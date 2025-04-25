@@ -533,7 +533,7 @@ abstract class Field_Contract {
                     // translators: %s: left and right arrow
                     __( 'Search the terms name. use %1$s %2$s for navigate', 'wp-user-frontend' ), '⇦', '⇨'
                 ),
-                'options'   => wpuf_get_terms( $tax_name ),
+                'options'   => wpuf_get_taxonomy_terms($tax_name),
             ],
 
             [

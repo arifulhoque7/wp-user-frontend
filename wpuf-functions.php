@@ -5437,3 +5437,27 @@ function wpuf_get_post_form_builder_setting_menu_contents() {
 function wpuf_is_checkbox_or_toggle_on( $value ) {
     return 'on' === $value || 'yes' === $value || 'true' === $value || '1' === $value;
 }
+
+/**
+ * Get taxonomy terms based on the appropriate post type
+ *
+ * @param string $taxonomy The taxonomy to retrieve terms from
+ * @return array
+ */
+function wpuf_get_taxonomy_terms($taxonomy) {
+    // Get form ID from URL
+    $form_id = isset($_GET['id']) ? absint($_GET['id']) : 0;
+    
+    // Get form settings
+    $form_settings = wpuf_get_form_settings($form_id);
+    
+    // Get post type from form settings
+    $post_type = !empty($form_settings['post_type']) ? $form_settings['post_type'] : 'post';
+    
+    // Handle 'category' taxonomy for different post types
+    if ($taxonomy === 'category' && $post_type === 'product') {
+        return wpuf_get_terms('product_cat');
+    }
+    
+    return wpuf_get_terms($taxonomy);
+}
