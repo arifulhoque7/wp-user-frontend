@@ -4977,14 +4977,6 @@ function wpuf_get_post_form_builder_setting_menu_contents() {
                                 'https://wedevs.com/docs/wp-user-frontend-pro/posting-forms/different-custom-post-type-submission-2/'
                             ),
                         ],
-                        'default_category' => [
-                            'label'     => __( 'Default Category', 'wp-user-frontend' ),
-                            'type'      => 'multi-select',
-                            'help_text' => __(
-                                'Select the default category for posts submitted through this form', 'wp-user-frontend'
-                            ),
-                            'options'   => wpuf_get_terms(),
-                        ],
                         'redirect_to'      => [
                             'label'     => __( 'Successful Redirection', 'wp-user-frontend' ),
                             'type'      => 'select',

@@ -1114,39 +1114,41 @@
         populate_default_categories(this);
     });
 
+    // Load default categories when the page loads
+    $(document).ready(function() {
+        // Check if we're on the form builder page and post type select exists
+        if ($('select#post_type').length) {
+            populate_default_categories($('select#post_type')[0]);
+        }
+    });
+
     function populate_default_categories(obj) {
-        var post_type = $( obj ).val();
+        var post_type = $(obj).val();
+        $('.wpuf-input-container[class*="wpuf-taxonomy-select-container-"]').remove(); 
+        
+        // Get the form ID
+        var form_id = $('input[name="wpuf_form_id"]').val();
+        
         wp.ajax.send('wpuf_form_setting_post', {
             data: {
                 post_type: post_type,
+                form_id: form_id,
                 wpuf_form_builder_setting_nonce: wpuf_form_builder.nonce
             },
             success: function (response) {
-                const default_category = 'select#default_category';
-                let default_category_name = default_category;
+                $('.wpuf-input-container[class*="wpuf-taxonomy-select-container-"]').remove(); 
+                $('select#post_type').closest('.wpuf-input-container').after(response.data);
 
-                if ( post_type !== 'post' ) {
-                    default_category_name = 'select#default_' + post_type + '_cat';
-                }
-
-                const value = $(default_category_name).data('value');
-
-                $(default_category).parent('.wpuf-my-4.wpuf-input-container').remove();
-                $('select#post_type').parent('.wpuf-my-4.wpuf-input-container').after(response.data);
-
-                if (value && ( typeof value === 'string' )) {
-                    $(default_category).val(value.split(","));
-                } else {
-                    $(default_category).val(value);
-                }
-
-                $(default_category).selectize({
-                    plugins: ['remove_button'],
+                $('.wpuf-taxonomy-select').each(function() {
+                    var $select = $(this);
+                    
+                    $select.selectize({
+                        plugins: ['remove_button'],
+                    });
                 });
-
             },
-            error: function ( error ) {
-                console.log(error);
+            error: function (error) {
+                console.error("Error fetching or processing taxonomies:", error);
             }
         });
     }
