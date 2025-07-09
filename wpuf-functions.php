@@ -2034,6 +2034,7 @@ function wpuf_is_license_expired() {
 function wpuf_get_post_form_templates() {
     $integrations['post_form_template_post'] = new WeDevs\Wpuf\Admin\Forms\Post\Templates\Post_Form_Template_Post();
 
+    $integrations['post_form_template_guest_post_with_subscription'] = new WeDevs\Wpuf\Admin\Forms\Post\Templates\Post_Form_Template_Guest_Subscription();
     return apply_filters( 'wpuf_get_post_form_templates', $integrations );
 }
 
