@@ -502,47 +502,47 @@ class TEC_V6_Compatibility {
                     $event_id = ( $event instanceof \WP_Post ) ? $event->ID : 0;
                 }
 
-                if ( $event_id ) {
-                    $post_status = ! empty( $form_settings['post_status'] ) ? $form_settings['post_status'] : 'draft';
-                    wp_update_post(
-                        [
-                            'ID'          => $event_id,
-                            'post_status' => $post_status,
-                        ]
-                    );
-
-                    // Add tags if they exist - use wp_set_post_tags for better reliability
-                    if ( ! empty( $args['tags_input'] ) ) {
-                        wp_set_post_tags( $event_id, $args['tags_input'], false );
-                    }
-
-                    // Add event categories if they exist
-                    if ( ! empty( $args['categories'] ) ) {
-                        wp_set_post_terms( $event_id, $args['categories'], 'tribe_events_cat', false );
-                    }
-
-                    /**
-                     * Opportunity to perform actions after event creation
-                     *
-                     * This action allows developers to perform additional operations after
-                     * an event has been successfully created. Useful for notifications,
-                     * integrations, or custom post-processing.
-                     *
-                     * @since 4.1.9
-                     *
-                     * @param int   $event_id      The created event post ID
-                     * @param array $args          The ORM arguments used to create the event
-                     * @param array $postarr       The original WordPress post array
-                     * @param array $meta_vars     The original meta variables from WPUF
-                     * @param int   $form_id      The WPUF form ID
-                     * @param array $form_settings The WPUF form settings
-                     */
-                    do_action( 'wpuf_tec_after_create_event', $event_id, $args, $postarr, $meta_vars, $form_id, $form_settings );
-
-                    return $event_id;
-                } else {
+                if ( ! $event_id ) {
                     return 0;
                 }
+
+                $post_status = ! empty( $form_settings['post_status'] ) ? $form_settings['post_status'] : 'draft';
+                wp_update_post(
+                    [
+                        'ID'          => $event_id,
+                        'post_status' => $post_status,
+                    ]
+                );
+
+                // Add tags if they exist - use wp_set_post_tags for better reliability
+                if ( ! empty( $args['tags_input'] ) ) {
+                    wp_set_post_tags( $event_id, $args['tags_input'], false );
+                }
+
+                // Add event categories if they exist
+                if ( ! empty( $args['categories'] ) ) {
+                    wp_set_post_terms( $event_id, $args['categories'], 'tribe_events_cat', false );
+                }
+
+                /**
+                 * Opportunity to perform actions after event creation
+                 *
+                 * This action allows developers to perform additional operations after
+                 * an event has been successfully created. Useful for notifications,
+                 * integrations, or custom post-processing.
+                 *
+                 * @since 4.1.9
+                 *
+                 * @param int   $event_id      The created event post ID
+                 * @param array $args          The ORM arguments used to create the event
+                 * @param array $postarr       The original WordPress post array
+                 * @param array $meta_vars     The original meta variables from WPUF
+                 * @param int   $form_id      The WPUF form ID
+                 * @param array $form_settings The WPUF form settings
+                 */
+                do_action( 'wpuf_tec_after_create_event', $event_id, $args, $postarr, $meta_vars, $form_id, $form_settings );
+
+                return $event_id;
             } else {
                 return 0;
             }
