@@ -103,6 +103,12 @@
                                 case 'billing-address':
                                     $icon = '<svg class="wpuf-w-5 wpuf-h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>';
                                     break;
+                                case 'invoices':
+                                    $icon = '<svg width="16" height="20" viewBox="0 0 16 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M4.75 11.75L10.75 5.75M5.25003 6.25H5.26003M10.25 11.25H10.26M14.75 18.75V2.75C14.75 1.64543 13.8546 0.75 12.75 0.75H2.75C1.64543 0.75 0.75 1.64543 0.75 2.75V18.75L4.25 16.75L7.75 18.75L11.25 16.75L14.75 18.75ZM5.75 6.25C5.75 6.52614 5.52614 6.75 5.25 6.75C4.97386 6.75 4.75 6.52614 4.75 6.25C4.75 5.97386 4.97386 5.75 5.25 5.75C5.52614 5.75 5.75 5.97386 5.75 6.25ZM10.75 11.25C10.75 11.5261 10.5261 11.75 10.25 11.75C9.97386 11.75 9.75 11.5261 9.75 11.25C9.75 10.9739 9.97386 10.75 10.25 10.75C10.5261 10.75 10.75 10.9739 10.75 11.25Z" stroke="#374151" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                            </svg>
+                                        ';
+                                    break;
                                 default:
                                     $icon = '<svg class="wpuf-w-5 wpuf-h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>';
                             }
