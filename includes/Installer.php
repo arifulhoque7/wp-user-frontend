@@ -102,6 +102,8 @@ class Installer {
      * @since 2.2.7
      */
     public function schedule_events() {
-        wp_schedule_event( time(), 'daily', 'wpuf_remove_expired_post_hook' );
+        if ( ! wp_next_scheduled( 'wpuf_remove_expired_post_hook' ) ) {
+            wp_schedule_event( time(), 'daily', 'wpuf_remove_expired_post_hook' );
+        }
     }
 }

@@ -800,8 +800,13 @@ class Frontend_Form_Ajax {
         $user_wpuf_subscription_pack = get_user_meta( get_current_user_id(), '_wpuf_subscription_pack', true );
         $wpuf_user               = wpuf_get_user();
         $user_subscription       = new User_Subscription( $wpuf_user );
-        if ( ! empty( $user_wpuf_subscription_pack ) && isset( $user_wpuf_subscription_pack['_enable_post_expiration'] )
-             && isset( $user_wpuf_subscription_pack['expire'] ) && strtotime( $user_wpuf_subscription_pack['expire'] ) >= time() ) {
+        $has_active_sub_expiration = ! empty( $user_wpuf_subscription_pack )
+            && isset( $user_wpuf_subscription_pack['_enable_post_expiration'] )
+            && isset( $user_wpuf_subscription_pack['expire'] )
+            && strtotime( $user_wpuf_subscription_pack['expire'] ) >= time();
+
+        if ( $has_active_sub_expiration ) {
+            // Active subscription pack with post expiration enabled — use subscription pack settings.
             $expire_date = gmdate( 'Y-m-d', strtotime( '+' . $user_wpuf_subscription_pack['_post_expiration_time'] ) );
             update_post_meta( $post_id, $this->post_expiration_date, $expire_date );
             // save post status after expiration
@@ -812,32 +817,18 @@ class Frontend_Form_Ajax {
                 $post_expiration_message = $user_subscription->get_subscription_exp_msg( $user_wpuf_subscription_pack['pack_id'] );
                 update_post_meta( $post_id, $this->post_expiration_message, $post_expiration_message );
             }
-        } elseif ( ! empty( $user_wpuf_subscription_pack ) && isset( $user_wpuf_subscription_pack['expire'] ) && strtotime( $user_wpuf_subscription_pack['expire'] ) <= time() ) {
-            if ( isset( $form_settings['expiration_settings']['enable_post_expiration'] ) ) {
-                $expire_date = gmdate( 'Y-m-d', strtotime( '+' . $form_settings['expiration_settings']['expiration_time_value'] . ' ' . $form_settings['expiration_settings']['expiration_time_type'] . '' ) );
-
-                update_post_meta( $post_id, $this->post_expiration_date, $expire_date );
-                // save post status after expiration
-                $expired_post_status = $form_settings['expiration_settings']['expired_post_status'];
-                update_post_meta( $post_id, $this->expired_post_status, $expired_post_status );
-                // if mail active
-                if ( isset( $form_settings['expiration_settings']['enable_mail_after_expired'] ) && $form_settings['expiration_settings']['enable_mail_after_expired'] === 'on' ) {
-                    $post_expiration_message = $form_settings['expiration_settings']['post_expiration_message'];
-                    update_post_meta( $post_id, $this->post_expiration_message, $post_expiration_message );
-                }
-            }
-        } elseif ( empty( $user_wpuf_subscription_pack ) || $user_wpuf_subscription_pack === 'Cancel' || $user_wpuf_subscription_pack === 'cancel' ) {
-            if ( isset( $form_settings['expiration_settings']['enable_post_expiration'] ) ) {
-                $expire_date = gmdate( 'Y-m-d', strtotime( '+' . $form_settings['expiration_settings']['expiration_time_value'] . ' ' . $form_settings['expiration_settings']['expiration_time_type'] . '' ) );
-                update_post_meta( $post_id, $this->post_expiration_date, $expire_date );
-                // save post status after expiration
-                $expired_post_status = $form_settings['expiration_settings']['expired_post_status'];
-                update_post_meta( $post_id, $this->expired_post_status, $expired_post_status );
-                // if mail active
-                if ( isset( $form_settings['expiration_settings']['enable_mail_after_expired'] ) && $form_settings['expiration_settings']['enable_mail_after_expired'] === 'on' ) {
-                    $post_expiration_message = $form_settings['expiration_settings']['post_expiration_message'];
-                    update_post_meta( $post_id, $this->post_expiration_message, $post_expiration_message );
-                }
+        } elseif ( isset( $form_settings['expiration_settings']['enable_post_expiration'] ) ) {
+            // No active subscription pack expiration — fall back to form-level expiration settings.
+            // Covers: no subscription pack, cancelled pack, expired pack, or active pack without expiration enabled.
+            $expire_date = gmdate( 'Y-m-d', strtotime( '+' . $form_settings['expiration_settings']['expiration_time_value'] . ' ' . $form_settings['expiration_settings']['expiration_time_type'] ) );
+            update_post_meta( $post_id, $this->post_expiration_date, $expire_date );
+            // save post status after expiration
+            $expired_post_status = $form_settings['expiration_settings']['expired_post_status'];
+            update_post_meta( $post_id, $this->expired_post_status, $expired_post_status );
+            // if mail active
+            if ( isset( $form_settings['expiration_settings']['enable_mail_after_expired'] ) && $form_settings['expiration_settings']['enable_mail_after_expired'] === 'on' ) {
+                $post_expiration_message = $form_settings['expiration_settings']['post_expiration_message'];
+                update_post_meta( $post_id, $this->post_expiration_message, $post_expiration_message );
             }
         }
 
