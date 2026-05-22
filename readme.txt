@@ -3,8 +3,8 @@ Contributors: wedevs, tareq1988, nizamuddinbabu
 Donate link: https://tareq.co/donate/
 Tags: frontend post, user directory, membership, user profile, user registration, content restriction, guest post, submit post, subscriptions, directory, login form, registration form, user profile, profile builder, forms
 Requires at least: 5.0
-Tested up to: 6.9.4
-Stable tag: 4.3.5
+Tested up to: 7
+Stable tag: 4.3.6
 Requires PHP: 7.4
 License: GPLv2
 License URL: https://www.gnu.org/licenses/gpl-2.0.html
@@ -381,6 +381,9 @@ Please report security bugs found in the source code of the User Frontend plugin
 15. Create AI Powered Post Form
 
 == Changelog ==
+= v4.3.6 (22 May, 2026) =
+* Fix – Restore edit button for custom post type published posts after 4.2.9
+
 = v4.3.5 (11 May, 2026) =
 * Chore – Exclude .DS_Store files from builds and SVN deploy
 
