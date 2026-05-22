@@ -6695,7 +6695,7 @@ function wpuf_user_can_edit_post( $post_id, $check_settings = true ) {
         );
     }
 
-    if ( ! current_user_can( 'edit_post', $post_id ) ) {
+    if ( $current_user_id !== $post_author_id && ! current_user_can( 'edit_post', $post_id ) ) {
         return new WP_Error(
             'wpuf_unauthorized_edit',
             __( 'You are not authorized to edit this post.', 'wp-user-frontend' )
