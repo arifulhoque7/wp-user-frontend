@@ -444,7 +444,7 @@ class Frontend_Form extends Frontend_Render_Form {
      * Enable edit post link for post authors
      *
      * @since 3.4.0
-     * @since WPUF_SINCE Support all post types created via WPUF forms.
+     * @since 4.3.6 Support all post types created via WPUF forms.
      *
      * @param array   $allcaps
      * @param array   $caps
