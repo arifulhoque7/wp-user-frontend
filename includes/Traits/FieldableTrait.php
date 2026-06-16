@@ -92,7 +92,7 @@ trait FieldableTrait {
             $this->wp_post_types[ $post_type ] = [];
             $taxonomies = get_object_taxonomies( $post_type, 'object' );
             foreach ( $taxonomies as $tax_name => $taxonomy ) {
-                if ( ! in_array( $tax_name, $ignore_taxonomies ) ) {
+                if ( ! in_array( $tax_name, $ignore_taxonomies, true) ) {
                     $this->wp_post_types[ $post_type ][ $tax_name ] = [
                         'title'        => $taxonomy->label,
                         'hierarchical' => $taxonomy->hierarchical,
@@ -169,7 +169,7 @@ trait FieldableTrait {
                     if ( ! empty( $column_fields ) ) {
                         // ignore section break and HTML input type
                         foreach ( $column_fields as $column_field_key => $column_field ) {
-                            if ( in_array( $column_field['input_type'], $ignore_lists ) ) {
+                            if ( in_array( $column_field['input_type'], $ignore_lists, true) ) {
                                 continue;
                             }
 
@@ -197,7 +197,7 @@ trait FieldableTrait {
             }
 
             // ignore section break and HTML input type
-            if ( in_array( $value['input_type'], $ignore_lists ) ) {
+            if ( in_array( $value['input_type'], $ignore_lists, true) ) {
                 continue;
             }
 
@@ -596,7 +596,14 @@ trait FieldableTrait {
         
         foreach ( $taxonomy_vars as $taxonomy ) {
             $taxonomy_name = $taxonomy['name'];
-            $posted_terms = isset( $_POST[$taxonomy_name] ) ? wp_unslash( $_POST[$taxonomy_name] ) : null;
+            // phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce verified upstream in the form submission handler.
+            $posted_terms = isset( $_POST[ $taxonomy_name ] ) ? wp_unslash( $_POST[ $taxonomy_name ] ) : null;
+
+            if ( is_array( $posted_terms ) ) {
+                $posted_terms = array_map( 'sanitize_text_field', $posted_terms );
+            } elseif ( null !== $posted_terms ) {
+                $posted_terms = sanitize_text_field( $posted_terms );
+            }
 
             // Use default terms if none posted
             if ( empty( $posted_terms ) && ! empty( $taxonomy['default'] ) ) {
@@ -647,7 +654,7 @@ trait FieldableTrait {
                 $intended_type = get_post_meta( $post_id, '_wpuf_intended_product_type', true );
                 if ( $intended_type ) {
                     // If the saved type doesn't match the intended type, fix it
-                    if ( empty( $saved_types ) || ! in_array( $intended_type, $saved_types ) ) {
+                    if ( empty( $saved_types ) || ! in_array( $intended_type, $saved_types, true) ) {
                         wp_set_object_terms( $post_id, $intended_type, 'product_type', false );
                         $this->sync_product_type_data( $post_id, $intended_type );
                         
@@ -700,7 +707,7 @@ trait FieldableTrait {
             
             // For system taxonomies, always add to attributes if visibility is enabled
             // This ensures product_type, shipping_class, visibility show in Additional Information
-            if ( ! in_array( $taxonomy_name, ['product_cat', 'product_tag'] ) ) {
+            if ( ! in_array( $taxonomy_name, ['product_cat', 'product_tag'], true) ) {
                 // Check if this should be visible in Additional Information
                 $should_show = false;
                 
@@ -949,18 +956,18 @@ trait FieldableTrait {
      */
     protected function sync_visibility_meta( $post_id, $visibility_terms ) {
         // Handle stock status
-        if ( in_array( 'outofstock', $visibility_terms ) ) {
+        if ( in_array( 'outofstock', $visibility_terms, true) ) {
             update_post_meta( $post_id, '_stock_status', 'outofstock' );
         }
         
         // Handle catalog visibility
-        if ( in_array( 'exclude-from-catalog', $visibility_terms ) && in_array( 'exclude-from-search', $visibility_terms ) ) {
+        if ( in_array( 'exclude-from-catalog', $visibility_terms, true) && in_array( 'exclude-from-search', $visibility_terms, true) ) {
             update_post_meta( $post_id, '_visibility', 'hidden' );
-        } elseif ( in_array( 'exclude-from-catalog', $visibility_terms ) ) {
+        } elseif ( in_array( 'exclude-from-catalog', $visibility_terms, true) ) {
             update_post_meta( $post_id, '_visibility', 'search' );
-        } elseif ( in_array( 'exclude-from-search', $visibility_terms ) ) {
+        } elseif ( in_array( 'exclude-from-search', $visibility_terms, true) ) {
             update_post_meta( $post_id, '_visibility', 'catalog' );
-        } elseif ( ! in_array( 'featured', $visibility_terms ) && ! in_array( 'outofstock', $visibility_terms ) ) {
+        } elseif ( ! in_array( 'featured', $visibility_terms, true) && ! in_array( 'outofstock', $visibility_terms, true) ) {
             // Only set to visible if no special visibility terms
             update_post_meta( $post_id, '_visibility', 'visible' );
         }
@@ -1154,7 +1161,7 @@ trait FieldableTrait {
             
             // Update WooCommerce meta values based on visibility terms
             // Handle stock status
-            if ( in_array( 'outofstock', $terms_to_set ) ) {
+            if ( in_array( 'outofstock', $terms_to_set, true) ) {
                 update_post_meta( $post_id, '_stock_status', 'outofstock' );
             } else {
                 // Don't change stock status if not explicitly set to outofstock
@@ -1168,15 +1175,15 @@ trait FieldableTrait {
                 $current_visibility = 'visible'; // Default
             }
             
-            if ( in_array( 'exclude-from-catalog', $terms_to_set ) && in_array( 'exclude-from-search', $terms_to_set ) ) {
+            if ( in_array( 'exclude-from-catalog', $terms_to_set, true) && in_array( 'exclude-from-search', $terms_to_set, true) ) {
                 update_post_meta( $post_id, '_visibility', 'hidden' );
-            } elseif ( in_array( 'exclude-from-catalog', $terms_to_set ) ) {
+            } elseif ( in_array( 'exclude-from-catalog', $terms_to_set, true) ) {
                 update_post_meta( $post_id, '_visibility', 'search' );
-            } elseif ( in_array( 'exclude-from-search', $terms_to_set ) ) {
+            } elseif ( in_array( 'exclude-from-search', $terms_to_set, true) ) {
                 update_post_meta( $post_id, '_visibility', 'catalog' );
             } else {
                 // If no exclusion terms, set to visible
-                if ( ! in_array( 'featured', $terms_to_set ) && ! in_array( 'outofstock', $terms_to_set ) && 
+                if ( ! in_array( 'featured', $terms_to_set, true) && ! in_array( 'outofstock', $terms_to_set, true) && 
                      ! preg_grep( '/^rated-/', $terms_to_set ) ) {
                     // Only set to visible if there are no other special visibility terms
                     update_post_meta( $post_id, '_visibility', 'visible' );
@@ -1325,7 +1332,7 @@ trait FieldableTrait {
         // Only exclude product_cat and product_tag from attributes
         // Allow product_type, shipping_class, visibility, brand to show if enabled
         $excluded = [ 'product_cat', 'product_tag', 'product_brand' ];
-        if ( in_array( $taxonomy_name, $excluded ) ) {
+        if ( in_array( $taxonomy_name, $excluded, true) ) {
             return [];
         }
         
@@ -1419,7 +1426,7 @@ trait FieldableTrait {
 
                                 // Handle different field types appropriately
                                 if ( isset( $row[ $fname ] ) ) {
-                                    if ( in_array( $inner_field['template'], [ 'checkbox_field', 'multiple_select' ] ) ) {
+                                    if ( in_array( $inner_field['template'], [ 'checkbox_field', 'multiple_select' ], true) ) {
                                         // For checkbox and multiselect, keep as array and sanitize each element
                                         if ( is_array( $row[ $fname ] ) ) {
                                             $sanitized_row[ $fname ] = array_map( function( $item ) { return strip_shortcodes( sanitize_text_field( $item ) ); }, $row[ $fname ] );
@@ -1557,7 +1564,7 @@ trait FieldableTrait {
         
         // Only exclude main categories and tags from additional information display
         $excluded_taxonomies = [ 'product_cat', 'product_tag', 'product_brand' ];
-        if ( in_array( $taxonomy['name'], $excluded_taxonomies ) ) {
+        if ( in_array( $taxonomy['name'], $excluded_taxonomies, true) ) {
             return [];
         }
         
@@ -1672,7 +1679,7 @@ trait FieldableTrait {
         // Process remaining attributes to ensure proper labels and values
         foreach ( $product_attributes as $key => &$attribute ) {
             // Skip weight and dimensions as they're handled by WooCommerce
-            if ( in_array( $key, [ 'weight', 'dimensions' ] ) ) {
+            if ( in_array( $key, [ 'weight', 'dimensions' ], true) ) {
                 continue;
             }
 
