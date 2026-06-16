@@ -1,44 +1,39 @@
-# WP User Frontend - CLAUDE.md
+# WP User Frontend — CLAUDE.md
 
-## Project Overview
+## What This Is
 
-WP User Frontend (WPUF) is a frontend content management plugin for WordPress. It allows users to create, edit, and delete posts, pages, or custom post types from the frontend — without ever accessing the WordPress admin. Version 4.2.10. Requires PHP 5.6+.
+WP User Frontend (WPUF) is a WordPress plugin that enables frontend content management — post submission, user registration/login, dashboards, subscriptions, guest posting, content restriction, and AI form building. Requires PHP 5.6+.
 
-Key capabilities: frontend post submission forms, user registration/login forms, frontend user dashboard, subscription/payment plans, guest posting, content restriction, and AI-powered form building.
+## Skill Routing (invoke these, don't re-explain them)
 
-## Available Skills
+The `.claude/skills/` directory has procedural HOW-TOs. **Invoke the matching skill before starting work.**
 
-The `.claude/skills/` directory contains procedural HOW-TO instructions:
+| When you're about to… | Invoke |
+|---|---|
+| Write or modify PHP | [`wpuf-backend-dev`](.claude/skills/wpuf-backend-dev/SKILL.md) |
+| Write or modify Vue / JS / CSS | [`wpuf-frontend-dev`](.claude/skills/wpuf-frontend-dev/SKILL.md) |
+| Review a PR or code change | [`wpuf-code-review`](.claude/skills/wpuf-code-review/SKILL.md) |
 
-- **`wpuf-backend-dev`** — Backend PHP conventions: namespaces, container, hooks, REST controllers. **Invoke before writing any PHP code or tests.**
-- **`wpuf-dev-cycle`** — Testing and linting workflows (PHPCS, Playwright E2E)
-- **`wpuf-frontend-dev`** — Frontend conventions: Vue 3, Vite, Tailwind CSS, Pinia stores
-- **`wpuf-code-review`** — Code review standards: critical violations to flag, PR checklist verification, severity levels
-- **`wpuf-git`** — Git and GitHub operations: branching, PR templates, CI checks
+## Deeper Docs (read on demand)
 
-## Build & Development Commands
+| Topic | File | When to read |
+|---|---|---|
+| Architecture (directory layout, init flow, services, REST, payments, fields) | [`docs/architecture.md`](docs/architecture.md) | New to the codebase, or touching a subsystem you don't know |
+| Coding standards & patterns | [`docs/conventions.md`](docs/conventions.md) | Before writing non-trivial code |
+| Build & test commands | [`docs/build-and-test.md`](docs/build-and-test.md) | Before running lint/build/tests |
 
-```bash
-# Frontend (Vite + Vue 3)
-npm run build                        # Production build (all entry points)
-npm run build:forms-list             # Build forms list module
-npm run build:subscriptions          # Build admin subscriptions module
-npm run build:frontend-subscriptions # Build frontend subscriptions module
-npm run build:ai-form-builder        # Build AI form builder module
-npm run build:account                # Build account module
-npm run build:user-directory         # Build user directory module
-npm run build:css                    # Compile Tailwind CSS via Grunt
-npm run dev:user-directory           # Dev mode for user directory module
+Per-directory `CLAUDE.md` files auto-load when Claude works in that path:
+- [`includes/Fields/CLAUDE.md`](includes/Fields/CLAUDE.md) — form field contract & conventions
+- [`tests/e2e/CLAUDE.md`](tests/e2e/CLAUDE.md) — Playwright patterns
 
-# Frontend (Grunt — legacy)
-grunt release                        # Full release build
+## Non-Negotiables
 
-# PHP
-composer phpcs                       # PHP CodeSniffer
-composer phpcbf                      # Auto-fix PHP code style
-```
+- **Preserve existing behavior.** Hooks, filters, public methods, REST routes, template paths, and shortcodes are contracts — don't change signatures or drop parameters silently.
+- **Legacy code stays.** jQuery form builder, LESS, Grunt, and the `class/` directory coexist with modern Vue/Tailwind/Vite intentionally. Don't rewrite legacy code without explicit permission.
+- **Free/Pro split matters.** Never assume Pro features exist. Detect with `class_exists('WP_User_Frontend_Pro')`.
+- **Scope discipline.** No drive-by refactors. Note unrelated issues separately instead of fixing them inline.
 
-## Architecture
+## Quick Reference
 
 ### Entry Point
 - `wpuf.php` — Main plugin file, defines constants, loads autoloader, bootstraps `WP_User_Frontend` singleton
@@ -178,3 +173,29 @@ WPUF integrates with several marketplace and third-party plugins:
 - **ACF** — Advanced Custom Fields compatibility
 - **n8n** — Workflow automation integration
 - **Events Calendar** — Event post type support
+
+## Code Review Prevention (MANDATORY)
+
+**Apply these rules to ALL new/modified code. Top causes of review rejection.**
+
+### Zero-Tolerance Rules
+
+1. **Strict comparisons only** — `===`/`!==` always, never `==`/`!=`
+2. **`in_array()`/`array_search()` strict** — always pass `true` as 3rd arg
+3. **Superglobals** — `wp_unslash()` + sanitize every `$_POST/$_GET/$_REQUEST/$_SERVER` access. Use `sanitize_text_field(wp_unslash(...))`, `absint()`, `sanitize_email(wp_unslash(...))`, `esc_url_raw(wp_unslash(...))`, `sanitize_key(wp_unslash(...))`
+4. **Escape all output** — `esc_html()` for text, `esc_attr()` for attributes, `esc_url()` for URLs, `wp_kses_post()` for HTML
+5. **SQL safety** — `$wpdb->prepare()` for ALL dynamic values. Allowlist column names for ORDER BY
+6. **Nonce + permission** — every form/AJAX: `check_ajax_referer()` + `current_user_can(wpuf_admin_role())`
+
+### Required Standards
+
+7. **snake_case methods** — never camelCase in PHP
+8. **DocBlocks** — `@since WPUF_SINCE` on every new public/protected method
+9. **Translator comments** — `/* translators: */` before every `sprintf()` with `__()`
+10. **Text domain** — `'wp-user-frontend'` (free), `'wpuf-pro'` (pro), never `'wpuf'`
+11. **Hook prefix** — all `do_action()`/`apply_filters()` names start with `wpuf_`
+12. **WP spacing** — `if ( $x )` not `if($x)`, `! $x` not `!$x`
+
+### Pre-PR Checklist
+
+Run `composer phpcs` — zero violations before submitting. See `wpuf-backend-dev` skill for full examples.
