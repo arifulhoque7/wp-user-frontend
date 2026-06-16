@@ -364,7 +364,7 @@ class Admin_Tools {
 
                 <div class="inside">
                     <p><?php esc_html_e( 'Clicking this button will create required pages for the plugin. Note: It\'ll not delete/replace existing pages.', 'wp-user-frontend' ); ?></p>
-                    <a class="button button-primary" href="<?php echo esc_attr( add_query_arg( [ 'install_wpuf_pages' => true ] ) ); ?>"><?php esc_html_e( 'Install WPUF Pages', 'wp-user-frontend' ); ?></a>
+                    <a class="button button-primary" href="<?php echo esc_url( wp_nonce_url( add_query_arg( [ 'install_wpuf_pages' => '1' ] ), 'wpuf_install_pages' ) ); ?>"><?php esc_html_e( 'Install WPUF Pages', 'wp-user-frontend' ); ?></a>
                 </div>
             </div>
 
@@ -408,7 +408,7 @@ class Admin_Tools {
     /**
      * Render the logout menu tool UI
      *
-     * @since WPUF_SINCE
+     * @since 4.2.10
      *
      * @return void
      */
@@ -1070,7 +1070,7 @@ class Admin_Tools {
     /**
      * Get all navigation menus
      *
-     * @since WPUF_SINCE
+     * @since 4.2.10
      *
      * @return array
      */
@@ -1083,7 +1083,7 @@ class Admin_Tools {
     /**
      * Add logout link to navigation menu
      *
-     * @since WPUF_SINCE
+     * @since 4.2.10
      *
      * @return void
      */
@@ -1120,7 +1120,7 @@ class Admin_Tools {
     /**
      * Get logout URL info for display
      *
-     * @since WPUF_SINCE
+     * @since 4.2.10
      *
      * @return array
      */
@@ -1134,7 +1134,7 @@ class Admin_Tools {
     /**
      * Check if current theme is a block theme (FSE)
      *
-     * @since WPUF_SINCE
+     * @since 4.2.10
      *
      * @return bool
      */

@@ -109,6 +109,12 @@ class Assets {
             'frontend-forms'      => [
                 'src' => WPUF_ASSET_URI . '/css/frontend-forms.css',
             ],
+            'elementor-frontend-forms'      => [
+                'src' => WPUF_ASSET_URI . '/css/elementor-frontend-forms.css',
+            ],
+            'elementor-subscription-plans'      => [
+                'src' => WPUF_ASSET_URI . '/css/elementor-subscription-plans.css',
+            ],
             'frontend-subscriptions' => [
                 'src' => WPUF_ASSET_URI . '/css/frontend-subscriptions.min.css',
             ],
@@ -181,9 +187,6 @@ class Assets {
             'setup'               => [
                 'src'  => WPUF_ASSET_URI . '/css/admin/wpuf-setup.css',
                 'deps' => [ 'dashicons', 'install' ],
-            ],
-            'whats-new'           => [
-                'src' => WPUF_ASSET_URI . '/css/admin/whats-new.css',
             ],
             'forms-list'           => [
                 'src' => WPUF_ASSET_URI . '/css/forms-list.min.css',
@@ -413,6 +416,10 @@ class Assets {
             ],
             'frontend-subscriptions' => [
                 'src'       => WPUF_ASSET_URI . '/js/frontend-subscriptions.min.js',
+                'in_footer' => true,
+            ],
+            'elementor-subscription-plans' => [
+                'src'       => WPUF_ASSET_URI . '/js/elementor-subscription-plans.js',
                 'in_footer' => true,
             ],
         ];

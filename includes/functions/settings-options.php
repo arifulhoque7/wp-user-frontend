@@ -760,9 +760,9 @@ function wpuf_settings_fields() {
             [
                 'name'    => 'active_gateways',
                 'label'   => __( 'Payment Gateways', 'wp-user-frontend' ),
-                'desc'    => __( 'Active payment gateways', 'wp-user-frontend' ),
-                'type'    => 'multicheck',
-                'options' => wpuf_get_gateways(),
+                'desc'    => __( 'Select the payment methods available at checkout', 'wp-user-frontend' ),
+                'type'    => 'gateway_selector',
+                'options' => wpuf_get_gateways( 'gateway_selector' ),
             ],
             [
                 'name'              => 'failed_retry',
@@ -942,7 +942,7 @@ function wpuf_settings_field_profile( $args = [] ) { // phpcs:ignore Generic.Cod
 /**
  * Render login form settings section header
  *
- * @since WPUF_SINCE
+ * @since 4.2.10
  *
  * @param array $args Settings field args.
  *

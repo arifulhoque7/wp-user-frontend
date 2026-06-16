@@ -20,6 +20,9 @@ module.exports = {
         './assets/js/subscriptions-react.jsx',
         './src/js/components-react/**/*.{js,jsx}',
         './src/js/subscriptions-react.jsx',
+        // Free User Directory module templates
+        './modules/user-directory/**/*.php',
+        './modules/user-directory/views/**/*.php',
     ],
     theme: {
         extend: {
