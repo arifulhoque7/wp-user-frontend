@@ -29,7 +29,8 @@ module.exports = function( grunt) {
             // one to one
             front: {
                 files: {
-                    '<%= dirs.css %>/frontend-forms.css': '<%= dirs.less %>/frontend-forms.less'
+                    '<%= dirs.css %>/frontend-forms.css': '<%= dirs.less %>/frontend-forms.less',
+                    '<%= dirs.css %>/elementor-frontend-forms.css': '<%= dirs.less %>/elementor-frontend-forms.less'
                 }
             },
 
@@ -38,7 +39,6 @@ module.exports = function( grunt) {
                     // Vue cleanup: form-builder LESS no longer compiled (React uses Tailwind/CSS)
                     // '<%= dirs.css %>/wpuf-form-builder.css': ['admin/form-builder/assets/less/form-builder.less'],
                     '<%= dirs.css %>/admin.css': ['<%= dirs.less %>/admin.less'],
-                    '<%= dirs.css %>/admin/whats-new.css': ['<%= dirs.less %>/whats-new.less'],
                     '<%= dirs.css %>/registration-forms.css': ['<%= dirs.less %>/registration-forms.less']
                 }
             }
@@ -180,6 +180,20 @@ module.exports = function( grunt) {
                 }
             },
 
+            userDirectory: {
+                files: [
+                    'src/js/user-directory/**/*.js',
+                    'src/js/user-directory/**/*.jsx',
+                    'src/js/user-directory/**/*.css',
+                    'src/js/user-directory/styles/*.css',
+                    'modules/user-directory/**/*.php',
+                ],
+                tasks: ['build-user-directory'],
+                options: {
+                    spawn: false
+                }
+            },
+
         },
 
         // Clean up build directory
@@ -192,7 +206,7 @@ module.exports = function( grunt) {
             main: {
                 src: [
                     '**',
-                    '!node_modules/**',
+                    '!**/node_modules/**',
                     '!build/**',
                     '!admin/form-builder/assets/**',
                     '!assets/css/*.less',
@@ -228,6 +242,9 @@ module.exports = function( grunt) {
                     '!**/postcss.config.js',
                     '!**/tailwind.config.js',
                     '!**/vite.config.mjs',
+                    '!**/CLAUDE.md',
+                    '!.claude/**',
+                    '!**/.DS_Store',
                 ],
                 dest: 'build/'
             }
@@ -293,6 +310,9 @@ module.exports = function( grunt) {
             npm_build_form_builder_react: {
                 command: 'npm run build:form-builder',
             },
+            npm_build_user_directory: {
+                command: 'npm run build:user-directory',
+            },
             tailwind: {
                 command: function ( input, output ) {
                     return `npx tailwindcss -i ${input} -o ${output} --minify`;
@@ -322,7 +342,6 @@ module.exports = function( grunt) {
     grunt.loadNpmTasks( 'grunt-shell' );
     grunt.loadNpmTasks( 'grunt-postcss' );
 
-    // Vue cleanup: removed 'concat' (Vue form builder concat no longer needed)
     grunt.registerTask( 'default', [ 'less', 'uglify', 'i18n', 'tailwind' ] );
 
     // file auto generation
@@ -333,6 +352,11 @@ module.exports = function( grunt) {
     // Vue cleanup: removed 'concat' (Vue form builder concat no longer needed)
     grunt.registerTask( 'release', [ 'less', 'uglify', 'i18n', 'readme', 'tailwind', 'tailwind-minify' ] );
     grunt.registerTask( 'zip', [ 'shell:npm_build', 'clean', 'copy', 'compress' ] );
+
+    // User Directory CSS build task
+    grunt.registerTask( 'build-user-directory', 'Build User Directory CSS with Tailwind', function() {
+        grunt.task.run('shell:npm_build_user_directory');
+    });
 
     grunt.event.on('watch', function(action, filepath, target) {
         if (target === 'tailwind') {
