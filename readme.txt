@@ -3,9 +3,9 @@ Contributors: wedevs, tareq1988, nizamuddinbabu
 Donate link: https://tareq.co/donate/
 Tags: frontend post, user directory, membership, user profile, user registration, content restriction, guest post, submit post, subscriptions, directory, login form, registration form, user profile, profile builder, forms
 Requires at least: 5.0
-Tested up to: 6.9.1
-Stable tag: 4.2.10
-Requires PHP: 5.6
+Tested up to: 7.0
+Stable tag: 4.3.7
+Requires PHP: 7.4
 License: GPLv2
 License URL: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -122,6 +122,28 @@ This WordPress Registration Form Plugin also allows you to build user registrati
 <strong>Display Custom Fields Data in Post</strong>
 
 Custom field data are viewable to visitors on frontend on single post pages. Admins can also disable this if they don’t want to display custom fields to everyone.
+
+<strong>Elementor Compatibility</strong>
+
+WP User Frontend is now fully compatible with <strong>Elementor</strong>, the popular WordPress page builder. You can build and design <strong>frontend forms, user dashboards, and subscription pages</strong> in Elementor without using shortcodes.
+
+This integration combines the power of <strong>WP User Frontend (frontend content management)</strong> with <strong>Elementor (visual page builder)</strong> for a faster and smoother workflow.
+
+<strong>Available Elementor Widgets</strong>
+
+* <strong>Account Widget</strong> – Customize the user account dashboard layout and appearance
+* <strong>Subscription Widget</strong> – Display and organize user subscription plans clearly
+* <strong>Post Form Widget</strong> – Design frontend submission forms visually using Elementor
+
+These widgets help you turn your site into a <strong>frontend content management system</strong> without backend access.
+
+<strong>How Elementor Integration Works</strong>
+
+* Drag and drop User Frontend widgets into Elementor
+* Customize layout, spacing, and design visually
+* Publish pages and display them on the frontend
+
+WP User Frontend handles <strong>form logic, user roles, and permissions</strong>, while Elementor controls <strong>design and layout</strong>.
 
 = How to download and install WPUF FREE =
 
@@ -359,6 +381,44 @@ Please report security bugs found in the source code of the User Frontend plugin
 15. Create AI Powered Post Form
 
 == Changelog ==
+= v4.3.7 (4 June, 2026) =
+* Fix – Tags suggestions not loading in form builder
+* Fix – Checkbox styling in form builder
+
+= v4.3.6 (22 May, 2026) =
+* Fix – Restore edit button for custom post type published posts after 4.2.9
+
+= v4.3.5 (11 May, 2026) =
+* Chore – Exclude .DS_Store files from builds and SVN deploy
+
+= v4.3.4 (11 May, 2026) =
+Chore – Exclude CLAUDE.md and .claude directory from wp.org SVN deploy
+
+= v4.3.3 (30 April, 2026) =
+Enhance – Bind cancel nonce to user and enforce ownership
+Fix – Resolve post expiration not working
+
+= v4.3.2 (24 April, 2026) =
+New – Add guest and paid guest post templates and assets
+New – Add user directory page creation to installer and tools
+Enhance – Add 'General' category for registration forms
+Fix – Sanitize file IDs with absint and remove debug logs
+Fix – Resolve unauthorized subscription pack assignment
+Fix – Enable fallback pay-per-post when force_pack is set
+
+= v4.3.1 (8 April, 2026) =
+* New – Add Elementor Account page widget
+* New – Add Elementor Subscription widget
+* New – Add Elementor Post Form Builder widget
+* New – Introduce card grid UI for payment gateway selection
+* Enhance – Bind cancel nonce to user and enforce ownership
+* Enhance – Clean up What's New page assets and remove unused code
+* Fix – Improve wording of plugin update notice
+* Fix – Resolve CSS/JS warning in setup wizard
+
+= v4.3.0 (11 March, 2026) =
+* New – Add User Directory Module
+
 = v4.2.10 (26 February, 2026) =
 * New – Add Logout link to navigation menu for Classic and FSE themes
 * New – Support custom image icons in Form Builder
