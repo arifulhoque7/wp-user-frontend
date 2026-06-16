@@ -405,7 +405,7 @@ class Paypal {
                 'status'           => 'completed',
                 'subtotal'         => $subtotal,
                 'discount'         => ! empty( $custom_data['discount'] ) ? floatval( $custom_data['discount'] ) : 0,
-                'coupon_id'        => ! empty( $custom_data['coupon_id'] ) ? absint( $custom_data['coupon_id'] ) : 0,
+                'coupon_id'        => ! empty( $custom_data['coupon_id'] ) ? absint( $custom_data['coupon_id'] ) : null,
                 'tax'              => $tax,
                 'cost'             => $cost,
                 'post_id'          => ( 'post' === $custom_data['type'] ) ? $custom_data['item_number'] : 0,
@@ -1439,9 +1439,11 @@ class Paypal {
                 }
             }
 
-            // Handle coupon if present
+            // Handle coupon if present. Coupons are a Pro feature, so only run when Pro is
+            // available to avoid a fatal on wpuf_pro() in free-only installs.
             $coupon_discount = 0;
-            if ( isset( $_POST['coupon_id'] ) && ! empty( $_POST['coupon_id'] ) &&
+            if ( function_exists( 'wpuf_pro' ) && wpuf_pro() &&
+                isset( $_POST['coupon_id'] ) && ! empty( $_POST['coupon_id'] ) &&
                 isset( $_POST['_wpnonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ) ), 'wpuf_payment_coupon' ) &&
                 is_numeric( sanitize_text_field( wp_unslash( $_POST['coupon_id'] ) ) ) ) {
                 $coupon_id       = absint( sanitize_text_field( wp_unslash( $_POST['coupon_id'] ) ) );

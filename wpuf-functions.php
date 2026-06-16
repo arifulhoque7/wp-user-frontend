@@ -2451,7 +2451,7 @@ function wpuf_get_pending_transactions( $args = [] ) {
             'subtotal'         => $subtotal,
             'discount'         => ! empty( $info['discount'] ) ? $info['discount'] : 0,
             'coupon_id'        => ! empty( $info['post_data']['coupon_id'] ) ? absint( $info['post_data']['coupon_id'] ) : 0,
-            'cost'             => ! empty( $info['price'] ) ? floatval( $info['price'] ) : $subtotal - $tax,
+            'cost'             => ! empty( $info['cost'] ) ? floatval( $info['cost'] ) : ( ! empty( $info['price'] ) ? floatval( $info['price'] ) + floatval( $tax ) : $subtotal ),
             'tax'              => $tax,
             'post_id'          => ( $info['type'] === 'post' ) ? $info['item_number'] : 0,
             'pack_id'          => ( $info['type'] === 'pack' ) ? $info['item_number'] : 0,
@@ -2549,7 +2549,7 @@ function wpuf_get_all_transactions( $args = [] ) {
         $transaction->subtotal         = $subtotal;
         $transaction->discount         = ! empty( $info['discount'] ) ? $info['discount'] : 0;
         $transaction->coupon_id        = ! empty( $info['post_data']['coupon_id'] ) ? absint( $info['post_data']['coupon_id'] ) : 0;
-        $transaction->cost             = ! empty( $info['price'] ) ? floatval( $info['price'] ) : $subtotal - $tax;
+        $transaction->cost             = ! empty( $info['cost'] ) ? floatval( $info['cost'] ) : ( ! empty( $info['price'] ) ? floatval( $info['price'] ) + floatval( $tax ) : $subtotal );
         $transaction->tax              = $tax;
         $transaction->post_id          = ( 'post' === $type ) ? $item_number : 0;
         $transaction->pack_id          = ( 'pack' === $type ) ? $item_number : 0;
