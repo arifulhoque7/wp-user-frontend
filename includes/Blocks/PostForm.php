@@ -78,11 +78,15 @@ class PostForm {
             $asset['version']
         );
 
-        wp_localize_script(
-            'wpuf-post-form-editor',
-            'wpufPostForm',
-            $this->get_editor_data()
-        );
+        // Editor data is only needed in the block editor; avoid the get_posts()
+        // query on every front-end request.
+        if ( is_admin() ) {
+            wp_localize_script(
+                'wpuf-post-form-editor',
+                'wpufPostForm',
+                $this->get_editor_data()
+            );
+        }
 
         $block_json_path = WPUF_ROOT . '/src/js/blocks/post-form';
 
