@@ -171,6 +171,12 @@ class WPUF_Admin_Tools {
 
         $errors = new WP_Error();
 
+        if ( ! is_array( $options ) ) {
+            $errors->add( 'invalid_json', __( 'The uploaded file is not a valid WPUF export.', 'wp-user-frontend' ) );
+
+            return $errors;
+        }
+
         foreach ( $options as $key => $value ) {
             $generate_post = [
                 'post_title'     => $value['post_data']['post_title'],
@@ -232,7 +238,7 @@ class WPUF_Admin_Tools {
         $formatted_data = [];
         $ids            = [];
         $blogname       = strtolower( str_replace( ' ', '-', get_option( 'blogname' ) ) );
-        $date           = date( 'Y-m-d' );
+        $date           = gmdate( 'Y-m-d' );
         $json_name      = $blogname . '-wpuf-' . $post_type . '-' . $date; // Namming the filename will be generated.
 
         if ( !empty( $post_ids ) ) {
@@ -265,14 +271,15 @@ class WPUF_Admin_Tools {
             array_push( $formatted_data, $data );
         }
 
-        $json_file = json_encode( $formatted_data ); // Encode data into json data
+        $json_file = wp_json_encode( $formatted_data ); // Encode data into json data
 
         ob_clean();
 
-        echo $json_file; // phpcs:ignore WordPress.XSS.EscapeOutput.OutputNotEscaped
-
+        // Send headers before any output, otherwise "headers already sent" is triggered.
         header( 'Content-Type: text/json; charset=' . get_option( 'blog_charset' ) );
         header( "Content-Disposition: attachment; filename=$json_name.json" );
+
+        echo $json_file; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- raw JSON file download
 
         exit();
     }

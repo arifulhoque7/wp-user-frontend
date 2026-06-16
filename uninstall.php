@@ -29,7 +29,12 @@ class WPUF_Uninstaller {
             $this->delete_pages();
         }
         if ( ! empty( $uninstall_settings['delete_settings'] ) ) {
-            $wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '%wpuf_%'" );
+            $wpdb->query(
+                $wpdb->prepare(
+                    "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s",
+                    '%' . $wpdb->esc_like( 'wpuf_' ) . '%'
+                )
+            );
         }
         // reset Tools > Uninstall Settings anyway upon plugin deletion
         delete_option( 'wpuf_uninstall' );
@@ -48,7 +53,10 @@ class WPUF_Uninstaller {
         global $wpdb;
         // Fetch pages that contain WPUF shortcodes
         $page_ids = $wpdb->get_col(
-            "SELECT ID FROM {$wpdb->posts} WHERE post_type = 'page' AND post_content LIKE '%[wpuf%'"
+            $wpdb->prepare(
+                "SELECT ID FROM {$wpdb->posts} WHERE post_type = 'page' AND post_content LIKE %s",
+                '%' . $wpdb->esc_like( '[wpuf' ) . '%'
+            )
         );
         if ( $page_ids ) {
             foreach ( $page_ids as $page_id ) {
@@ -81,7 +89,12 @@ class WPUF_Uninstaller {
                 wp_delete_post( $item->ID, true );
             }
         }
-        $wpdb->query( "DELETE FROM {$wpdb->postmeta} WHERE meta_key LIKE '%wpuf_%'" );
+        $wpdb->query(
+            $wpdb->prepare(
+                "DELETE FROM {$wpdb->postmeta} WHERE meta_key LIKE %s",
+                '%' . $wpdb->esc_like( 'wpuf_' ) . '%'
+            )
+        );
         wp_reset_postdata();
     }
 
