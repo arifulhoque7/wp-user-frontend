@@ -2518,7 +2518,8 @@ function wpuf_get_all_transactions( $args = [] ) {
             "(SELECT id, user_id, status, subtotal, discount, coupon_id, tax, cost, post_id, pack_id, payer_first_name, payer_last_name, payer_email, payment_type, transaction_id, created FROM {$transaction_table})
             UNION ALL
             (SELECT ID AS id, post_author AS user_id, null AS status, null AS subtotal, null AS discount, null AS coupon_id, null AS tax, null AS cost, ID as post_id, null AS pack_id, null AS payer_first_name, null AS payer_last_name, null AS payer_email, null AS payment_type, 0 AS transaction_id, post_date AS created FROM {$wpdb->posts}
-            WHERE post_type = %s)
+            WHERE post_type = %s
+            AND post_status IN ('pending', 'publish'))
             ORDER BY {$orderby} {$sorting_order}
             LIMIT %d, %d",
             'wpuf_order', $offset, $number
