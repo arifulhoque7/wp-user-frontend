@@ -5,7 +5,7 @@ description: Release a new version of WP User Frontend (free) to weDevsOfficial 
 
 # WP User Frontend (Free) Release Skill
 
-Battle-tested one-command release. Verified working: v4.3.5 deployed to wp.org cleanly via `wpuf-release-free`.
+Battle-tested one-command release. Verified: v4.3.5 deployed to wp.org cleanly via `wpuf-release-free`.
 
 ## TL;DR
 
@@ -14,14 +14,14 @@ wpuf-release-free 4.3.6
 # → prompts for changelog
 # → does everything
 # → ships to wp.org
+# → prints Slack message template
 ```
 
 That's it. **All steps automated.**
 
 ## When to Use
 
-User wants to ship a WPUF (free) version. Match phrases:
-
+User wants to ship WPUF (free) version. Match phrases:
 - `release wpuf 4.3.6`
 - `ship wpuf next version`
 - `publish wpuf X.Y.Z`
@@ -42,26 +42,26 @@ Single command. Orchestrates entire pipeline:
 6. **Verifies zip excludes** (CLAUDE.md / .DS_Store / .claude must NOT be in zip)
 7. **Runs `bin/release-git.sh`** (commits + git flow finish + push develop+master+tag)
 8. **Creates GitHub release** with auto-extracted changelog from `changelog.txt`
-9. **Waits 60s + verifies SVN** deploy via curl
+9. **Waits 60s + verifies SVN** deploy
+10. **Prints Slack message template** for copy-paste to `#release` channel
 
-Total time: ~5 min (interactive prompts) + ~60s SVN wait.
+Total time: ~5 min interactive + ~60s SVN wait.
 
 ## File locations
 
 | Path | Purpose |
 |------|---------|
 | `~/wpuf-release-free.sh` | Orchestrator (one-command entry point) |
-| `~/.wpuf-release/release-zip.sh` | Sapayth's release-zip.sh (patched) |
-| `~/.wpuf-release/release-git.sh` | Sapayth's release-git.sh (patched) |
+| `~/.wpuf-release/release-zip.sh` | release-zip.sh (patched) |
+| `~/.wpuf-release/release-git.sh` | release-git.sh (patched) |
 | `~/Sites/wpuf-release/wp-user-frontend/` | Fresh clone workspace (created/destroyed each run) |
-| `~/.zshrc` line | `alias wpuf-release-free='~/wpuf-release-free.sh'` |
+| `~/.zshrc` | `alias wpuf-release-free='~/wpuf-release-free.sh'` |
 
 ## Critical pre-reqs (one-time per machine)
 
 ### Required tools
 
 ```bash
-# All must succeed:
 which git git-flow getopt composer node npm grunt curl gh
 git flow version | head -1     # Must show "AVH Edition"
 getopt --version | head -1     # Must show "util-linux"
@@ -76,7 +76,6 @@ cd /tmp && rm -rf gitflow-avh
 git clone --recursive https://github.com/petervanderdoes/gitflow-avh.git
 cd gitflow-avh
 make install prefix=~/.local
-# ~/.local/bin/git-flow now exists. Add to PATH if not already.
 ```
 
 ### If `getopt` is BSD (fails on `-m` with spaces)
@@ -94,24 +93,41 @@ Open new terminal to pick up.
 gh api repos/weDevsOfficial/wp-user-frontend/collaborators/$(gh api user --jq .login)/permission --jq .role_name
 ```
 
-If `write` only: master push may be blocked. Get bypass from `tareq1988` or `nizamuddin` BEFORE running `wpuf-release-free`. (Once granted, perm is permanent — only confirm once per machine setup.)
+If `write` only: master push may be blocked. Get bypass from `tareq1988` or `nizamuddin`.
+
+## Slack release announcement
+
+Orchestrator prints a copy-paste template at the end. Format matches team convention:
+
+```
+WPUF Free `v4.3.6` has been released
+CC: @Anik bhai, @Sharif Rakib bhai, @Tanvir - WRITER bhai, @Md. Anower Hossain bhai, @Habibur Rahman bhai, @Rubaiyat-QA bhai
+
+```
+= v4.3.6 (DD Month, YYYY) =
+* Changelog entries here
+```
+```
+
+Paste into `#release` Slack channel. **No auto-post** (would need webhook/bot setup; user opted out).
+
+To bundle multiple versions in one announcement (e.g. "v4.3.3, v4.3.4, v4.3.5"): edit the printed template manually before pasting.
 
 ## Example prompts → expected outputs
 
 ### Example 1: standard chore release
 
-**User says:** `release wpuf 4.3.6 with this change: Tested up to 6.9.5`
+**User says:** `release wpuf 4.3.6 with this change: bump Tested up to 6.9.5`
 
 **Agent does:**
-
 1. Verifies pre-reqs (env tools)
-2. Asks: "Are config-file changes (e.g. .svnignore tweaks) needed?"
-3. If user says no: runs `wpuf-release-free 4.3.6`
-4. Tells user to enter changelog when script prompts:
+2. Asks: "Are config-file changes needed (e.g. .svnignore tweaks)?"
+3. If no: runs `wpuf-release-free 4.3.6`
+4. Tells user changelog input format:
    ```
    * Chore – Bump Tested up to WordPress 6.9.5
    ```
-5. Hands off URL after success
+5. Hands off URL + Slack template after success
 
 **Expected output (~5 min later):**
 
@@ -120,36 +136,33 @@ If `write` only: master push may be blocked. Get bypass from `tareq1988` or `niz
 ✔ Tag:            v4.3.6
 ✔ GitHub release: https://github.com/weDevsOfficial/wp-user-frontend/releases/tag/v4.3.6
 ✔ Zip asset:      build/wp-user-frontend-v4.3.6.zip
-✔ SVN deployed
++ Slack template printed for copy-paste
 ```
 
 ### Example 2: code change ships with release
 
-**User says:** `release wpuf 4.4.0. New: AI form templates feature in PR #1870`
+**User says:** `release wpuf 4.4.0 — new AI form templates from PR #1870`
 
 **Agent does:**
-
 1. Verifies PR #1870 is merged to upstream develop:
    ```bash
    gh pr view 1870 --repo weDevsOfficial/wp-user-frontend --json state,baseRefName
-   # Expect: state=MERGED, baseRefName=develop
    ```
-2. If merged: runs `wpuf-release-free 4.4.0`
-3. Tells user to enter changelog:
+2. If merged (state=MERGED, baseRefName=develop): runs `wpuf-release-free 4.4.0`
+3. Tells user changelog:
    ```
    * New – AI form templates feature
    ```
-4. If NOT merged: aborts, tells user to merge PR first.
+4. If NOT merged: aborts, tells user to merge PR first
 
 ### Example 3: minor change needs PR first
 
-**User says:** `release wpuf 4.3.7 with .svnignore tweak`
+**User says:** `release wpuf 4.3.7 with .svnignore tweak (add foo)`
 
 **Agent does:**
-
 1. Detects: .svnignore change is config, NOT in upstream develop yet
-2. Tells user: "Sapayth's flow needs config changes merged via PR first. Open PR?"
-3. User confirms → agent creates branch, commits, pushes to fork, opens PR, merges
+2. Tells user: "flow needs config changes merged via PR first. Open PR?"
+3. User confirms → agent creates branch in dev folder, commits, pushes to fork, opens PR, merges
 4. Then runs `wpuf-release-free 4.3.7`
 
 ### Example 4: dry-run version validation
@@ -157,16 +170,10 @@ If `write` only: master push may be blocked. Get bypass from `tareq1988` or `niz
 **User says:** `is wpuf 4.3.6 ready to release?`
 
 **Agent does:**
-
 ```bash
-# Check upstream develop tip
 gh api repos/weDevsOfficial/wp-user-frontend/branches/develop --jq '.commit.commit.message + " (" + .commit.sha[0:8] + ")"'
-
-# Check what's NOT yet released since last tag
 gh api repos/weDevsOfficial/wp-user-frontend/tags --jq '.[0].name'
 gh pr list --repo weDevsOfficial/wp-user-frontend --state merged --base develop --search "merged:>=2026-05-11" --limit 10 --json number,title
-
-# Check master push perm
 gh api repos/weDevsOfficial/wp-user-frontend/collaborators/$(gh api user --jq .login)/permission --jq .role_name
 ```
 
@@ -177,32 +184,28 @@ Returns summary. Does NOT run release.
 **User says:** `release shipped but wp.org still shows old version`
 
 **Agent does:**
-
 ```bash
-# 1. Check SVN actual state (source of truth)
+# 1. SVN actual state (source of truth)
 curl -sI "https://plugins.svn.wordpress.org/wp-user-frontend/tags/X.Y.Z/" | head -1
 curl -s "https://plugins.svn.wordpress.org/wp-user-frontend/trunk/readme.txt" | grep "Stable tag"
 
-# 2. Check wp.org API (cached)
+# 2. wp.org API (cached)
 curl -s "https://api.wordpress.org/plugins/info/1.0/wp-user-frontend.json" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('version'),d.get('last_updated'))"
 
-# 3. Check Appsero deploy log via SVN log
+# 3. SVN log
 svn log -l 5 "https://plugins.svn.wordpress.org/wp-user-frontend/trunk/readme.txt"
 ```
 
-If SVN is correct but API stale: wait 15-60 min for cache. If >2 hours: email `plugins@wordpress.org` with slug + verification proof.
+If SVN correct but API stale: wait 15-60 min. If >2 hours: email plugins@wordpress.org.
 
 ## Step-by-step (manual fallback if alias broken)
 
-### If `wpuf-release-free` not available
-
+### If alias not loaded
 ```bash
-# Run orchestrator directly
 ~/wpuf-release-free.sh 4.3.6
 ```
 
 ### If orchestrator broken, raw scripts
-
 ```bash
 export PATH="/opt/homebrew/opt/gnu-getopt/bin:$HOME/.local/bin:$PATH"
 mkdir -p ~/Sites/wpuf-release && cd ~/Sites/wpuf-release
@@ -219,16 +222,16 @@ gh release create v4.3.6 --repo weDevsOfficial/wp-user-frontend \
   ./build/wp-user-frontend-v4.3.6.zip
 ```
 
-## Critical Appsero gotcha (for awareness)
+## Critical Appsero gotcha
 
 Appsero deploys from **master branch** on this repo. Master MUST be at new version BEFORE GitHub release publishes. Else: "tag X already exists" error → wp.org pipeline frozen.
 
-`wpuf-release-free` handles this correctly:
+`wpuf-release-free` handles this:
 - Pushes master BEFORE creating GitHub release
 - Verifies master state via gh API
-- Only proceeds to release publish if push succeeded
+- Only proceeds if push succeeded
 
-If master push blocked: orchestrator warns + offers fallback path.
+If master push blocked: orchestrator warns + offers fallback.
 
 ## ⚠️ DO NOT release more than once per 24 hours
 
@@ -260,7 +263,7 @@ If shipping multiple changes: bundle into ONE release. Only re-release within 24
 - Patched version auto-runs `npm install`. If still fails: run `npm install` manually in `~/Sites/wpuf-release/wp-user-frontend`, then re-run from same `release/X.Y.Z` branch.
 
 ### `git push origin master` rejected (GH006)
-- No bypass perm. Get from tareq1988/nizamuddin. OR open PR fork:master → upstream:master, admin merges (manual fallback).
+- No bypass perm. Get from tareq1988/nizamuddin. OR open PR fork:master → upstream:master, admin merges.
 
 ### wp.org API stuck > 2 hours after publish
 - Pipeline rate-limit OR review hold. Email plugins@wordpress.org with: slug, SVN verification, request reindex.
@@ -278,22 +281,20 @@ If shipping multiple changes: bundle into ONE release. Only re-release within 24
 - Excludes config: `appsero.json` (wp.org), `.svnignore` (SVN manual), `Gruntfile.js` `copy.main.src` (grunt zip)
 - Appsero source: **master** branch
 - Auto-deploy: Appsero on tag + GitHub release publish
-- Wp.org plugin URL: https://wordpress.org/plugins/wp-user-frontend/
+- Wp.org URL: https://wordpress.org/plugins/wp-user-frontend/
 - SVN URL: https://plugins.svn.wordpress.org/wp-user-frontend/
 
-## Patches in `~/.wpuf-release/release-zip.sh` vs sapayth's original
+## Patches in `~/.wpuf-release/release-zip.sh` vs original
 
-1. **WPUF_SINCE pipefail fix** (line ~180):
-   - Original: `SINCE_COUNT=$(grep ... | wc -l ...)`
-   - Patched: appended `|| true` + `${SINCE_COUNT:-0}` default
+1. **WPUF_SINCE pipefail fix** (line ~180): `|| true` + default 0
 2. **Auto npm install** if `node_modules` missing
 3. **Auto composer install** if `vendor/` missing
 4. **Auto gitflow init** if not initialized + sets versiontag prefix to `v`
 5. **AVH + GNU getopt detection** with install instructions
 6. **Cleanup-on-error trap** with recovery commands
-7. **Better next-steps output** with exact commands
+7. **Better next-steps output**
 
-## Patches in `~/.wpuf-release/release-git.sh` vs sapayth's original
+## Patches in `~/.wpuf-release/release-git.sh` vs original
 
 1. **AVH + GNU getopt detection** with warnings
 2. **Cleanup-on-error trap** with recovery commands
@@ -312,9 +313,10 @@ If shipping multiple changes: bundle into ONE release. Only re-release within 24
    ```
 4. **Run:** `wpuf-release-free X.Y.Z`
 5. **Walk user through interactive prompts** in `release-zip.sh`:
-   - "When prompted for WP version: accept default or override"
-   - "When prompted for changelog: type each `* Type – Description` line, empty line to finish"
-6. **Hand off final URLs** after success
+   - "Tested up to: accept default or override"
+   - "Changelog: type each `* Type – Description` line, empty line to finish"
+6. **After success: tell user to copy printed Slack template into #release**
+7. **Hand off final URLs**
 
 ## DO NOT
 
@@ -333,4 +335,4 @@ If shipping multiple changes: bundle into ONE release. Only re-release within 24
 
 | Version | Date | Status |
 |---------|------|--------|
-| 4.3.5 | 2026-05-11 | ✅ Full sapayth-script flow worked, deployed to wp.org cleanly after rate-limit cleared |
+| 4.3.5 | 2026-05-11 | ✅ Full script flow worked, deployed to wp.org cleanly after rate-limit cleared |
