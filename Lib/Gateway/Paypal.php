@@ -2124,7 +2124,16 @@ class Paypal {
                     $this->process_payment_capture( $capture );
                 } catch ( \Exception $e ) {
                     // Do not block the success redirect if local processing
-                    // fails; the webhook remains as a fallback.
+                    // fails; the webhook remains as a fallback. Emit a hook so the
+                    // "paid but not published" path leaves a diagnostic trail.
+                    do_action(
+                        'wpuf_paypal_return_processing_failed',
+                        [
+                            'token'      => $token,
+                            'capture_id' => isset( $capture['id'] ) ? $capture['id'] : '',
+                            'message'    => $e->getMessage(),
+                        ]
+                    );
                 }
             }
 
