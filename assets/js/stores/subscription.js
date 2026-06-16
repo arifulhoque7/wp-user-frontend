@@ -21,6 +21,7 @@ export const useSubscriptionStore = defineStore( 'subscription', {
         } ),
         allCount: ref( {} ),
         taxonomyRestriction: ref( {} ),
+        taxonomyViewRestriction: ref( {} ),
         currentPageNumber: ref( 1 ),
     } ),
     getters: {
@@ -68,6 +69,11 @@ export const useSubscriptionStore = defineStore( 'subscription', {
     actions: {
         setCurrentSubscription( subscription ) {
             this.currentSubscription = subscription;
+            
+            // Populate taxonomy restriction data when loading a subscription for editing
+            if ( subscription && subscription.meta_value ) {
+                this.populateTaxonomyRestrictionData( subscription );
+            }
         },
         setCurrentSubscriptionCopy() {
             this.currentSubscriptionCopy = this.subscription;
@@ -133,6 +139,7 @@ export const useSubscriptionStore = defineStore( 'subscription', {
 
             this.isUpdating = true;
 
+            // Handle posting taxonomy restrictions
             let allTaxonomies = [];
 
             for (const [key, taxonomy] of Object.entries( this.taxonomyRestriction )) {
@@ -140,14 +147,28 @@ export const useSubscriptionStore = defineStore( 'subscription', {
             }
 
             const taxonomyIntValue = allTaxonomies.map( ( item ) => parseInt( item ) );
-
             const uniqueTaxonomies = [...new Set( taxonomyIntValue )];
 
             // custom meta key for taxonomy restriction
             this.setMetaValue( '_sub_allowed_term_ids', uniqueTaxonomies );
 
+            // Handle view taxonomy restrictions
+            let allViewTaxonomies = [];
+
+            for (const [key, taxonomy] of Object.entries( this.taxonomyViewRestriction )) {
+                allViewTaxonomies = allViewTaxonomies.concat( taxonomy );
+            }
+
+            const viewTaxonomyIntValue = allViewTaxonomies.map( ( item ) => parseInt( item ) );
+            const uniqueViewTaxonomies = [...new Set( viewTaxonomyIntValue )];
+
+            // custom meta key for view taxonomy restriction
+            this.setMetaValue( '_sub_view_allowed_term_ids', uniqueViewTaxonomies );
+
             const subscription = this.currentSubscription;
-            let requestUrl = '/wp-json/wpuf/v1/wpuf_subscription';
+            // Use the correct REST API root, including subdirectory if present
+            const restApiRoot = wpufSubscriptions.rest_url.replace(/\/$/, ''); // Remove trailing slash if any
+            let requestUrl = `${restApiRoot}/wpuf/v1/wpuf_subscription`;
 
             if (subscription.ID) {
                 requestUrl += '/' + subscription.ID;
@@ -194,6 +215,10 @@ export const useSubscriptionStore = defineStore( 'subscription', {
 
             if (!this.currentSubscription.meta_value.hasOwnProperty( key )) {
                 return;
+            }
+
+            if ( (typeof this.currentSubscription.meta_value[key] === 'string') && key === 'additional_cpt_options' ) {
+                this.currentSubscription.meta_value[key] = {};
             }
 
             this.currentSubscription.meta_value[key][serializeKey] = value;
@@ -314,6 +339,9 @@ export const useSubscriptionStore = defineStore( 'subscription', {
             return !this.hasError();
         },
         deleteSubscription( id ) {
+            // Use the correct REST API root, including subdirectory if present
+            const restApiRoot = wpufSubscriptions.rest_url.replace(/\/$/, ''); // Remove trailing slash if any
+            
             const requestOptions = {
                 method: 'DELETE',
                 headers: {
@@ -322,7 +350,7 @@ export const useSubscriptionStore = defineStore( 'subscription', {
                 },
             };
 
-            return fetch( '/wp-json/wpuf/v1/wpuf_subscription/' + id, requestOptions )
+            return fetch( `${restApiRoot}/wpuf/v1/wpuf_subscription/${id}`, requestOptions )
                 .then( ( response ) => response.json() )
                 .catch( ( error ) => {
                     console.log( error );
@@ -338,9 +366,12 @@ export const useSubscriptionStore = defineStore( 'subscription', {
         async setSubscriptionsByStatus( status, offset = 0 ) {
             this.isSubscriptionLoading = true;
 
+            // Use the correct REST API root, including subdirectory if present
+            const restApiRoot = wpufSubscriptions.rest_url.replace(/\/$/, ''); // Remove trailing slash if any
+            
             const queryParams = {'per_page': wpufSubscriptions.perPage, 'offset': offset, 'post_status': status};
             return apiFetch( {
-                path: addQueryArgs( '/wp-json/wpuf/v1/wpuf_subscription', queryParams ),
+                path: addQueryArgs( `${restApiRoot}/wpuf/v1/wpuf_subscription`, queryParams ),
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -363,7 +394,9 @@ export const useSubscriptionStore = defineStore( 'subscription', {
             });
         },
         async getSubscriptionCount( status = 'all' ) {
-            let path = '/wp-json/wpuf/v1/wpuf_subscription/count';
+            // Use the correct REST API root, including subdirectory if present
+            const restApiRoot = wpufSubscriptions.rest_url.replace(/\/$/, ''); // Remove trailing slash if any
+            let path = `${restApiRoot}/wpuf/v1/wpuf_subscription/count`;
 
             if (status !== 'all') {
                 path += '/' + status;
@@ -393,7 +426,7 @@ export const useSubscriptionStore = defineStore( 'subscription', {
                 if (returnAsHtml) {
                     return wpufSubscriptions.currencySymbol + subscription.meta_value.billing_amount + ' <span class="wpuf-text-sm wpuf-text-gray-500">per ' + expireAfter + ' ' + cyclePeriod + '(s)</span>';
                 } else {
-                    return wpufSubscriptions.currencySymbol + subscription.meta_value.billing_amount + ' per ' + expireAfter + ' ' + cyclePeriod + '(s)';
+                    return wpufSubscriptions.currencySymbol + subscription.meta_value.billing_amount + ' every ' + expireAfter + ' ' + cyclePeriod + '(s)';
                 }
             } else {
                 if (parseInt( subscription.meta_value.billing_amount ) === 0 || subscription.meta_value.billing_amount === '') {
@@ -405,6 +438,101 @@ export const useSubscriptionStore = defineStore( 'subscription', {
         },
         isRecurring( subscription ) {
             return subscription.meta_value.recurring_pay === 'on' || subscription.meta_value.recurring_pay === 'yes'
+        },
+        
+        /**
+         * Populate taxonomy restriction data from subscription meta
+         *
+         * @param {Object} subscription The subscription object
+         */
+        populateTaxonomyRestrictionData( subscription ) {
+            // Reset taxonomy restriction data
+            this.taxonomyRestriction = {};
+            this.taxonomyViewRestriction = {};
+            
+            if ( ! subscription.meta_value ) {
+                return;
+            }
+            
+            // Handle posting taxonomy restrictions
+            const allowedTermIds = subscription.meta_value._sub_allowed_term_ids;
+            
+            if ( allowedTermIds && Array.isArray( allowedTermIds ) ) {
+                // Group term IDs by taxonomy
+                const taxonomyGroups = {};
+                
+                allowedTermIds.forEach( termId => {
+                    // Get the term to find its taxonomy
+                    const term = this.getTermById( termId );
+                    if ( term && term.taxonomy ) {
+                        if ( ! taxonomyGroups[ term.taxonomy ] ) {
+                            taxonomyGroups[ term.taxonomy ] = [];
+                        }
+                        taxonomyGroups[ term.taxonomy ].push( termId );
+                    }
+                } );
+                
+                this.taxonomyRestriction = taxonomyGroups;
+            }
+            
+            // Handle view taxonomy restrictions
+            const viewAllowedTermIds = subscription.meta_value._sub_view_allowed_term_ids;
+            
+            if ( viewAllowedTermIds && Array.isArray( viewAllowedTermIds ) ) {
+                // Group term IDs by taxonomy
+                const viewTaxonomyGroups = {};
+                
+                viewAllowedTermIds.forEach( termId => {
+                    // Get the term to find its taxonomy
+                    const term = this.getTermById( termId );
+                    if ( term && term.taxonomy ) {
+                        const fieldId = 'view_' + term.taxonomy;
+                        if ( ! viewTaxonomyGroups[ fieldId ] ) {
+                            viewTaxonomyGroups[ fieldId ] = [];
+                        }
+                        viewTaxonomyGroups[ fieldId ].push( termId );
+                    }
+                } );
+                
+                this.taxonomyViewRestriction = viewTaxonomyGroups;
+            }
+        },
+        
+        /**
+         * Get term by ID from WordPress terms
+         *
+         * @param {number} termId The term ID
+         * @returns {Object|null} The term object or null if not found
+         */
+        getTermById( termId ) {
+            // This is a simplified version - in a real implementation,
+            // you might want to fetch this data from the server
+            // For now, we'll use the available taxonomy data from wpufSubscriptions
+            if ( wpufSubscriptions.fields && wpufSubscriptions.fields.advanced_configuration ) {
+                // Check taxonomy_restriction section
+                if ( wpufSubscriptions.fields.advanced_configuration.taxonomy_restriction ) {
+                    for ( const taxonomyName in wpufSubscriptions.fields.advanced_configuration.taxonomy_restriction ) {
+                        const termFields = wpufSubscriptions.fields.advanced_configuration.taxonomy_restriction[taxonomyName].term_fields;
+                        const term = termFields.find( t => t.value == termId );
+                        if ( term ) {
+                            return { ...term, taxonomy: taxonomyName };
+                        }
+                    }
+                }
+                
+                // Check taxonomy_view_restriction section
+                if ( wpufSubscriptions.fields.advanced_configuration.taxonomy_view_restriction ) {
+                    for ( const taxonomyName in wpufSubscriptions.fields.advanced_configuration.taxonomy_view_restriction ) {
+                        const termFields = wpufSubscriptions.fields.advanced_configuration.taxonomy_view_restriction[taxonomyName].term_fields;
+                        const term = termFields.find( t => t.value == termId );
+                        if ( term ) {
+                            return { ...term, taxonomy: taxonomyName };
+                        }
+                    }
+                }
+            }
+            
+            return null;
         }
     }
 } );

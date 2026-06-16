@@ -77,15 +77,15 @@ function _recaptcha_http_post($host, $path, $data, $port = 80) {
         $http_request .= $req;
 
         $response = '';
-        if( false == ( $fs = @fsockopen($host, $port, $errno, $errstr, 10) ) ) {
+        if( false == ( $fs = @fsockopen($host, $port, $errno, $errstr, 10) ) ) { // @codingStandardsIgnoreLine
                 die ('Could not open socket');
         }
 
-        fwrite($fs, $http_request);
+        fwrite($fs, $http_request); // @codingStandardsIgnoreLine
 
         while ( !feof($fs) )
                 $response .= fgets($fs, 1160); // One TCP-IP packet
-        fclose($fs);
+        fclose($fs); // @codingStandardsIgnoreLine
         $response = explode("\r\n\r\n", $response, 2);
 
         return $response;
@@ -122,9 +122,10 @@ function recaptcha_get_html ($pubkey, $enable_no_captcha = false, $error = null,
 
 
     if ( $enable_no_captcha == true ) {
-        $return_var =  '<div class="g-recaptcha" data-sitekey="'.$pubkey.'"></div><script src="https://www.google.com/recaptcha/api.js"></script>';
+        wp_enqueue_script( 'wpuf-recaptcha', 'https://www.google.com/recaptcha/api.js', array(), null, true );
+        $return_var =  '<div class="g-recaptcha" data-sitekey="'.esc_attr($pubkey).'"></div>';
     } else {
-        $return_var = '<script type="text/javascript" src="'. $server . '/challenge?k=' . $pubkey . $errorpart . '"></script>';
+        $return_var = '<script src="' . esc_url( $server . '/challenge?k=' . rawurlencode( $pubkey ) . $errorpart ) . '"></script>';
     }
 
         return $return_var.'

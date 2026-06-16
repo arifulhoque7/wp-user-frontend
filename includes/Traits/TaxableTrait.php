@@ -21,6 +21,8 @@ trait TaxableTrait {
      * @return bool
      */
     function wpuf_tax_enabled() {
+        _deprecated_function( __METHOD__, '4.2.9', 'WeDevs\Wpuf\Pro\Traits\TaxableTrait' );
+
         $tax_enabled = wpuf_get_option( 'enable_tax', 'wpuf_payment_tax', 'on' );
         $value = false;
         if ( $tax_enabled === 'on' ) {
@@ -37,6 +39,8 @@ trait TaxableTrait {
      * @return bool $include_tax
      */
     function wpuf_prices_include_tax() {
+        _deprecated_function( __METHOD__, '4.2.9', 'WeDevs\Wpuf\Pro\Traits\TaxableTrait' );
+
         $enable_tax    = $this->wpuf_tax_enabled();
         $price_inc_tax = wpuf_get_option( 'prices_include_tax', 'wpuf_payment_tax', 'yes' );
         $value = false;
@@ -55,6 +59,8 @@ trait TaxableTrait {
      * @return array Defined tax rates
      */
     function wpuf_get_tax_rates() {
+        _deprecated_function( __METHOD__, '4.2.9', 'WeDevs\Wpuf\Pro\Traits\TaxableTrait' );
+
         $rates = get_option( 'wpuf_tax_rates', [] );
         return apply_filters( 'wpuf_get_tax_rates', $rates );
     }
@@ -67,6 +73,8 @@ trait TaxableTrait {
      * @return void
      */
     function wpuf_base_country_state( $args ) {
+        _deprecated_function( __METHOD__, '4.2.9', 'WeDevs\Wpuf\Pro\Traits\TaxableTrait' );
+
         $rates = $this->wpuf_get_tax_rates();
 
         $cs = new Country_State();
@@ -74,7 +82,7 @@ trait TaxableTrait {
         $states = [];
 
         ob_start(); ?>
-        <p><?php echo $args['desc']; ?></p>
+        <p><?php echo wp_kses_post( $args['desc'] ); ?></p>
         <table style="width:80%; table-layout:auto;" id="wpuf-base-country-state" class="wp-list-table">
             <thead>
             <tr>
@@ -96,17 +104,30 @@ trait TaxableTrait {
                 <td style="width:40%" class="wpuf_base_country">
                     <?php
 
-                    echo wpuf_select(
+                    echo wp_kses( wpuf_select(
+                            [
+                                'options'          => $cs->countries(),
+                                'name'             => 'wpuf_base[country]',
+                                'selected'         => $selected['country'],
+                                'show_option_all'  => false,
+                                'show_option_none' => false,
+                                'id'               => 'wpuf-base-country',
+                                'class'            => 'wpuf-base-country',
+                                'chosen'           => false,
+                                'placeholder'      => __( 'Choose a country', 'wp-user-frontend' ),
+                            ]
+                        ),
                         [
-                            'options'          => $cs->countries(),
-                            'name'             => 'wpuf_base[country]',
-                            'selected'         => $selected['country'],
-                            'show_option_all'  => false,
-                            'show_option_none' => false,
-                            'id'               => 'wpuf-base-country',
-                            'class'            => 'wpuf-base-country',
-                            'chosen'           => false,
-                            'placeholder'      => __( 'Choose a country', 'wp-user-frontend' ),
+                            'select' => [
+                                'class'            => [],
+                                'name'             => [],
+                                'data-placeholder' => [],
+                            ],
+                            'option' => [
+                                'value'    => [],
+                                'class'    => [],
+                                'selected' => []
+                            ],
                         ]
                     );
                     ?>
@@ -114,16 +135,29 @@ trait TaxableTrait {
                 <td style="width:25%" class="wpuf_base_state">
                     <?php
                     $states = $cs->getStates( $selected['country'] );
-                    echo wpuf_select(
+                    echo wp_kses( wpuf_select(
+                            [
+                                'options'          => $states,
+                                'name'             => 'wpuf_base[state]',
+                                'selected'         => isset( $selected['state'] ) ? $selected['state'] : '',
+                                'show_option_all'  => false,
+                                'show_option_none' => false,
+                                'class'            => 'wpuf-base-state',
+                                'chosen'           => false,
+                                'placeholder'      => __( 'Choose a state', 'wp-user-frontend' ),
+                            ]
+                        ),
                         [
-                            'options'          => $states,
-                            'name'             => 'wpuf_base[state]',
-                            'selected'         => isset( $selected['state'] ) ? $selected['state'] : '',
-                            'show_option_all'  => false,
-                            'show_option_none' => false,
-                            'class'            => 'wpuf-base-state',
-                            'chosen'           => false,
-                            'placeholder'      => __( 'Choose a state', 'wp-user-frontend' ),
+                            'select' => [
+                                'class'            => [],
+                                'name'             => [],
+                                'data-placeholder' => [],
+                            ],
+                            'option' => [
+                                'value'    => [],
+                                'class'    => [],
+                                'selected' => []
+                            ],
                         ]
                     );
                     ?>
@@ -131,7 +165,7 @@ trait TaxableTrait {
             </tr>
         </table>
         <?php
-        echo ob_get_clean();
+        echo ob_get_clean(); // @codingStandardsIgnoreLine
     }
 
     /**
@@ -141,6 +175,8 @@ trait TaxableTrait {
      * @return void
      */
     function wpuf_ajax_get_base_states() {
+        _deprecated_function( __METHOD__, '4.2.9', 'WeDevs\Wpuf\Pro\Traits\TaxableTrait' );
+
         $cc = ! empty( $_REQUEST['country'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['country'] ) ) : 'US';
         $cs = new Country_State();
         $countries = $cs->countries();
@@ -177,13 +213,15 @@ trait TaxableTrait {
      * @return void
      */
     public function wpuf_tax_rates( $args ) {
+        _deprecated_function( __METHOD__, '4.2.9', 'WeDevs\Wpuf\Pro\Traits\TaxableTrait' );
+
         $rates  = $this->wpuf_get_tax_rates();
         $cs     = new Country_State();
         $states = [];
 
         ob_start();
         ?>
-        <p><?php echo $args['desc']; ?></p>
+        <p><?php echo wp_kses_post( $args['desc'] ); ?></p>
         <table style="width:100%; table-layout:auto;" id="wpuf_tax_rates" class="wp-list-table widefat">
             <thead>
             <tr>
@@ -200,16 +238,29 @@ trait TaxableTrait {
                             <?php
                             $selected = isset( $rate['country'] ) ? $rate['country'] : '';
 
-                            echo wpuf_select(
+                            echo wp_kses( wpuf_select(
+                                    [
+                                        'options'          => $cs->countries(),
+                                        'name'             => 'wpuf_tax_rates[' . $key . '][country]',
+                                        'selected'         => $selected,
+                                        'show_option_all'  => false,
+                                        'show_option_none' => false,
+                                        'class'            => 'wpuf-tax-country',
+                                        'chosen'           => false,
+                                        'placeholder'      => __( 'Choose a country', 'wp-user-frontend' ),
+                                    ]
+                                ),
                                 [
-                                    'options'          => $cs->countries(),
-                                    'name'             => 'wpuf_tax_rates[' . $key . '][country]',
-                                    'selected'         => $selected,
-                                    'show_option_all'  => false,
-                                    'show_option_none' => false,
-                                    'class'            => 'wpuf-tax-country',
-                                    'chosen'           => false,
-                                    'placeholder'      => __( 'Choose a country', 'wp-user-frontend' ),
+                                    'select' => [
+                                        'class'            => [],
+                                        'name'             => [],
+                                        'data-placeholder' => [],
+                                    ],
+                                    'option' => [
+                                        'value'    => [],
+                                        'class'    => [],
+                                        'selected' => []
+                                    ],
                                 ]
                             );
                             ?>
@@ -222,7 +273,7 @@ trait TaxableTrait {
                             }
                             $rate['state'] = isset( $rate['state'] ) ? $rate['state'] : '';
                             if ( ! empty( $states ) ) {
-                                echo wpuf_select(
+                                echo wp_kses( wpuf_select(
                                     [
                                         'options'          => $states,
                                         'name'             => 'wpuf_tax_rates[' . $key . '][state]',
@@ -233,19 +284,42 @@ trait TaxableTrait {
                                         'chosen'           => false,
                                         'placeholder'      => __( 'Choose a state', 'wp-user-frontend' ),
                                     ]
-                                );
+                                ),
+                                [
+                                    'select' => [
+                                        'class'            => [],
+                                        'name'             => [],
+                                        'data-placeholder' => [],
+                                    ],
+                                    'option' => [
+                                        'value'    => [],
+                                        'class'    => [],
+                                        'selected' => []
+                                    ],
+                                ]
+                            );
                             } else {
-                                echo wpuf_text(
+                                echo wp_kses( wpuf_text(
                                     [
                                         'name'  => 'wpuf_tax_rates[0][state]',
                                         $rate['state'],
                                         'value' => ! empty( $rate['state'] ) ? $rate['state'] : '',
                                     ]
-                                );
+                                ),
+                                [
+                                    'text' => [
+                                        'class' => [],
+                                    ],
+                                    'value' => [
+                                        'value' => [],
+                                        'class' => []
+                                    ],
+                                ]
+                            );
                             }
                             ?>
                         </td>
-                        <td style="width:20%" class="wpuf_tax_rate"><input type="number" class="small-text" step="0.0001" min="0.0" max="99" name="wpuf_tax_rates[<?php echo $key; ?>][rate]" value="<?php echo esc_html( ! empty( $rate['rate'] ) ? $rate['rate'] : 0 ); ?>"/></td>
+                        <td style="width:20%" class="wpuf_tax_rate"><input type="number" class="small-text" step="0.0001" min="0.0" max="99" name="wpuf_tax_rates[<?php echo esc_attr( $key ); ?>][rate]" value="<?php echo esc_html( ! empty( $rate['rate'] ) ? $rate['rate'] : 0 ); ?>"/></td>
                         <td style="width:10%"><span class="wpuf_remove_tax_rate button-secondary"><?php esc_html_e( 'Remove Rate', 'wp-user-frontend' ); ?></span></td>
                     </tr>
                 <?php endforeach; ?>
@@ -254,27 +328,50 @@ trait TaxableTrait {
                     <td class="wpuf_tax_country">
                         <?php
                         $selected = ! empty( $rate['country'] ) ? $cs->getCountry( $rate['country'] ) : '';
-                        echo wpuf_select(
+                        echo wp_kses( wpuf_select(
+                                [
+                                    'options'          => $cs->countries(),
+                                    'name'             => 'wpuf_tax_rates[0][country]',
+                                    'selected'         => $selected,
+                                    'show_option_all'  => false,
+                                    'show_option_none' => false,
+                                    'class'            => 'wpuf-tax-country',
+                                    'chosen'           => false,
+                                    'placeholder'      => __( 'Choose a country', 'wp-user-frontend' ),
+                                ]
+                            ),
                             [
-                                'options'          => $cs->countries(),
-                                'name'             => 'wpuf_tax_rates[0][country]',
-                                'selected'         => $selected,
-                                'show_option_all'  => false,
-                                'show_option_none' => false,
-                                'class'            => 'wpuf-tax-country',
-                                'chosen'           => false,
-                                'placeholder'      => __( 'Choose a country', 'wp-user-frontend' ),
+                                'select' => [
+                                    'class'            => [],
+                                    'name'             => [],
+                                    'data-placeholder' => [],
+                                ],
+                                'option' => [
+                                    'value'    => [],
+                                    'class'    => [],
+                                    'selected' => []
+                                ],
                             ]
                         );
                         ?>
                     </td>
                     <td class="wpuf_tax_state">
                         <?php
-                        echo wpuf_text(
+                        echo wp_kses( wpuf_text(
                             [
                                 'name' => 'wpuf_tax_rates[0][state]',
                             ]
-                        );
+                        ),
+                        [
+                            'text' => [
+                                'class' => [],
+                            ],
+                            'value' => [
+                                'value' => [],
+                                'class' => []
+                            ],
+                        ]
+                    );
                         ?>
                     </td>
                     <td class="wpuf_tax_rate"><input type="number" class="small-text" step="0.0001" min="0.0" name="wpuf_tax_rates[0][rate]" value=""/></td>
@@ -286,7 +383,7 @@ trait TaxableTrait {
             <span class="button-secondary" id="wpuf_add_tax_rate"><?php esc_attr_e( 'Add Tax Rate', 'wp-user-frontend' ); ?></span>
         </p>
         <?php
-        echo ob_get_clean();
+        echo ob_get_clean(); // @codingStandardsIgnoreLine
     }
 
     /**
@@ -298,6 +395,8 @@ trait TaxableTrait {
      * @return string
      */
     function wpuf_current_tax_rate() {
+        _deprecated_function( __METHOD__, '4.2.9', 'WeDevs\Wpuf\Pro\Traits\TaxableTrait' );
+
         $tax_amount = 0;
 
         if ( ! $this->wpuf_tax_enabled() ) {
@@ -370,6 +469,8 @@ trait TaxableTrait {
      * @return string
      */
     function wpuf_tax_rate_country_state( $country, $state ) {
+        _deprecated_function( __METHOD__, '4.2.9', 'WeDevs\Wpuf\Pro\Traits\TaxableTrait' );
+
         $tax_amount = 0;
 
         $rates = $this->wpuf_get_tax_rates();
@@ -410,6 +511,8 @@ trait TaxableTrait {
      * @return string
      */
     function wpuf_amount_with_tax( $billing_amount ) {
+        _deprecated_function( __METHOD__, '4.2.9', 'WeDevs\Wpuf\Pro\Traits\TaxableTrait' );
+
         global $current_user;
 
         $tax_enabled = $this->wpuf_tax_enabled();
@@ -430,6 +533,8 @@ trait TaxableTrait {
      * @return void|bool
      */
     function wpuf_calculate_taxes( $post_data ) {
+        _deprecated_function( __METHOD__, '4.2.9', 'WeDevs\Wpuf\Pro\Traits\TaxableTrait' );
+
         if ( ! $this->wpuf_tax_enabled() ) {
             return false;
         }
@@ -472,7 +577,7 @@ trait TaxableTrait {
             'cost'   => html_entity_decode( $billing_amount, ENT_COMPAT, 'UTF-8' ),
         ];
 
-        echo json_encode( $response );
+        echo wp_json_encode( $response );
         die();
     }
 
@@ -484,6 +589,8 @@ trait TaxableTrait {
      * @return void
      */
     function wpuf_save_tax_options() {
+        _deprecated_function( __METHOD__, '4.2.9', 'WeDevs\Wpuf\Pro\Traits\TaxableTrait' );
+
         if ( isset( $_REQUEST['option_page'] ) && $_REQUEST['option_page'] === 'wpuf_payment_tax' ) {
             if ( ! is_admin() ) {
                 return;
@@ -498,10 +605,12 @@ trait TaxableTrait {
     }
 
     function wpuf_render_tax_field() {
+        _deprecated_function( __METHOD__, '4.2.9', 'WeDevs\Wpuf\Pro\Traits\TaxableTrait' );
+
         $tax_rate = $this->wpuf_current_tax_rate() . '%';
         if ( $this->wpuf_tax_enabled() ) {
             ?>
-            <div><?php esc_attr_e( 'Tax', 'wp-user-frontend' ); ?>: <strong><span id="wpuf_pay_page_tax"><?php echo $tax_rate; ?></strong></span></div>
+            <div><?php esc_attr_e( 'Tax', 'wp-user-frontend' ); ?>: <strong><span id="wpuf_pay_page_tax"><?php echo esc_html( $tax_rate ); ?></strong></span></div>
             <?php
         }
     }
@@ -514,6 +623,8 @@ trait TaxableTrait {
      * @return void
      */
     function wpuf_tax_get_states_field() {
+        _deprecated_function( __METHOD__, '4.2.9', 'WeDevs\Wpuf\Pro\Traits\TaxableTrait' );
+
         $cs        = new Country_State();
         $countries = $cs->countries();
         $country   = isset( $_REQUEST['country'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['country'] ) ) : '';
@@ -535,7 +646,7 @@ trait TaxableTrait {
             $response = 'nostates';
         }
 
-        echo $response;
+        echo $response; // phpcs:ignore
 
         wp_die();
     }

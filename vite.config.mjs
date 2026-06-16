@@ -1,50 +1,45 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import { createRequire } from 'module';
 
-const input = [
-    './assets/js/subscriptions.js',
-    './src/js/transactions.js',
-];
+const require = createRequire(import.meta.url);
 
-const adminAssets = [
-    'subscriptions.css',
-    'transactions.css',
-];
+const entries = {
+    'subscriptions': './assets/js/subscriptions.js',
+    'frontend-subscriptions': './assets/js/frontend-subscriptions.js', 
+    'forms-list': './assets/js/forms-list.js',
+    'account': './assets/js/account.js',
+    'ai-form-builder': './assets/js/ai-form-builder.js',
+    'transactions': './src/js/transactions.js',
+};
 
-export default defineConfig({
-    plugins: [
-        vue({
-            template: {
-                compilerOptions: {
-                    // This is needed if your Vue components are inside PHP files
-                    isCustomElement: (tag) => tag.includes('-')
-                }
-            }
-        })
-    ],
-    build: {
-        minify: false,
-        sourcemap: true, // Enable source maps for debugging
-        rollupOptions: {
-            input: input,
-            output: {
-                entryFileNames: 'js/[name].js',
-                assetFileNames: (assetInfo) => {
-                    const info = assetInfo.name.split('.');
-                    const extType = info[info.length - 1];
-                    if (/\.(css)$/.test(assetInfo.name)) {
-                        if (adminAssets.includes(assetInfo.name)) {
-                            return `css/admin/[name].${extType}`;
+export default defineConfig(() => {
+    const entryPoint = process.env.ENTRY;
+    const input = entryPoint ? { [entryPoint]: entries[entryPoint] } : entries;
+
+    return {
+        plugins: [vue()],
+        build: {
+            rollupOptions: {
+                input,
+                output: {
+                    entryFileNames: 'js/[name].min.js',
+                    assetFileNames: (assetInfo) => {
+                        if (assetInfo.name.endsWith('.css')) {
+                            return 'css/[name].min.css';
                         }
-                        return `css/[name].${extType}`;
-                    }
-                }
+                        return 'assets/[name]-[hash][extname]';
+                    },
+                    format: 'iife',
+                    name: 'WPUF',
+                },
             },
+            outDir: './assets',
+            emptyOutDir: false,
+            sourcemap: true,
+            assetsInlineLimit: 0,
+            chunkSizeWarningLimit: 1000,
         },
-        outDir: './assets',
-        emptyOutDir: false
-    },
-    server: {
-        hmr: true, // Enable hot module replacement
-    },
+    }
 });
+

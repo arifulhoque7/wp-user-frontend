@@ -14,7 +14,7 @@ class Post_Form_Template_WooCommerce extends Form_Template {
         $this->enabled     = class_exists( 'WooCommerce' );
         $this->title       = __( 'WooCommerce Product', 'wp-user-frontend' );
         $this->description = __( 'Create a simple product form for WooCommerce.', 'wp-user-frontend' );
-        $this->image       = WPUF_ASSET_URI . '/images/templates/woocommerce.png';
+        $this->image       = WPUF_ASSET_URI . '/images/templates/woocommerce.svg';
         $this->form_fields = [
             [
                 'input_type'  => 'text',
@@ -29,6 +29,10 @@ class Post_Form_Template_WooCommerce extends Form_Template {
                 'default'     => '',
                 'size'        => '40',
                 'wpuf_cond'   => $this->conditionals,
+                'wpuf_visibility' => $this->get_default_visibility_prop(),
+                'restriction_to'   => 'max',
+                'restriction_type' => 'character',
+                'width'           => 'large',
             ],
             [
                 'input_type'          => 'textarea',
@@ -47,7 +51,11 @@ class Post_Form_Template_WooCommerce extends Form_Template {
                 'insert_image'        => 'yes',
                 'word_restriction'    => '',
                 'wpuf_cond'           => $this->conditionals,
+                'wpuf_visibility'     => $this->get_default_visibility_prop(),
+                'restriction_to'      => 'max',
+                'restriction_type'    => 'character',
                 'text_editor_control' => [],
+                'width'               => 'large',
             ],
             [
                 'input_type'          => 'textarea',
@@ -64,7 +72,11 @@ class Post_Form_Template_WooCommerce extends Form_Template {
                 'default'             => '',
                 'rich'                => 'no',
                 'wpuf_cond'           => $this->conditionals,
+                'wpuf_visibility'     => $this->get_default_visibility_prop(),
+                'restriction_to'      => 'max',
+                'restriction_type'    => 'character',
                 'text_editor_control' => [],
+                'width'               => 'large',
             ],
             [
                 'input_type'      => 'text',
@@ -82,6 +94,8 @@ class Post_Form_Template_WooCommerce extends Form_Template {
                 'min_value_field' => '0',
                 'max_value_field' => '',
                 'wpuf_cond'       => $this->conditionals,
+                'wpuf_visibility' => $this->get_default_visibility_prop(),
+                'width'           => 'large',
             ],
             [
                 'input_type'      => 'text',
@@ -99,6 +113,8 @@ class Post_Form_Template_WooCommerce extends Form_Template {
                 'min_value_field' => '0',
                 'max_value_field' => '',
                 'wpuf_cond'       => $this->conditionals,
+                'wpuf_visibility' => $this->get_default_visibility_prop(),
+                'width'           => 'large',
             ],
             [
                 'input_type'   => 'image_upload',
@@ -113,6 +129,8 @@ class Post_Form_Template_WooCommerce extends Form_Template {
                 'css'          => '',
                 'max_size'     => '1024',
                 'wpuf_cond'    => $this->conditionals,
+                'wpuf_visibility' => $this->get_default_visibility_prop(),
+                'width'           => 'large',
             ],
             [
                 'input_type'   => 'image_upload',
@@ -137,7 +155,7 @@ class Post_Form_Template_WooCommerce extends Form_Template {
                 'is_meta'    => 'yes',
                 'help'       => 'Choose where this product should be displayed in your catalog. The product will always be accessible directly.',
                 'css'        => '',
-                'first'      => ' - select -',
+                'first'      => ' - Select -',
                 'options'    => [
                     'visible' => 'Catalog/search',
                     'catalog' => 'Catalog',
@@ -145,6 +163,8 @@ class Post_Form_Template_WooCommerce extends Form_Template {
                     'hidden'  => 'Hidden',
                 ],
                 'wpuf_cond'  => $this->conditionals,
+                'wpuf_visibility' => $this->get_default_visibility_prop(),
+                'width'           => 'large',
             ],
             [
                 'input_type'          => 'textarea',
@@ -162,7 +182,11 @@ class Post_Form_Template_WooCommerce extends Form_Template {
                 'rich'                => 'no',
                 'word_restriction'    => '',
                 'wpuf_cond'           => $this->conditionals,
+                'wpuf_visibility'     => $this->get_default_visibility_prop(),
+                'restriction_to'      => 'max',
+                'restriction_type'    => 'character',
                 'text_editor_control' => [],
+                'width'               => 'large',
             ],
             [
                 'input_type' => 'checkbox',
@@ -177,14 +201,17 @@ class Post_Form_Template_WooCommerce extends Form_Template {
                     '_enable_reviews' => 'Enable reviews',
                 ],
                 'wpuf_cond'  => $this->conditionals,
+                'wpuf_visibility' => $this->get_default_visibility_prop(),
+                'width'           => 'large',
             ],
         ];
         $this->form_settings = [
             'post_type'        => 'product',
             'post_status'      => 'publish',
             'default_cat'      => '-1',
+            'post_permission'  => '-1',
             'guest_post'       => 'false',
-            'message_restrict' => 'This page is restricted. Please %login% / %register% to view this page.',
+            'message_restrict' => 'This page is restricted. Please {login} / {register} to view this page.',
             'redirect_to'      => 'post',
             'comment_status'   => 'open',
             'submit_text'      => 'Create Product',
@@ -279,8 +306,8 @@ Edit URL: {editlink}'
         $reviews = get_post_meta( $post_id, 'product_reviews', true );
         $status  = ! empty( $reviews ) ? 'open' : 'closed';
         // wp_update_post( array( 'ID' => $post_id, 'comment_status' => $status ) );
-        $comment_sql = "UPDATE {$wpdb->prefix}posts SET comment_status='{$status}' WHERE ID={$post_id} AND post_status='publish' AND post_type='product'";
-        $wpdb->get_results( $comment_sql );
+        //$comment_sql = "UPDATE {$wpdb->prefix}posts SET comment_status='{$status}' WHERE ID={$post_id} AND post_status='publish' AND post_type='product'";
+        $wpdb->get_results( $wpdb->prepare( "UPDATE {$wpdb->prefix}posts SET comment_status=%s WHERE ID=%d AND post_status='publish' AND post_type='product'", $status, $post_id ) );
     }
 
     /**

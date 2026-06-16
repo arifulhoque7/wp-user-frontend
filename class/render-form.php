@@ -32,7 +32,7 @@ class WPUF_Render_Form {
      * @param string $error
      */
     public function send_error( $error ) {
-        echo json_encode( [
+        echo wp_json_encode( [
             'success' => false,
             'error'   => $error,
         ] );
@@ -165,7 +165,7 @@ class WPUF_Render_Form {
 
         // try to add some random number in username
         // and may be we got our username
-        $username .= rand( 1, 199 );
+        $username .= wp_rand( 1, 199 );
 
         if ( !username_exists( $username ) ) {
             return $username;
@@ -228,10 +228,11 @@ class WPUF_Render_Form {
         foreach ( $meta_vars as $key => $value ) {
             $value_name = isset( $_POST[$value['name']] ) ? sanitize_text_field( wp_unslash( $_POST[$value['name']] ) ) : '';
             if ( isset( $_POST['wpuf_files'][$value['name']] ) ) {
-                $wpuf_files = isset( $_POST['wpuf_files'] ) ? sanitize_text_field( wp_unslash( $_POST['wpuf_files'][$value['name']] ) ) : [];
-            } else {
-                $wpuf_files = [];
-            }
+            $raw_files = wp_unslash( $_POST['wpuf_files'][$value['name']] );
+            $wpuf_files = absint( $raw_files );
+        } else {
+            $wpuf_files = [];
+        }
             switch ( $value['input_type'] ) {
 
                 // put files in a separate array, we'll process it later
@@ -398,7 +399,7 @@ class WPUF_Render_Form {
             wp_enqueue_style( 'wpuf-' . $layout );
         }
 
-        if ( !is_user_logged_in() && $form_settings['guest_post'] != 'true' ) {
+        if ( !is_user_logged_in() && ( isset( $form_settings['post_permission'] ) && 'guest_post' === $form_settings['post_permission'] ) ) {
             echo wp_kses_post( '<div class="wpuf-message">' . $form_settings['message_restrict'] . '</div>' );
 
             return;
@@ -407,6 +408,21 @@ class WPUF_Render_Form {
         if ( $form_vars ) {
             ?>
             <form class="wpuf-form-add wpuf-form-<?php echo esc_attr( $layout ); ?> <?php echo ( $layout == 'layout1' ) ? esc_attr( $theme_css ) : 'wpuf-style'; ?>" action="" method="post">
+
+                <?php
+                // Display form title if enabled
+                if ( isset( $form_settings['show_form_title'] ) && wpuf_is_checkbox_or_toggle_on( $form_settings['show_form_title'] ) ) {
+                    $form_title = get_the_title( $form_id );
+                    if ( ! empty( $form_title ) ) {
+                        echo '<h2 class="wpuf-form-title">' . esc_html( $form_title ) . '</h2>';
+                    }
+                }
+
+                // Display form description if set
+                if ( isset( $form_settings['form_description'] ) && ! empty( $form_settings['form_description'] ) ) {
+                    echo '<div class="wpuf-form-description">' . wp_kses_post( $form_settings['form_description'] ) . '</div>';
+                }
+                ?>
 
                 <ul class="wpuf-form form-label-<?php echo esc_attr( $label_position ); ?>">
 
@@ -417,7 +433,7 @@ class WPUF_Render_Form {
                         do_action( 'wpuf_edit_post_form_top', $form_id, $post_id, $form_settings );
                     }
 
-            if ( !is_user_logged_in() && $form_settings['guest_post'] == 'true' && $form_settings['guest_details'] == 'true' ) {
+            if ( !is_user_logged_in() && ( isset( $form_settings['post_permission'] ) && 'guest_post' === $form_settings['post_permission'] ) && wpuf_is_checkbox_or_toggle_on( $form_settings['guest_details'] ) ) {
                 $this->guest_fields( $form_settings );
             }
 
@@ -464,7 +480,7 @@ class WPUF_Render_Form {
             $cond_inputs['type']    = $form_field['input_type'];
             $cond_inputs['name']    = $form_field['name'];
             $cond_inputs['form_id'] = $form_id;
-            $condition              = json_encode( $cond_inputs );
+            $condition              = wp_json_encode( $cond_inputs );
         } else {
             $condition = '';
         }
@@ -472,13 +488,13 @@ class WPUF_Render_Form {
         //taxnomy name create unique
         if ( $form_field['input_type'] == 'taxonomy' ) {
             $cond_inputs['name'] = $form_field['name'] . '_' . $form_field['type'] . '_' . $form_field['id'];
-            $condition           = json_encode( $cond_inputs );
+            $condition           = wp_json_encode( $cond_inputs );
         }
 
         //for section break
         if ( $form_field['input_type'] == 'section_break' ) {
             $cond_inputs['name'] = $form_field['name'] . '_' . $form_field['id'];
-            $condition           = json_encode( $cond_inputs );
+            $condition           = wp_json_encode( $cond_inputs );
         } ?>
         <script type="text/javascript">
             wpuf_conditional_items.push(<?php echo esc_html( $condition ); ?>);
@@ -757,7 +773,7 @@ class WPUF_Render_Form {
                 <input type="hidden" name="wpuf_form_status" value="new">
             <?php } ?>
 
-            <?php if ( isset( $form_settings['draft_post'] ) && $form_settings['draft_post'] == 'true' ) { ?>
+            <?php if ( isset( $form_settings['draft_post'] ) && wpuf_is_checkbox_or_toggle_on( $form_settings['draft_post'] ) ) { ?>
                 <a href="#" class="btn" id="wpuf-post-draft"><?php esc_html_e( 'Save Draft', 'wp-user-frontend' ); ?></a>
             <?php } ?>
         </li>
@@ -773,6 +789,8 @@ class WPUF_Render_Form {
         $form_id = isset( $_GET['form_id'] ) ? intval( wp_unslash( $_GET['form_id'] ) ) : 0;
 
         if ( $form_id ) {
+            wp_enqueue_script( 'jquery' );
+            wp_enqueue_style( 'wpuf-frontend-forms' );
             ?>
 
             <!doctype html>
@@ -780,7 +798,6 @@ class WPUF_Render_Form {
                 <head>
                     <meta charset="UTF-8">
                     <title>Form Preview</title>
-                    <link rel="stylesheet" href="<?php echo esc_url( plugins_url( 'assets/css/frontend-forms.css', __DIR__ ) ); ?>">
 
                     <style type="text/css">
                         body {
@@ -801,7 +818,6 @@ class WPUF_Render_Form {
                         }
                     </style>
 
-                    <script type="text/javascript" src="<?php echo esc_url( includes_url( 'js/jquery/jquery.js' ) ); ?>"></script>
                 </head>
                 <body>
                     <div class="container">
@@ -989,7 +1005,7 @@ class WPUF_Render_Form {
             <script type="text/javascript">
                 ;(function($) {
                     $(document).ready( function(){
-                        $('li.tags input[name=tags]').suggest( wpuf_frontend.ajaxurl + '<?php echo $query_string; ?>', { delay: 500, minchars: 2, multiple: true, multipleSep: ', ' } );
+                        $('li.tags input[name=tags]').suggest( wpuf_frontend.ajaxurl + '<?php echo esc_js( $query_string ); ?>', { delay: 500, minchars: 2, multiple: true, multipleSep: ', ' } );
                     });
                 })(jQuery);
             </script>
@@ -1442,7 +1458,7 @@ class WPUF_Render_Form {
             //'term_id'      => $selected
         ];
         $attr = apply_filters( 'wpuf_taxonomy_checklist_args', $attr ); ?>
-        <span data-taxonomy=<?php echo esc_attr( json_encode( $attr ) ); ?>></span>
+        <span data-taxonomy=<?php echo esc_attr( wp_json_encode( $attr ) ); ?>></span>
         <?php
     }
 
@@ -1592,7 +1608,7 @@ class WPUF_Render_Form {
                         <script type="text/javascript">
                             ;(function($) {
                                 $(document).ready( function(){
-                                        $('#<?php echo esc_attr( $attr['name'] ); ?>').suggest( wpuf_frontend.ajaxurl + '<?php echo $query_string; ?>', { delay: 500, minchars: 2, multiple: true, multipleSep: ', ' } );
+                                        $('#<?php echo esc_attr( $attr['name'] ); ?>').suggest( wpuf_frontend.ajaxurl + '<?php echo esc_js( $query_string ); ?>', { delay: 500, minchars: 2, multiple: true, multipleSep: ', ' } );
                                 });
                             })(jQuery);
                         </script>
@@ -1746,7 +1762,7 @@ class WPUF_Render_Form {
         }
 
         if ( $enable_invisible_recaptcha ) { ?>
-            <script src="https://www.google.com/recaptcha/api.js?onload=wpufreCaptchaLoaded&render=explicit&hl=en" async defer></script>
+            <?php wp_enqueue_script( 'wpuf-recaptcha-invisible', 'https://www.google.com/recaptcha/api.js?onload=wpufreCaptchaLoaded&render=explicit&hl=en', array(), null, true ); ?>
             <script>
                 jQuery(document).ready(function($) {
                     jQuery('[name="submit"]').removeClass('wpuf-submit-button').addClass('g-recaptcha').attr('data-sitekey', '<?php echo esc_html( wpuf_get_option( 'recaptcha_public', 'wpuf_general' ) ); ?>');

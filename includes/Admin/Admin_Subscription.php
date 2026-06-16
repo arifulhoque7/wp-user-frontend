@@ -38,6 +38,8 @@ class Admin_Subscription {
         add_action( 'wpuf_load_subscription_page', [ $this, 'remove_notices' ] );
         add_action( 'wpuf_load_subscription_page', [ $this, 'enqueue_admin_scripts' ] );
         add_action( 'wpuf_load_subscription_page', [ $this, 'modify_admin_footer_text' ] );
+
+        add_action( 'admin_init', [ $this, 'set_default_sort_order_for_existing_subscriptions' ] );
     }
 
     /**
@@ -66,17 +68,26 @@ class Admin_Subscription {
 
             if ( $post_type_object ) {
                 $additional_options['additional'][ $key ] = [
-                    'id'          => $key,
-                    'name'        => $key,
-                    'db_key'      => $key,
-                    'db_type'     => 'meta',
-                    'type'        => 'input-number',
-                    'label'       => sprintf( 'Number of %s', esc_html( $post_type_object->label ) ),
-                    'tooltip'     => sprintf(
-                        'Set the maximum number of %s users can create within their subscription period. Enter -1 for unlimited',
+                    'id'            => $key,
+                    'name'          => $key,
+                    'db_key'        => 'additional_cpt_options',
+                    'db_type'       => 'meta_serialized',
+                    'serialize_key' => $key,
+                    'type'          => 'input-number',
+                    'label'         => sprintf(
+                        // translators: %s: post type label
+                        __( 'Number of %s', 'wp-user-frontend' ),
+                        esc_html( $post_type_object->label )
+                    ),
+                    'tooltip' => sprintf(
+                        // translators: %s: post type label
+                        __(
+                            'Set the maximum number of %s users can create within their subscription period. Enter -1 for unlimited',
+                            'wp-user-frontend'
+                        ),
                         esc_html( $key )
                     ),
-                    'default'     => '-1',
+                    'default'       => '-1',
                 ];
             }
         }
@@ -111,6 +122,7 @@ class Admin_Subscription {
                     'https://wedevs.com/wp-user-frontend-pro/pricing/?utm_source=wpuf-subscription'
                 ),
                 'nonce'           => wp_create_nonce( 'wp_rest' ),
+                'rest_url'        => esc_url_raw( rest_url() ),
                 'sections'        => $this->get_sections(),
                 'subSections'     => $this->get_sub_sections(),
                 'fields'          => $this->get_fields(),
@@ -153,7 +165,10 @@ class Admin_Subscription {
             2  => __( 'Custom field updated.', 'wp-user-frontend' ),
             3  => __( 'Custom field deleted.', 'wp-user-frontend' ),
             4  => __( 'Subscription pack updated.', 'wp-user-frontend' ),
-            5  => isset( $_GET['revision'] ) ? sprintf( __( 'Subscription pack restored to revision from %s', 'wp-user-frontend' ), wp_post_revision_title( (int) $_GET['revision'], false ) ) : false,
+            5  => isset( $_GET['revision'] ) ? sprintf(
+                // translators: %s is Revision
+                __( 'Subscription pack restored to revision from %s', 'wp-user-frontend' ), wp_post_revision_title( (int) $_GET['revision'],
+                false ) ) : false,
             6  => __( 'Subscription pack published.', 'wp-user-frontend' ),
             7  => __( 'Subscription pack saved.', 'wp-user-frontend' ),
             8  => __( 'Subscription pack submitted.', 'wp-user-frontend' ),
@@ -239,7 +254,7 @@ class Admin_Subscription {
             }
 
             $user_info      = get_userdata( $user_id );
-            $cost           = $pack->meta_value['billing_amount'];
+            $cost           = isset( $pack->meta_value['billing_amount'] ) ? (float) $pack->meta_value['billing_amount'] : 0;
             $billing_amount = apply_filters( 'wpuf_payment_amount', $cost );
             $tax_amount     = $billing_amount - $cost;
 
@@ -533,7 +548,7 @@ class Admin_Subscription {
                                 ?>
                                 <th class="wpuf-post-exp-time"> <?php esc_html_e( 'Post Expiration Time', 'wp-user-frontend' ); ?> </th>
                                 <td class="wpuf-post-exp-time">
-                                    <input type="number" name="post_expiration_settings[expiration_time_value]" id="wpuf-expiration_time_value" value="<?php echo $time_value; ?>" id="wpuf-expiration_time_value" min="1">
+                                    <input type="number" name="post_expiration_settings[expiration_time_value]" id="wpuf-expiration_time_value" value="<?php echo esc_attr( $time_value ); ?>" id="wpuf-expiration_time_value" min="1">
                                     <select name="post_expiration_settings[expiration_time_type]" id="wpuf-expiration_time_type">
                                         <?php
                                         foreach ( $timeType_array as $each_time_type ) {
@@ -588,7 +603,7 @@ class Admin_Subscription {
                                             <?php
                                             printf(
                                             // translators: %1$s: {post_author}, %2$s: {post_url}, %3$s: {blogname}, %4$s: {post_title}, %5$s: {post_status}
-                                                __( 'You may use: %1$s %2$s %3$s %4$s %5$s', 'wp-user-frontend' ),
+                                            esc_html__( 'You may use: %1$s %2$s %3$s %4$s %5$s', 'wp-user-frontend' ),
                                                 '{post_author}',
                                                 '{post_url}',
                                                 '{blogname}',
@@ -718,8 +733,12 @@ class Admin_Subscription {
                 $recurring_pay  = isset( $pack->meta_value['recurring_pay'] ) && wpuf_is_option_on( $pack->meta_value['recurring_pay'] );
 
                 if ( $billing_amount && $recurring_pay ) {
-                    $recurring_des = sprintf( __( 'For each %1$s %2$s', 'wp-user-frontend' ), $pack->meta_value['billing_cycle_number'], $pack->meta_value['cycle_period'], $pack->meta_value['trial_duration_type'] );
-                    $recurring_des .= ! empty( $pack->meta_value['billing_limit'] ) ? sprintf( __( ', for %s installments', 'wp-user-frontend' ), $pack->meta_value['billing_limit'] ) : '';
+                    $recurring_des = sprintf(
+                        // translators: %1$s and %2$s are Billing cycle number and Billing cycle period
+                        __( 'For each %1$s %2$s', 'wp-user-frontend' ), $pack->meta_value['billing_cycle_number'], $pack->meta_value['cycle_period'], $pack->meta_value['trial_duration_type'] );
+                    $recurring_des .= ! empty( $pack->meta_value['billing_limit'] ) ? sprintf(
+                        // translators: %s is Billing limit
+                        __( ', for %s installments', 'wp-user-frontend' ), $pack->meta_value['billing_limit'] ) : '';
                     $recurring_des = $recurring_des;
                 } else {
                     $recurring_des = '';
@@ -809,13 +828,10 @@ class Admin_Subscription {
                             $_post_expiration_time = explode( ' ', isset( $user_sub['_post_expiration_time'] ) ? $user_sub['_post_expiration_time'] : '' );
                             $time_value            = isset( $_post_expiration_time[0] ) && ! empty( $_post_expiration_time[0] ) ? $_post_expiration_time[0] : '1';
                             $time_type             = isset( $_post_expiration_time[1] ) && ! empty( $_post_expiration_time[1] ) ? $_post_expiration_time[1] : 'day';
-
-                            error_log( print_r( $_post_expiration_time, true ) );
-                            error_log( print_r( $time_type, true ) );
                             ?>
                             <tr>
                                 <th><label><?php esc_html_e( 'Post Expiration Enabled', 'wp-user-frontend' ); ?></label></th>
-                                <td><?php $is_post_exp_selected ? _e( 'Yes', 'wp-user-frontend' ) : _e( 'No', 'wp-user-frontend' ); ?></td>
+                                <td><?php $is_post_exp_selected ? esc_html_e( 'Yes', 'wp-user-frontend' ) : esc_html_e( 'No', 'wp-user-frontend' ); ?></td>
                             </tr>
                             <tr class="wpuf-post-exp-time">
                                 <?php
@@ -1005,7 +1021,9 @@ class Admin_Subscription {
         <div class="wpuf-footer-help">
             <span class="wpuf-footer-help-content">
                 <span class="dashicons dashicons-editor-help"></span>
-                <?php printf( wp_kses_post( __( 'Learn more about <a href="%s" target="_blank">Subscription</a>', 'wp-user-frontend' ) ), 'https://wedevs.com/docs/wp-user-frontend-pro/subscription-payment/?utm_source=wpuf-footer-help&utm_medium=text-link&utm_campaign=learn-more-subscription' ); ?>
+                <?php printf(
+                    // translators: %s is a link about subscription payment
+                    wp_kses_post( __( 'Learn more about <a href="%s" target="_blank">Subscription</a>', 'wp-user-frontend' ) ), 'https://wedevs.com/docs/wp-user-frontend-pro/subscription-payment/?utm_source=wpuf-footer-help&utm_medium=text-link&utm_campaign=learn-more-subscription' ); ?>
             </span>
         </div>
 
@@ -1170,6 +1188,22 @@ class Admin_Subscription {
                         'placeholder' => __( 'Enter plan slug', 'wp-user-frontend' ),
                         'default'     => '',
                     ],
+                    'sort_order'   => [
+                        'id'          => 'sort-order',
+                        'name'        => 'sort_order',
+                        'db_key'      => '_sort_order',
+                        'db_type'     => 'meta',
+                        'type'        => 'input-number',
+                        'label'       => __( 'Sort Order', 'wp-user-frontend' ),
+                        'tooltip'     => __( 'Plans with lower numbers appear first on the frontend, keep default value 1. Cannot keep it empty.', 'wp-user-frontend' ),
+                        'placeholder' => __( 'Enter sort order', 'wp-user-frontend' ),
+                        'is_required' => true,
+                        'default'     => '1',
+                        'validation'  => [
+                            'required' => true,
+                            'min'      => 1,
+                        ],
+                    ],
                     'publish_time' => [
                         'id'          => 'publish-time',
                         'name'        => 'publish-time',
@@ -1305,6 +1339,7 @@ class Admin_Subscription {
                             'If enabled, number of posts will be restored if the post is deleted.', 'wp-user-frontend'
                         ),
                         'default' => false,
+                        'is_pro'  => true,
                     ],
                 ],
             ]
@@ -1331,8 +1366,8 @@ class Admin_Subscription {
                         'type'    => 'inline',
                         'fields'  => [
                             'subs_expiration_value' => [
-                                'id'      => 'subs-expiration-value',
-                                'name'    => 'subs-expiration-value',
+                                'id'      => 'wpuf-expiration-number',
+                                'name'    => 'wpuf-expiration-number',
                                 'type'    => 'input-number',
                                 'db_key'  => '_expiration_number',
                                 'db_type' => 'meta',
@@ -1465,20 +1500,6 @@ class Admin_Subscription {
                         ),
                         'default'       => '-1',
                     ],
-                    'number_of_global_styles'  => [
-                        'id'            => 'number-of-global-styles',
-                        'name'          => 'number-of-global-styles',
-                        'db_key'        => '_post_type_name',
-                        'db_type'       => 'meta_serialized',
-                        'serialize_key' => 'wp_global_styles',
-                        'type'          => 'input-number',
-                        'label'         => __( 'Maximum Number of Global Styles', 'wp-user-frontend' ),
-                        'tooltip'       => __(
-                            'Set maximum number of global styles that users can use within the subscription period. Enter -1 for unlimited',
-                            'wp-user-frontend'
-                        ),
-                        'default'       => '-1',
-                    ],
                     'number_of_menus'          => [
                         'id'            => 'number-of-menus',
                         'name'          => 'number-of-menus',
@@ -1545,27 +1566,28 @@ class Admin_Subscription {
     public function get_dependent_fields() {
         $fields = [
             'post_expiration'  => [
-                'expiration_time'    => 'hide',
-                'post_status'        => 'hide',
-                'send_mail'          => 'hide',
-                'expiration_message' => 'hide',
+                'expiration_time'    => true,
+                'post_status'        => true,
+                'send_mail'          => true,
+                'expiration_message' => true,
             ],
             'send_mail'        => [
-                'expiration_message' => 'hide',
+                'expiration_message' => true,
             ],
             'enable_recurring' => [
-                'payment_cycle' => 'hide',
-                'stop_cycle'    => 'hide',
-                'billing_limit' => 'hide',
-                'trial'         => 'hide',
-                'trial_period'  => 'hide',
-                'expire_in'     => 'show',
+                'payment_cycle'       => true,
+                'stop_cycle'          => true,
+                'billing_limit'       => true,
+                'trial'               => true,
+                'trial_period'        => true,
+                'billing_cycle'       => true,
+                'expire_in'           => false,
             ],
             'stop_cycle'       => [
-                'billing_limit' => 'hide',
+                'billing_limit' => true,
             ],
             'trial'            => [
-                'trial_period' => 'hide',
+                'trial_period' => true,
             ],
         ];
 
@@ -1600,5 +1622,50 @@ class Admin_Subscription {
         );
 
         return $footer_text;
+    }
+
+    /**
+     * Set default sort order for existing subscriptions that don't have it
+     *
+     * @since 4.1.7
+     */
+    public function set_default_sort_order_for_existing_subscriptions() {
+        // Check if we've already run this migration
+        if ( get_transient( 'wpuf_sort_order_migration_done' ) ) {
+            return;
+        }
+
+        $args = [
+            'post_type'      => 'wpuf_subscription',
+            'posts_per_page' => -1,
+            'post_status'    => ['publish', 'draft', 'private'],
+            'meta_query'     => [
+                'relation' => 'OR',
+                [
+                    'key'     => '_sort_order',
+                    'compare' => 'NOT EXISTS',
+                ],
+                [
+                    'key'     => '_sort_order',
+                    'value'   => '',
+                    'compare' => '=',
+                ],
+                [
+                    'key'     => '_sort_order',
+                    'value'   => 0,
+                    'compare' => '<=',
+                ],
+            ],
+        ];
+
+        $subscriptions = get_posts( $args );
+
+        if ( $subscriptions ) {
+            foreach ( $subscriptions as $subscription ) {
+                update_post_meta( $subscription->ID, '_sort_order', 1 );
+            }
+        }
+
+        set_transient( 'wpuf_sort_order_migration_done', true, WEEK_IN_SECONDS );
     }
 }

@@ -10,7 +10,7 @@ class Form_Field_Checkbox extends Field_Contract {
     public function __construct() {
         $this->name       = __( 'Checkbox', 'wp-user-frontend' );
         $this->input_type = 'checkbox_field';
-        $this->icon       = 'check-square-o';
+        $this->icon       = 'check-circle';
     }
 
     /**
@@ -24,15 +24,16 @@ class Form_Field_Checkbox extends Field_Contract {
      * @return void
      */
     public function render( $field_settings, $form_id, $type = 'post', $post_id = null ) {
-        $selected = !empty( $field_settings['selected'] ) ? $field_settings['selected'] : [];
-
         if ( isset( $post_id ) && $post_id != '0'  ) {
             if ( $this->is_meta( $field_settings ) ) {
                 if ( $value = $this->get_meta( $post_id, $field_settings['name'], $type, true ) ) {
                     $selected = $this->get_formatted_value( $value );
                 } else {
+                    $selected = [];
                 }
             }
+        } else {
+            $selected = ! empty( $field_settings['selected'] ) ? $field_settings['selected'] : [];
         }
         $this->field_print_label( $field_settings, $form_id ); ?>
 
@@ -46,6 +47,7 @@ class Form_Field_Checkbox extends Field_Contract {
                         <input
                             type="checkbox"
                             class="<?php echo esc_attr( sprintf( 'wpuf_%s_%d', $field_settings['name'], $form_id ) ); ?>"
+                            id="<?php echo esc_attr( $field_settings['name'] ); ?>"
                             name="<?php echo esc_attr( $field_settings['name'] ); ?>[]"
                             value="<?php echo esc_attr( $value ); ?>"<?php echo in_array( $value, $selected ) ? ' checked="checked"' : ''; ?>
                             data-required="<?php echo esc_attr( $field_settings['required'] ); ?>"
@@ -128,6 +130,7 @@ class Form_Field_Checkbox extends Field_Contract {
         check_ajax_referer( 'wpuf_form_add' );
 
         $field_name = isset( $_POST[$field['name']] ) ? array_map( 'sanitize_text_field', wp_unslash( $_POST[$field['name']] ) ) : [];
+        $field_name = array_map( 'sanitize_text_field', array_map( 'strip_shortcodes', $field_name ) );
 
         $entry_value  = ( is_array( $field_name ) && $field_name ) ? $field_name : [];
 
@@ -189,8 +192,10 @@ class Form_Field_Checkbox extends Field_Contract {
             return;
         }
 
+        $data = is_array( $data ) ? array_pop( $data ) : $data;
+        // check again if there is any nested data
         $data     = is_array( $data ) ? array_pop( $data ) : $data;
-        $data     = explode( '|' , $data );
+        $data     = explode( '|', $data );
         $selected = [];
 
         foreach ( $data as $item ) {

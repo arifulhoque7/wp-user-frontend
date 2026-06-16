@@ -97,6 +97,23 @@ class Subscription extends WP_REST_Controller {
                 ],
             ]
         );
+
+        // Register subscription settings endpoints
+        register_rest_route(
+            $this->namespace,
+            '/subscription-settings', [
+                [
+                    'methods'             => WP_REST_Server::READABLE,
+                    'callback'            => [ $this, 'get_subscription_settings' ],
+                    'permission_callback' => [ $this, 'permission_check' ],
+                ],
+                [
+                    'methods'             => WP_REST_Server::CREATABLE,
+                    'callback'            => [ $this, 'update_subscription_settings' ],
+                    'permission_callback' => [ $this, 'permission_check' ],
+                ],
+            ]
+        );
     }
 
     /**
@@ -419,6 +436,9 @@ class Subscription extends WP_REST_Controller {
         $post_type_name         = ! empty( $subscription['meta_value']['_post_type_name'] ) ? array_map(
             'sanitize_text_field', $subscription['meta_value']['_post_type_name']
         ) : '';
+        $additional_cpt_options = ! empty( $subscription['meta_value']['additional_cpt_options'] ) ? array_map(
+            'sanitize_text_field', $subscription['meta_value']['additional_cpt_options']
+        ) : '';
         $enable_post_expir      = ! empty( $subscription['meta_value']['_enable_post_expiration'] ) ? sanitize_text_field(
             $subscription['meta_value']['_enable_post_expiration']
         ) : 'no';
@@ -439,6 +459,19 @@ class Subscription extends WP_REST_Controller {
         $remove_feature_item    = ! empty( $subscription['meta_value']['_remove_feature_item'] ) ? sanitize_text_field(
             $subscription['meta_value']['_remove_feature_item']
         ) : '';
+        $sort_order = ! empty( $subscription['meta_value']['_sort_order'] ) ? (int) $subscription['meta_value']['_sort_order'] : 1;
+        $postnum_rollback_on_delete = ! empty( $subscription['meta_value']['postnum_rollback_on_delete'] ) ? sanitize_text_field(
+            $subscription['meta_value']['postnum_rollback_on_delete']
+        ) : '';
+
+        // Process view restriction data
+        $view_allowed_term_ids = ! empty( $subscription['meta_value']['_sub_view_allowed_term_ids'] ) 
+            ? $subscription['meta_value']['_sub_view_allowed_term_ids'] 
+            : array();
+        
+        if ( $sort_order < 1 ) {
+            $sort_order = 1;
+        }
 
         if ( $recurring_pay !== 'no' && empty( $cycle_period ) ) {
             $cycle_period = 'day';
@@ -454,7 +487,7 @@ class Subscription extends WP_REST_Controller {
                 'post_content'      => $post_content,
                 'post_title'        => $name,
                 'post_status'       => $status,
-                'post_modified'     => $current_time,
+                'post_modified'     => $current_time->format( 'Y-m-d H:i:s' ),
                 'post_modified_gmt' => get_gmt_from_date( $current_time->format( 'Y-m-d H:i:s' ) ),
             ];
 
@@ -493,6 +526,7 @@ class Subscription extends WP_REST_Controller {
             update_post_meta( $id, '_trial_duration', $trial_duration );
             update_post_meta( $id, '_trial_duration_type', $trial_duration_type );
             update_post_meta( $id, '_post_type_name', $post_type_name );
+            update_post_meta( $id, 'additional_cpt_options', $additional_cpt_options );
             update_post_meta( $id, '_enable_post_expiration', $enable_post_expir );
             update_post_meta( $id, '_post_expiration_number', $post_expiration_number );
             update_post_meta( $id, '_post_expiration_period', $post_expiration_period );
@@ -501,8 +535,14 @@ class Subscription extends WP_REST_Controller {
             update_post_meta( $id, '_post_expiration_message', $post_expire_msg );
             update_post_meta( $id, '_total_feature_item', $total_feature_item );
             update_post_meta( $id, '_remove_feature_item', $remove_feature_item );
+            update_post_meta( $id, '_sort_order', $sort_order );
+            update_post_meta( $id, '_sub_view_allowed_term_ids', $view_allowed_term_ids );
+            update_post_meta( $id, 'postnum_rollback_on_delete', $postnum_rollback_on_delete );
 
             do_action( 'wpuf_after_update_subscription_pack_meta', $id, $request );
+
+            // Update global taxonomy view restriction status
+            $this->update_global_taxonomy_view_restriction_status( $view_allowed_term_ids );
 
             return rest_ensure_response(
                 [
@@ -517,6 +557,78 @@ class Subscription extends WP_REST_Controller {
                     'message' => $e->getMessage(),
                 ]
             );
+        }
+    }
+
+    /**
+     * Get subscription settings
+     *
+     * @since 4.1.8
+     *
+     * @param WP_REST_Request $request
+     *
+     * @return WP_REST_Response
+     */
+    public function get_subscription_settings( $request ) {
+        $settings = [
+            // Empty string means use Tailwind's wpuf-bg-primary class
+            'button_color' => wpuf_get_option( 'button_color', 'wpuf_subscription_settings', '' ),
+        ];
+
+        return rest_ensure_response( $settings );
+    }
+
+    /**
+     * Update subscription settings
+     *
+     * @since 4.1.8
+     *
+     * @param WP_REST_Request $request
+     *
+     * @return WP_REST_Response|\WP_Error
+     */
+    public function update_subscription_settings( $request ) {
+        $params = $request->get_params();
+        $settings = [];
+
+        // Handle button_color - empty means use Tailwind primary
+        if ( isset( $params['button_color'] ) && ! empty( $params['button_color'] ) ) {
+            $sanitized_color = sanitize_hex_color( $params['button_color'] );
+
+            // Validate that the color was properly sanitized
+            if ( $sanitized_color === null || $sanitized_color === '' ) {
+                return new \WP_Error(
+                    'invalid_color',
+                    __( 'Invalid color format. Please provide a valid hex color (e.g., #FF0000).', 'wp-user-frontend' ),
+                    [ 'status' => 400 ]
+                );
+            }
+
+            $settings['button_color'] = $sanitized_color;
+        } else {
+            // Empty string means use default Tailwind primary color
+            $settings['button_color'] = '';
+        }
+
+        update_option( 'wpuf_subscription_settings', $settings );
+
+        return rest_ensure_response( [
+            'success' => true,
+            'settings' => $settings,
+        ] );
+    }
+
+    /**
+     * Update global taxonomy view restriction status
+     *
+     * @since 4.1.9
+     *
+     * @param array $current_view_restrictions Current subscription's view restrictions
+     */
+    private function update_global_taxonomy_view_restriction_status( $current_view_restrictions = array() ) {
+        // If current subscription has view restrictions, global status should be 'yes'
+        if ( ! empty( $current_view_restrictions ) ) {
+            update_option( 'wpuf_taxonomy_view_restrictions_enabled', 'yes' );
         }
     }
 

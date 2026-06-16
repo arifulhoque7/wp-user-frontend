@@ -18,31 +18,39 @@ const dependencyStore = useFieldDependencyStore();
 
 provide( 'subSection', subSection.value.id );
 
-const showField = ref( true );
 const closed = ref( false );
 
 const openTabs = [ 'overview', 'content_limit', 'payment_details' ];
 
 closed.value = !openTabs.includes( subSection.value.id );
 
-const toggleDependentFields = (fieldId, status) => {
-    if (!wpufSubscriptions.dependentFields.hasOwnProperty( fieldId )) {
-        return;
-    }
-
+const toggleDependentFields = ( fieldId, status ) => {
+    // Update the status of the current modifier field
     dependencyStore.modifierFieldStatus[fieldId] = status;
+
+    // Reset hiddenFields array
     let hiddenFields = [];
 
-    for ( const modifierFieldName in dependencyStore.modifierFieldStatus ) {
-        for (const field in wpufSubscriptions.dependentFields[modifierFieldName]) {
-            if (!dependencyStore.modifierFieldStatus[modifierFieldName]) {
-                hiddenFields.push( field );
-            } else {
-                hiddenFields = hiddenFields.filter( (item) => item !== field );
+    // Loop through all modifier fields and their dependent fields
+    for (const modifierFieldName in wpufSubscriptions.dependentFields) {
+        // Get the current status of this modifier field
+        const modifierStatus = dependencyStore.modifierFieldStatus[modifierFieldName] || false;
+
+        // For each dependent field of this modifier
+        for (const dependentField in wpufSubscriptions.dependentFields[modifierFieldName]) {
+            const expectedValue = wpufSubscriptions.dependentFields[modifierFieldName][dependentField];
+
+            // If status doesn't match the expected value, add to hiddenFields
+            if (modifierStatus !== expectedValue) {
+                // Only add if not already in the array
+                if (!hiddenFields.includes( dependentField )) {
+                    hiddenFields.push( dependentField );
+                }
             }
         }
     }
 
+    // Update the hiddenFields in the dependency store
     dependencyStore.hiddenFields = hiddenFields;
 };
 
@@ -60,7 +68,7 @@ const toggleDependentFields = (fieldId, status) => {
                     <span v-if="subSection.sub_label" class="wpuf-relative wpuf-m-0 wpuf-p-0 wpuf-ml-2 wpuf-mt-[1px] wpuf-italic wpuf-text-[11px] wpuf-text-gray-400">
                         {{ subSection.sub_label }}
                     </span>
-                    <span class="pro-icon-title wpuf-relative wpuf-pt-1 wpuf-group wpuf-ml-2">
+                    <span class="pro-icon-title wpuf-relative wpuf-group wpuf-ml-2">
                         <ProBadge v-if="subSection.is_pro" />
                         <ProTooltip />
                     </span>

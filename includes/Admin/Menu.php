@@ -12,6 +12,7 @@ class Menu {
 
         add_filter( 'parent_file', [ $this, 'fix_parent_menu' ] );
         add_filter( 'submenu_file', [ $this, 'fix_submenu_file' ] );
+        add_filter( 'script_loader_tag', [ $this , 'add_async_attribute' ], 10, 3 );
     }
 
     public function admin_menu() {
@@ -103,10 +104,16 @@ class Menu {
      * @return void
      */
     public function wpuf_post_forms_page() {
-        add_action( 'admin_footer', [ $this, 'load_headway_badge' ] );
+        if ( wpuf_is_pro_active() && defined( 'WPUF_PRO_VERSION' ) && version_compare( WPUF_PRO_VERSION, '4.1.0', '<' ) ) {
+            require_once WPUF_INCLUDES . '/Admin/views/need-to-update.php';
+
+            return;
+        }
+
         // phpcs:ignore WordPress.Security.NonceVerification
         $action           = ! empty( $_GET['action'] ) ? sanitize_text_field( wp_unslash( $_GET['action'] ) ) : null;
         $add_new_page_url = admin_url( 'admin.php?page=wpuf-post-forms&action=add-new' );
+        $form_type        = __( 'Post Form', 'wp-user-frontend' );
 
         switch ( $action ) {
             case 'edit':
@@ -115,41 +122,60 @@ class Menu {
                 break;
 
             default:
+                wp_enqueue_style( 'wpuf-admin' );
+                wp_enqueue_style( 'wpuf-forms-list' );
+                wp_enqueue_script( 'wpuf-forms-list' );
+                // Check AI configuration status
+                $ai_settings = get_option( 'wpuf_ai', [] );
+                $ai_provider = isset( $ai_settings['ai_provider'] ) ? $ai_settings['ai_provider'] : '';
+                $ai_model    = isset( $ai_settings['ai_model'] ) ? $ai_settings['ai_model'] : '';
+                $provider_key_field = $ai_provider . '_api_key';
+                $ai_api_key = isset( $ai_settings[$provider_key_field] ) ? $ai_settings[$provider_key_field] : '';
+                $ai_configured = !empty( $ai_provider ) && !empty( $ai_api_key ) && !empty( $ai_model );
+
+                wp_localize_script('wpuf-forms-list', 'wpuf_forms_list',
+                    [
+                        'post_counts'            => wpuf_get_forms_counts_with_status(),
+                        'rest_nonce'             => wp_create_nonce( 'wp_rest' ),
+                        'rest_url'               => esc_url_raw( rest_url() ),
+                        'bulk_nonce'             => wp_create_nonce( 'bulk-post-forms' ),
+                        'template_nonce'         => wp_create_nonce( 'wpuf_create_from_template' ),
+                        'is_plain_permalink'     => empty( get_option( 'permalink_structure' ) ),
+                        'permalink_settings_url' => admin_url( 'options-permalink.php' ),
+                        'ai_configured'          => $ai_configured,
+                        'ai_settings_url'        => admin_url( 'admin.php?page=wpuf-settings#wpuf_ai' ),
+                    ]
+                );
                 require_once WPUF_INCLUDES . '/Admin/views/post-forms-list-table-view.php';
+
+                $registry       = wpuf_get_post_form_templates();
+                $pro_templates  = wpuf_get_pro_form_previews();
+                $blank_form_url = admin_url( 'admin.php?page=wpuf-post-forms&action=add-new' );
+                $action_name    = 'post_form_template';
+                $footer_help    = sprintf(
+                    // translators: %s: mailto link
+                    __( 'Want a new integration? <a href="%s" target="_blank">Let us know</a>.', 'wp-user-frontend' ), 'mailto:support@wedevs.com?subject=WPUF Custom Post Template Integration Request'
+                );
+
+                if ( ! $registry ) {
+                    break;
+                }
+
+                include WPUF_ROOT . '/includes/Admin/template-parts/modal-v4.2.php';
+
                 break;
         }
     }
 
     /**
-     * Load the Headway badge
-     *
-     * @since 4.0.5
-     *
-     * @return void
-     */
-    public function load_headway_badge() {
-        ?>
-        <script>
-            const HW_config = {
-                selector: '.headway-icon',
-                account: 'JPqPQy',
-                callbacks: {
-                    onWidgetReady: function ( widget ) {
-                        if ( widget.getUnseenCount() === 0 ) {
-                            document.querySelector('.headway-header ul li.headway-icon span#HW_badge_cont.HW_visible')
-                                .style = 'opacity: 0';
-                        }
-                    },
-                    onHideWidget: function(){
-                        document.querySelector('.headway-header ul li.headway-icon span#HW_badge_cont.HW_visible')
-                            .style = 'opacity: 0';
-                    }
-                }
-            };
+    * Mark headway as async. Because nothing depends on it, it can run at any time
+    */
+    public function add_async_attribute( $tag, $handle, $src ) {
+        if ('wpuf-headway-script' === $handle) {
+            return str_replace( ' src', ' async src', $tag );
+        }
 
-        </script>
-        <script async src="//cdn.headwayapp.co/widget.js"></script>
-        <?php
+        return $tag;
     }
 
     /**
@@ -345,8 +371,6 @@ class Menu {
     public function enqueue_settings_page_scripts() {
         wp_enqueue_script( 'wpuf-subscriptions' );
         wp_enqueue_script( 'wpuf-settings' );
-
-        add_action( 'admin_footer', [ $this, 'load_headway_badge' ] );
     }
 
     /**
@@ -362,7 +386,10 @@ class Menu {
                     <?php esc_html_e( 'Settings', 'wp-user-frontend' ); ?>
                 </span>
                 <span class="flex-end">
-                    <span class="headway-icon"></span>
+                    <span
+                        id="wpuf-headway-icon"
+                        class="wpuf-border wpuf-border-gray-100 wpuf-mr-[16px] wpuf-rounded-full wpuf-p-1 wpuf-shadow-sm hover:wpuf-bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                    ></span>
                     <a class="canny-link" target="_blank" href="<?php echo esc_url( 'https://wpuf.canny.io/ideas' ); ?>">💡 <?php esc_html_e(
                     'Submit Ideas', 'wp-user-frontend'
                     ); ?></a>

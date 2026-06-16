@@ -61,11 +61,7 @@ class Form {
     public function guest_post() {
         $settings = $this->get_settings();
 
-        if ( isset( $settings['guest_post'] ) && $settings['guest_post'] === 'true' ) {
-            return true;
-        }
-
-        return false;
+        return ! empty( $settings['post_permission'] ) && 'guest_post' === $settings['post_permission'];
     }
 
     /**
@@ -76,7 +72,7 @@ class Form {
     public function is_charging_enabled() {
         $settings = $this->get_settings();
 
-        if ( isset( $settings['payment_options'] ) && $settings['payment_options'] === 'true' ) {
+        if ( isset( $settings['payment_options'] ) && wpuf_is_checkbox_or_toggle_on( $settings['payment_options'] ) ) {
             return true;
         }
 
@@ -89,13 +85,10 @@ class Form {
      * @return bool
      */
     public function is_enabled_pay_per_post() {
-        $settings = $this->get_settings();
+        $settings       = $this->get_settings();
+        $payment_option = ! empty( $settings['choose_payment_option'] ) ? $settings['choose_payment_option'] : '';
 
-        if ( isset( $settings['enable_pay_per_post'] ) && $settings['enable_pay_per_post'] === 'true' ) {
-            return true;
-        }
-
-        return false;
+        return isset( $settings['choose_payment_option'] ) && 'enable_pay_per_post' === $payment_option;
     }
 
     /**
@@ -105,24 +98,21 @@ class Form {
      */
     public function is_enabled_force_pack() {
         $settings = $this->get_settings();
+        $payment_option = ! empty( $settings['choose_payment_option'] ) ? $settings['choose_payment_option'] : '';
 
-        if ( isset( $settings['force_pack_purchase'] ) && $settings['force_pack_purchase'] === 'true' ) {
-            return true;
-        }
-
-        return false;
+        return isset( $settings['choose_payment_option'] ) && 'force_pack_purchase' === $payment_option;
     }
 
     /**
      * Get pay per cost amount
      *
-     * @return int
+     * @return float
      */
     public function get_pay_per_post_cost() {
         $settings = $this->get_settings();
 
         if ( isset( $settings['pay_per_post_cost'] ) && $settings['pay_per_post_cost'] > 0 ) {
-            return $settings['pay_per_post_cost'];
+            return (float) $settings['pay_per_post_cost'];
         }
 
         return 0;
@@ -136,7 +126,7 @@ class Form {
     public function is_enabled_fallback_cost() {
         $settings = $this->get_settings();
 
-        if ( isset( $settings['fallback_ppp_enable'] ) && $settings['fallback_ppp_enable'] === 'true' ) {
+        if ( isset( $settings['fallback_ppp_enable'] ) && wpuf_is_checkbox_or_toggle_on( $settings['fallback_ppp_enable'] ) ) {
             return true;
         }
 
@@ -146,13 +136,13 @@ class Form {
     /**
      * Get the fallback cost amount
      *
-     * @return int
+     * @return float
      */
     public function get_subs_fallback_cost() {
         $settings = $this->get_settings();
 
         if ( isset( $settings['fallback_ppp_cost'] ) && $settings['fallback_ppp_cost'] > 0 ) {
-            return $settings['fallback_ppp_cost'];
+            return (float) $settings['fallback_ppp_cost'];
         }
 
         return 0;
@@ -182,27 +172,37 @@ class Form {
             return [ $user_can_post, $info ];
         }
 
+        // Admin users bypass all subscription and payment restrictions
+        if ( current_user_can( wpuf_admin_role() ) ) {
+            return [ 'yes', '' ];
+        }
+
         $post_type = ! empty( $form_settings['post_type'] ) ? $form_settings['post_type'] : 'post';
 
         $has_post_count = $current_user->subscription()->has_post_count( $post_type );
 
-        if ( $current_user->subscription()->current_pack_id() && ! $has_post_count ) {
+        // skip the early return so the payment logic below can handle it
+        $skip_limit_block = $this->is_charging_enabled()
+            && $this->is_enabled_force_pack()
+            && $this->is_enabled_fallback_cost();
+
+        if ( $current_user->subscription()->current_pack_id() && ! $has_post_count && ! $skip_limit_block ) {
             $user_can_post = 'no';
             $info          = __( 'Post Limit Exceeded for your purchased subscription pack.', 'wp-user-frontend' );
 
             return [ $user_can_post, $info ];
         }
 
-
         if ( $this->is_charging_enabled() ) {
             $pay_per_post      = $this->is_enabled_pay_per_post();
+
             // $pay_per_post_cost = (float) $this->get_pay_per_post_cost();
             $force_pack        = $this->is_enabled_force_pack();
             $fallback_enabled  = $this->is_enabled_fallback_cost();
             // $fallback_cost     = $this->get_subs_fallback_cost();
 
             // guest post payment checking
-            if ( ! is_user_logged_in() && isset( $form_settings['guest_post'] ) && $form_settings['guest_post'] === 'true' ) {
+            if ( ! is_user_logged_in() && ( isset( $form_settings['post_permission'] ) && 'guest_post' === $form_settings['post_permission'] ) ) {
 
                 //if ( $form->is_charging_enabled() ) {
 
@@ -263,7 +263,7 @@ class Form {
                 }
             }
         } else {
-            if ( isset( $form_settings['guest_post'] ) && $form_settings['guest_post'] === 'true' && !
+            if ( ( isset( $form_settings['post_permission'] ) && 'guest_post' === $form_settings['post_permission'] ) && !
                 is_user_logged_in() ) {
                 $user_can_post = 'yes';
             }
@@ -377,6 +377,17 @@ class Form {
 
         // return $this->form_fields;
 
-        return $form_fields;
+        /**
+         * Filter form fields data array before returning
+         *
+         * Allows filtering the complete form fields array. Used to filter out
+         * pro-only fields when pro plugin is not active.
+         *
+         * @since 4.2.9
+         *
+         * @param array $form_fields The array of form fields data
+         * @param int   $this->id    The form ID
+         */
+        return apply_filters( 'wpuf_form_fields_data', $form_fields, $this->id );
     }
 }

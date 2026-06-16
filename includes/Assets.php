@@ -106,77 +106,96 @@ class Assets {
      */
     public function get_styles() {
         $styles = [
-            'frontend-forms'     => [
+            'frontend-forms'      => [
                 'src' => WPUF_ASSET_URI . '/css/frontend-forms.css',
             ],
-            'layout1'            => [
+            'elementor-frontend-forms'      => [
+                'src' => WPUF_ASSET_URI . '/css/elementor-frontend-forms.css',
+            ],
+            'elementor-subscription-plans'      => [
+                'src' => WPUF_ASSET_URI . '/css/elementor-subscription-plans.css',
+            ],
+            'frontend-subscriptions' => [
+                'src' => WPUF_ASSET_URI . '/css/frontend-subscriptions.min.css',
+            ],
+            'layout1'             => [
                 'src' => WPUF_ASSET_URI . '/css/frontend-form/layout1.css',
             ],
-            'layout2'            => [
+            'layout2'             => [
                 'src' => WPUF_ASSET_URI . '/css/frontend-form/layout2.css',
             ],
-            'layout3'            => [
+            'layout3'             => [
                 'src' => WPUF_ASSET_URI . '/css/frontend-form/layout3.css',
             ],
-            'layout4'            => [
+            'layout4'             => [
                 'src' => WPUF_ASSET_URI . '/css/frontend-form/layout4.css',
             ],
-            'layout5'            => [
+            'layout5'             => [
                 'src' => WPUF_ASSET_URI . '/css/frontend-form/layout5.css',
             ],
-            'jquery-ui'          => [
+            'jquery-ui'           => [
                 'src'     => WPUF_ASSET_URI . '/css/jquery-ui-1.9.1.custom.css',
                 'version' => '1.9.1',
             ],
             'sweetalert2'        => [
-                'src'     => WPUF_ASSET_URI . '/vendor/sweetalert2/dist/sweetalert2.css',
-                'version' => '11.4.19',
+                'src'     => WPUF_ASSET_URI . '/vendor/sweetalert2/sweetalert2.css',
+                'version' => '11.4.8',
             ],
-            'font-awesome'       => [
-                'src'     => WPUF_ASSET_URI . '/vendor/font-awesome/css/font-awesome.min.css',
-                'version' => '4.7.0',
+            'font-awesome'        => [
+                'src'     => WPUF_ASSET_URI . '/vendor/font-awesome/css/all.min.css',
+                'version' => '7.0.1',
             ],
-            'selectize'          => [
+            'selectize'           => [
                 'src'     => WPUF_ASSET_URI . '/vendor/selectize/css/selectize.default.css',
                 'version' => '0.12.4',
             ],
-            'toastr'             => [
+            'toastr'              => [
                 'src'     => WPUF_ASSET_URI . '/vendor/toastr/toastr.min.css',
                 'version' => '2.1.3',
             ],
-            'tooltip'            => [
+            'tooltip'             => [
                 'src'     => WPUF_ASSET_URI . '/vendor/tooltip/tooltip.css',
                 'version' => '3.3.7',
             ],
-            'form-builder'       => [
+            'form-builder'        => [
                 'src'  => WPUF_ASSET_URI . '/css/wpuf-form-builder.css',
                 'deps' => $this->form_builder_css_deps,
             ],
-            'admin'              => [
+            'admin-form-builder'  => [
+                'src'  => WPUF_ASSET_URI . '/css/admin/form-builder.css',
+                'deps' => $this->form_builder_css_deps,
+            ],
+            'ai-form-builder'     => [
+                'src'  => WPUF_ASSET_URI . '/css/ai-form-builder.css',
+            ],
+            'admin'               => [
                 'src' => WPUF_ASSET_URI . '/css/admin.css',
             ],
-            'admin-subscriptions'              => [
+            'admin-subscriptions' => [
                 'src' => WPUF_ASSET_URI . '/css/admin/subscriptions.min.css',
             ],
             'admin-transactions'              => [
                 'src' => WPUF_ASSET_URI . '/css/admin/transactions' . $this->suffix . '.css',
             ],
-            'registration-forms' => [
+            'registration-forms'  => [
                 'src' => WPUF_ASSET_URI . '/css/registration-forms.css',
             ],
-            'module'             => [
+            'module'              => [
                 'src' => WPUF_ASSET_URI . '/css/admin/wpuf-module.css',
             ],
-            'swiffy-slider'      => [
+            'swiffy-slider'       => [
                 'src'     => WPUF_ASSET_URI . '/vendor/swiffy-slider/swiffy-slider.min.css',
                 'version' => '1.6.0',
             ],
-            'setup'              => [
+            'setup'               => [
                 'src'  => WPUF_ASSET_URI . '/css/admin/wpuf-setup.css',
                 'deps' => [ 'dashicons', 'install' ],
             ],
-            'whats-new'          => [
-                'src'  => WPUF_ASSET_URI . '/css/admin/whats-new.css',
+            'forms-list'           => [
+                'src' => WPUF_ASSET_URI . '/css/forms-list.min.css',
+            ],
+            'account'              => [
+                'src' => WPUF_ASSET_URI . '/css/frontend/account.css',
             ],
         ];
 
@@ -229,9 +248,9 @@ class Assets {
                 'version'   => '2.2.1',
             ],
             'sweetalert2'              => [
-                'src'       => WPUF_ASSET_URI . '/vendor/sweetalert2/dist/sweetalert2' . $this->suffix . '.js',
+                'src'       => WPUF_ASSET_URI . '/vendor/sweetalert2/sweetalert2.js',
                 'in_footer' => true,
-                'version'   => '11.4.19',
+                'version'   => '11.4.8',
                 'deps'      => [ 'jquery' ],
             ],
             'jquery-scrollTo'          => [
@@ -293,6 +312,11 @@ class Assets {
                 'src'       => WPUF_ASSET_URI . '/js/transactions' . $this->suffix . '.js',
                 'in_footer' => true,
             ],
+            'ai-form-builder'          => [
+                'src'       => WPUF_ASSET_URI . '/js/ai-form-builder.min.js',
+                'in_footer' => true,
+                'version'   => time(), // Cache busting - force browser to reload
+            ],
             'timepicker'               => [
                 'src'       => WPUF_ASSET_URI . '/js/jquery-ui-timepicker-addon.js',
                 'deps'      => [ 'jquery-ui-datepicker' ],
@@ -325,7 +349,7 @@ class Assets {
                 'version'   => '1.6.0',
                 'in_footer' => true,
             ],
-            'admin-shortcode'                => [
+            'admin-shortcode'          => [
                 'src'  => WPUF_ASSET_URI . '/js/admin-shortcode.js',
                 'deps' => [ 'jquery' ],
             ],
@@ -360,15 +384,20 @@ class Assets {
             ],
             'enhanced-select'          => [
                 'src'  => WPUF_ASSET_URI . '/js/admin/wpuf-enhanced-select' . $this->suffix . '.min.js',
-                'deps' => [ 'jquery', 'selectWoo' ],
+                'deps' => [ 'jquery', 'wpuf-selectWoo' ],
             ],
             'setup'                    => [
                 'src'  => WPUF_ASSET_URI . '/js/admin/wpuf-setup' . $this->suffix . '.js',
-                'deps' => [ 'jquery', 'wpuf-enhanced-select', 'jquery-blockui' ],
+                'deps' => [ 'jquery', 'wpuf-enhanced-select', 'wpuf-jquery-blockui' ],
             ],
             'frontend-form'            => [
                 'src'  => WPUF_ASSET_URI . '/js/frontend-form' . $this->suffix . '.js',
                 'deps' => [ 'jquery' ],
+            ],
+            'account'                  => [
+                'src'       => WPUF_ASSET_URI . '/js/account' . $this->suffix . '.js',
+                'deps'      => [ 'jquery' ],
+                'in_footer' => true,
             ],
             'upload'                   => [
                 'src'  => WPUF_ASSET_URI . '/js/upload' . $this->suffix . '.js',
@@ -380,6 +409,25 @@ class Assets {
             ],
             'headway'                  => [
                 'src'  => '//cdn.headwayapp.co/widget.js',
+            ],
+            'turnstile'                  => [
+                'src'  => 'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback',
+            ],
+            'headway-script'         => [
+                'src' => WPUF_ASSET_URI . '/vendor/headway.js',
+                'deps' => [ 'jquery' ],
+            ],
+            'forms-list'         => [
+                'src'       => WPUF_ASSET_URI . '/js/forms-list.min.js',
+                'in_footer' => true,
+            ],
+            'frontend-subscriptions' => [
+                'src'       => WPUF_ASSET_URI . '/js/frontend-subscriptions.min.js',
+                'in_footer' => true,
+            ],
+            'elementor-subscription-plans' => [
+                'src'       => WPUF_ASSET_URI . '/js/elementor-subscription-plans.js',
+                'in_footer' => true,
             ],
         ];
 

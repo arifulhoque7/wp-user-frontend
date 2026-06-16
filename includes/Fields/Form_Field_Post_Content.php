@@ -10,7 +10,28 @@ class Form_Field_Post_Content extends Field_Contract {
     public function __construct() {
         $this->name       = __( 'Post Content', 'wp-user-frontend' );
         $this->input_type = 'post_content';
-        $this->icon       = 'text-width';
+        $this->icon       = 'queue-list';
+
+        // check if block theme is active
+        if ( function_exists( 'wp_is_block_theme' ) && wp_is_block_theme() ) {
+            add_filter( 'format_for_editor', [ $this, 'format_for_editor' ], 10, 2 );
+        }
+    }
+
+    /**
+     * Format the content for editor. Need to do this for block theme support
+     *
+     * @param string $content
+     * @param string $default_editor
+     *
+     * @return string
+     */
+    public function format_for_editor( $content, $default_editor ) {
+        if ( 'tinymce' !== $default_editor ) {
+            return $content;
+        }
+
+        return htmlspecialchars_decode( $content, ENT_NOQUOTES );
     }
 
     /**
@@ -35,7 +56,7 @@ class Form_Field_Post_Content extends Field_Contract {
         <li <?php $this->print_list_attributes( $field_settings ); ?>>
             <?php $this->print_label( $field_settings, $form_id ); ?>
 
-            <?php if ( in_array( $field_settings['rich'], [ 'yes', 'teeny' ] ) ) { ?>
+            <?php if ( isset( $field_settings['rich'] ) && in_array( $field_settings['rich'], [ 'yes', 'teeny' ] ) ) { ?>
                 <div class="wpuf-fields wpuf-rich-validation <?php printf( 'wpuf_%s_%s', esc_attr( $field_settings['name'] ), esc_attr( $form_id ) ); ?>" data-type="rich" data-required="<?php echo esc_attr( $field_settings['required'] ); ?>" data-id="<?php echo esc_attr( $field_settings['name'] ) . '_' . esc_attr( $form_id ); ?>" data-name="<?php echo esc_attr( $field_settings['name'] ); ?>">
             <?php } else { ?>
                 <div class="wpuf-fields">
@@ -64,7 +85,7 @@ class Form_Field_Post_Content extends Field_Contract {
 
                 $tinymce_settings = wpuf_filter_editor_toolbar( $field_settings );
 
-                if ( $field_settings['rich'] === 'yes' ) {
+                if ( isset( $field_settings['rich'] ) && $field_settings['rich'] === 'yes' ) {
                     $editor_settings = [
                         // 'textarea_rows' => $field_settings['rows'],
                         'quicktags'     => false,
@@ -78,8 +99,9 @@ class Form_Field_Post_Content extends Field_Contract {
                     }
 
                     $editor_settings = apply_filters( 'wpuf_textarea_editor_args', $editor_settings );
+
                     wp_editor( $value, $textarea_id, $editor_settings );
-                } elseif ( $field_settings['rich'] === 'teeny' ) {
+                } elseif ( isset( $field_settings['rich'] ) && $field_settings['rich'] === 'teeny' ) {
                     $editor_settings = [
                         'textarea_rows' => $field_settings['rows'],
                         'quicktags'     => false,
@@ -94,6 +116,7 @@ class Form_Field_Post_Content extends Field_Contract {
                     }
 
                     $editor_settings = apply_filters( 'wpuf_textarea_editor_args', $editor_settings );
+
                     wp_editor( $value, $textarea_id, $editor_settings );
                 } else {
                     ?>
@@ -126,6 +149,7 @@ class Form_Field_Post_Content extends Field_Contract {
             );
         }
         ?>
+        </div>
         </li>
         <?php
     }
@@ -189,7 +213,7 @@ class Form_Field_Post_Content extends Field_Contract {
     public function prepare_entry( $field ) {
         check_ajax_referer( 'wpuf_form_add' );
 
-        $field = isset( $_POST[ $field['name'] ] ) ? sanitize_text_field( wp_unslash( $_POST[ $field['name'] ] ) ) : '';
+        $field = isset( $_POST[ $field['name'] ] ) ? strip_shortcodes( sanitize_text_field( wp_unslash( $_POST[ $field['name'] ] ) ) ) : '';
 
         return trim( $field );
     }

@@ -10,7 +10,7 @@ class Form_Field_Radio extends Form_Field_Checkbox {
     public function __construct() {
         $this->name       = __( 'Radio', 'wp-user-frontend' );
         $this->input_type = 'radio_field';
-        $this->icon       = 'dot-circle-o';
+        $this->icon       = 'stop';
     }
 
     /**
@@ -24,32 +24,30 @@ class Form_Field_Radio extends Form_Field_Checkbox {
      * @return void
      */
     public function render( $field_settings, $form_id, $type = 'post', $post_id = null ) {
-        $selected = isset( $field_settings['selected'] ) ? $field_settings['selected'] : '';
-
         if ( isset( $post_id ) && $post_id != '0'  ) {
             if ( $this->is_meta( $field_settings ) ) {
                 $selected = $this->get_meta( $post_id, $field_settings['name'], $type );
             }
+        } else {
+            $selected = isset( $field_settings['selected'] ) ? $field_settings['selected'] : '';
         }
-        // else {
-
-        //     $selected = isset( $field_settings['selected'] ) ? $field_settings['selected'] : '';
-        // }
 
         $this->field_print_label( $field_settings, $form_id );
 
-        do_action( 'WPUF_radio_field_after_label', $field_settings ); ?>
+        do_action( 'wpuf_radio_field_after_label', $field_settings ); ?>
 
             <div class="wpuf-fields">
 
                 <?php
                 if ( $field_settings['options'] && count( $field_settings['options'] ) > 0 ) {
                     foreach ( $field_settings['options'] as $value => $option ) {
+                        $selected = is_array( $selected ) ? '' : $selected;
                         ?>
 
                         <label <?php echo $field_settings['inline'] == 'yes' ? 'class="wpuf-radio-inline"' : 'class="wpuf-radio-block"'; ?>>
                             <input
                                 name="<?php echo esc_attr( $field_settings['name'] ); ?>"
+                                id="<?php echo esc_attr( $field_settings['name'] ); ?>"
                                 class="<?php echo esc_attr( 'wpuf_' . $field_settings['name'] . '_' . $form_id ); ?>"
                                 type="radio"
                                 data-type="radio"
@@ -131,7 +129,7 @@ class Form_Field_Radio extends Form_Field_Checkbox {
     public function prepare_entry( $field ) {
         check_ajax_referer( 'wpuf_form_add' );
 
-        $val   = isset( $_POST[$field['name']] ) ? sanitize_text_field( wp_unslash( $_POST[$field['name']] ) ) : '';
+        $val   = isset( $_POST[$field['name']] ) ? strip_shortcodes( sanitize_text_field( wp_unslash( $_POST[$field['name']] ) ) ) : '';
 
         return isset( $field['options'][$val] ) ? $field['options'][$val] : '';
     }

@@ -12,7 +12,7 @@ class Form_Field_Featured_Image extends Field_Contract {
     public function __construct() {
         $this->name       = __( 'Featured Image', 'wp-user-frontend' );
         $this->input_type = 'featured_image';
-        $this->icon       = 'file-image-o';
+        $this->icon       = 'photograph';
     }
 
     /**
@@ -95,7 +95,7 @@ class Form_Field_Featured_Image extends Field_Contract {
         <script type="text/javascript">
             ;(function($) {
                 $(document).ready( function(){
-                    var uploader = new WPUF_Uploader('wpuf-<?php echo esc_attr( $unique_id ); ?>-pickfiles', 'wpuf-<?php echo esc_attr( $unique_id ); ?>-upload-container', <?php echo esc_attr($field_settings['count'] ); ?>, '<?php echo esc_attr( $field_settings['name'] ); ?>', 'jpg,jpeg,gif,png,bmp', <?php echo esc_attr( $field_settings['max_size'] ); ?>);
+                    var uploader = new WPUF_Uploader('wpuf-<?php echo esc_attr( $unique_id ); ?>-pickfiles', 'wpuf-<?php echo esc_attr( $unique_id ); ?>-upload-container', <?php echo esc_attr($field_settings['count'] ); ?>, '<?php echo esc_attr( $field_settings['name'] ); ?>', 'jpg,jpeg,gif,png,bmp,webp', <?php echo esc_attr( $field_settings['max_size'] ); ?>);
                     wpuf_plupload_items.push(uploader);
                 });
             })(jQuery);
@@ -110,7 +110,7 @@ class Form_Field_Featured_Image extends Field_Contract {
      * @return array
      */
     public function get_options_settings() {
-        $default_options      = $this->get_default_option_settings( false, ['dynamic'] ); // exclude dynamic
+        $default_options = $this->get_default_option_settings( false, [ 'dynamic', 'width' ] ); // exclude dynamic
 
         $settings = [
             [
@@ -166,7 +166,8 @@ class Form_Field_Featured_Image extends Field_Contract {
     public function prepare_entry( $field ) {
         check_ajax_referer( 'wpuf_form_add' );
 
-        $wpuf_files = isset( $_POST['wpuf_files'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_POST['wpuf_files'] ) ) : [];
+        $raw_files = isset( $_POST['wpuf_files'] ) ? wp_unslash( $_POST['wpuf_files'] ) : [];
+        $wpuf_files = array_map( 'absint', $raw_files );
 
         return isset( $wpuf_files[$field['name']] ) ? $wpuf_files[$field['name']] : [];
     }

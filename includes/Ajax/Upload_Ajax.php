@@ -45,7 +45,7 @@ class Upload_Ajax {
         if ( ! is_user_logged_in() ) {
             $guest_post    = false;
             $form_settings = wpuf_get_form_settings( $form_id );
-            if ( isset( $form_settings['guest_post'] ) && $form_settings['guest_post'] == 'true' ) {
+            if ( isset( $form_settings['post_permission'] ) && 'guest_post' === $form_settings['post_permission'] ) {
                 $guest_post = true;
             }
             // check if the request coming from weForms & allow users to upload when require login option is disabled
@@ -147,24 +147,16 @@ class Upload_Ajax {
     /**
      * Generic function to upload a file
      *
-     * @param string $field_name file input field name
+     * @param array $upload_data file upload data
      *
-     * @return bool|int attachment id on success, bool false instead
+     * @return array attachment result with success status and attach_id
      */
     public function handle_upload( $upload_data ) {
-        $check_duplicate = $this->duplicate_upload( $upload_data );
-        if ( isset( $check_duplicate['duplicate'] ) && $check_duplicate['duplicate'] ) {
-            return [
-                'success'   => true,
-                'attach_id' => $check_duplicate['duplicate'],
-            ];
-        }
         $uploaded_file = wp_handle_upload( $upload_data, [ 'test_form' => false ] );
         // If the wp_handle_upload call returned a local path for the image
         if ( isset( $uploaded_file['file'] ) ) {
             $file_loc    = $uploaded_file['file'];
-            $file_name   = basename( $upload_data['name'] );
-            $upload_hash = md5( $upload_data['name'] . $upload_data['size'] );
+            $file_name   = basename( $uploaded_file['file'] );
             $file_type   = wp_check_filetype( $file_name );
             $attachment = [
                 'post_mime_type' => $file_type['type'],
@@ -175,7 +167,6 @@ class Upload_Ajax {
             $attach_id   = wp_insert_attachment( $attachment, $file_loc );
             $attach_data = wp_generate_attachment_metadata( $attach_id, $file_loc );
             wp_update_attachment_metadata( $attach_id, $attach_data );
-            update_post_meta( $attach_id, 'wpuf_file_hash', $upload_hash );
 
             return [
                 'success'   => true,
@@ -298,26 +289,5 @@ class Upload_Ajax {
     public function insert_image() {
         $this->upload_file( true );
     }
-
-    /**
-     * Check if duplicate file
-     *
-     * @param array $file
-     *
-     * @return mixed
-     */
-    function duplicate_upload( $file ) {
-        global $wpdb;
-        $upload_hash = md5( $file['name'] . $file['size'] );
-        $sql   = $wpdb->prepare(
-            "SELECT post_id FROM $wpdb->postmeta m JOIN $wpdb->posts p ON p.ID = m.post_id WHERE m.meta_key = 'wpuf_file_hash' AND m.meta_value = %s AND p.post_status != 'trash' LIMIT 1;",
-            $upload_hash
-        );
-        $match = $wpdb->get_var( $sql );
-        if ( $match ) {
-            $file['duplicate'] = $match;
-        }
-
-        return $file;
-    }
+    
 }

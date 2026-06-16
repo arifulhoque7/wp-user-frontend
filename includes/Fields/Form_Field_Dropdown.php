@@ -2,6 +2,8 @@
 
 namespace WeDevs\Wpuf\Fields;
 
+use WP_Query;
+
 /**
  * DropDown Field Class
  */
@@ -10,7 +12,7 @@ class Form_Field_Dropdown extends Field_Contract {
     public function __construct() {
         $this->name       = __( 'Dropdown', 'wp-user-frontend' );
         $this->input_type = 'dropdown_field';
-        $this->icon       = 'caret-square-o-down';
+        $this->icon       = 'chevron-down';
     }
 
     /**
@@ -31,13 +33,13 @@ class Form_Field_Dropdown extends Field_Contract {
         }
 
         /* Workaround for Events calendar venue and organizer field render in wpuf custom fields metabox */
-        if ( 'tribe_events' == get_post_type( $post_id ) ) {
+        // if ( 'tribe_events' == get_post_type( $post_id ) ) {
             if ( '_EventVenueID' == $field_settings['name'] ) {
                 $field_settings['options'] = $this->get_posts( 'tribe_venue' );
             } else if ( '_EventOrganizerID' == $field_settings['name'] ) {
                 $field_settings['options'] = $this->get_posts( 'tribe_organizer' );
             }
-        }
+        // }
 
         $name  = $field_settings['name'];
 
@@ -105,7 +107,7 @@ class Form_Field_Dropdown extends Field_Contract {
             'label'            => __( 'Dropdown', 'wp-user-frontend' ),
             'is_meta'          => 'yes',
             'options'          => [ 'Option' => __( 'Option', 'wp-user-frontend' ) ],
-            'first'            => __( '- select -', 'wp-user-frontend' ),
+            'first'            => __( '- Select -', 'wp-user-frontend' ),
             'id'               => 0,
             'is_new'           => true,
             'show_in_post'     => 'yes',
@@ -125,7 +127,7 @@ class Form_Field_Dropdown extends Field_Contract {
     public function prepare_entry( $field ) {
         check_ajax_referer( 'wpuf_form_add' );
 
-        $val = isset( $_POST[$field['name']] ) ? sanitize_text_field( wp_unslash( $_POST[$field['name']] ) ) : '';
+        $val = isset( $_POST[$field['name']] ) ? strip_shortcodes( sanitize_text_field( wp_unslash( $_POST[$field['name']] ) ) ) : '';
 
         return isset( $field['options'][$val] ) ? $field['options'][$val] : '';
     }

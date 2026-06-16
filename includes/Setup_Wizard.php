@@ -37,10 +37,6 @@ class Setup_Wizard {
      * @return void
      */
     public function custom_admin_bar_styles() {
-        if ( ! is_admin_bar_showing() ) {
-            return;
-        }
-
         if ( function_exists( 'wp_enqueue_admin_bar_header_styles' ) ) {
             wp_enqueue_admin_bar_header_styles();
         } else {
@@ -363,7 +359,7 @@ class Setup_Wizard {
                     <a class="wpuf-insights-data-we-collect" href="#">What we collect</a>                </span>
                 <p id="collection-info" class="description" style="display:none;">
                     Server environment details (php, mysql, server, WordPress versions), Number of users in your site, Site language, Number of active and inactive plugins, Site name and url, Your name and email address. No sensitive data is tracked.                    We are using <a href="https://appsero.com" target="_blank">Appsero</a> to collect your data. <a href="https://appsero.com/privacy-policy/" target="_blank">Learn more</a> about how <a href="https://appsero.com" target="_blank">Appsero</a> collects and handle your data.                </p>'; ?>
-                        <label for="share_wpuf_essentials"><?php echo wp_kses( __( $share, 'wp-user-frontend' ),
+                        <label for="share_wpuf_essentials"><?php echo wp_kses( $share,
                             [
                                 'span'      => [
                                     'class' => []
@@ -448,6 +444,16 @@ class Setup_Wizard {
             <div class="wpuf-setup-next-steps-last">
                 <h2><a href="<?php echo esc_url( admin_url( 'admin.php?page=wpuf-settings&wpuf_steup='. wp_create_nonce('wpuf-setup') ) ); ?>"><?php esc_html_e( 'Go to Full Settings', 'wp-user-frontend' ); ?></a></h2>
             </div>
+        </div>
+
+        <div class="wpuf-setup-tip" style="margin-top: 30px; padding: 20px; background: #f6f7f7; border-left: 4px solid #7dc443; border-radius: 4px; clear: both;">
+            <h3 style="margin: 0 0 10px;"><?php esc_html_e( 'Add Logout Link to Your Menu', 'wp-user-frontend' ); ?></h3>
+            <p style="margin: 0 0 15px; color: #555;">
+                <?php esc_html_e( 'Help your users easily log out by adding a logout link to your navigation menu.', 'wp-user-frontend' ); ?>
+            </p>
+            <a href="<?php echo esc_url( admin_url( 'admin.php?page=wpuf_tools&tab=tools' ) ); ?>" class="button">
+                <?php esc_html_e( 'Add Logout to Menu', 'wp-user-frontend' ); ?>
+            </a>
         </div>
         <?php
     }

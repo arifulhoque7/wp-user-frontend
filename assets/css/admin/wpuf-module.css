@@ -35,70 +35,44 @@
     line-height: 1.6em;
 }
 
-.wpuf-toggle-switch {
-    position: relative;
-    display: inline-block;
-    width: 50px;
-    height: 26px;
-}
-
-.wpuf-toggle-switch input {
-    display: none;
-}
-
-.wpuf-toggle-switch .slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc;
-    -webkit-transition: .4s;
-    transition: .4s;
-}
-
-.wpuf-toggle-switch .slider:before {
-    position: absolute;
-    content: "";
-    height: 18px;
-    width: 18px;
-    left: 3px;
-    bottom: 4px;
-    background-color: white;
-    -webkit-transition: .4s;
-    transition: .4s;
-}
-
-.wpuf-toggle-switch input:checked + .slider {
-    background-color: #0073aa;
-}
-
-.wpuf-toggle-switch input:focus + .slider {
-    -webkit-box-shadow: 0 0 1px #2196F3;
-    box-shadow: 0 0 1px #2196F3;
-}
-
-.wpuf-toggle-switch input:checked + .slider:before {
-    -webkit-transform: translateX(26px);
-    -ms-transform: translateX(26px);
-    transform: translateX(26px);
-}
-
-/* Rounded sliders */
-.slider.round {
-    border-radius: 34px;
-}
-
-.slider.round:before {
-    border-radius: 50%;
-}
-
 .wpuf-modules .plugin-card {
     border: 1px solid #e5e5e5;
     -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
     box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
     position: relative;
+}
+
+.wpuf-modules-section-title {
+    clear: both;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.wpuf-modules-section-title.wpuf-pro-modules-title {
+    margin-top: 30px;
+}
+
+.wpuf-modules-section-title .wpuf-pro-badge {
+    font-size: 12px;
+    font-weight: normal;
+    color: #666;
+    margin-left: 10px;
+}
+
+.wpuf-pro-modules-preview {
+    position: relative;
+}
+
+.wpuf-free-modules {
+    margin-bottom: 20px;
+}
+
+.wpuf-free-modules::after {
+    content: "";
+    display: table;
+    clear: both;
 }
 
 .wpuf-modules .plugin-card .plugin-name {
@@ -137,7 +111,7 @@
     padding-top: 26px;
 }
 
-.plugin-card:hover .form-create-overlay {
+.wpuf-pro-modules-preview .plugin-card:hover .form-create-overlay {
     -webkit-opacity: 1;
     opacity: 1;
     z-index: 1;
@@ -149,10 +123,12 @@
     width: 100%;
     height: 100%;
     content: "";
-    background: rgba(0, 0, 0, .5);
+    background: rgba(236, 253, 245, 0.5);
+    border-radius: 5px;
     top: 0;
     left: 0;
     z-index: -1;
+    border: 1px dashed #10b981;
 }
 
 .form-create-overlay a.wpuf-button.button-upgrade-to-pro {

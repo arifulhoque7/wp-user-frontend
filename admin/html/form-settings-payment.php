@@ -7,7 +7,7 @@ $payment_options       = isset( $form_settings['payment_options'] ) ? $form_sett
 $enable_pay_per_post   = isset( $form_settings['enable_pay_per_post'] ) ? $form_settings['enable_pay_per_post'] : 'false';
 $force_pack_purchase   = isset( $form_settings['force_pack_purchase'] ) ? $form_settings['force_pack_purchase'] : 'false';
 
-$pay_per_post_cost     = isset( $form_settings['pay_per_post_cost'] ) ? $form_settings['pay_per_post_cost'] : 2;
+$pay_per_post_cost     = ! empty( $form_settings['pay_per_post_cost'] ) ? $form_settings['pay_per_post_cost'] : 0;
 $fallback_ppp_enable   = isset( $form_settings['fallback_ppp_enable'] ) ? $form_settings['fallback_ppp_enable'] : 'false';
 $fallback_ppp_cost     = isset( $form_settings['fallback_ppp_cost'] ) ? $form_settings['fallback_ppp_cost'] : 1;
 $ppp_success_page      = isset( $form_settings['ppp_payment_success_page'] ) ? $form_settings['ppp_payment_success_page'] : '';
@@ -57,7 +57,7 @@ $ppp_success_page      = isset( $form_settings['ppp_payment_success_page'] ) ? $
             <th>&mdash; &mdash; <?php esc_html_e( 'Fallback cost', 'wp-user-frontend' ); ?></th>
             <td>
                 <label>
-                    <input type="number" name="wpuf_settings[fallback_ppp_cost]" value="<?php echo esc_attr( $fallback_ppp_cost ); ?>" />
+                    <input type="number" step="0.01" min="0" name="wpuf_settings[fallback_ppp_cost]" value="<?php echo esc_attr( $fallback_ppp_cost ); ?>" />
                 </label>
                 <p class="description"><?php esc_html_e( 'Cost of pay per post after a subscription pack limit is reached.', 'wp-user-frontend' ); ?></p>
             </td>
@@ -79,7 +79,7 @@ $ppp_success_page      = isset( $form_settings['ppp_payment_success_page'] ) ? $
             <th>&mdash; &mdash; <?php esc_html_e( 'Cost Settings', 'wp-user-frontend' ); ?></th>
             <td>
                 <label>
-                    <input type="number" name="wpuf_settings[pay_per_post_cost]" value="<?php echo esc_attr( $pay_per_post_cost ); ?>" />
+                    <input type="number" step="0.01" min="0" name="wpuf_settings[pay_per_post_cost]" value="<?php echo esc_attr( $pay_per_post_cost ); ?>" />
                 </label>
                 <p class="description"><?php esc_html_e( 'Amount to be charged per post', 'wp-user-frontend' ); ?></p>
             </td>
@@ -92,7 +92,7 @@ $ppp_success_page      = isset( $form_settings['ppp_payment_success_page'] ) ? $
                         <?php
                         foreach ( wpuf_get_pages() as $page_id => $page_name ) {
                             ?>
-                            <option value="<?php echo $page_id; ?>" <?php echo $page_id === (int) $ppp_success_page ? 'selected' : ''; ?> ><?php echo $page_name; ?></option>
+                            <option value="<?php echo esc_attr( $page_id ); ?>" <?php echo $page_id === (int) $ppp_success_page ? 'selected' : ''; ?> ><?php echo esc_html( $page_name ); ?></option>
                             <?php
                         }
                         ?>

@@ -38,7 +38,24 @@ class Form_Field_Post_Taxonomy extends Field_Contract {
         $this->input_type = 'taxonomy';
         $this->tax_name   = $tax_name;
         // $this->taxonomy=$taxonomy;
-        // $this->icon       = 'caret-square-o-down';
+        $this->icon       = 'squares-2x2';
+    }
+
+    /**
+     * Check if this field should be treated as a pro feature
+     *
+     * @return bool
+     */
+    public function is_pro() {
+        // Get free taxonomies (built-in + taxonomies for post/page)
+        $free_taxonomies = wpuf_get_free_taxonomies();
+
+        // If this is a custom taxonomy (not in free list) and pro is not active, treat it as a pro feature
+        if ( ! in_array( $this->tax_name, $free_taxonomies, true ) && ! wpuf_is_pro_active() ) {
+            return true;
+        }
+        
+        return false;
     }
 
     /**
@@ -52,6 +69,15 @@ class Form_Field_Post_Taxonomy extends Field_Contract {
      * @return void
      */
     public function render( $field_settings, $form_id, $type = 'post', $post_id = null ) {
+        // Check if this is a custom taxonomy and pro is not active
+        $free_taxonomies = wpuf_get_free_taxonomies();
+        $taxonomy_name = isset( $field_settings['name'] ) ? $field_settings['name'] : $this->tax_name;
+
+        if ( ! in_array( $taxonomy_name, $free_taxonomies, true ) && ! wpuf_is_pro_active() ) {
+            // Don't render custom taxonomies on frontend when pro is not active
+            return;
+        }
+
         $this->field_settings = $field_settings;
         $this->form_id = $form_id; ?>
 
@@ -97,7 +123,9 @@ class Form_Field_Post_Taxonomy extends Field_Contract {
 
         switch ( $this->field_settings['type'] ) {
             case 'ajax':
-                $this->tax_ajax( $post_id );
+                // Use text input with ajax search for all taxonomies
+                $post_id = null;
+                $this->tax_input( $post_id, $field_settings );
                 break;
 
             case 'select':
@@ -159,7 +187,7 @@ class Form_Field_Post_Taxonomy extends Field_Contract {
         $tax_args = apply_filters( 'wpuf_taxonomy_checklist_args', $tax_args );
         $select = wp_dropdown_categories( $tax_args );
 
-        echo str_replace( '<select', '<select ' . $dataset, $select ); // phpcs:ignore WordPress.XSS.EscapeOutput.OutputNotEscaped
+        echo str_replace( '<select', '<select ' . $dataset, $select ); // phpcs:ignore
         $attr = [
             'required'      => $attr['required'],
             'name'          => $attr['name'],
@@ -173,7 +201,7 @@ class Form_Field_Post_Taxonomy extends Field_Contract {
         ];
         $attr = apply_filters( 'wpuf_taxonomy_checklist_args', $attr );
         ?>
-        <span data-taxonomy=<?php echo esc_attr( json_encode( $attr ) ); ?>></span>
+        <span data-taxonomy=<?php echo esc_attr( wp_json_encode( $attr ) ); ?>></span>
         <?php
     }
 
@@ -286,7 +314,7 @@ class Form_Field_Post_Taxonomy extends Field_Contract {
                     ];
 
                       $select_result = wp_dropdown_categories( $tax_args );
-                       echo str_replace( '<select', '<select ' . $dataset, $select_result );
+                       echo str_replace( '<select', '<select ' . $dataset, $select_result ); // phpcs:ignore
                         $attr = [
                             'required'      => $attr['required'],
                             'name'          => $attr['name'],
@@ -297,7 +325,7 @@ class Form_Field_Post_Taxonomy extends Field_Contract {
                         ];
                         $attr = apply_filters( 'wpuf_taxonomy_checklist_args', $attr );
                         ?>
-           <span data-taxonomy=<?php echo esc_attr( json_encode( $attr ) ); ?>></span>
+           <span data-taxonomy=<?php echo esc_attr( wp_json_encode( $attr ) ); ?>></span>
                                </div>
                     <?php
                     $found = in_array( $this->terms[0]->parent, $this->field_settings['exclude'], true );
@@ -372,7 +400,7 @@ class Form_Field_Post_Taxonomy extends Field_Contract {
             ],
         ];
 
-        echo str_replace( '<select', '<select ' . $required, $select ); // phpcs:ignore WordPress.XSS.EscapeOutput.OutputNotEscaped
+        echo str_replace( '<select', '<select ' . $required, $select ); // phpcs:ignore
 
         // echo wp_kses( str_replace( '<select', '<select ' . $required, $select ), [
         //     'select' => [],
@@ -415,12 +443,13 @@ class Form_Field_Post_Taxonomy extends Field_Contract {
         $tax_args = apply_filters( 'wpuf_taxonomy_checklist_args', $tax_args );
         $select   = wp_dropdown_categories( $tax_args );
 
-        echo str_replace( '<select', '<select multiple="multiple" ' . $required, $select );  // phpcs:ignore WordPress.XSS.EscapeOutput.OutputNotEscaped
+        echo str_replace( '<select', '<select multiple="multiple" ' . $required, $select );  // phpcs:ignore
     }
 
     public function tax_input( $post_id = null, $field_settings = [] ) {
         $attr = $this->field_settings;
-        $query_string = '?action=wpuf_ajax_tag_search&tax=' . $attr['name'];
+        $nonce = wp_create_nonce( 'wpuf_ajax_tag_search' );
+        $query_string = '?action=wpuf_ajax_tag_search&tax=' . $attr['name'] . '&nonce=' . $nonce;
 
         if ( 'child_of' === $this->exclude_type ) {
             $exclude = wpuf_get_field_settings_excludes( $this->field_settings, $this->exclude_type );
@@ -435,7 +464,7 @@ class Form_Field_Post_Taxonomy extends Field_Contract {
         <script type="text/javascript">
             ;(function($) {
                 $(document).ready( function(){
-                        $('#<?php echo esc_attr( $attr['name'] ); ?>').suggest( wpuf_frontend.ajaxurl + '<?php echo $query_string; ?>', { delay: 500, minchars: 2, multiple: true, multipleSep: ', ' } );
+                        $('#<?php echo esc_attr( $attr['name'] ); ?>').suggest( wpuf_frontend.ajaxurl + '<?php echo $query_string; // phpcs:ignore ?>', { delay: 500, minchars: 2, multiple: true, multipleSep: ', ' } );
                 });
             })(jQuery);
         </script>
@@ -466,9 +495,9 @@ class Form_Field_Post_Taxonomy extends Field_Contract {
             'label'             => ucfirst( $this->tax_name ),
             'name'              => $this->tax_name,
             'is_meta'           => 'no',
-            'width'             => 'small',
+            'width'             => 'large',
             'type'              => 'select',
-            'first'             => __( '- select -', 'wp-user-frontend' ),
+            'first'             => __( '- Select -', 'wp-user-frontend' ),
             'show_inline'       => 'inline',
             'orderby'           => 'name',
             'order'             => 'ASC',
@@ -494,7 +523,7 @@ class Form_Field_Post_Taxonomy extends Field_Contract {
         // return sanitize_text_field($_POST[$field['name']]);
         check_ajax_referer( 'wpuf_form_add' );
 
-        $val = isset( $_POST[ $field['name'] ] ) ? sanitize_text_field( wp_unslash( $_POST[ $field['name'] ] ) ) : '';
+        $val = isset( $_POST[ $field['name'] ] ) ? strip_shortcodes( sanitize_text_field( wp_unslash( $_POST[ $field['name'] ] ) ) ) : '';
 
         return isset( $field['options'][ $val ] ) ? $field['options'][ $val ] : '';
     }
