@@ -251,7 +251,7 @@ class Render_Form {
 
         do_action( 'wpuf_before_form_render', $form_id );
 
-        if ( !empty( $layout ) ) {
+        if ( ! empty( $layout ) && 'on' !== $theme_css ) {
             wp_enqueue_style( 'wpuf-' . $layout );
         }
 
@@ -493,6 +493,11 @@ class Render_Form {
             // igonre the hidden fields
             if ( $form_field['input_type'] == 'hidden' ) {
                 $hidden_fields[] = $form_field;
+                continue;
+            }
+
+            // Skip gated taxonomy fields to prevent empty list items and orphaned labels
+            if ( $this->is_taxonomy_field_gated( $form_field ) ) {
                 continue;
             }
 
@@ -861,7 +866,7 @@ class Render_Form {
             <script type="text/javascript">
                 ;(function($) {
                     $(document).ready( function(){
-                        $('li.tags input[name=tags]').suggest( wpuf_frontend.ajaxurl + '<?php echo $query_string; ?>', { delay: 500, minchars: 2, multiple: true, multipleSep: ', ' } );
+                        $('li.tags input[name=tags]').suggest( wpuf_frontend.ajaxurl + '<?php echo esc_js( $query_string ); ?>', { delay: 500, minchars: 2, multiple: true, multipleSep: ', ' } );
                     });
                 })(jQuery);
             </script>
@@ -1319,12 +1324,41 @@ class Render_Form {
     }
 
     /**
+     * Check if a taxonomy field is gated (custom taxonomy when pro is not active)
+     *
+     * @param array $form_field Field configuration
+     * @return bool True if field is gated and should be skipped
+     */
+    private function is_taxonomy_field_gated( $form_field ) {
+        // Only check taxonomy fields
+        if ( $form_field['input_type'] !== 'taxonomy' ) {
+            return false;
+        }
+
+        // If pro is active, no fields are gated
+        if ( wpuf_is_pro_active() ) {
+            return false;
+        }
+        
+        // Get free taxonomies (built-in + taxonomies for post/page)
+        $free_taxonomies = wpuf_get_free_taxonomies();
+        return ! in_array( $form_field['name'], $free_taxonomies, true );
+    }
+
+    /**
      * Prints a taxonomy field
      *
      * @param array    $attr
      * @param int|null $post_id
      */
     public function taxonomy( $attr, $post_id, $form_id ) {
+        // Check if this is a custom taxonomy and pro is not active
+        $free_taxonomies = wpuf_get_free_taxonomies();
+        if ( ! in_array( $attr['name'], $free_taxonomies, true ) && ! wpuf_is_pro_active() ) {
+            // Don't render custom taxonomies when pro is not active
+            return;
+        }
+
         $exclude_type       = isset( $attr['exclude_type'] ) ? esc_attr( $attr['exclude_type'] ) : 'exclude';
         // $exclude            = $attr['exclude'];
         $exclude            = isset( $attr['exclude'] ) ? esc_attr( $attr['exclude'] ) : '';
@@ -1464,7 +1498,7 @@ class Render_Form {
                         <script type="text/javascript">
                             ;(function($) {
                                 $(document).ready( function(){
-                                    $('#<?php echo esc_attr( $attr['name'] ); ?>').suggest( wpuf_frontend.ajaxurl + '<?php echo $query_string; ?>', { delay: 500, minchars: 2, multiple: true, multipleSep: ', ' } );
+                                    $('#<?php echo esc_attr( $attr['name'] ); ?>').suggest( wpuf_frontend.ajaxurl + '<?php echo esc_js( $query_string ); ?>', { delay: 500, minchars: 2, multiple: true, multipleSep: ', ' } );
                                 });
                             })(jQuery);
                         </script>
@@ -1617,32 +1651,41 @@ class Render_Form {
             $enable_no_captcha          = $attr['recaptcha_type'] == 'enable_no_captcha' ? true : false;
         }
 
-        if ( $enable_invisible_recaptcha ) { ?>
-            <script src="https://www.google.com/recaptcha/api.js?onload=wpufreCaptchaLoaded&render=explicit&hl=en" async defer></script>
-            <script>
-                jQuery(document).ready(function($) {
-                    jQuery('[name="submit"]').removeClass('wpuf-submit-button').addClass('g-recaptcha').attr('data-sitekey', '<?php echo esc_html( wpuf_get_option( 'recaptcha_public', 'wpuf_general' ) ); ?>');
+        if ( $enable_invisible_recaptcha ) {
+            wp_enqueue_script( 'wpuf-recaptcha-invisible', 'https://www.google.com/recaptcha/api.js?onload=wpufreCaptchaLoaded&render=explicit&hl=en', array(), null, true );
+
+            $inline_script = sprintf(
+                "jQuery(document).ready(function($) {
+                    jQuery('[name=\"submit\"]').removeClass('wpuf-submit-button').addClass('g-recaptcha').attr('data-sitekey', '%s');
 
                     $(document).on('click','.g-recaptcha', function(e){
                         e.preventDefault();
                         e.stopPropagation();
-                        grecaptcha.execute();
+                        if (typeof grecaptcha !== 'undefined') {
+                            grecaptcha.execute();
+                        }
                     })
                 });
 
                 var wpufreCaptchaLoaded = function() {
-                    grecaptcha.render('recaptcha', {
-                        'size' : 'invisible',
-                        'callback' : wpufRecaptchaCallback
-                    });
-                    grecaptcha.execute();
+                    if (typeof grecaptcha !== 'undefined') {
+                        grecaptcha.render('recaptcha', {
+                            'size' : 'invisible',
+                            'callback' : wpufRecaptchaCallback
+                        });
+                        grecaptcha.execute();
+                    }
                 };
 
                 function wpufRecaptchaCallback(token) {
-                    jQuery('[name="g-recaptcha-response"]').val(token);
-                    jQuery('[name="submit"]').removeClass('g-recaptcha').addClass('wpuf-submit-button');
-                }
-            </script>
+                    jQuery('[name=\"g-recaptcha-response\"]').val(token);
+                    jQuery('[name=\"submit\"]').removeClass('g-recaptcha').addClass('wpuf-submit-button');
+                }",
+                esc_js( wpuf_get_option( 'recaptcha_public', 'wpuf_general' ) )
+            );
+
+            wp_add_inline_script( 'wpuf-recaptcha-invisible', $inline_script, 'after' );
+            ?>
 
             <div type="submit" id='recaptcha' class="g-recaptcha" data-sitekey=<?php echo esc_attr( wpuf_get_option( 'recaptcha_public', 'wpuf_general' ) ); ?> data-callback="onSubmit" data-size="invisible"></div>
         <?php } else { ?>

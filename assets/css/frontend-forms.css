@@ -1,5 +1,166 @@
 /* DivTable.com */
 body {
+  /* Commented out to allow Tailwind styles for subscription packs
+.entry-content ul.wpuf_packs,
+ul.wpuf_packs {
+    overflow: hidden;
+    margin: 15px 0;
+    max-width: initial;
+    width: 100%;
+    padding-left: 0;
+
+    > li {
+        background: #fff;
+        display: inline-block;
+        vertical-align: top;
+        border: 1px solid #DDD;
+        border-radius: 5px 5px 5px 5px;
+        list-style: none outside none;
+        margin: 0 25px 25px 0;
+        position: relative;
+        width: 200px;
+        box-shadow: 0 2px 6px rgba(100, 100, 100, 0.3);
+    }
+    @media (max-width: @mediaSM) {
+        text-align: center;
+        padding-left: 25px;
+    }
+    @media (max-width: 500px) {
+        padding-left: 0;
+        > li {
+            width: 100%;
+            margin-left: 0;
+        }
+    }
+
+    h3 {
+        background: #52B5D5;
+        color: #fff;
+        font-size: 18px;
+        font-weight: normal;
+        margin: 0;
+        padding: 10px !important;
+        text-align: center;
+        border-bottom: 1px solid darken(#52B5D5, 5%);
+    }
+
+    .wpuf-pricing-wrap {
+        background: @mainColor;
+
+        .wpuf-sub-amount {
+            position: relative;
+            text-align: center;
+            color: #FFF;
+            border-bottom: 1px solid darken(@mainColor, 5%);
+            padding: 10px 0;
+
+            .wpuf-sub-symbol {
+                font-size: 19px;
+                position: absolute;
+                top: 25px;
+                line-height: 10px;
+            }
+
+            .wpuf-sub-cost {
+                font-size: 40px;
+                margin-left: 10px;
+                line-height: 50px;
+            }
+
+            .wpuf-pack-cycle {
+                font-size: 13px;
+                padding-bottom: 5px;
+            }
+        }
+    }
+
+    .wpuf-sub-body {
+        margin: 0;
+        padding: 8px 0 0 8px;
+        background: #fff;
+        font-size: 11px;
+        color: #999;
+    }
+
+    .wpuf-sub-button {
+        text-align: center;
+        margin-bottom: 20px;
+        margin-top: 20px;
+        overflow: hidden;
+
+        a {
+            // .core-button();
+            background: @mainColor;
+            color: #fff;
+            text-decoration: none;
+            padding: 5px 10px;
+            .border-radius(3px);
+            display: inline-block;
+
+            &:hover {
+                background: darken(@mainColor, 10%);
+            }
+        }
+
+        a:hover {
+            background: none repeat scroll 0 0 #1E8CBE;
+            border-color: #0074A2;
+            box-shadow: 0 1px 0 rgba(120, 200, 230, 0.6) inset;
+            color: #FFFFFF;
+        }
+    }
+
+    .wpuf-sub-desciption {
+        margin-top: 15px;
+
+        ul, li {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        li {
+            text-align: center;
+            border-top: 1px solid #eee;
+            padding: 7px 0;
+
+            &:last-child {
+                border-bottom: 1px solid #eee;
+            }
+
+            &:first-child {
+                border-top: none;
+            }
+        }
+
+        p {
+            padding: 0 10px;
+            margin-bottom: 15px;
+        }
+    }
+
+    .button {
+        background: none repeat scroll 0 0 #2EA2CC;
+        border-color: #0074A2;
+        box-shadow: 0 1px 0 rgba(120, 200, 230, 0.5) inset, 0 1px 0 rgba(0, 0, 0, 0.15);
+        color: #FFFFFF;
+        text-decoration: none;
+        padding: 0 12px 2px;
+        color: #fff;
+    }
+
+    .cost {
+        background: red;
+        border-radius: 30px 30px 30px 30px;
+        color: #FFFFFF;
+        margin: -16px -12px 0 0;
+        padding: 10px 8px 8px;
+        position: absolute;
+        right: 0;
+        top: 0;
+    }
+}
+End of commented pack styles */
   /* css for timepicker */
   /** author info **/
   /** jQuery Suggest **/
@@ -464,24 +625,29 @@ body ul.wpuf-form li .wpuf-fields .wpuf-fields-list.wpuf-list-inline li {
   padding-left: 5px;
   padding-right: 5px;
 }
-body ul.wpuf-form li .wpuf-fields table.wpuf-repeatable-field {
+body ul.wpuf-form li .wpuf-fields .wpuf-repeatable-field {
   border-collapse: collapse;
 }
-body ul.wpuf-form li .wpuf-fields table.wpuf-repeatable-field * {
-  box-sizing: border-box;
+body ul.wpuf-form li .wpuf-fields .wpuf-repeatable-field.wpuf-field-columns {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
-body ul.wpuf-form li .wpuf-fields table.wpuf-repeatable-field input {
+body ul.wpuf-form li .wpuf-fields .wpuf-repeatable-field .wpuf-column-field-inner-columns {
   width: 100%;
 }
-body ul.wpuf-form li .wpuf-fields table.wpuf-repeatable-field .wpuf-repeater-buttons {
+body ul.wpuf-form li .wpuf-fields .wpuf-repeatable-field * {
+  box-sizing: border-box;
+}
+body ul.wpuf-form li .wpuf-fields .wpuf-repeatable-field .wpuf-repeater-buttons {
   width: 75px;
   padding-left: 12px;
 }
-body ul.wpuf-form li .wpuf-fields table.wpuf-repeatable-field .wpuf-repeater-buttons img {
+body ul.wpuf-form li .wpuf-fields .wpuf-repeatable-field .wpuf-repeater-buttons img {
   width: 100%;
   height: auto;
 }
-body ul.wpuf-form li .wpuf-fields table.wpuf-repeatable-field .wpuf-repeater-buttons i {
+body ul.wpuf-form li .wpuf-fields .wpuf-repeatable-field .wpuf-repeater-buttons i {
   display: inline-block;
   width: 15px;
   height: 15px;
@@ -682,175 +848,6 @@ body .wpuf-coupon-info-wrap .wpuf-copon-cancel {
   text-decoration: none;
   font-size: 11px;
 }
-body .entry-content ul.wpuf_packs,
-body ul.wpuf_packs {
-  overflow: hidden;
-  margin: 15px 0;
-  max-width: initial;
-  width: 100%;
-  padding-left: 0;
-}
-body .entry-content ul.wpuf_packs > li,
-body ul.wpuf_packs > li {
-  background: #fff;
-  display: inline-block;
-  vertical-align: top;
-  border: 1px solid #DDD;
-  border-radius: 5px 5px 5px 5px;
-  list-style: none outside none;
-  margin: 0 25px 25px 0;
-  position: relative;
-  width: 200px;
-  box-shadow: 0 2px 6px rgba(100, 100, 100, 0.3);
-}
-@media (max-width: 991px) {
-  body .entry-content ul.wpuf_packs,
-  body ul.wpuf_packs {
-    text-align: center;
-    padding-left: 25px;
-  }
-}
-@media (max-width: 500px) {
-  body .entry-content ul.wpuf_packs,
-  body ul.wpuf_packs {
-    padding-left: 0;
-  }
-  body .entry-content ul.wpuf_packs > li,
-  body ul.wpuf_packs > li {
-    width: 100%;
-    margin-left: 0;
-  }
-}
-body .entry-content ul.wpuf_packs h3,
-body ul.wpuf_packs h3 {
-  background: #52B5D5;
-  color: #fff;
-  font-size: 18px;
-  font-weight: normal;
-  margin: 0;
-  padding: 10px !important;
-  text-align: center;
-  border-bottom: 1px solid #3dacd0;
-}
-body .entry-content ul.wpuf_packs .wpuf-pricing-wrap,
-body ul.wpuf_packs .wpuf-pricing-wrap {
-  background: #64C3DE;
-}
-body .entry-content ul.wpuf_packs .wpuf-pricing-wrap .wpuf-sub-amount,
-body ul.wpuf_packs .wpuf-pricing-wrap .wpuf-sub-amount {
-  position: relative;
-  text-align: center;
-  color: #FFF;
-  border-bottom: 1px solid #4fbbda;
-  padding: 10px 0;
-}
-body .entry-content ul.wpuf_packs .wpuf-pricing-wrap .wpuf-sub-amount .wpuf-sub-symbol,
-body ul.wpuf_packs .wpuf-pricing-wrap .wpuf-sub-amount .wpuf-sub-symbol {
-  font-size: 19px;
-  position: absolute;
-  top: 25px;
-  line-height: 10px;
-}
-body .entry-content ul.wpuf_packs .wpuf-pricing-wrap .wpuf-sub-amount .wpuf-sub-cost,
-body ul.wpuf_packs .wpuf-pricing-wrap .wpuf-sub-amount .wpuf-sub-cost {
-  font-size: 40px;
-  margin-left: 10px;
-  line-height: 50px;
-}
-body .entry-content ul.wpuf_packs .wpuf-pricing-wrap .wpuf-sub-amount .wpuf-pack-cycle,
-body ul.wpuf_packs .wpuf-pricing-wrap .wpuf-sub-amount .wpuf-pack-cycle {
-  font-size: 13px;
-  padding-bottom: 5px;
-}
-body .entry-content ul.wpuf_packs .wpuf-sub-body,
-body ul.wpuf_packs .wpuf-sub-body {
-  margin: 0;
-  padding: 8px 0 0 8px;
-  background: #fff;
-  font-size: 11px;
-  color: #999;
-}
-body .entry-content ul.wpuf_packs .wpuf-sub-button,
-body ul.wpuf_packs .wpuf-sub-button {
-  text-align: center;
-  margin-bottom: 20px;
-  margin-top: 20px;
-  overflow: hidden;
-}
-body .entry-content ul.wpuf_packs .wpuf-sub-button a,
-body ul.wpuf_packs .wpuf-sub-button a {
-  background: #64C3DE;
-  color: #fff;
-  text-decoration: none;
-  padding: 5px 10px;
-  -webkit-border-radius: 3px;
-  -moz-border-radius: 3px;
-  border-radius: 3px;
-  display: inline-block;
-}
-body .entry-content ul.wpuf_packs .wpuf-sub-button a:hover,
-body ul.wpuf_packs .wpuf-sub-button a:hover {
-  background: #3ab3d5;
-}
-body .entry-content ul.wpuf_packs .wpuf-sub-button a:hover,
-body ul.wpuf_packs .wpuf-sub-button a:hover {
-  background: none repeat scroll 0 0 #1E8CBE;
-  border-color: #0074A2;
-  box-shadow: 0 1px 0 rgba(120, 200, 230, 0.6) inset;
-  color: #FFFFFF;
-}
-body .entry-content ul.wpuf_packs .wpuf-sub-desciption,
-body ul.wpuf_packs .wpuf-sub-desciption {
-  margin-top: 15px;
-}
-body .entry-content ul.wpuf_packs .wpuf-sub-desciption ul,
-body ul.wpuf_packs .wpuf-sub-desciption ul,
-body .entry-content ul.wpuf_packs .wpuf-sub-desciption li,
-body ul.wpuf_packs .wpuf-sub-desciption li {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-body .entry-content ul.wpuf_packs .wpuf-sub-desciption li,
-body ul.wpuf_packs .wpuf-sub-desciption li {
-  text-align: center;
-  border-top: 1px solid #eee;
-  padding: 7px 0;
-}
-body .entry-content ul.wpuf_packs .wpuf-sub-desciption li:last-child,
-body ul.wpuf_packs .wpuf-sub-desciption li:last-child {
-  border-bottom: 1px solid #eee;
-}
-body .entry-content ul.wpuf_packs .wpuf-sub-desciption li:first-child,
-body ul.wpuf_packs .wpuf-sub-desciption li:first-child {
-  border-top: none;
-}
-body .entry-content ul.wpuf_packs .wpuf-sub-desciption p,
-body ul.wpuf_packs .wpuf-sub-desciption p {
-  padding: 0 10px;
-  margin-bottom: 15px;
-}
-body .entry-content ul.wpuf_packs .button,
-body ul.wpuf_packs .button {
-  background: none repeat scroll 0 0 #2EA2CC;
-  border-color: #0074A2;
-  box-shadow: 0 1px 0 rgba(120, 200, 230, 0.5) inset, 0 1px 0 rgba(0, 0, 0, 0.15);
-  color: #FFFFFF;
-  text-decoration: none;
-  padding: 0 12px 2px;
-  color: #fff;
-}
-body .entry-content ul.wpuf_packs .cost,
-body ul.wpuf_packs .cost {
-  background: red;
-  border-radius: 30px 30px 30px 30px;
-  color: #FFFFFF;
-  margin: -16px -12px 0 0;
-  padding: 10px 8px 8px;
-  position: absolute;
-  right: 0;
-  top: 0;
-}
 body .ui-timepicker-div .ui-widget-header {
   margin-bottom: 8px;
 }
@@ -939,6 +936,9 @@ body #wpuf-payment-gateway ul.wpuf-payment-gateways {
 }
 body #wpuf-payment-gateway ul.wpuf-payment-gateways li {
   margin: 0;
+}
+body #wpuf-payment-gateway ul.wpuf-payment-gateways li.wpuf-gateway-paypal img {
+  max-width: 18px;
 }
 body #wpuf-payment-gateway ul.wpuf-payment-gateways li .wpuf-payment-instruction {
   padding: 8px 10px;
@@ -1708,7 +1708,6 @@ body ul.wpuf-form .wpuf-field-columns .wpuf-column-field-inner-columns .wpuf-col
   float: none;
   display: flex;
   width: 100%;
-  overflow: hidden;
 }
 body ul.wpuf-form .wpuf-field-columns .wpuf-column-field-inner-columns .wpuf-column .wpuf-column-inner-fields {
   padding: 0 5px 0 0;
@@ -1797,4 +1796,33 @@ img.wpuf-eye {
   right: 1rem;
   top: 50%;
   transform: translateY(-50%) translateX(-6%);
+}
+/* CSS utility classes for hiding fields on frontend */
+.wpuf-form .hidden,
+.wpuf-form .Hidden,
+.wpuf-form .HIDDEN,
+.wpuf-form .d-none,
+.wpuf-form .D-none,
+.wpuf-form .D-None,
+.wpuf-form .hide,
+.wpuf-form .Hide,
+.wpuf-form .HIDE {
+  display: none !important;
+}
+.wpuf-form .invisible,
+.wpuf-form .Invisible,
+.wpuf-form .INVISIBLE {
+  visibility: hidden !important;
+}
+.wpuf-form .sr-only,
+.wpuf-form .visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
 }

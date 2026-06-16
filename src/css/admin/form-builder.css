@@ -4,7 +4,7 @@
 
 @layer components {
     .wpuf-btn-primary {
-        @apply wpuf-rounded-md wpuf-bg-primary !wpuf-text-white wpuf-px-4 wpuf-py-3 wpuf-text-sm wpuf-font-semibold hover:wpuf-bg-emerald-700 hover:wpuf-text-white focus:wpuf-text-white focus:wpuf-shadow-none;
+        @apply wpuf-rounded-md wpuf-bg-primary !wpuf-text-white wpuf-px-4 wpuf-py-3 wpuf-text-sm wpuf-font-semibold hover:wpuf-bg-primaryHover hover:wpuf-text-white focus:wpuf-text-white focus:wpuf-shadow-none;
     }
 
     .wpuf-btn-secondary {
@@ -16,7 +16,7 @@
     }
 
     .wpuf-input-checkbox {
-        @apply wpuf-bg-transparent wpuf-text-white checked:wpuf-bg-transparent checked:wpuf-shadow-primary checked:hover:wpuf-shadow-transparent checked:hover:wpuf-bg-transparent checked:focus:wpuf-bg-transparent
+        @apply wpuf-bg-transparent wpuf-text-white checked:wpuf-bg-transparent checked:wpuf-shadow-sm checked:hover:wpuf-shadow-none checked:hover:wpuf-bg-transparent checked:focus:wpuf-bg-transparent
     }
 
     .wpuf-pill-green {
@@ -288,3 +288,71 @@ button.swal2-cancel.swal2-styled.swal2-default-outline {
     font-size: .75rem;
 }
 /*tooltip*/
+
+/* WPUF Pro Modal Styles */
+.wpuf-pro-modal-content {
+    @apply wpuf-flex wpuf-items-start wpuf-gap-16;
+}
+
+.wpuf-pro-modal-left {
+    @apply wpuf-flex-1 wpuf-text-left;
+}
+
+.wpuf-pro-modal-icon {
+    @apply wpuf-bg-emerald-100 wpuf-rounded-full wpuf-w-24 wpuf-h-24 wpuf-flex wpuf-items-center wpuf-justify-center wpuf-mb-5;
+}
+
+.wpuf-pro-modal-title {
+    @apply wpuf-text-2xl wpuf-font-medium wpuf-text-gray-900 wpuf-mb-4 wpuf-mt-0;
+}
+
+.wpuf-pro-modal-text {
+    @apply wpuf-text-xl wpuf-text-gray-500 wpuf-leading-7 wpuf-mt-0 wpuf-mb-0 wpuf-font-medium;
+}
+
+.wpuf-pro-modal-right {
+    @apply wpuf-flex-shrink-0 wpuf-bg-orange-50 wpuf-rounded-lg wpuf-p-6 wpuf-relative;
+}
+
+.wpuf-pro-modal-right img {
+    @apply wpuf-w-auto wpuf-h-80 wpuf-rounded wpuf-block;
+}
+
+/* AI Field Options Modal */
+.wpuf-ai-modal-overlay {
+    @apply wpuf-fixed wpuf-inset-0 wpuf-bg-black wpuf-bg-opacity-50 wpuf-flex wpuf-items-center wpuf-justify-center wpuf-z-50;
+}
+
+.wpuf-ai-modal {
+    @apply wpuf-bg-white wpuf-rounded-lg wpuf-shadow-xl wpuf-max-w-2xl wpuf-w-full wpuf-mx-4;
+    max-height: 90vh;
+}
+
+.wpuf-ai-modal-header {
+    @apply wpuf-flex wpuf-justify-between wpuf-items-center wpuf-p-6 wpuf-border-b;
+}
+
+.wpuf-ai-modal-header h3 {
+    @apply wpuf-text-lg wpuf-font-semibold wpuf-m-0;
+}
+
+.wpuf-ai-modal-close {
+    @apply wpuf-text-gray-400 hover:wpuf-text-gray-600 wpuf-text-3xl wpuf-leading-none wpuf-bg-transparent wpuf-border-0 wpuf-cursor-pointer;
+}
+
+.wpuf-ai-modal-body {
+    @apply wpuf-p-6;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.wpuf-ai-modal-footer {
+    @apply wpuf-flex wpuf-justify-end wpuf-gap-3 wpuf-p-6 wpuf-border-t;
+}
+
+.wpuf-ai-options-list {
+    @apply wpuf-max-h-64 wpuf-overflow-y-auto wpuf-border wpuf-rounded wpuf-p-3;
+}
+#wpuf-form-builder [type='checkbox']:checked {
+    background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e");
+}

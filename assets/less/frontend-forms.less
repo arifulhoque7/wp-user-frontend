@@ -516,15 +516,21 @@ ul.wpuf-form {
                 }
             }
 
-            table.wpuf-repeatable-field {
+            .wpuf-repeatable-field {
                 border-collapse: collapse;
+
+                &.wpuf-field-columns {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+
+                .wpuf-column-field-inner-columns {
+                    width: 100%;
+                }
 
                 & * {
                     box-sizing: border-box;
-                }
-
-                input {
-                    width: 100%;
                 }
 
                 .wpuf-repeater-buttons {
@@ -790,6 +796,7 @@ ul.wpuf-form {
     }
 }
 
+/* Commented out to allow Tailwind styles for subscription packs
 .entry-content ul.wpuf_packs,
 ul.wpuf_packs {
     overflow: hidden;
@@ -949,6 +956,7 @@ ul.wpuf_packs {
         top: 0;
     }
 }
+End of commented pack styles */
 
 /* css for timepicker */
 .ui-timepicker-div .ui-widget-header { margin-bottom: 8px; }
@@ -1026,6 +1034,10 @@ table.wpuf-table {
 
         li {
             margin: 0;
+
+            &.wpuf-gateway-paypal img {
+                max-width: 18px;
+            }
 
             .wpuf-payment-instruction {
                 padding: 8px 10px;
@@ -1979,7 +1991,6 @@ ul.wpuf-form{
                 float: none;
                 display: flex;
                 width: 100%;
-                overflow: hidden;
 
                 .wpuf-column-inner-fields{
                     padding: 0 5px 0 0;
@@ -2078,4 +2089,38 @@ img.wpuf-eye {
     right: 1rem;
     top: 50%;
     transform: translateY(-50%) translateX(-6%);
+}
+
+/* CSS utility classes for hiding fields on frontend */
+.wpuf-form {
+    .hidden,
+    .Hidden,
+    .HIDDEN,
+    .d-none,
+    .D-none,
+    .D-None,
+    .hide,
+    .Hide,
+    .HIDE {
+        display: none !important;
+    }
+
+    .invisible,
+    .Invisible,
+    .INVISIBLE {
+        visibility: hidden !important;
+    }
+
+    .sr-only,
+    .visually-hidden {
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        padding: 0 !important;
+        margin: -1px !important;
+        overflow: hidden !important;
+        clip: rect(0, 0, 0, 0) !important;
+        white-space: nowrap !important;
+        border: 0 !important;
+    }
 }

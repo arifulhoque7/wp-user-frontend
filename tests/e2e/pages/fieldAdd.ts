@@ -1,5 +1,5 @@
 import * as dotenv from 'dotenv';
-dotenv.config();
+dotenv.config({ quiet: true });
 import { expect, type Page } from '@playwright/test';
 import { Selectors } from './selectors';
 import { Base } from './base';
@@ -83,6 +83,28 @@ export class FieldAddPage extends Base {
         await this.assertionValidate(Selectors.postForms.validateProductPostFields_PF.validateProductAttribute);
     }
 
+    async validateDownloadsPostFields_PF(){
+        // Validate
+        // Downloads Title
+        await this.assertionValidate(Selectors.postForms.validateDownloadsPostFields_PF.validateDownloadsTitle);
+        //Downloads Category
+        await this.assertionValidate(Selectors.postForms.validateDownloadsPostFields_PF.validateDownloadsCategory);
+        // Downloads Description
+        await this.assertionValidate(Selectors.postForms.validateDownloadsPostFields_PF.validateDownloadsDescription);
+        // Downloads Price
+        await this.assertionValidate(Selectors.postForms.validateDownloadsPostFields_PF.validateDownloadsShDescription);
+        // Regular Price
+        await this.assertionValidate(Selectors.postForms.validateDownloadsPostFields_PF.validateRegularPrice);
+        // Downloads Image
+        await this.assertionValidate(Selectors.postForms.validateDownloadsPostFields_PF.validateDownloadsImage);
+        // Purchase Note
+        await this.assertionValidate(Selectors.postForms.validateDownloadsPostFields_PF.validatepurchaseNote);
+        // Downloadable Files
+        await this.assertionValidate(Selectors.postForms.validateDownloadsPostFields_PF.validateDownloadableFiles);
+        // Product Tag
+        await this.assertionValidate(Selectors.postForms.validateDownloadsPostFields_PF.validateProductTag);
+    }
+
 
 
     /********************* Taxonomies *********************/
@@ -122,6 +144,10 @@ export class FieldAddPage extends Base {
         await this.validateAndClick(Selectors.postForms.addProductTaxo_PF.attributeBlock);
     }
 
+    async addDownloadsTaxoFields_PF(){
+        //Taxonomies
+        await this.validateAndClick(Selectors.postForms.addDownloadsTaxo_PF.tagBlock);
+    }
 
 
 
@@ -195,6 +221,16 @@ export class FieldAddPage extends Base {
 
         }
 
+    }
+
+    async addTextRelatedFields() {
+        //CustomFields
+        await this.validateAndClick(Selectors.postForms.addCustomFields_Common.customFieldsText);
+        
+        if (await this.page.isVisible(Selectors.postForms.addCustomFields_Common.prompt1PopUpModalClose)) {
+            await this.validateAndClick(Selectors.postForms.addCustomFields_Common.prompt1PopUpModalClose);
+        }
+        await this.validateAndClick(Selectors.postForms.addCustomFields_Common.customFieldsTextarea);
     }
 
     //Validate > CustomFields
@@ -340,6 +376,60 @@ export class FieldAddPage extends Base {
         }
     }
 
+    async addFOS() {
+        //FOS
+        await this.validateAndClick(Selectors.postForms.addPostFields_PF.postTitleBlock);
+        await this.validateAndClick(Selectors.postForms.addTaxonomies_PF.categoryBlock);
+        await this.validateAndClick(Selectors.postForms.addCustomFields_Common.customFieldsText);
+        
+        if (await this.page.isVisible(Selectors.postForms.addCustomFields_Common.prompt1PopUpModalClose)) {
+            await this.validateAndClick(Selectors.postForms.addCustomFields_Common.prompt1PopUpModalClose);
+        }
+        await this.validateAndClick(Selectors.postForms.addCustomFields_Common.customFieldsTextarea);
+        await this.validateAndClick(Selectors.postForms.addCustomFields_Common.customFieldsDropdown);
+        await this.validateAndClick(Selectors.postForms.addCustomFields_Common.customFieldsRadio);
+        await this.validateAndClick(Selectors.postForms.addCustomFields_Common.customFieldsImageUpload);
+        //TimeField
+        await this.validateAndClick(Selectors.postForms.addCustomFields_Common.customFieldsTimeField);
+        //FileUpload    
+        await this.validateAndClick(Selectors.postForms.addCustomFields_Common.customFieldsFileUpload);
+        //CountryList
+        await this.validateAndClick(Selectors.postForms.addCustomFields_Common.customFieldsCountryList);
+
+        await this.validateAndClick(Selectors.postForms.addCustomFields_Common.customFieldsEmbed);
+
+        await this.validateAndClick(Selectors.postForms.addCustomFields_Common.customFieldsEmailAddress);
+
+        //AddressField  
+        await this.validateAndClick(Selectors.postForms.addCustomFields_Common.customFieldsAddressField);
+
+        await this.validateAndClick(Selectors.postForms.addCustomFields_Common.customFieldsWebsiteUrl);
+
+        //NumericField
+        await this.validateAndClick(Selectors.postForms.addCustomFields_Common.customFieldsNumericField);
+
+    }
+    
+    async addFOS_more() {
+        //FOS
+        await this.validateAndClick(Selectors.postForms.addPostFields_PF.postTitleBlock);
+        //DateTime
+        await this.validateAndClick(Selectors.postForms.addCustomFields_Common.customFieldsDateTime);
+        if (await this.page.isVisible(Selectors.postForms.addCustomFields_Common.prompt1PopUpModalClose)) {
+            await this.validateAndClick(Selectors.postForms.addCustomFields_Common.prompt1PopUpModalClose);
+        }
+
+    }
+
+    async addFOS_again() {
+        //FOS
+        await this.validateAndClick(Selectors.postForms.addPostFields_PF.postTitleBlock);
+        await this.validateAndClick(Selectors.postForms.addCustomFields_Common.customFieldsWebsiteUrl);
+        if (await this.page.isVisible(Selectors.postForms.addCustomFields_Common.prompt1PopUpModalClose)) {
+            await this.validateAndClick(Selectors.postForms.addCustomFields_Common.prompt1PopUpModalClose);
+        }
+    }
+
 
     //Settings > MultiStep Check
     async setMultiStepSettings_Common() {
@@ -366,8 +456,8 @@ export class FieldAddPage extends Base {
     async saveForm_Common() {
         //Save Form
         await this.validateAndClick(Selectors.postForms.saveForm_Common.saveFormButton);
-        // Wait for save and verify success message
-        await this.page.waitForSelector(Selectors.postFormSettings.messages.formSaved);
+
+        await this.waitForFormSaved(Selectors.postFormSettings.messages.formSaved, Selectors.postForms.saveForm_Common.saveFormButton);
 
     }
 
@@ -382,10 +472,7 @@ export class FieldAddPage extends Base {
         //ASSERTION > Check if-VALID
         const checkNewBlankFormCreatedValid_PF = await this.page.isVisible(Selectors.postForms.navigatePage_PF.checkAddButton_PF);
         if (checkNewBlankFormCreatedValid_PF === true) {
-            const checkNewFormCreated_PF = await this.page.innerText(Selectors.postForms.navigatePage_PF.postFormsPageFormsTitleCheck_PF(validateNewPostName_PF));
-            expect(checkNewFormCreated_PF).toContain(validateNewPostName_PF);
-            console.log('PF Name: ' + checkNewFormCreated_PF);
-            console.log('PF List: ' + validateNewPostName_PF);
+            await this.checkElementText(Selectors.postForms.navigatePage_PF.postFormsPageFormsTitleCheck_PF(validateNewPostName_PF), validateNewPostName_PF);
             return await this.page.textContent(Selectors.postForms.navigatePage_PF.postFormShortCode(validateNewPostName_PF));
         }
     }
@@ -399,10 +486,7 @@ export class FieldAddPage extends Base {
         //ASSERTION > Check if-VALID
         const checkNewBlankFormCreatedValid_PF = await this.page.isVisible(Selectors.postForms.navigatePage_PF.checkAddButton_PF);
         if (checkNewBlankFormCreatedValid_PF === true) {
-            const checkNewFormCreated_PF = await this.page.innerText(Selectors.postForms.navigatePage_PF.postFormsPageFormsTitleCheck_PF(validateNewPostName_PF));
-            expect(checkNewFormCreated_PF).toContain(validateNewPostName_PF);
-            console.log('PF Name: ' + checkNewFormCreated_PF);
-            console.log('PF List: ' + validateNewPostName_PF);
+            await this.checkElementText(Selectors.postForms.navigatePage_PF.postFormsPageFormsTitleCheck_PF(validateNewPostName_PF), validateNewPostName_PF);
             return await this.page.textContent(Selectors.postForms.navigatePage_PF.postFormShortCode(validateNewPostName_PF));
         }
     }
@@ -449,10 +533,7 @@ export class FieldAddPage extends Base {
         //ASSERTION > Check if-VALID
         const checkNewBlankFormCreatedValid_RF = await this.page.isVisible(Selectors.registrationForms.navigatePage_RF.checkAddButton_RF);
         if (checkNewBlankFormCreatedValid_RF === true) {
-            const checkNewFormCreated_RF = await this.page.innerText(Selectors.registrationForms.navigatePage_RF.postFormsPageFormTitleCheck_RF);
-            await expect(checkNewFormCreated_RF).toContain(validateNewPostName_RF);
-            console.log('RF Name: ' + checkNewFormCreated_RF);
-            console.log('PF List: ' + validateNewPostName_RF);
+            await this.checkElementText(Selectors.registrationForms.navigatePage_RF.postFormsPageFormTitleCheck_RF, validateNewPostName_RF);
         }
     }
 }

@@ -109,6 +109,15 @@ class Assets {
             'frontend-forms'      => [
                 'src' => WPUF_ASSET_URI . '/css/frontend-forms.css',
             ],
+            'elementor-frontend-forms'      => [
+                'src' => WPUF_ASSET_URI . '/css/elementor-frontend-forms.css',
+            ],
+            'elementor-subscription-plans'      => [
+                'src' => WPUF_ASSET_URI . '/css/elementor-subscription-plans.css',
+            ],
+            'frontend-subscriptions' => [
+                'src' => WPUF_ASSET_URI . '/css/frontend-subscriptions.min.css',
+            ],
             'layout1'             => [
                 'src' => WPUF_ASSET_URI . '/css/frontend-form/layout1.css',
             ],
@@ -133,8 +142,8 @@ class Assets {
                 'version' => '11.4.8',
             ],
             'font-awesome'        => [
-                'src'     => WPUF_ASSET_URI . '/vendor/font-awesome/css/font-awesome.min.css',
-                'version' => '4.7.0',
+                'src'     => WPUF_ASSET_URI . '/vendor/font-awesome/css/all.min.css',
+                'version' => '7.0.1',
             ],
             'selectize'           => [
                 'src'     => WPUF_ASSET_URI . '/vendor/selectize/css/selectize.default.css',
@@ -156,6 +165,9 @@ class Assets {
                 'src'  => WPUF_ASSET_URI . '/css/admin/form-builder.css',
                 'deps' => $this->form_builder_css_deps,
             ],
+            'ai-form-builder'     => [
+                'src'  => WPUF_ASSET_URI . '/css/ai-form-builder.css',
+            ],
             'admin'               => [
                 'src' => WPUF_ASSET_URI . '/css/admin.css',
             ],
@@ -176,11 +188,11 @@ class Assets {
                 'src'  => WPUF_ASSET_URI . '/css/admin/wpuf-setup.css',
                 'deps' => [ 'dashicons', 'install' ],
             ],
-            'whats-new'           => [
-                'src' => WPUF_ASSET_URI . '/css/admin/whats-new.css',
-            ],
             'forms-list'           => [
                 'src' => WPUF_ASSET_URI . '/css/forms-list.min.css',
+            ],
+            'account'              => [
+                'src' => WPUF_ASSET_URI . '/css/frontend/account.css',
             ],
         ];
 
@@ -293,6 +305,11 @@ class Assets {
                 'src'       => WPUF_ASSET_URI . '/js/subscriptions.min.js',
                 'in_footer' => true,
             ],
+            'ai-form-builder'          => [
+                'src'       => WPUF_ASSET_URI . '/js/ai-form-builder.min.js',
+                'in_footer' => true,
+                'version'   => time(), // Cache busting - force browser to reload
+            ],
             'timepicker'               => [
                 'src'       => WPUF_ASSET_URI . '/js/jquery-ui-timepicker-addon.js',
                 'deps'      => [ 'jquery-ui-datepicker' ],
@@ -360,15 +377,20 @@ class Assets {
             ],
             'enhanced-select'          => [
                 'src'  => WPUF_ASSET_URI . '/js/admin/wpuf-enhanced-select' . $this->suffix . '.min.js',
-                'deps' => [ 'jquery', 'selectWoo' ],
+                'deps' => [ 'jquery', 'wpuf-selectWoo' ],
             ],
             'setup'                    => [
                 'src'  => WPUF_ASSET_URI . '/js/admin/wpuf-setup' . $this->suffix . '.js',
-                'deps' => [ 'jquery', 'wpuf-enhanced-select', 'jquery-blockui' ],
+                'deps' => [ 'jquery', 'wpuf-enhanced-select', 'wpuf-jquery-blockui' ],
             ],
             'frontend-form'            => [
                 'src'  => WPUF_ASSET_URI . '/js/frontend-form' . $this->suffix . '.js',
                 'deps' => [ 'jquery' ],
+            ],
+            'account'                  => [
+                'src'       => WPUF_ASSET_URI . '/js/account' . $this->suffix . '.js',
+                'deps'      => [ 'jquery' ],
+                'in_footer' => true,
             ],
             'upload'                   => [
                 'src'  => WPUF_ASSET_URI . '/js/upload' . $this->suffix . '.js',
@@ -390,6 +412,14 @@ class Assets {
             ],
             'forms-list'         => [
                 'src'       => WPUF_ASSET_URI . '/js/forms-list.min.js',
+                'in_footer' => true,
+            ],
+            'frontend-subscriptions' => [
+                'src'       => WPUF_ASSET_URI . '/js/frontend-subscriptions.min.js',
+                'in_footer' => true,
+            ],
+            'elementor-subscription-plans' => [
+                'src'       => WPUF_ASSET_URI . '/js/elementor-subscription-plans.js',
                 'in_footer' => true,
             ],
         ];

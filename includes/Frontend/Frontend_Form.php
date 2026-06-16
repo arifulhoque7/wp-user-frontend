@@ -169,17 +169,39 @@ class Frontend_Form extends Frontend_Render_Form {
 
     /**
      * Draft Post
+     *
+     * Saves or updates a draft post via AJAX. For updates (when post_id is provided),
+     * authorization is enforced using WordPress capabilities.
+     *
+     * - Logged-in users: Verifies post ownership and edit_post capability, or edit_others_posts
+     *   capability for posts they don't own
+     * - Guest users: Can create new drafts but cannot edit existing drafts (must log in)
+     *
+     * @since 4.0.0
+     * @since 4.2.9 Enhanced authorization with proper capability checks. Removed guest draft editing.
+     *
+     * @return void
      */
     public function draft_post() {
         check_ajax_referer( 'wpuf_form_add' );
         add_filter( 'wpuf_form_fields', [ $this, 'add_field_settings' ] );
-        @header( 'Content-Type: application/json; charset=' . get_option( 'blog_charset' ) );
+
+        if ( ! headers_sent() ) {
+            header( 'Content-Type: application/json; charset=' . get_option( 'blog_charset' ) );
+        }
 
         $form_id             = isset( $_POST['form_id'] ) ? intval( wp_unslash( $_POST['form_id'] ) ) : 0;
         $form                = new Form( $form_id );
         $this->form_settings = $form->get_settings();
         $this->form_fields   = $form->get_fields();
         $pay_per_post        = $form->is_enabled_pay_per_post();
+
+        // Early return: User must be logged in to save drafts
+        $current_user_id = get_current_user_id();
+
+        if ( $current_user_id <= 0 ) {
+            wp_send_json_error( [ 'message' => __( 'You must be logged in to save drafts.', 'wp-user-frontend' ) ] );
+        }
 
         [ $post_vars, $taxonomy_vars, $meta_vars ] = $this->get_input_fields( $this->form_fields );
 
@@ -189,7 +211,7 @@ class Frontend_Form extends Frontend_Render_Form {
         $postarr = [
             'post_type'    => $this->form_settings['post_type'],
             'post_status'  => wpuf_get_draft_post_status( $this->form_settings ),
-            'post_author'  => get_current_user_id(),
+            'post_author'  => $current_user_id,
             'post_title'   => isset( $_POST['post_title'] ) ? sanitize_text_field( wp_unslash( $_POST['post_title'] ) ) : '',
             'post_content' => $post_content,
             'post_excerpt' => isset( $_POST['post_excerpt'] ) ? wp_kses( wp_unslash( $_POST['post_excerpt'] ), $allowed_tags ) : '',
@@ -236,10 +258,21 @@ class Frontend_Form extends Frontend_Render_Form {
             $postarr['tags_input'] = explode( ',', sanitize_text_field( wp_unslash( $_POST['tags'] ) ) );
         }
 
-        // if post_id is passed, we update the post
         if ( isset( $_POST['post_id'] ) ) {
+            $update_post_id = intval( wp_unslash( $_POST['post_id'] ) );
+
+            // Verify the post exists and user has permission to edit
+            $can_edit = wpuf_user_can_edit_post( $update_post_id );
+
+            if ( is_wp_error( $can_edit ) ) {
+                wp_send_json_error( [ 'message' => $can_edit->get_error_message() ] );
+            }
+
+            $existing_post = get_post( $update_post_id );
+
             $is_update                 = true;
-            $postarr['ID']             = intval( wp_unslash( $_POST['post_id'] ) );
+            $postarr['ID']             = $update_post_id;
+            $postarr['post_author']    = (int) $existing_post->post_author; // Preserve original author
             $postarr['comment_status'] = 'open';
         }
 
@@ -270,22 +303,21 @@ class Frontend_Form extends Frontend_Render_Form {
             }
         }
 
-        //used to add code to run when the post is going to draft
         do_action( 'wpuf_draft_post_after_insert', $post_id, $form_id, $this->form_settings, $this->form_fields );
 
         wpuf_clear_buffer();
 
-        echo wp_json_encode(
-            [
-                'post_id'        => $post_id,
-                'action'         => isset( $_POST['action'] ) ? sanitize_text_field( wp_unslash( $_POST['action'] ) ) : '',
-                'date'           => current_time( 'mysql' ),
-                'post_author'    => get_current_user_id(),
-                'comment_status' => get_option( 'default_comment_status' ),
-                'url'            => add_query_arg( 'preview', 'true', get_permalink( $post_id ) ),
-                'message'        => __( 'Post Saved', 'wp-user-frontend' ),
-            ]
-        );
+        $response = [
+            'post_id'        => $post_id,
+            'action'         => isset( $_POST['action'] ) ? sanitize_text_field( wp_unslash( $_POST['action'] ) ) : '',
+            'date'           => current_time( 'mysql' ),
+            'post_author'    => $current_user_id,
+            'comment_status' => get_option( 'default_comment_status' ),
+            'url'            => add_query_arg( 'preview', 'true', get_permalink( $post_id ) ),
+            'message'        => __( 'Post Saved', 'wp-user-frontend' ),
+        ];
+
+        echo wp_json_encode( $response );
 
         exit;
     }
@@ -313,6 +345,9 @@ class Frontend_Form extends Frontend_Render_Form {
         $info                         = apply_filters( 'wpuf_addpost_notice', $info, $id, $this->form_settings );
         $user_can_post                = apply_filters( 'wpuf_can_post', $user_can_post, $id, $this->form_settings );
 
+        // Enqueue FontAwesome for field icons
+        wp_enqueue_style( 'wpuf-font-awesome' );
+
         if ( $user_can_post === 'yes' ) {
             $this->render_form( $id, null, $atts, $form );
         } else {
@@ -330,9 +365,13 @@ class Frontend_Form extends Frontend_Render_Form {
      * @since 2.5.8
      */
     public function publish_guest_post() {
+        // Email-verification flow: link is sent to guest's inbox; payload is validated
+        // via wpuf_decryption() and post-author check below — no form nonce applies.
+        // phpcs:disable WordPress.Security.NonceVerification.Recommended
         $post_msg = isset( $_GET['post_msg'] ) ? sanitize_text_field( wp_unslash( $_GET['post_msg'] ) ) : '';
         $pid      = isset( $_GET['p_id'] ) ? sanitize_text_field( wp_unslash( $_GET['p_id'] ) ) : '';
         $fid      = isset( $_GET['f_id'] ) ? sanitize_text_field( wp_unslash( $_GET['f_id'] ) ) : '';
+        // phpcs:enable WordPress.Security.NonceVerification.Recommended
 
         if ( $post_msg !== 'verified' ) {
             return;
@@ -341,8 +380,27 @@ class Frontend_Form extends Frontend_Render_Form {
         $response       = [];
         $post_id        = wpuf_decryption( $pid );
         $form_id        = wpuf_decryption( $fid );
+
+        $post = get_post( $post_id );
+
+        if ( ! $post ) {
+            wp_die( esc_html__( 'Invalid post.', 'wp-user-frontend' ) );
+        }
+
+        $post_author_id = (int) $post->post_author;
+
+        if ( $post_author_id !== 0 ) {
+            wp_die( esc_html__( 'This post cannot be published via email verification.', 'wp-user-frontend' ) );
+        }
+
+        $current_status   = get_post_status( $post_id );
+        $allowed_statuses = [ 'draft', 'pending', 'auto-draft' ];
+
+        if ( ! in_array( $current_status, $allowed_statuses, true ) ) {
+            wp_die( esc_html__( 'This post has already been published.', 'wp-user-frontend' ) );
+        }
+
         $form_settings  = wpuf_get_form_settings( $form_id );
-        $post_author_id = get_post_field( 'post_author', $post_id );
         $payment_status = new Subscription();
         $form           = new Form( $form_id );
         $pay_per_post   = $form->is_enabled_pay_per_post();
@@ -360,7 +418,7 @@ class Frontend_Form extends Frontend_Render_Form {
                     get_permalink( wpuf_get_option( 'payment_page', 'wpuf_payment' ) )
                 );
 
-                wp_redirect( $response['redirect_to'] );
+                wp_safe_redirect( $response['redirect_to'] );
                 wpuf_clear_buffer();
                 wp_send_json_error( $response );
             }
@@ -386,14 +444,15 @@ class Frontend_Form extends Frontend_Render_Form {
      * Enable edit post link for post authors
      *
      * @since 3.4.0
+     * @since 4.3.6 Support all post types created via WPUF forms.
      *
-     * @param array    $allcaps
-     * @param array    $caps
-     * @param array    $args
+     * @param array   $allcaps
+     * @param array   $caps
+     * @param array   $args
      * @param WP_User $wp_user
      *
      * @return array
-    */
+     */
     public function map_capabilities_for_post_authors( $allcaps, $caps, $args, $wp_user ) {
         if (
             empty( $args )
@@ -405,16 +464,25 @@ class Frontend_Form extends Frontend_Render_Form {
             return $allcaps;
         }
 
-        $post_id = $args[2];
+        $post_id = absint( $args[2] );
         $post    = get_post( $post_id );
 
-        // We'll show edit link only for posts, not page, product or other post types
+        if ( empty( $post ) || empty( $post->post_type ) ) {
+            return $allcaps;
+        }
+
+        // Only grant cap for posts genuinely created via a WPUF form.
+        // Excludes arbitrary CPTs (page, product, etc.) and admin-created content.
+        $wpuf_form_id = absint( get_post_meta( $post_id, '_wpuf_form_id', true ) );
+
+        if ( empty( $wpuf_form_id ) ) {
+            return $allcaps;
+        }
+
         if (
-            empty( $post->post_type )
-            || 'post' !== $post->post_type
-            || ! wpuf_validate_boolean( wpuf_get_option( 'enable_post_edit', 'wpuf_dashboard', 'yes' ) )
+            ! wpuf_validate_boolean( wpuf_get_option( 'enable_post_edit', 'wpuf_dashboard', 'yes' ) )
             || ! $this->get_frontend_post_edit_link( $post_id )
-            || absint( $post->post_author ) !== $wp_user->ID
+            || absint( $post->post_author ) !== absint( $wp_user->ID )
         ) {
             return $allcaps;
         }
@@ -435,6 +503,10 @@ class Frontend_Form extends Frontend_Render_Form {
      * @return string
     */
     public function get_edit_post_link( $url, $post_id ) {
+        // Role checks (not capabilities): only swap WP admin edit link for the WPUF
+        // frontend edit link when the user is a custom role (e.g. subscriber) that
+        // still has edit_post — standard core roles keep the admin edit link.
+        // phpcs:disable WordPress.WP.Capabilities.RoleFound
         if (
             current_user_can( 'edit_post', $post_id )
             && ! current_user_can( 'administrator' )
@@ -442,6 +514,7 @@ class Frontend_Form extends Frontend_Render_Form {
             && ! current_user_can( 'author' )
             && ! current_user_can( 'contributor' )
         ) {
+            // phpcs:enable WordPress.WP.Capabilities.RoleFound
             $post    = get_post( $post_id );
             $form_id = get_post_meta( $post_id, '_wpuf_form_id', true );
 
@@ -497,8 +570,12 @@ class Frontend_Form extends Frontend_Render_Form {
      * @return void
      */
     public function send_mail_to_admin_after_guest_mail_verified() {
+        // Email-verification flow: link is sent to guest's inbox; payload is validated
+        // via wpuf_decryption() before use — no form nonce applies.
+        // phpcs:disable WordPress.Security.NonceVerification.Recommended
         $post_id = ! empty( $_GET['p_id'] ) ? wpuf_decryption( sanitize_text_field( wp_unslash( $_GET['p_id'] ) ) ) : 0;
         $form_id = ! empty( $_GET['f_id'] ) ? wpuf_decryption( sanitize_text_field( wp_unslash( $_GET['f_id'] ) ) ) : 0;
+        // phpcs:enable WordPress.Security.NonceVerification.Recommended
 
         if ( empty( $post_id ) || empty( $form_id ) ) {
             return;
@@ -523,16 +600,18 @@ class Frontend_Form extends Frontend_Render_Form {
             return;
         }
 
-        $mail_body   = $this->prepare_mail_body( $this->form_settings['notification']['new_body'], $author_id, $post_id );
+        $mail_body = $this->prepare_mail_body( $this->form_settings['notification']['new_body'], $author_id, $post_id );
         // Validate & sanitise recipient addresses before sending
         $to_raw      = $this->prepare_mail_body( $this->form_settings['notification']['new_to'], $author_id, $post_id );
         $to          = implode(
             ',',
             array_filter(
-                array_map( static function ( $addr ) {
-                    $addr = trim( $addr );
-                    return is_email( $addr ) ? $addr : null;
-                }, explode( ',', $to_raw ) )
+                array_map(
+                    static function ( $addr ) {
+						$addr = trim( $addr );
+						return is_email( $addr ) ? $addr : null;
+					}, explode( ',', $to_raw )
+                )
             )
         );
         $subject     = $this->prepare_mail_body( $this->form_settings['notification']['new_subject'], $author_id, $post_id );
@@ -629,12 +708,10 @@ class Frontend_Form extends Frontend_Render_Form {
                                 $meta_val = $val;
                             }
                             $is_first = false;
-                        } else {
-                            if ( get_post_mime_type( (int) $val ) ) {
+                        } elseif ( get_post_mime_type( (int) $val ) ) {
                                 $meta_val = $meta_val . ', ' . wp_get_attachment_url( $val );
-                            } else {
-                                $meta_val = $meta_val . ', ' . $val;
-                            }
+						} else {
+							$meta_val = $meta_val . ', ' . $val;
                         }
 
                         if ( get_post_mime_type( (int) $val ) ) {

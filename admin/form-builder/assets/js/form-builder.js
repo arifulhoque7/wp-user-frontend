@@ -1,3 +1,4 @@
+/* global wpuf_admin_script, ajaxurl, Swal, tinyMCE */
 ;(function($) {
     'use strict';
 
@@ -114,23 +115,56 @@
                 for (i = 0; i < state.form_fields.length; i++) {
                     // check if the editing field exist in normal fields
                     if (state.form_fields[i].id === parseInt(payload.editing_field_id)) {
-                        if ( 'read_only' === payload.field_name && payload.value ) {
-                            state.form_fields[i]['required'] = 'no';
+                        // Store original values before making changes
+                        var original_read_only = state.form_fields[i].read_only;
+                        var original_required = state.form_fields[i].required;
+
+                        if ( 'read_only' === payload.field_name && (payload.value === true || payload.value === 'yes') ) {
+                            // Only set required to 'no' if it's currently 'yes' (to avoid unnecessary updates)
+                            if (state.form_fields[i].required === 'yes') {
+                                Vue.set(state.form_fields[i], 'required', 'no');
+                            }
                         }
 
-                        if ( 'required' === payload.field_name && 'yes' === payload.value ) {
-                            state.form_fields[i]['read_only'] = false;
+                        if ( 'required' === payload.field_name && (payload.value === true || payload.value === 'yes') ) {
+                            // Only set read_only to empty string if it's currently true/yes (to avoid unnecessary updates)
+                            // Empty string is what the checkbox expects when unchecked (for is_single_opt checkboxes)
+                            if (state.form_fields[i].read_only === true || state.form_fields[i].read_only === 'yes') {
+                                // Use Vue.set to ensure reactivity, and set it before assigning required
+                                Vue.set(state.form_fields[i], 'read_only', '');
+                                // Force object property access to ensure Vue processes the change
+                                // This creates a micro-delay that allows Vue's reactivity to propagate
+                                JSON.stringify({ r: state.form_fields[i].read_only });
+                            }
+                        }
+
+                        // Prevent infinite loop: if this mutation was triggered by our programmatic change,
+                        // don't apply mutual exclusion again
+                        if ( 'required' === payload.field_name && original_required === 'no' && payload.value === 'yes' ) {
+                            // This is likely a user trying to set required back to 'yes' after we set it to 'no'
+                            // Check if read_only was just set
+                            if (original_read_only === true || original_read_only === 'yes') {
+                                Vue.set(state.form_fields[i], 'read_only', '');
+                                // Force object property access to ensure Vue processes the change
+                                JSON.stringify({ r: state.form_fields[i].read_only });
+                            }
                         }
 
                         if (payload.field_name === 'name'  && ! state.form_fields[i].hasOwnProperty('is_new') ) {
                             continue;
                         } else {
+                            // Prevent setting required to 'yes' if read_only is true
+                            if (payload.field_name === 'required' && payload.value === 'yes') {
+                                if (state.form_fields[i].read_only === true || state.form_fields[i].read_only === 'yes') {
+                                    continue; // Skip updating required if read_only is set
+                                }
+                            }
+                            
                             state.form_fields[i][payload.field_name] = payload.value;
                         }
-
                     }
 
-                    // check if the editing field belong to a column field
+                    // check if the editing field belongs to a column field
                     if (state.form_fields[i].template === 'column_field') {
                         var innerColumnFields = state.form_fields[i].inner_fields;
 
@@ -139,10 +173,42 @@
                                 var columnFieldIndex = 0;
 
                                 while (columnFieldIndex < innerColumnFields[columnFields].length) {
+                                    // don't modify existing meta key
+                                    if (payload.field_name === 'name'  && ! innerColumnFields[columnFields][columnFieldIndex].hasOwnProperty('is_new') ) {
+                                        columnFieldIndex++;
+                                        continue;
+                                    }
+
                                     if (innerColumnFields[columnFields][columnFieldIndex].id === parseInt(payload.editing_field_id)) {
                                        innerColumnFields[columnFields][columnFieldIndex][payload.field_name] = payload.value;
                                     }
                                     columnFieldIndex++;
+                                }
+                            }
+                        }
+                    }
+
+                    // check if the editing field belongs to a repeat field
+                    if (state.form_fields[i].template === 'repeat_field') {
+                        var innerRepeatFields = state.form_fields[i].inner_fields;
+
+                        if (Array.isArray(innerRepeatFields)) {
+                            for (var repeatFieldIndex = 0; repeatFieldIndex < innerRepeatFields.length; repeatFieldIndex++) {
+                                // don't modify existing meta key
+                                if (payload.field_name === 'name' && !innerRepeatFields[repeatFieldIndex].hasOwnProperty('is_new')) {
+                                    continue;
+                                }
+
+                                if (innerRepeatFields[repeatFieldIndex].id === parseInt(payload.editing_field_id)) {
+                                    if ('read_only' === payload.field_name && payload.value) {
+                                        innerRepeatFields[repeatFieldIndex]['required'] = 'no';
+                                    }
+
+                                    if ('required' === payload.field_name && 'yes' === payload.value) {
+                                        innerRepeatFields[repeatFieldIndex]['read_only'] = false;
+                                    }
+
+                                    innerRepeatFields[repeatFieldIndex][payload.field_name] = payload.value;
                                 }
                             }
                         }
@@ -152,15 +218,27 @@
 
             // add new form field element
             add_form_field_element: function (state, payload) {
+                // Initialize icon properties for new fields to ensure Vue reactivity
+                if (!payload.field.hasOwnProperty('show_icon')) {
+                    payload.field.show_icon = 'no';
+                }
+                if (!payload.field.hasOwnProperty('field_icon')) {
+                    payload.field.field_icon = '';
+                }
+                if (!payload.field.hasOwnProperty('icon_position')) {
+                    payload.field.icon_position = 'left_label';
+                }
 
                 state.form_fields.splice(payload.toIndex, 0, payload.field);
                 var sprintf = wp.i18n.sprintf;
                 var __ = wp.i18n.__;
                 // bring newly added element into viewport, do not show for reg form
-                if ( window.location.search.substring(1).split('&').includes('page=wpuf-profile-forms') ) return;
+                if ( window.location.search.substring(1).split('&').includes('page=wpuf-profile-forms') ) {
+                    return;
+                }
                 Vue.nextTick(function () {
                     var el = $('#form-preview-stage .wpuf-form .field-items').eq(payload.toIndex);
-                    if ('yes' == payload.field.is_meta && state.show_custom_field_tooltip) {
+                    if ('yes' === payload.field.is_meta && state.show_custom_field_tooltip) {
 
                         var image_one  = wpuf_admin_script.asset_url + '/images/custom-fields/settings.png';
                         var image_two  = wpuf_admin_script.asset_url + '/images/custom-fields/advance.png';
@@ -242,10 +320,12 @@
                                                 var $sections = $fieldOptionsMainContainer.find('.option-fields-section');
 
 
-                                                $sections.each(function(index) {
+                                                $sections.each(function() {
                                                     var $parentSection = $(this);
                                                     var $h3 = $parentSection.find('h3').first();
-                                                    if (!$h3.length) return true;
+                                                    if (!$h3.length) {
+                                                        return true;
+                                                    }
 
                                                     var rawH3Text = $h3.clone().children('i').remove().end().text();
                                                     var normalizedH3Text = rawH3Text.trim().toLowerCase().replace(/\.$/, "");
@@ -261,9 +341,9 @@
                                                     }
                                                 });
 
-                                                if ($advancedOptionsToggle?.length) {
+                                                if ($advancedOptionsToggle && $advancedOptionsToggle.length) {
                                                     var isContentVisible = false;
-                                                    if ($advancedOptionsContentDiv?.length) {
+                                                    if ($advancedOptionsContentDiv && $advancedOptionsContentDiv.length) {
                                                         isContentVisible = $advancedOptionsContentDiv.is(':visible');
 
                                                     } else {
@@ -273,8 +353,8 @@
                                                     if (!isContentVisible) {
 
                                                         $advancedOptionsToggle.trigger('click');
-                                                        setTimeout(() => {
-                                                            if ($advancedOptionsContentDiv?.length) {
+                                                        setTimeout(function() {
+                                                            if ($advancedOptionsContentDiv && $advancedOptionsContentDiv.length) {
 
                                                             }
                                                         }, 150);
@@ -282,10 +362,12 @@
 
                                                     }
 
-                                                    if (!$sectionToScroll?.length) $sectionToScroll = $advancedOptionsToggle;
+                                                    if (!$sectionToScroll || !$sectionToScroll.length) {
+                                                        $sectionToScroll = $advancedOptionsToggle;
+                                                    }
 
-                                                    setTimeout(() => {
-                                                        const elementToScrollTo = $sectionToScroll.get(0);
+                                                    setTimeout(function() {
+                                                        var elementToScrollTo = $sectionToScroll.get(0);
                                                         if (elementToScrollTo && typeof elementToScrollTo.scrollIntoView === 'function') {
                                                             elementToScrollTo.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
 
@@ -300,11 +382,11 @@
                                     }, 250);
                                 });
                             }
-                        }).then((result) => {
+                        }).then(function(result) {
                             if (result.isConfirmed) {
                                 state.show_custom_field_tooltip = false;
                             }
-                        } );
+                        });
                     }
 
                     if (el && !is_element_in_viewport(el.get(0))) {
@@ -355,6 +437,7 @@
             delete_form_field_element: function (state, index) {
                 state.current_panel = 'form-fields-v4-1';
                 state.form_fields.splice(index, 1);
+                state.editing_field_id = 0;
             },
 
             // set fields for a panel section
@@ -400,6 +483,41 @@
                 } else {
                     state.form_fields[columnFieldIndex].inner_fields[payload.toWhichColumn].splice( payload.toIndex, 0, payload.field );
                 }
+            },
+
+            // add new form field element to repeat field
+            add_repeat_inner_field_element: function (state, payload) {
+                var repeatFieldIndex = state.form_fields.findIndex(field => field.id === payload.toWhichRepeatField);
+                if (repeatFieldIndex === -1) return;
+                if (!state.form_fields[repeatFieldIndex].inner_fields) {
+                    Vue.set(state.form_fields[repeatFieldIndex], 'inner_fields', []);
+                }
+                state.form_fields[repeatFieldIndex].inner_fields.splice(payload.toIndex, 0, payload.field);
+            },
+
+            // delete a repeat inner field element
+            delete_repeat_inner_field_element: function (state, payload) {
+                var repeatFieldIndex = state.form_fields.findIndex(field => field.id === payload.field_id);
+                if (repeatFieldIndex === -1) return;
+                
+                state.current_panel = 'form-fields-v4-1';
+                state.form_fields[repeatFieldIndex].inner_fields.splice(payload.index, 1);
+            },
+
+            // clone a repeat inner field element
+            clone_repeat_inner_field_element: function (state, payload) {
+                var repeatFieldIndex = state.form_fields.findIndex(field => field.id === payload.field_id);
+                if (repeatFieldIndex === -1) return;
+
+                var field = state.form_fields[repeatFieldIndex].inner_fields[payload.index];
+                var clone = $.extend(true, {}, field);
+                var newIndex = parseInt(payload.index) + 1;
+
+                clone.id = payload.new_id;
+                clone.name = clone.name + '_copy';
+                clone.is_new = true;
+
+                state.form_fields[repeatFieldIndex].inner_fields.splice(newIndex, 0, clone);
             },
 
             move_column_inner_fields: function(state, payload) {
@@ -479,6 +597,27 @@
                 }
             },
 
+            // open repeat field settings panel
+            open_repeat_field_settings: function (state, payload) {
+                var field = payload.repeat_field;
+
+                if ('field-options' === state.current_panel && field.id === state.editing_field_id) {
+                    return;
+                }
+
+                if (field) {
+                    state.editing_field_id = field.id;
+                    state.current_panel = 'field-options';
+                    state.editing_field_type = 'repeat_field';
+                    state.editing_repeat_field_id = payload.field_id;
+                    state.editing_inner_field_index = payload.index;
+
+                    setTimeout(function () {
+                        state.editing_field_id = field.id;
+                    }, 400);
+                }
+            },
+
             clone_column_field_element: function (state, payload) {
                 var columnFieldIndex = state.form_fields.findIndex(field => field.id === payload.field_id);
 
@@ -538,7 +677,6 @@
             post_title_editing: false,
             isDirty: false,
             shortcodeCopied: false,
-            validation_error_msg: '',
             logoUrl: wpuf_form_builder.asset_url + '/images/wpuf-icon-circle.svg',
             settings_titles: wpuf_form_builder.settings_titles,
             settings_items: wpuf_form_builder.settings_items,
@@ -582,7 +720,7 @@
                     }
                 });
 
-                return meta_key.map(function(name) { return '{' + name +'}' }).join( );
+                return meta_key.map(function(name) { return '{' + name +'}'; }).join( );
             },
 
             settings_titles: function() {
@@ -635,6 +773,75 @@
         },
 
         mounted: function () {
+            // Ensure all fields have proper default values for icon settings when editing existing forms
+            this.$store.state.form_fields.forEach(function(field) {
+                // If show_icon is not set in the database, default it to 'no'
+                if (field.show_icon === undefined || field.show_icon === null) {
+                    field.show_icon = 'no';
+                }
+
+                // If field_icon is not set in the database, set it to default icon fas fa-0
+                if (field.field_icon === undefined || field.field_icon === null) {
+                    field.field_icon = 'fas fa-0';
+                }
+
+                // If icon_position is not set, default it to 'left_label'
+                if (field.icon_position === undefined || field.icon_position === null) {
+                    field.icon_position = 'left_label';
+                }
+            });
+
+            // Check if there are hidden custom taxonomy fields and show warning
+            if (wpuf_form_builder.has_hidden_taxonomies && !wpuf_form_builder.is_pro_active) {
+                var self = this;
+                // Check if warning has already been shown in this session
+                // Temporarily disabled for testing - uncomment to enable session check
+                // if (sessionStorage.getItem('wpuf_pro_taxonomy_warning_shown')) {
+                //     return;
+                // }
+                setTimeout(function() {
+                    var __ = (wp && wp.i18n && wp.i18n.__) ? wp.i18n.__ : function(text) { return text; };
+                    if (typeof Swal !== 'undefined') {    
+                        Swal.fire({
+                            title: '',
+                            html: '<div class="wpuf-pro-modal-content">' +
+                                  '<div class="wpuf-pro-modal-left">' +
+                                  '<div class="wpuf-pro-modal-icon">' +
+                                  '<img src="' + wpuf_form_builder.asset_url + '/images/free-circle.svg" alt="' + __('Pro upgrade notification icon', 'wp-user-frontend') + '">' +
+                                  '</div>' +
+                                  '<h2 class="wpuf-pro-modal-title">' + __('Pro Fields Hidden', 'wp-user-frontend') + '</h2>' +
+                                  '<p class="wpuf-pro-modal-text">' + __('This form includes custom taxonomy fields from third-party plugins. These are Pro-only and are hidden in both the builder and frontend until WPUF Pro is activated.', 'wp-user-frontend') + '</p>' +
+                                  '</div>' +
+                                  '<div class="wpuf-pro-modal-right">' +
+                                  '<img src="' + wpuf_form_builder.asset_url + '/images/event-pro-field.jpeg" alt="' + __('Event Pro Field preview', 'wp-user-frontend') + '">' +
+                                  '</div>' +
+                                  '</div>',
+                            icon: false,
+                            showCancelButton: false,
+                            showConfirmButton: true,
+                            confirmButtonColor: '#059669',
+                            confirmButtonText: __('Okay', 'wp-user-frontend'),
+                            customClass: {
+                                popup: 'wpuf-pro-taxonomy-warning',
+                                confirmButton: 'wpuf-btn-primary',
+                                icon: 'wpuf-warning-icon'
+                            },
+                            width: '1038px',
+                            height: '512px',
+                            padding: '36px',
+                            imageAlt: __('Pro upgrade notification', 'wp-user-frontend')
+                        });
+                        // Mark warning as shown in this session
+                        sessionStorage.setItem('wpuf_pro_taxonomy_warning_shown', 'true');
+                    } else {
+                        // Fallback to alert if SweetAlert is not available
+                        alert(__('This form includes custom taxonomy fields from third-party plugins. These are Pro-only and are hidden in both the builder and frontend until WPUF Pro is activated.', 'wp-user-frontend'));
+                        // Mark warning as shown in this session
+                        sessionStorage.setItem('wpuf_pro_taxonomy_warning_shown', 'true');
+                    }
+                }, 500); // Small delay to ensure page is fully loaded
+            }
+
             // primary nav tabs and their contents
             this.bind_tab_on_click($('#wpuf-form-builder > fieldset > .nav-tab-wrapper > a'), '#wpuf-form-builder');
 
@@ -688,6 +895,21 @@
                 }, 1000);
 
                 e.clearSelection();
+            });
+
+            // Mutual exclusivity between Enable Payments and Enable Pricing Fields Payment
+            $(document).on('change', '#payment_options', function() {
+                if ($(this).is(':checked')) {
+                    // When Enable Payments is turned ON, turn OFF Enable Pricing Fields Payment
+                    $('#enable_pricing_payment').prop('checked', false).trigger('change');
+                }
+            });
+
+            $(document).on('change', '#enable_pricing_payment', function() {
+                if ($(this).is(':checked')) {
+                    // When Enable Pricing Fields Payment is turned ON, turn OFF Enable Payments
+                    $('#payment_options').prop('checked', false).trigger('change');
+                }
             });
         },
 
@@ -778,6 +1000,11 @@
                         self.is_form_saving = false;
                         self.is_form_saved = true;
 
+                        // Check if currently on field-options panel and switch to form-fields after save
+                        if (self.$store.state.current_panel === 'field-options') {
+                            self.$store.commit('set_current_panel', 'form-fields-v4-1');
+                        }
+
                         setTimeout(function(){
                             self.isDirty = false;
                         }, 500);
@@ -833,7 +1060,7 @@
                     this.active_settings_title = this.settings_titles[menu].sub_items[submenu].label;
                 }
             },
-            
+
             switch_form_settings_pic_radio_item: function ( key, value ) {
                 this.form_settings[key] = value;
             },
@@ -862,13 +1089,14 @@
         //     resizeBuilderContainer();
         // });
 
-        function resizeBuilderContainer() {
-            if ($(document.body).hasClass('folded')) {
-                $("#wpuf-form-builder").css("width", "calc(100% - 80px)");
-            } else {
-                $("#wpuf-form-builder").css("width", "calc(100% - 200px)");
-            }
-        }
+        // Commented out - not currently used
+        // function resizeBuilderContainer() {
+        //     if ($(document.body).hasClass('folded')) {
+        //         $("#wpuf-form-builder").css("width", "calc(100% - 80px)");
+        //     } else {
+        //         $("#wpuf-form-builder").css("width", "calc(100% - 200px)");
+        //     }
+        // }
 
         SettingsTab.init();
 
@@ -926,10 +1154,16 @@
                 },
                 guest_email_verify: {
                     type: 'text',
-                    dependsOn: [{
-                        field: 'post_permission',
-                        value: 'guest_post'
-                    }]
+                    dependsOn: [
+                        {
+                            field: 'post_permission',
+                            value: 'guest_post'
+                        },
+                        {
+                            field: 'guest_details',
+                            value: true
+                        }
+                    ]
                 },
                 name_label: {
                     type: 'text',
@@ -992,7 +1226,7 @@
                     ]
                 },
                 fallback_ppp_cost: {
-                    type: 'checkbox',
+                    type: 'number',
                     dependsOn: [
                         {
                             field: 'payment_options',
@@ -1089,6 +1323,13 @@
                         field: 'limit_entries',
                         value: true
                     }]
+                },
+                n8n_webhook_url: {
+                    type: 'text',
+                    dependsOn: [{
+                        field: 'enable_n8n',
+                        value: true
+                    }],
                 }
             }
         };
@@ -1177,9 +1418,11 @@
                 const fieldName = field.attr('name');
                 const radioFields = $(`input[name="${fieldName}"]`);
 
-                radioFields.each((index, radio) => {
-                    $(radio).on('change', () => this.checkAllDependencies());
-                });
+                radioFields.each(function(_, radio) {
+                    $(radio).on('change', function() {
+                        this.checkAllDependencies();
+                    }.bind(this));
+                }.bind(this));
             }
         }
 
@@ -1207,17 +1450,31 @@
                 const controlField = $(`#${dep.field}`);
 
                 if (controlField.length === 0) {
-                    return;
+                    return false;
                 }
 
                 const fieldType = controlField.attr('type') || controlField.prop('tagName').toLowerCase();
 
-                if (fieldType === 'checkbox' || fieldType === 'radio') {
+                if (fieldType === 'checkbox') {
+                    // For checkboxes, check if the field is checked
                     return controlField.is(':checked') === dep.value;
+                } else if (fieldType === 'radio') {
+                    // For radio groups, find the checked radio with the same name
+                    const radioName = controlField.attr('name');
+                    const checkedRadio = $(`input[name="${radioName}"]:checked`);
+                    
+                    if (checkedRadio.length === 0) {
+                        return dep.value === false || dep.value === '';
+                    }
+                    
+                    return checkedRadio.val() === dep.value;
                 } else if (fieldType === 'select') {
+                    // For selects, compare the selected value
+                    return controlField.val() === dep.value;
+                } else {
+                    // For text inputs and other field types
                     return controlField.val() === dep.value;
                 }
-                return false;
             });
         }
 
@@ -1263,7 +1520,7 @@
         });
     });
 
-    function populate_default_categories(obj, isInitialLoad) {
+    function populate_default_categories(obj) {  // isInitialLoad parameter removed - not used
         var post_type = $(obj).val();
 
         // Don't proceed if no post type is selected
@@ -1305,8 +1562,8 @@
                     });
                 }
             },
-            error: function (error) {
-
+            error: function () {
+                // Error handler - currently no specific error handling
             }
         });
     }

@@ -17,13 +17,19 @@
             data-source="stage"
         >
             <div v-if="!is_full_width(field.template)" class="wpuf-label">
+                <span v-if="field.show_icon === 'yes' && field.field_icon && field.icon_position === 'left_label'"
+                      class="wpuf-field-label-icon wpuf-inline-flex wpuf-items-center wpuf-mr-1">
+                      <img v-if="field.field_icon.indexOf('http') === 0 || field.field_icon.indexOf('/') === 0" :src="field.field_icon" alt="" class="wpuf-field-icon wpuf-field-icon-img" />
+                      <i v-else :class="[field.field_icon, 'wpuf-field-icon']"></i>
+                </span>
                 <label v-if="!is_invisible(field)" :for="'wpuf-' + field.name ? field.name : 'cls'">
-                    {{ field.label }} <span v-if="field.required && 'yes' === field.required" class="required">*</span><span v-if="field.template === 'twitter_url' && field.show_icon === 'yes'" class="wpuf-social-label-icon wpuf-inline-flex wpuf-items-center wpuf-ml-1">
-                        <svg class="wpuf-twitter-svg" width="16" height="16" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="X (Twitter)" role="img">
-                            <path d="M6 16L10.1936 11.8065M10.1936 11.8065L6 6H8.77778L11.8065 10.1935M10.1936 11.8065L13.2222 16H16L11.8065 10.1935M16 6L11.8065 10.1935M1.5 11C1.5 6.52166 1.5 4.28249 2.89124 2.89124C4.28249 1.5 6.52166 1.5 11 1.5C15.4784 1.5 17.7175 1.5 19.1088 2.89124C20.5 4.28249 20.5 6.52166 20.5 11C20.5 15.4783 20.5 17.7175 19.1088 19.1088C17.7175 20.5 15.4784 20.5 11 20.5C6.52166 20.5 4.28249 20.5 2.89124 19.1088C1.5 17.7175 1.5 15.4783 1.5 11Z" stroke="#079669" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </span>
+                    {{ field.label }} <span v-if="field.required && 'yes' === field.required" class="required">*</span>
                 </label>
+                <span v-if="field.show_icon === 'yes' && field.field_icon && field.icon_position === 'right_label'"
+                      class="wpuf-field-label-icon wpuf-inline-flex wpuf-items-center wpuf-ml-2">
+                      <img v-if="field.field_icon.indexOf('http') === 0 || field.field_icon.indexOf('/') === 0" :src="field.field_icon" alt="" class="wpuf-field-icon wpuf-field-icon-img" />
+                      <i v-else :class="[field.field_icon, 'wpuf-field-icon']"></i>
+                </span>
             </div>
 
             <component v-if="is_template_available(field)" :is="'form-' + field.template" :field="field"></component>

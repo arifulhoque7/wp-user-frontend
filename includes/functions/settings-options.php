@@ -49,6 +49,11 @@ function wpuf_settings_sections() {
             'title' => __( 'Privacy Options', 'wp-user-frontend' ),
             'icon'  => 'dashicons-shield-alt',
         ],
+        [
+            'id'    => 'wpuf_ai',
+            'title' => __( 'AI Settings', 'wp-user-frontend' ),
+            'icon'  => 'dashicons-admin-network',
+        ],
     ];
 
     return apply_filters( 'wpuf_settings_sections', $sections );
@@ -465,6 +470,198 @@ function wpuf_settings_fields() {
                 'default'    => 'off',
                 'depends_on' => 'enable_turnstile',
             ],
+            [
+                'name'     => 'profile_form_roles',
+                'label'    => __( 'Profile Forms for User Roles', 'wp-user-frontend' ),
+                'type'     => 'html',
+                'callback' => 'wpuf_settings_field_profile',
+            ],
+            [
+                'name'     => 'login_form_settings_section',
+                'label'    => '',
+                'type'     => 'html',
+                'callback' => 'wpuf_render_login_settings_section_header',
+            ],
+            [
+                'name'           => 'wpuf_login_form_layout',
+                'label'          => __( 'Login Form Layout', 'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . esc_url( WPUF_ASSET_URI . '/images/pro-badge.svg' ) . '" alt="' . esc_attr__( 'PRO', 'wp-user-frontend' ) . '">' . '</span>',
+                'desc'           => __( 'Choose a layout style for your login forms.', 'wp-user-frontend' ),
+                'type'           => 'radio',
+                'options'        => wpuf_get_login_layout_options(),
+                'default'        => 'layout1',
+                'is_pro_preview' => ! wpuf_is_pro_active(),
+                'callback'       => 'wpuf_render_login_layout_field',
+            ],
+            [
+                'name'           => 'wpuf_login_form_bg_color',
+                'label'          => __( 'Form BG Color', 'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . esc_url( WPUF_ASSET_URI . '/images/pro-badge.svg' ) . '" alt="' . esc_attr__( 'PRO', 'wp-user-frontend' ) . '">' . '</span>',
+                'type'           => 'color',
+                'default'        => 'transparent',
+                'is_pro_preview' => ! wpuf_is_pro_active(),
+            ],
+            [
+                'name'           => 'wpuf_login_form_border_color',
+                'label'          => __( 'Form Border Color', 'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . esc_url( WPUF_ASSET_URI . '/images/pro-badge.svg' ) . '" alt="' . esc_attr__( 'PRO', 'wp-user-frontend' ) . '">' . '</span>',
+                'type'           => 'color',
+                'default'        => 'transparent',
+                'is_pro_preview' => ! wpuf_is_pro_active(),
+            ],
+            [
+                'name'           => 'wpuf_login_field_border_color',
+                'label'          => __( 'Field Border Color', 'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . esc_url( WPUF_ASSET_URI . '/images/pro-badge.svg' ) . '" alt="' . esc_attr__( 'PRO', 'wp-user-frontend' ) . '">' . '</span>',
+                'type'           => 'color',
+                'default'        => '#D1D5DB',
+                'is_pro_preview' => ! wpuf_is_pro_active(),
+            ],
+            [
+                'name'           => 'wpuf_login_field_bg_color',
+                'label'          => __( 'Field BG Color', 'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . esc_url( WPUF_ASSET_URI . '/images/pro-badge.svg' ) . '" alt="' . esc_attr__( 'PRO', 'wp-user-frontend' ) . '">' . '</span>',
+                'type'           => 'color',
+                'default'        => 'transparent',
+                'is_pro_preview' => ! wpuf_is_pro_active(),
+            ],
+            [
+                'name'           => 'wpuf_login_label_text_color',
+                'label'          => __( 'Label Text Color', 'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . esc_url( WPUF_ASSET_URI . '/images/pro-badge.svg' ) . '" alt="' . esc_attr__( 'PRO', 'wp-user-frontend' ) . '">' . '</span>',
+                'type'           => 'color',
+                'default'        => '#333333',
+                'is_pro_preview' => ! wpuf_is_pro_active(),
+            ],
+            [
+                'name'           => 'wpuf_login_placeholder_color',
+                'label'          => __( 'Placeholder Color', 'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . esc_url( WPUF_ASSET_URI . '/images/pro-badge.svg' ) . '" alt="' . esc_attr__( 'PRO', 'wp-user-frontend' ) . '">' . '</span>',
+                'type'           => 'color',
+                'default'        => '#9CA3AF',
+                'is_pro_preview' => ! wpuf_is_pro_active(),
+            ],
+            [
+                'name'           => 'wpuf_login_input_text_color',
+                'label'          => __( 'Input Text Color', 'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . esc_url( WPUF_ASSET_URI . '/images/pro-badge.svg' ) . '" alt="' . esc_attr__( 'PRO', 'wp-user-frontend' ) . '">' . '</span>',
+                'type'           => 'color',
+                'default'        => '#111827',
+                'is_pro_preview' => ! wpuf_is_pro_active(),
+            ],
+            [
+                'name'           => 'wpuf_login_help_text_color',
+                'label'          => __( 'Help Text Color', 'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . esc_url( WPUF_ASSET_URI . '/images/pro-badge.svg' ) . '" alt="' . esc_attr__( 'PRO', 'wp-user-frontend' ) . '">' . '</span>',
+                'type'           => 'color',
+                'default'        => '#6B7280',
+                'is_pro_preview' => ! wpuf_is_pro_active(),
+            ],
+            [
+                'name'           => 'wpuf_login_button_bg_color',
+                'label'          => __( 'Button BG Color', 'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . esc_url( WPUF_ASSET_URI . '/images/pro-badge.svg' ) . '" alt="' . esc_attr__( 'PRO', 'wp-user-frontend' ) . '">' . '</span>',
+                'type'           => 'color',
+                'default'        => '#3B82F6',
+                'is_pro_preview' => ! wpuf_is_pro_active(),
+            ],
+            [
+                'name'           => 'wpuf_login_button_border_color',
+                'label'          => __( 'Button Border Color', 'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . esc_url( WPUF_ASSET_URI . '/images/pro-badge.svg' ) . '" alt="' . esc_attr__( 'PRO', 'wp-user-frontend' ) . '">' . '</span>',
+                'type'           => 'color',
+                'default'        => '',
+                'is_pro_preview' => ! wpuf_is_pro_active(),
+            ],
+            [
+                'name'           => 'wpuf_login_button_text_color',
+                'label'          => __( 'Button Text Color', 'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . esc_url( WPUF_ASSET_URI . '/images/pro-badge.svg' ) . '" alt="' . esc_attr__( 'PRO', 'wp-user-frontend' ) . '">' . '</span>',
+                'type'           => 'color',
+                'default'        => '#ffffff',
+                'is_pro_preview' => ! wpuf_is_pro_active(),
+            ],
+            [
+                'name'           => 'wpuf_login_form_title',
+                'label'          => __( 'Form Header Title', 'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . esc_url( WPUF_ASSET_URI . '/images/pro-badge.svg' ) . '" alt="' . esc_attr__( 'PRO', 'wp-user-frontend' ) . '">' . '</span>',
+                'type'           => 'text',
+                'default'        => __( 'Login Form', 'wp-user-frontend' ),
+                'is_pro_preview' => ! wpuf_is_pro_active(),
+            ],
+            [
+                'name'           => 'wpuf_login_form_subtitle',
+                'label'          => __( 'Form Description', 'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . esc_url( WPUF_ASSET_URI . '/images/pro-badge.svg' ) . '" alt="' . esc_attr__( 'PRO', 'wp-user-frontend' ) . '">' . '</span>',
+                'type'           => 'text',
+                'default'        => __( 'Please complete all information below', 'wp-user-frontend' ),
+                'is_pro_preview' => ! wpuf_is_pro_active(),
+            ],
+            [
+                'name'           => 'wpuf_login_username_label',
+                'label'          => __( 'Username Label', 'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . esc_url( WPUF_ASSET_URI . '/images/pro-badge.svg' ) . '" alt="' . esc_attr__( 'PRO', 'wp-user-frontend' ) . '">' . '</span>',
+                'type'           => 'text',
+                'default'        => __( 'Username or Email', 'wp-user-frontend' ),
+                'is_pro_preview' => ! wpuf_is_pro_active(),
+            ],
+            [
+                'name'           => 'wpuf_login_username_placeholder',
+                'label'          => __( 'Username Placeholder', 'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . esc_url( WPUF_ASSET_URI . '/images/pro-badge.svg' ) . '" alt="' . esc_attr__( 'PRO', 'wp-user-frontend' ) . '">' . '</span>',
+                'type'           => 'text',
+                'default'        => __( 'Enter Username or Email', 'wp-user-frontend' ),
+                'is_pro_preview' => ! wpuf_is_pro_active(),
+            ],
+            [
+                'name'           => 'wpuf_login_username_help',
+                'label'          => __( 'Username Help Text', 'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . esc_url( WPUF_ASSET_URI . '/images/pro-badge.svg' ) . '" alt="' . esc_attr__( 'PRO', 'wp-user-frontend' ) . '">' . '</span>',
+                'type'           => 'text',
+                'default'        => __( 'Please enter your username or email address', 'wp-user-frontend' ),
+                'is_pro_preview' => ! wpuf_is_pro_active(),
+            ],
+            [
+                'name'           => 'wpuf_login_password_label',
+                'label'          => __( 'Password Label', 'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . esc_url( WPUF_ASSET_URI . '/images/pro-badge.svg' ) . '" alt="' . esc_attr__( 'PRO', 'wp-user-frontend' ) . '">' . '</span>',
+                'type'           => 'text',
+                'default'        => __( 'Password', 'wp-user-frontend' ),
+                'is_pro_preview' => ! wpuf_is_pro_active(),
+            ],
+            [
+                'name'           => 'wpuf_login_password_placeholder',
+                'label'          => __( 'Password Placeholder', 'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . esc_url( WPUF_ASSET_URI . '/images/pro-badge.svg' ) . '" alt="' . esc_attr__( 'PRO', 'wp-user-frontend' ) . '">' . '</span>',
+                'type'           => 'text',
+                'default'        => __( 'Enter Password', 'wp-user-frontend' ),
+                'is_pro_preview' => ! wpuf_is_pro_active(),
+            ],
+            [
+                'name'           => 'wpuf_login_password_help',
+                'label'          => __( 'Password Help Text', 'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . esc_url( WPUF_ASSET_URI . '/images/pro-badge.svg' ) . '" alt="' . esc_attr__( 'PRO', 'wp-user-frontend' ) . '">' . '</span>',
+                'type'           => 'text',
+                'default'        => __( 'Please enter your password', 'wp-user-frontend' ),
+                'is_pro_preview' => ! wpuf_is_pro_active(),
+            ],
+            [
+                'name'           => 'wpuf_login_remember_me_text',
+                'label'          => __( 'Remember Me Text', 'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . esc_url( WPUF_ASSET_URI . '/images/pro-badge.svg' ) . '" alt="' . esc_attr__( 'PRO', 'wp-user-frontend' ) . '">' . '</span>',
+                'type'           => 'text',
+                'default'        => __( 'Remember Me', 'wp-user-frontend' ),
+                'is_pro_preview' => ! wpuf_is_pro_active(),
+            ],
+            [
+                'name'           => 'wpuf_login_lost_password_text',
+                'label'          => __( 'Lost Password Text', 'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . esc_url( WPUF_ASSET_URI . '/images/pro-badge.svg' ) . '" alt="' . esc_attr__( 'PRO', 'wp-user-frontend' ) . '">' . '</span>',
+                'type'           => 'text',
+                'default'        => __( 'Lost Password', 'wp-user-frontend' ),
+                'is_pro_preview' => ! wpuf_is_pro_active(),
+            ],
+            [
+                'name'           => 'wpuf_login_button_text',
+                'label'          => __( 'Login Button Text', 'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . esc_url( WPUF_ASSET_URI . '/images/pro-badge.svg' ) . '" alt="' . esc_attr__( 'PRO', 'wp-user-frontend' ) . '">' . '</span>',
+                'type'           => 'text',
+                'default'        => __( 'Log In', 'wp-user-frontend' ),
+                'is_pro_preview' => ! wpuf_is_pro_active(),
+            ],
+            [
+                'name'           => 'pending_user_message',
+                'label'          => __( 'Pending User Message', 'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . esc_url( WPUF_ASSET_URI . '/images/pro-badge.svg' ) . '" alt="' . esc_attr__( 'PRO', 'wp-user-frontend' ) . '">' . '</span>',
+                'desc'           => __( 'Pending user will see this message when try to log in.', 'wp-user-frontend' ),
+                'type'           => 'textarea',
+                'default'        => '<strong>' . __( 'ERROR:', 'wp-user-frontend' ) . '</strong> ' . __( 'Your account has to be approved by an administrator before you can login.', 'wp-user-frontend' ),
+                'is_pro_preview' => ! wpuf_is_pro_active(),
+            ],
+            [
+                'name'           => 'denied_user_message',
+                'label'          => __( 'Denied User Message', 'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . esc_url( WPUF_ASSET_URI . '/images/pro-badge.svg' ) . '" alt="' . esc_attr__( 'PRO', 'wp-user-frontend' ) . '">' . '</span>',
+                'desc'           => __( 'Denied user will see this message when try to log in.', 'wp-user-frontend' ),
+                'type'           => 'textarea',
+                'default'        => '<strong>' . __( 'ERROR:', 'wp-user-frontend' ) . '</strong> ' . __( 'Your account has been denied by an administrator, please contact admin to approve your account.', 'wp-user-frontend' ),
+                'is_pro_preview' => ! wpuf_is_pro_active(),
+            ],
         ] ),
         'wpuf_payment'          => apply_filters( 'wpuf_options_payment', [
             [
@@ -563,9 +760,9 @@ function wpuf_settings_fields() {
             [
                 'name'    => 'active_gateways',
                 'label'   => __( 'Payment Gateways', 'wp-user-frontend' ),
-                'desc'    => __( 'Active payment gateways', 'wp-user-frontend' ),
-                'type'    => 'multicheck',
-                'options' => wpuf_get_gateways(),
+                'desc'    => __( 'Select the payment methods available at checkout', 'wp-user-frontend' ),
+                'type'    => 'gateway_selector',
+                'options' => wpuf_get_gateways( 'gateway_selector' ),
             ],
             [
                 'name'              => 'failed_retry',
@@ -632,14 +829,58 @@ function wpuf_settings_fields() {
                 'options'  => $post_types,
             ],
         ] ),
+        'wpuf_ai'               => apply_filters( 'wpuf_ai_options', [
+            [
+                'name'    => 'ai_provider',
+                'label'   => __( 'AI Provider', 'wp-user-frontend' ),
+                'desc'    => __( 'Select the AI service provider you want to use.', 'wp-user-frontend' ),
+                'type'    => 'radio_inline',
+                'options' => \WeDevs\Wpuf\AI\Config::get_provider_options(),
+                'default' => 'openai',
+                'class'   => 'wpuf-ai-provider-radio',
+            ],
+            [
+                'name'     => 'api_key_current',
+                'label'    => __( 'API Key', 'wp-user-frontend' ),
+                'desc'     => sprintf(
+                    // translators: %1$s is the OpenAI URL, %2$s is the Anthropic URL, %3$s is the Google URL
+                    __(
+                        'Enter your AI service API key. Need help finding your <a href="%1$s" target="_blank" class="wpuf-api-key-link" data-openai="%1$s" data-anthropic="%2$s" data-google="%3$s" style="text-decoration: underline;">API Key?</a>',
+                        'wp-user-frontend'
+                    ),
+                    esc_url( 'https://platform.openai.com/api-keys' ),
+                    esc_url( 'https://console.anthropic.com/settings/keys' ),
+                    esc_url( 'https://aistudio.google.com/app/apikey' )
+                ),
+                'type'     => 'callback',
+                'callback' => 'wpuf_ai_api_key_field',
+            ],
+            [
+                'name'    => 'ai_model',
+                'label'   => __( 'AI Model', 'wp-user-frontend' ),
+                'desc'    => __( 'Select the AI model to use for content generation.', 'wp-user-frontend' ),
+                'type'    => 'select',
+                'options' => apply_filters('wpuf_ai_model_options', \WeDevs\Wpuf\AI\Config::get_model_options()),
+                'default' => 'gpt-3.5-turbo',
+                'class'   => 'ai-model-select',
+            ],
+            [
+                'name'     => 'temperature',
+                'label'    => __( 'Temperature', 'wp-user-frontend' ),
+                'desc'     => __( 'Controls randomness in responses. Lower values (0.1-0.3) are more focused and deterministic. Higher values (0.7-1.0) are more creative and varied.', 'wp-user-frontend' ),
+                'type'     => 'callback',
+                'callback' => 'wpuf_ai_temperature_field',
+                'default'  => '0.7',
+            ],
+        ] ),
     ];
 
     return apply_filters( 'wpuf_settings_fields', $settings_fields );
 }
 
-function wpuf_settings_field_profile( $form ) {
-    $user_roles = apply_filters( 'wpuf_settings_user_roles', wpuf_get_user_roles() );
-    $forms      = get_posts(
+function wpuf_settings_field_profile( $args = [] ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter -- reserved for callback signature compatibility
+    $user_roles    = apply_filters( 'wpuf_settings_user_roles', wpuf_get_user_roles() );
+    $profile_forms = get_posts(
         [
             'numberposts' => -1,
             'post_type'   => 'wpuf_profile',
@@ -652,7 +893,7 @@ function wpuf_settings_field_profile( $form ) {
     $val = get_option( 'wpuf_profile', [] );
 
     if ( ! class_exists( 'WP_User_Frontend_Pro' ) ) {
-        $crown_icon = sprintf( '<span class="pro-icon"> %s</span>', file_get_contents( WPUF_ROOT . '/assets/images/crown.svg' ) );
+        $crown_icon = sprintf( '<span class="pro-icon"><img src="%s" alt="PRO"></span>', WPUF_ASSET_URI . '/images/pro-badge.svg' );
         $class      = 'class="pro-preview"';
         $disabled   = 'disabled';
     }
@@ -660,24 +901,24 @@ function wpuf_settings_field_profile( $form ) {
     if ( ! empty( $user_roles ) ) {
         ?>
 
-    <p style="padding-left: 10px; font-style: italic; font-size: 13px;">
+    <p style="padding-left: 0; font-style: italic; font-size: 13px;">
         <strong><?php esc_html_e( 'Select profile/registration forms for user roles. These forms will be used to populate extra edit profile fields in backend.', 'wp-user-frontend' ); ?></strong>
     </p>
-    <table class="form-table">
+    <table class="form-table" style="margin-top: 0;">
         <?php
         foreach ( $user_roles as $role => $name ) {
             $current = isset( $val['roles'][ $role ] ) ? $val['roles'][ $role ] : '';
             ?>
             <tr valign="top" <?php echo esc_attr( $class ); ?>>
-                <th scrope="row"><?php echo esc_attr( $name ) . wp_kses( $crown_icon, array('svg' => [ 'xmlns' => true, 'width' => true, 'height' => true, 'viewBox' => true, 'fill' => true ], 'path' => [ 'd' => true, 'fill' => true ], 'circle' => [ 'cx' => true, 'cy' => true, 'r' => true ], ) ); ?></th>
+                <th scope="row"><?php echo esc_attr( $name ) . wp_kses( $crown_icon, [ 'span' => [ 'class' => true ], 'img' => [ 'src' => true, 'alt' => true, 'class' => true, 'width' => true, 'height' => true, 'loading' => true ], 'svg' => [ 'xmlns' => true, 'width' => true, 'height' => true, 'viewBox' => true, 'fill' => true ], 'path' => [ 'd' => true, 'fill' => true ], 'circle' => [ 'cx' => true, 'cy' => true, 'r' => true ] ] ); ?></th>
                 <td>
                     <select name="wpuf_profile[roles][<?php echo esc_attr( $role ); ?>]" class="regular" style="min-width: 300px;" <?php echo esc_attr( $disabled ); ?>>
                         <option value=""><?php esc_html_e( '&mdash; Select &mdash;', 'wp-user-frontend' ); ?></option>
                         <?php
                         if ( class_exists( 'WP_User_Frontend_Pro' ) ) {
-                            foreach ( $forms as $form ) {
+                            foreach ( $profile_forms as $profile_form ) {
                                 ?>
-                                <option value="<?php echo esc_attr( $form->ID ); ?>"<?php selected( $current, $form->ID ); ?>><?php echo esc_html( $form->post_title ); ?></option>
+                                <option value="<?php echo esc_attr( $profile_form->ID ); ?>"<?php selected( $current, $profile_form->ID ); ?>><?php echo esc_html( $profile_form->post_title ); ?></option>
                                 <?php
                             }
                         }
@@ -698,4 +939,586 @@ function wpuf_settings_field_profile( $form ) {
     }
 }
 
-add_action( 'wsa_form_bottom_wpuf_profile', 'wpuf_settings_field_profile' );
+/**
+ * Render login form settings section header
+ *
+ * @since 4.2.10
+ *
+ * @param array $args Settings field args.
+ *
+ * @return void
+ */
+function wpuf_render_login_settings_section_header( $args = [] ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter -- reserved for callback signature compatibility
+    ?>
+    </td></tr></tbody></table>
+    <h2 class="wpuf-settings-section-title" style="margin: 30px 0 10px 0; padding-bottom: 10px; border-bottom: 1px solid #c3c4c7; font-size: 1.3em;">
+        <?php esc_html_e( 'Login Form Customization', 'wp-user-frontend' ); ?>
+    </h2>
+    <p class="description" style="margin-bottom: 15px;">
+        <?php esc_html_e( 'Customize the appearance and text of your login forms.', 'wp-user-frontend' ); ?>
+    </p>
+
+    <div class="wpuf-login-settings-tabs" style="margin: 20px 0;">
+        <nav class="wpuf-login-tabs-nav" style="display: flex; gap: 0; border-bottom: 1px solid #c3c4c7;">
+            <a href="#" class="wpuf-login-tab-link active" data-tab="appearance" style="padding: 10px 20px; text-decoration: none; color: #2271b1; font-weight: 500; border-bottom: 2px solid #2271b1; margin-bottom: -1px; background: transparent;">
+                <?php esc_html_e( 'Appearance', 'wp-user-frontend' ); ?>
+            </a>
+            <a href="#" class="wpuf-login-tab-link" data-tab="fields" style="padding: 10px 20px; text-decoration: none; color: #646970; font-weight: 500; border-bottom: 2px solid transparent; margin-bottom: -1px; background: transparent;">
+                <?php esc_html_e( 'Fields', 'wp-user-frontend' ); ?>
+            </a>
+        </nav>
+    </div>
+
+    <table class="form-table" role="presentation"><tbody><tr style="display:none;"><td>
+    <?php
+}
+
+/**
+ * Render dynamic API key field based on selected provider
+ */
+function wpuf_ai_api_key_field( $args ) {
+    $settings = get_option( 'wpuf_ai', [] );
+
+    // Get current provider
+    $current_provider = $settings['ai_provider'] ?? 'openai';
+
+    // Get all API keys
+    $openai_key = $settings['openai_api_key'] ?? '';
+    $anthropic_key = $settings['anthropic_api_key'] ?? '';
+    $google_key = $settings['google_api_key'] ?? '';
+
+    // Get current provider key
+    $current_key = $settings[ $current_provider . '_api_key' ] ?? '';
+
+    // Mask the API key for display
+    $masked_key = '';
+    if ( ! empty( $current_key ) ) {
+        $key_length = strlen( $current_key );
+        if ( $key_length > 8 ) {
+            $masked_key = substr( $current_key, 0, 4 ) . str_repeat( '*', $key_length - 8 ) . substr( $current_key, -4 );
+        } else {
+            $masked_key = str_repeat( '*', $key_length );
+        }
+    }
+
+    ?>
+    <div class="wpuf-ai-api-key-wrapper">
+        <?php if ( ! empty( $current_key ) ) : ?>
+            <!-- Show masked key as text -->
+            <input type="text"
+                   id="wpuf_ai_api_key_display"
+                   class="regular-text wpuf-api-key-display"
+                   value="<?php echo esc_attr( $masked_key ); ?>"
+                   readonly
+                   style="background-color: #f0f0f1; cursor: default;">
+
+            <button type="button"
+                    id="wpuf-change-api-key-btn"
+                    class="button button-secondary"
+                    style="margin-left: 5px;">
+                <?php esc_html_e( 'Change', 'wp-user-frontend' ); ?>
+            </button>
+        <?php endif; ?>
+
+        <!-- Actual password input field -->
+        <input type="password"
+               id="wpuf_ai_api_key_field"
+               name="wpuf_ai[<?php echo esc_attr( $current_provider ); ?>_api_key]"
+               class="regular-text wpuf-ai-api-key-dynamic"
+               value="<?php echo esc_attr( $current_key ); ?>"
+               placeholder="<?php esc_attr_e( 'Enter your API key', 'wp-user-frontend' ); ?>"
+               autocomplete="off"
+               <?php echo ! empty( $current_key ) ? 'style="display: none;"' : ''; ?>>
+
+        <button type="button"
+                id="wpuf-test-connection-btn"
+                class="button button-secondary"
+                style="margin-left: 10px;">
+            <span class="dashicons dashicons-update" style="margin-top: 3px;"></span>
+            <?php esc_html_e( 'Test Connection', 'wp-user-frontend' ); ?>
+        </button>
+
+        <span id="wpuf-connection-status" style="margin-left: 10px;"></span>
+    </div>
+
+    <!-- Store API keys for each provider -->
+    <input type="hidden" name="wpuf_ai[openai_api_key]" id="wpuf_ai_openai_key" value="<?php echo esc_attr($openai_key); ?>">
+    <input type="hidden" name="wpuf_ai[anthropic_api_key]" id="wpuf_ai_anthropic_key" value="<?php echo esc_attr($anthropic_key); ?>">
+    <input type="hidden" name="wpuf_ai[google_api_key]" id="wpuf_ai_google_key" value="<?php echo esc_attr($google_key); ?>">
+
+    <?php
+    // Determine the correct API key link based on current provider
+    $api_key_links = [
+        'openai' => 'https://platform.openai.com/api-keys',
+        'anthropic' => 'https://console.anthropic.com/settings/keys',
+        'google' => 'https://aistudio.google.com/app/apikey'
+    ];
+    $current_link = $api_key_links[$current_provider] ?? $api_key_links['openai'];
+    ?>
+
+    <p class="description">
+        Enter your AI service API key. Need help finding your
+        <a href="<?php echo esc_url($current_link); ?>" class="wpuf-api-key-link"
+           data-openai="https://platform.openai.com/api-keys"
+           data-anthropic="https://console.anthropic.com/settings/keys"
+           data-google="https://aistudio.google.com/app/apikey"
+           target="_blank"
+           style="text-decoration: underline;">API Key?</a>
+    </p>
+
+    <script>
+    jQuery(document).ready(function($) {
+        // Function to update API key link
+        function updateApiKeyLink(provider) {
+            var apiKeyLink = $('.wpuf-api-key-link');
+            if (apiKeyLink.length > 0) {
+                var providerLinks = {
+                    'openai': 'https://platform.openai.com/api-keys',
+                    'anthropic': 'https://console.anthropic.com/settings/keys',
+                    'google': 'https://aistudio.google.com/app/apikey'
+                };
+
+                var newLink = providerLinks[provider] || providerLinks['openai'];
+                apiKeyLink.prop('href', newLink);
+                apiKeyLink.attr('href', newLink);
+            }
+        }
+
+        // Function to update visible input's name attribute
+        function updateVisibleInputName(provider) {
+            var $visibleInput = $('#wpuf_ai_api_key_field');
+            $visibleInput.attr('name', 'wpuf_ai[' + provider + '_api_key]');
+        }
+
+        // Set the initial name on page load
+        var initialProvider = $('input[name="wpuf_ai[ai_provider]"]:checked').val() || 'openai';
+        updateVisibleInputName(initialProvider);
+
+        // Handle "Change" button click to show password field
+        $('#wpuf-change-api-key-btn').on('click', function() {
+            $('#wpuf_ai_api_key_display').hide();
+            $(this).hide();
+            $('#wpuf_ai_api_key_field').show().focus().select();
+            $('#wpuf-connection-status').html('').show();
+        });
+
+        // Function to mask API key display
+        function maskApiKey(key) {
+            if (!key || key.length === 0) return '';
+            var keyLength = key.length;
+            if (keyLength > 8) {
+                return key.substr(0, 4) + '*'.repeat(keyLength - 8) + key.substr(-4);
+            }
+            return '*'.repeat(keyLength);
+        }
+
+        // Function to show/hide API key fields based on whether key exists
+        function updateApiKeyDisplay(provider) {
+            var apiKey = $('#wpuf_ai_' + provider + '_key').val();
+            var hasKey = apiKey && apiKey.trim().length > 0;
+
+            if (hasKey) {
+                var masked = maskApiKey(apiKey);
+                $('#wpuf_ai_api_key_display').val(masked).show();
+                $('#wpuf-change-api-key-btn').show();
+                $('#wpuf_ai_api_key_field').hide();
+            } else {
+                $('#wpuf_ai_api_key_display').hide();
+                $('#wpuf-change-api-key-btn').hide();
+                $('#wpuf_ai_api_key_field').show();
+            }
+        }
+
+        // Update API key field and link when provider changes
+        $('input[name="wpuf_ai[ai_provider]"]').on('change', function() {
+            var provider = $(this).val();
+            var apiKey = $('#wpuf_ai_' + provider + '_key').val();
+            $('#wpuf_ai_api_key_field').val(apiKey);
+
+            // Update the visible input's name attribute to match the new provider
+            updateVisibleInputName(provider);
+
+            // Update the API key link
+            updateApiKeyLink(provider);
+
+            // Update display/input visibility
+            updateApiKeyDisplay(provider);
+
+            // Enable/disable test connection button
+            $('#wpuf-test-connection-btn').prop('disabled', !apiKey || apiKey.trim().length < 10);
+
+            // Update model field state
+            updateModelFieldState(apiKey);
+
+            // Filter model list by provider
+            filterModelsByProvider(provider);
+
+            // Refresh model list if API key exists
+            if (apiKey && apiKey.trim().length >= 10) {
+                refreshAllModels();
+            }
+
+            // Clear connection status
+            $('#wpuf-connection-status').html('').show();
+        });
+
+        // Save API key to hidden field when typing
+        $('#wpuf_ai_api_key_field').on('input', function() {
+            var provider = $('input[name="wpuf_ai[ai_provider]"]:checked').val();
+            var apiKey = $(this).val();
+            $('#wpuf_ai_' + provider + '_key').val(apiKey);
+
+            // Enable/disable test connection button
+            $('#wpuf-test-connection-btn').prop('disabled', !apiKey || apiKey.trim().length < 10);
+
+            // Enable/disable model field based on API key
+            updateModelFieldState(apiKey);
+        });
+
+        // Function to update model field state
+        function updateModelFieldState(apiKey) {
+            var $modelSelect = $('select[name="wpuf_ai[ai_model]"]');
+            var hasValidKey = apiKey && apiKey.trim().length >= 10;
+
+            if (!hasValidKey) {
+                $modelSelect.prop('disabled', true);
+                $modelSelect.closest('tr').find('.description').html(
+                    '<?php esc_html_e( 'Please enter a valid API key and test the connection first.', 'wp-user-frontend' ); ?>'
+                );
+            } else {
+                $modelSelect.prop('disabled', false);
+                $modelSelect.closest('tr').find('.description').html(
+                    '<?php esc_html_e( 'Select the AI model to use for content generation.', 'wp-user-frontend' ); ?>'
+                );
+            }
+        }
+
+        // Initialize model field state on page load
+        var initialApiKey = $('#wpuf_ai_api_key_field').val();
+        updateModelFieldState(initialApiKey);
+
+        // Temperature field validation (HTML5 handles basic validation, this adds visual feedback)
+        $('#wpuf_ai_temperature').on('input change', function() {
+            var $input = $(this);
+            var value = parseFloat($input.val());
+
+            // Use HTML5 validity check
+            if (!this.checkValidity() || isNaN(value) || value < 0 || value > 1) {
+                $input.css('border-color', '#d63638');
+            } else {
+                $input.css('border-color', '#50C878');
+                // Auto-clear green border after 1 second
+                setTimeout(function() {
+                    $input.css('border-color', '');
+                }, 1000);
+            }
+        });
+
+        // Store timeout ID for clearing
+        var statusTimeout = null;
+
+        // Helper function to escape HTML and prevent XSS
+        function escapeHtml(text) {
+            return $('<div>').text(text || '').html();
+        }
+
+        // Test connection button handler
+        $('#wpuf-test-connection-btn').on('click', function() {
+            var $btn = $(this);
+            var $status = $('#wpuf-connection-status');
+            var provider = $('input[name="wpuf_ai[ai_provider]"]:checked').val();
+            var apiKey = $('#wpuf_ai_api_key_field').val();
+            var model = $('select[name="wpuf_ai[ai_model]"]').val();
+
+            // Clear any previous timeout
+            if (statusTimeout) {
+                clearTimeout(statusTimeout);
+            }
+
+            // Make sure status is visible
+            $status.stop(true, true).show().css('opacity', '1');
+
+            if (!apiKey || apiKey.trim().length < 10) {
+                $status.html('<span style="color: #d63638;">⚠ <?php esc_html_e( 'Please enter a valid API key', 'wp-user-frontend' ); ?></span>');
+                return;
+            }
+
+            // Update button state
+            $btn.prop('disabled', true);
+            $btn.find('.dashicons').addClass('spin');
+            $status.html('<span style="color: #999;">⏳ <?php esc_html_e( 'Testing connection...', 'wp-user-frontend' ); ?></span>');
+
+            // Call test connection endpoint with API key, provider, and model
+            $.ajax({
+                url: '<?php echo esc_url( rest_url( 'wpuf/v1/ai-form-builder/test' ) ); ?>',
+                method: 'POST',
+                dataType: 'json',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    api_key: apiKey,
+                    provider: provider,
+                    model: model
+                }),
+                beforeSend: function(xhr) {
+                    xhr.setRequestHeader('X-WP-Nonce', '<?php echo wp_create_nonce( 'wp_rest' ); ?>');
+                },
+                success: function(response) {
+                    $btn.prop('disabled', false);
+                    $btn.find('.dashicons').removeClass('spin');
+
+                    // Ensure status is visible
+                    $status.stop(true, true).show().css('opacity', '1');
+
+                    if (response && response.success) {
+                        $status.html('<span style="color: #00a32a;">✓ ' + escapeHtml(response.message || '<?php esc_html_e( 'Connection successful!', 'wp-user-frontend' ); ?>') + '</span>');
+
+                        // Enable model field and refresh models
+                        updateModelFieldState(apiKey);
+                        refreshAllModels();
+
+                        // Auto-hide success message after 5 seconds
+                        statusTimeout = setTimeout(function() {
+                            $status.fadeOut(400);
+                        }, 5000);
+                    } else {
+                        var errorMsg = response.message || '<?php esc_html_e( 'Connection failed', 'wp-user-frontend' ); ?>';
+                        $status.html('<span style="color: #d63638;">✗ ' + escapeHtml(errorMsg) + '</span>');
+                        // Error messages stay visible
+                    }
+                },
+                error: function(xhr, status, error) {
+                    $btn.prop('disabled', false);
+                    $btn.find('.dashicons').removeClass('spin');
+
+                    // Ensure status is visible
+                    $status.stop(true, true).show().css('opacity', '1');
+
+                    var errorMsg = '<?php esc_html_e( 'Connection failed. Please check your API key.', 'wp-user-frontend' ); ?>';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMsg = xhr.responseJSON.message;
+                    }
+                    $status.html('<span style="color: #d63638;">✗ ' + escapeHtml(errorMsg) + '</span>');
+                    // Error messages stay visible
+                }
+            });
+        });
+
+        // Store all models globally for filtering
+        var allModels = {};
+
+        // Function to filter models by provider
+        function filterModelsByProvider(provider, preserveValue) {
+            var $modelSelect = $('select[name="wpuf_ai[ai_model]"]');
+            if (!$modelSelect.length) return;
+
+            // If we don't have models loaded yet, try to load them first
+            if (Object.keys(allModels).length === 0) {
+                addProviderDataAttributes();
+                return;
+            }
+
+            // Get the value to preserve (either passed in or current selection)
+            var valueToPreserve = preserveValue || $modelSelect.val();
+            var options = '';
+
+            // Build options only for selected provider
+            for (var modelId in allModels) {
+                if (allModels.hasOwnProperty(modelId)) {
+                    var modelConfig = allModels[modelId];
+                    if (modelConfig.provider === provider) {
+                        var selected = (modelId === valueToPreserve) ? ' selected' : '';
+                        options += '<option value="' + modelId + '" data-provider="' + modelConfig.provider + '"' + selected + '>' + modelConfig.name + '</option>';
+                    }
+                }
+            }
+
+            // Update dropdown with filtered options
+            if (options) {
+                $modelSelect.html(options);
+            }
+        }
+
+        // Function to refresh all models from API
+        function refreshAllModels() {
+            var $modelSelect = $('select[name="wpuf_ai[ai_model]"]');
+            if (!$modelSelect.length) return;
+
+            // Show loading state
+            var originalHtml = $modelSelect.html();
+            var currentValue = $modelSelect.val();
+            var currentProvider = $('input[name="wpuf_ai[ai_provider]"]:checked').val();
+            $modelSelect.html('<option>Loading models...</option>').prop('disabled', true);
+
+            // Call API to refresh models
+            $.ajax({
+                url: '<?php echo esc_url(rest_url('wpuf/v1/ai-form-builder/refresh-google-models')); ?>',
+                method: 'POST',
+                beforeSend: function(xhr) {
+                    xhr.setRequestHeader('X-WP-Nonce', '<?php echo wp_create_nonce('wp_rest'); ?>');
+                },
+                success: function(response) {
+                    if (response && response.success && response.models) {
+                        // Store all models globally
+                        allModels = response.models;
+
+                        // Enable dropdown
+                        $modelSelect.prop('disabled', false);
+
+                        // Filter by current provider
+                        filterModelsByProvider(currentProvider);
+
+                        // Try to restore previous selection if it exists and matches current provider
+                        if (currentValue) {
+                            var currentModel = allModels[currentValue];
+                            if (currentModel && currentModel.provider === currentProvider) {
+                                $modelSelect.val(currentValue);
+                            }
+                        }
+
+                    } else {
+                        $modelSelect.html(originalHtml).prop('disabled', false);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    $modelSelect.html(originalHtml).prop('disabled', false);
+                }
+            });
+        }
+
+        // Function to load all models and add provider data attributes
+        function addProviderDataAttributes() {
+            var $modelSelect = $('select[name="wpuf_ai[ai_model]"]');
+            if (!$modelSelect.length) return;
+
+            // Save the current selected value before we fetch
+            var savedModelValue = $modelSelect.val();
+
+            // Fetch model configs via REST API to get provider info
+            $.ajax({
+                url: '<?php echo esc_url(rest_url('wpuf/v1/ai-form-builder/models')); ?>',
+                method: 'GET',
+                beforeSend: function(xhr) {
+                    xhr.setRequestHeader('X-WP-Nonce', '<?php echo wp_create_nonce('wp_rest'); ?>');
+                },
+                success: function(response) {
+                    if (response && response.success && response.models) {
+                        // Store all models globally
+                        allModels = response.models;
+
+                        // Filter by current provider and preserve saved selection
+                        var currentProvider = $('input[name="wpuf_ai[ai_provider]"]:checked').val();
+                        if (currentProvider) {
+                            filterModelsByProvider(currentProvider, savedModelValue);
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize provider data attributes on page load
+        addProviderDataAttributes();
+
+        // Function to refresh Google models (backward compatibility)
+        function refreshGoogleModels() {
+            var $modelSelect = $('select[name="wpuf_ai[ai_model]"]');
+            if (!$modelSelect.length) return;
+
+            // Show loading state
+            var originalHtml = $modelSelect.html();
+            var currentValue = $modelSelect.val();
+            $modelSelect.html('<option>Loading Google models...</option>').prop('disabled', true);
+
+            // Call API to refresh models
+            $.ajax({
+                url: '<?php echo esc_url(rest_url('wpuf/v1/ai-form-builder/refresh-google-models')); ?>',
+                method: 'POST',
+                beforeSend: function(xhr) {
+                    xhr.setRequestHeader('X-WP-Nonce', '<?php echo wp_create_nonce('wp_rest'); ?>');
+                },
+                success: function(response) {
+                    if (response && response.success && response.models) {
+                        // Update dropdown with new models
+                        var options = '';
+                        var models = response.models;
+
+                        // Check if models is an object
+                        if (typeof models === 'object' && models !== null) {
+                            for (var modelId in models) {
+                                if (models.hasOwnProperty(modelId)) {
+                                    var modelConfig = models[modelId];
+                                    var modelName = modelConfig.name || modelId;
+                                    options += '<option value="' + modelId + '">' + modelName + '</option>';
+                                }
+                            }
+                        }
+
+                        if (options) {
+                            $modelSelect.html(options).prop('disabled', false);
+                            // Try to restore previous selection
+                            if (currentValue) {
+                                $modelSelect.val(currentValue);
+                            }
+                        } else {
+                            $modelSelect.html(originalHtml).prop('disabled', false);
+                        }
+                    } else {
+                        $modelSelect.html(originalHtml).prop('disabled', false);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    $modelSelect.html(originalHtml).prop('disabled', false);
+                }
+            });
+        }
+    });
+    </script>
+    <style>
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .dashicons.spin {
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+        .wpuf-ai-api-key-wrapper {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        #wpuf-connection-status {
+            display: inline-block;
+            min-width: 200px;
+        }
+    </style>
+    <?php
+}
+
+/**
+ * Render temperature field with proper HTML5 attributes
+ *
+ * @param array $args Field arguments (unused but required by Settings API)
+ */
+function wpuf_ai_temperature_field( $args ) {
+    $settings = get_option( 'wpuf_ai', [] );
+    $value = isset( $settings['temperature'] ) ? floatval( $settings['temperature'] ) : 0.7;
+
+    // Ensure value is within valid range
+    $value = max( 0.0, min( 1.0, $value ) );
+
+    ?>
+    <input type="number"
+           id="wpuf_ai_temperature"
+           name="wpuf_ai[temperature]"
+           class="regular-text wpuf-ai-temperature"
+           value="<?php echo esc_attr( $value ); ?>"
+           min="0"
+           max="1"
+           step="0.1"
+           required>
+    <p class="description">
+        <?php esc_html_e( 'Controls randomness in responses. Lower values (0.1-0.3) are more focused and deterministic. Higher values (0.7-1.0) are more creative and varied.', 'wp-user-frontend' ); ?>
+    </p>
+    <?php
+}

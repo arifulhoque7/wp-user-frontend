@@ -18,13 +18,19 @@
             data-source="stage"
         >
             <div v-if="!is_full_width(field.template)" class="wpuf-label">
+                <span v-if="field.show_icon === 'yes' && field.field_icon && field.icon_position === 'left_label'"
+                      class="wpuf-field-label-icon wpuf-inline-flex wpuf-items-center wpuf-mr-1">
+                      <img v-if="field.field_icon.indexOf('http') === 0 || field.field_icon.indexOf('/') === 0" :src="field.field_icon" alt="" class="wpuf-field-icon wpuf-field-icon-img" />
+                      <i v-else :class="[field.field_icon, 'wpuf-field-icon']"></i>
+                </span>
                 <label v-if="!is_invisible(field)" :for="'wpuf-' + field.name ? field.name : 'cls'">
-                    {{ field.label }} <span v-if="field.required && 'yes' === field.required" class="required">*</span><span v-if="field.template === 'twitter_url' && field.show_icon === 'yes'" class="wpuf-social-label-icon wpuf-inline-flex wpuf-items-center wpuf-ml-1">
-                        <svg class="wpuf-twitter-svg" width="16" height="16" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="X (Twitter)" role="img">
-                            <path d="M6 16L10.1936 11.8065M10.1936 11.8065L6 6H8.77778L11.8065 10.1935M10.1936 11.8065L13.2222 16H16L11.8065 10.1935M16 6L11.8065 10.1935M1.5 11C1.5 6.52166 1.5 4.28249 2.89124 2.89124C4.28249 1.5 6.52166 1.5 11 1.5C15.4784 1.5 17.7175 1.5 19.1088 2.89124C20.5 4.28249 20.5 6.52166 20.5 11C20.5 15.4783 20.5 17.7175 19.1088 19.1088C17.7175 20.5 15.4784 20.5 11 20.5C6.52166 20.5 4.28249 20.5 2.89124 19.1088C1.5 17.7175 1.5 15.4783 1.5 11Z" stroke="#079669" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </span>
+                    {{ field.label }} <span v-if="field.required && 'yes' === field.required" class="required">*</span>
                 </label>
+                <span v-if="field.show_icon === 'yes' && field.field_icon && field.icon_position === 'right_label'"
+                      class="wpuf-field-label-icon wpuf-inline-flex wpuf-items-center wpuf-ml-2">
+                      <img v-if="field.field_icon.indexOf('http') === 0 || field.field_icon.indexOf('/') === 0" :src="field.field_icon" alt="" class="wpuf-field-icon wpuf-field-icon-img" />
+                      <i v-else :class="[field.field_icon, 'wpuf-field-icon']"></i>
+                </span>
             </div>
 
             <component v-if="is_template_available(field)" :is="'form-' + field.template" :field="field"></component>
@@ -89,12 +95,11 @@
 <script type="text/x-template" id="tmpl-wpuf-builder-stage-v4-1">
 <div id="form-preview-stage" class="wpuf-h-[70vh]">
     <div v-if="!form_fields.length" class="wpuf-flex wpuf-flex-col wpuf-items-center wpuf-justify-center wpuf-h-[80vh]">
-        <img src="<?php echo WPUF_ASSET_URI . '/images/form-blank-state.svg'; ?>" alt="">
+        <img src="<?php echo esc_url( WPUF_ASSET_URI . '/images/form-blank-state.svg' ); ?>" alt="">
         <h2 class="wpuf-text-lg wpuf-text-gray-800 wpuf-mt-8 wpuf-mb-2"><?php esc_html_e( 'Add fields and build your desired form', 'wp-user-frontend' ); ?></h2>
 
         <p class="wpuf-text-sm wpuf-text-gray-500"><?php esc_html_e( 'Add the necessary field and build your form.', 'wp-user-frontend' ); ?></p>
     </div>
-
     <ul
         :class="['form-label-' + label_type]"
         class="wpuf-form sortable-list wpuf-py-8">
@@ -104,27 +109,41 @@
             :data-index="index"
             data-source="stage"
             :class="[
-                        'field-items', 'wpuf-el', field.name, field.css, 'form-field-' + field.template,
+                        'field-items', 'wpuf-el', field.name, filter_builder_css_classes(field.css), 'form-field-' + field.template,
                         field.width ? 'field-size-' + field.width : '',
                         ('custom_hidden_field' === field.template) ? 'hidden-field' : ''
                     ]"
-            class="wpuf-group wpuf-rounded-lg hover:!wpuf-bg-green-50 wpuf-transition wpuf-duration-150 wpuf-ease-out !wpuf-m-0 !wpuf-p-0">
+            class="wpuf-group wpuf-rounded-lg hover:!wpuf-bg-green-50 wpuf-transition wpuf-duration-150 wpuf-ease-out !wpuf-m-0 !wpuf-p-0 wpuf-overflow-hidden">
             <div
-                v-if="field.input_type !== 'column_field'"
-                :class="parseInt(editing_form_id) === parseInt(field.id) ? 'wpuf-bg-green-50 wpuf-border-green-400' : 'wpuf-border-transparent'"
-                class="wpuf-flex wpuf-justify-between wpuf-p-6 wpuf-rounded-t-md wpuf-border-t wpuf-border-r wpuf-border-l wpuf-border-dashed group-hover:wpuf-border-green-400 group-hover:wpuf-cursor-pointer !wpuf-pb-3">
+                v-if="field.input_type !== 'column_field' && field.input_type !== 'repeat'"
+                :class="parseInt(editing_form_id) === parseInt(field.id) ? 'wpuf-bg-green-50 wpuf-border-primary' : 'wpuf-border-transparent'"
+                class="wpuf-flex wpuf-justify-between wpuf-p-6 wpuf-rounded-t-md wpuf-border-t wpuf-border-r wpuf-border-l wpuf-border-dashed group-hover:wpuf-border-primary group-hover:wpuf-cursor-pointer !wpuf-pb-3">
                 <div v-if="!(is_full_width(field.template) || is_pro_preview(field.template))" class="wpuf-w-1/4 wpuf-flex wpuf-items-center">
+                    <span v-if="field.show_icon === 'yes' && field.field_icon && field.icon_position === 'left_label'"
+                          class="wpuf-field-label-icon wpuf-inline-flex wpuf-items-center wpuf-mr-1">
+                          <img v-if="field.field_icon.indexOf('http') === 0 || field.field_icon.indexOf('/') === 0" :src="field.field_icon" alt="" class="wpuf-field-icon wpuf-field-icon-img" />
+                          <i v-else :class="[field.field_icon, 'wpuf-field-icon']"></i>
+                    </span>
                     <label
                         v-if="!is_invisible(field)"
                         :for="'wpuf-' + field.name ? field.name : 'cls'"
                         class="wpuf-block wpuf-text-sm wpuf-font-medium wpuf-leading-6 wpuf-text-gray-900">
                         {{ field.label }} <span v-if="field.required && 'yes' === field.required"
-                                                class="required">*</span><span v-if="field.template === 'twitter_url' && field.show_icon === 'yes'" class="wpuf-social-label-icon wpuf-inline-flex wpuf-items-center wpuf-ml-1">
-                            <svg class="wpuf-twitter-svg" width="20" height="25" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="X (Twitter)" role="img">
-                                <path d="M6 16L10.1936 11.8065M10.1936 11.8065L6 6H8.77778L11.8065 10.1935M10.1936 11.8065L13.2222 16H16L11.8065 10.1935M16 6L11.8065 10.1935M1.5 11C1.5 6.52166 1.5 4.28249 2.89124 2.89124C4.28249 1.5 6.52166 1.5 11 1.5C15.4784 1.5 17.7175 1.5 19.1088 2.89124C20.5 4.28249 20.5 6.52166 20.5 11C20.5 15.4783 20.5 17.7175 19.1088 19.1088C17.7175 20.5 15.4784 20.5 11 20.5C6.52166 20.5 4.28249 20.5 2.89124 19.1088C1.5 17.7175 1.5 15.4783 1.5 11Z" stroke="#079669" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                                class="required">*</span>
+                        <span v-if="has_hidden_css_class(field.css)"
+                              class="wpuf-inline-flex wpuf-items-center wpuf-ml-2 wpuf-px-2 wpuf-py-0.5 wpuf-rounded wpuf-text-xs wpuf-font-medium wpuf-bg-yellow-100 wpuf-text-yellow-800 wpuf-border wpuf-border-yellow-300"
+                              title="This field will be hidden on the frontend due to CSS class">
+                            <svg class="wpuf-w-3 wpuf-h-3 wpuf-mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path>
                             </svg>
+                            Hidden on frontend
                         </span>
                     </label>
+                    <span v-if="field.show_icon === 'yes' && field.field_icon && field.icon_position === 'right_label'"
+                          class="wpuf-field-label-icon wpuf-inline-flex wpuf-items-center wpuf-ml-2">
+                          <img v-if="field.field_icon.indexOf('http') === 0 || field.field_icon.indexOf('/') === 0" :src="field.field_icon" alt="" class="wpuf-field-icon wpuf-field-icon-img" />
+                          <i v-else :class="[field.field_icon, 'wpuf-field-icon']"></i>
+                    </span>
                 </div>
                 <div
                     :class="(is_full_width(field.template) || is_pro_preview(field.template)) ? 'wpuf-w-full' : 'wpuf-w-3/4'"
@@ -139,19 +158,19 @@
                         <label class="wpuf-pro-text-alert">
                             <a :href="pro_link" target="_blank"
                                class="wpuf-text-gray-700 wpuf-text-base"><strong>{{ get_field_name( field.template )
-                                    }}</strong> <?php _e( 'is available in Pro Version', 'wp-user-frontend' ); ?></a>
+                                    }}</strong> <?php esc_html_e( 'is available in Pro Version', 'wp-user-frontend' ); ?></a>
                         </label>
                     </div>
                 </div>
             </div>
             <component
-                v-if="is_template_available(field) && field.input_type === 'column_field'"
+                v-if="is_template_available(field) && (field.input_type === 'column_field' || field.input_type === 'repeat')"
                 :is="'form-' + field.template"
                 :field="field">
             </component>
             <div
                 :class="parseInt(editing_form_id) === parseInt(field.id) ? 'wpuf-opacity-100' : 'wpuf-opacity-0'"
-                class="field-buttons group-hover:wpuf-opacity-100 wpuf-rounded-b-lg !wpuf-bg-green-600 wpuf-items-center wpuf-transition wpuf-duration-150 wpuf-ease-out wpuf-flex wpuf-justify-around">
+                class="field-buttons group-hover:wpuf-opacity-100 wpuf-rounded-b-lg !wpuf-bg-primary wpuf-items-center wpuf-transition wpuf-duration-150 wpuf-ease-out wpuf-flex wpuf-justify-around">
                 <div class="wpuf-flex wpuf-justify-around wpuf-text-green-200">
                     <template v-if="!is_failed_to_validate(field.template)">
                         <span class="!wpuf-mt-2.5">
@@ -196,12 +215,12 @@
                         </span>
                     <span
                         v-if="is_pro_preview(field.template)"
-                        :class="action_button_classes" class="hover:wpuf-bg-green-700">
+                        :class="action_button_classes" class="hover:wpuf-bg-primary">
                             <a
                                 :href="pro_link"
                                 target="_blank"
                                 class="wpuf-rounded-r-md hover:wpuf-bg-slate-500 hover:wpuf-cursor-pointer wpuf-transition wpuf-duration-150 wpuf-ease-out hover:wpuf-transition-all">
-                                <img src="<?php esc_attr_e( WPUF_ASSET_URI . '/images/pro-badge.svg' ); ?>" alt="">
+                                <img src="<?php echo esc_url( WPUF_ASSET_URI . '/images/pro-badge.svg' ); ?>" alt="">
                             </a>
                         </span>
                 </div>
@@ -220,8 +239,8 @@
                 class="field-items wpuf-group/hidden-fields !wpuf-m-0 !wpuf-p-0 hover:wpuf-cursor-pointer"
             >
                 <div
-                    :class="parseInt(editing_form_id) === parseInt(field.id) ? 'wpuf-bg-green-50 wpuf-border-green-400' : 'wpuf-border-transparent'"
-                    class="wpuf-flex wpuf-rounded-t-lg wpuf-border-t wpuf-border-r wpuf-border-l wpuf-border-dashed group-hover/hidden-fields:wpuf-border-green-400 group-hover/hidden-fields:wpuf-bg-green-50">
+                    :class="parseInt(editing_form_id) === parseInt(field.id) ? 'wpuf-bg-green-50 wpuf-border-primaryHover' : 'wpuf-border-transparent'"
+                    class="wpuf-flex wpuf-rounded-t-lg wpuf-border-t wpuf-border-r wpuf-border-l wpuf-border-dashed group-hover/hidden-fields:wpuf-border-primaryHover group-hover/hidden-fields:wpuf-bg-green-50">
                     <div class="wpuf-bg-primary wpuf-m-4 wpuf-py-2 wpuf-px-4 wpuf-w-full wpuf-rounded-lg">
                         <strong><?php esc_html_e( 'key', 'wp-user-frontend' ); ?></strong>: {{ field.name }} |
                         <strong><?php esc_html_e( 'value', 'wp-user-frontend' ); ?></strong>: {{ field.meta_value }}
@@ -229,7 +248,7 @@
                 </div>
                 <div
                     :class="parseInt(editing_form_id) === parseInt(field.id) ? 'wpuf-opacity-100' : 'wpuf-opacity-0'"
-                    class="field-buttons wpuf-opacity-0 group-hover/hidden-fields:wpuf-opacity-100 wpuf-bg-green-600 wpuf-rounded-b-lg wpuf-transition wpuf-duration-150 wpuf-ease-out wpuf-flex wpuf-items-center wpuf-justify-around">
+                    class="field-buttons wpuf-opacity-0 group-hover/hidden-fields:wpuf-opacity-100 wpuf-bg-primary wpuf-rounded-b-lg wpuf-transition wpuf-duration-150 wpuf-ease-out wpuf-flex wpuf-items-center wpuf-justify-around">
                     <div class="wpuf-flex wpuf-justify-around wpuf-text-green-200">
                         <template v-if="!is_failed_to_validate(field.template)">
                             <span
@@ -284,6 +303,124 @@
 <div class="panel-field-opt panel-field-html-help-text" v-html="option_field.text"></div>
 </script>
 
+<script type="text/x-template" id="tmpl-wpuf-field-icon_selector">
+<div v-if="met_dependencies" class="panel-field-opt panel-field-opt-icon-selector">
+    <div class="wpuf-flex">
+        <label v-if="option_field.title" class="!wpuf-mb-0">
+            {{ option_field.title }} <help-text v-if="option_field.help_text" :text="option_field.help_text"></help-text>
+        </label>
+    </div>
+
+    <div class="option-fields-section wpuf-relative">
+        <div
+            @click.stop="togglePicker"
+            class="wpuf-w-full wpuf-mt-4 wpuf-min-w-full !wpuf-py-[10px] !wpuf-px-[14px] wpuf-text-gray-700 wpuf-font-medium !wpuf-shadow-sm wpuf-border !wpuf-border-gray-300 !wpuf-rounded-[6px] hover:!wpuf-text-gray-700 wpuf-flex wpuf-justify-between wpuf-items-center !wpuf-text-base wpuf-cursor-pointer"
+        >
+            <div class="wpuf-flex wpuf-items-center wpuf-gap-2">
+                <img v-if="isImageValue" :src="value" alt="" style="width: 20px; height: 20px; object-fit: cover; border-radius: 2px;" />
+                <i v-else-if="value" :class="value" class="wpuf-text-gray-600"></i>
+                <span>{{ selectedIconDisplay }}</span>
+            </div>
+            <div class="wpuf-flex wpuf-items-center wpuf-gap-1">
+                <i v-if="value" @click.stop="clearIcon" class="fa fa-times wpuf-text-gray-500 hover:wpuf-text-red-500 wpuf-cursor-pointer wpuf-p-1"></i>
+                <i :class="showIconPicker ? 'fa-angle-up' : 'fa-angle-down'" class="fa wpuf-text-base"></i>
+            </div>
+        </div>
+
+        <div
+            v-if="showIconPicker"
+            @click.stop
+            class="wpuf-absolute wpuf-bg-white wpuf-border wpuf-border-gray-300 wpuf-rounded-lg wpuf-w-full wpuf-z-50 wpuf-mt-1 wpuf-shadow-lg wpuf-right-0"
+            style="max-height: 350px; min-width: 320px; max-width: 400px;"
+        >
+            <!-- Tabs -->
+            <div class="wpuf-flex wpuf-border-b wpuf-border-gray-200">
+                <button
+                    type="button"
+                    @click.stop="switchTab('icon')"
+                    :class="['wpuf-flex-1 wpuf-py-2 wpuf-px-4 wpuf-text-sm wpuf-font-medium wpuf-border-b-2 wpuf-transition-colors', activeTab === 'icon' ? 'wpuf-border-blue-500 wpuf-text-blue-600' : 'wpuf-border-transparent wpuf-text-gray-500 hover:wpuf-text-gray-700']"
+                >
+                    <i class="fa fa-icons wpuf-mr-1"></i> <?php esc_html_e( 'Icons', 'wp-user-frontend' ); ?>
+                </button>
+                <button
+                    type="button"
+                    @click.stop="switchTab('image')"
+                    :class="['wpuf-flex-1 wpuf-py-2 wpuf-px-4 wpuf-text-sm wpuf-font-medium wpuf-border-b-2 wpuf-transition-colors', activeTab === 'image' ? 'wpuf-border-blue-500 wpuf-text-blue-600' : 'wpuf-border-transparent wpuf-text-gray-500 hover:wpuf-text-gray-700']"
+                >
+                    <i class="fa fa-image wpuf-mr-1"></i> <?php esc_html_e( 'Upload Image', 'wp-user-frontend' ); ?>
+                </button>
+            </div>
+
+            <!-- Icon Tab Content -->
+            <div v-if="activeTab === 'icon'">
+                <!-- Search -->
+                <div class="wpuf-p-3 wpuf-border-b wpuf-border-gray-200">
+                    <input
+                        v-model="searchTerm"
+                        type="text"
+                        placeholder="<?php esc_attr_e( 'Search icons... (e.g., user, email, home)', 'wp-user-frontend' ); ?>"
+                        class="wpuf-w-full !wpuf-px-4 !wpuf-py-1.5 wpuf-border wpuf-border-gray-300 wpuf-rounded wpuf-text-sm wpuf-text-gray-900 placeholder:wpuf-text-gray-400 wpuf-shadow focus:!wpuf-shadow-none"
+                    >
+                    <div class="wpuf-text-xs wpuf-text-gray-500 wpuf-mt-1">
+                        {{ iconCountLabel }}
+                    </div>
+                </div>
+
+                <!-- Icons Grid -->
+                <div class="wpuf-icon-grid-container" style="max-height: 210px; overflow-y: auto; padding: 10px;">
+                    <div v-if="filteredIcons.length > 0" class="wpuf-icon-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                        <button
+                            type="button"
+                            v-for="icon in filteredIcons"
+                            :key="icon.class"
+                            @click="selectIcon(icon.class)"
+                            :class="['wpuf-icon-grid-item', { 'selected': value === icon.class }]"
+                            :title="icon.name + ' - ' + icon.keywords"
+                            :aria-pressed="value === icon.class"
+                            style="padding: 10px 5px; text-align: center; border: 1px solid #e0e0e0; border-radius: 4px; cursor: pointer; transition: all 0.2s; min-height: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center;"
+                        >
+                            <i :class="icon.class" style="font-size: 18px; margin-bottom: 4px; color: #555;"></i>
+                            <div style="font-size: 10px; color: #666; line-height: 1.2; word-break: break-word; max-width: 100%;">{{ icon.name }}</div>
+                        </button>
+                    </div>
+
+                    <!-- No Results -->
+                    <div v-else class="wpuf-text-center wpuf-py-8 wpuf-text-gray-500">
+                        <div style="font-size: 16px; margin-bottom: 8px;">No icons found</div>
+                        <div style="font-size: 12px;">Try searching with different keywords like "user", "email", "home"</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Image Tab Content -->
+            <div v-if="activeTab === 'image'" class="wpuf-p-4">
+                <div class="wpuf-text-center">
+                    <!-- Image Preview -->
+                    <div v-if="isImageValue" class="wpuf-mb-4">
+                        <img :src="value" alt="" style="max-width: 100px; max-height: 100px; object-fit: cover; border-radius: 8px; border: 2px solid #e0e0e0; margin: 0 auto;" />
+                        <div class="wpuf-text-xs wpuf-text-gray-500 wpuf-mt-2"><?php esc_html_e( 'Current custom image', 'wp-user-frontend' ); ?></div>
+                    </div>
+
+                    <!-- Upload Button -->
+                    <button
+                        type="button"
+                        @click.stop="openMediaUploader"
+                        class="wpuf-inline-flex wpuf-items-center wpuf-gap-2 wpuf-px-4 wpuf-py-2 wpuf-bg-blue-500 wpuf-text-white wpuf-rounded wpuf-text-sm wpuf-font-medium hover:wpuf-bg-blue-600 wpuf-transition-colors"
+                    >
+                        <i class="fa fa-upload"></i>
+                        <?php esc_html_e( 'Upload an image to use as icon', 'wp-user-frontend' ); ?>
+                    </button>
+
+                    <p class="wpuf-text-xs wpuf-text-gray-500 wpuf-mt-3">
+                        <?php esc_html_e( 'Recommended size: 32x32 pixels', 'wp-user-frontend' ); ?>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</script>
+
 <script type="text/x-template" id="tmpl-wpuf-field-multiselect">
 <div v-if="met_dependencies" class="panel-field-opt panel-field-opt-select">
     <div class="wpuf-flex">
@@ -334,7 +471,24 @@
     </div>
 
     <div class="wpuf-mt-4">
-        <span class="wpuf-text-[14px] wpuf-text-gray-700 wpuf-font-medium"><?php esc_attr_e( 'Label & Values', 'wp-user-frontend' ); ?></span>
+        <div class="wpuf-flex wpuf-items-center wpuf-justify-between wpuf-mb-2">
+            <div class="wpuf-flex wpuf-items-center wpuf-gap-2">
+                <span class="wpuf-text-[14px] wpuf-text-gray-700 wpuf-font-medium"><?php esc_attr_e( 'Label & Values', 'wp-user-frontend' ); ?></span>
+                <button
+                    type="button"
+                    @click="open_ai_modal"
+                    class="wpuf-w-8 wpuf-h-8 wpuf-flex wpuf-items-center wpuf-justify-center wpuf-rounded-lg wpuf-shadow-sm hover:wpuf-shadow-md wpuf-border-0"
+                    style="background: linear-gradient(135deg, #FFEE00 0%, #D500FF 28%, #0082FF 100%);"
+                    title="<?php esc_attr_e( 'AI Generate Options', 'wp-user-frontend' ); ?>">
+                    <svg class="wpuf-w-5 wpuf-h-5" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M8.17766 13.2532L7.5 15.625L6.82234 13.2532C6.4664 12.0074 5.4926 11.0336 4.24682 10.6777L1.875 10L4.24683 9.32234C5.4926 8.9664 6.4664 7.9926 6.82234 6.74682L7.5 4.375L8.17766 6.74683C8.5336 7.9926 9.5074 8.9664 10.7532 9.32234L13.125 10L10.7532 10.6777C9.5074 11.0336 8.5336 12.0074 8.17766 13.2532Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M15.2157 7.26211L15 8.125L14.7843 7.26212C14.5324 6.25444 13.7456 5.46764 12.7379 5.21572L11.875 5L12.7379 4.78428C13.7456 4.53236 14.5324 3.74556 14.7843 2.73789L15 1.875L15.2157 2.73788C15.4676 3.74556 16.2544 4.53236 17.2621 4.78428L18.125 5L17.2621 5.21572C16.2544 5.46764 15.4676 6.25444 15.2157 7.26211Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M14.0785 17.1394L13.75 18.125L13.4215 17.1394C13.2348 16.5795 12.7955 16.1402 12.2356 15.9535L11.25 15.625L12.2356 15.2965C12.7955 15.1098 13.2348 14.6705 13.4215 14.1106L13.75 13.125L14.0785 14.1106C14.2652 14.6705 14.7045 15.1098 15.2644 15.2965L16.25 15.625L15.2644 15.9535C14.7045 16.1402 14.2652 16.5795 14.0785 17.1394Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+            <?php do_action( 'wpuf_field_option_data_actions' ); ?>
+        </div>
         <table class="option-field-option-chooser">
             <tbody>
                 <tr
@@ -416,6 +570,102 @@
         @click.prevent="clear_selection">
         <?php esc_attr_e( 'Clear Selection', 'wp-user-frontend' ); ?>
     </a>
+
+    <!-- AI Generate Options Modal -->
+    <div v-if="show_ai_modal" class="wpuf-ai-modal-overlay" @click="close_ai_modal">
+        <div class="wpuf-ai-modal" @click.stop>
+            <div class="wpuf-ai-modal-header">
+                <h3><?php esc_attr_e( 'AI Generate Options', 'wp-user-frontend' ); ?></h3>
+                <button type="button" @click="close_ai_modal" class="wpuf-ai-modal-close">&times;</button>
+            </div>
+            <div class="wpuf-ai-modal-body">
+                <label class="wpuf-block wpuf-mb-2 wpuf-text-sm wpuf-font-medium">
+                    <?php esc_attr_e( 'Describe the options you need', 'wp-user-frontend' ); ?>
+                </label>
+                <textarea
+                    v-model="ai_prompt"
+                    rows="3"
+                    class="wpuf-w-full wpuf-px-3 wpuf-py-2 wpuf-border wpuf-rounded"
+                    placeholder="<?php esc_attr_e( 'e.g., List of US states, Business categories, Job titles', 'wp-user-frontend' ); ?>"
+                ></textarea>
+                <div v-if="ai_error" class="wpuf-mt-2 wpuf-text-sm wpuf-text-red-600">{{ ai_error }}</div>
+                <div v-if="ai_generated_options.length" class="wpuf-mt-4">
+                    <div class="wpuf-flex wpuf-justify-between wpuf-items-center wpuf-mb-2">
+                        <span class="wpuf-text-sm wpuf-font-medium"><?php esc_attr_e( 'Generated Options', 'wp-user-frontend' ); ?></span>
+                        <button type="button" @click="select_all_ai_options" class="wpuf-text-sm wpuf-text-primary hover:wpuf-underline">
+                            {{ all_ai_selected ? '<?php esc_attr_e( 'Deselect All', 'wp-user-frontend' ); ?>' : '<?php esc_attr_e( 'Select All', 'wp-user-frontend' ); ?>' }}
+                        </button>
+                    </div>
+                    <div class="wpuf-ai-options-list">
+                        <label v-for="(opt, idx) in ai_generated_options" :key="idx" class="wpuf-flex wpuf-items-center wpuf-py-1 wpuf-cursor-pointer hover:wpuf-bg-gray-50 wpuf-rounded wpuf-px-2">
+                            <input
+                                type="checkbox"
+                                v-model="opt.selected"
+                                :class="builder_class_names('checkbox')">
+                            <span class="wpuf-text-sm wpuf-text-gray-700">{{ opt.label }}</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="wpuf-ai-modal-footer">
+                <button type="button" @click="close_ai_modal" class="wpuf-btn wpuf-btn-secondary">
+                    <?php esc_attr_e( 'Cancel', 'wp-user-frontend' ); ?>
+                </button>
+                <button v-if="!ai_generated_options.length" type="button" @click="generate_ai_options" :disabled="ai_loading || !ai_prompt" class="wpuf-rounded-md wpuf-text-center wpuf-bg-gradient-to-r wpuf-from-purple-600 wpuf-to-blue-600 wpuf-px-3 wpuf-py-2 wpuf-text-sm wpuf-font-semibold wpuf-text-white wpuf-shadow-sm hover:wpuf-from-purple-700 hover:wpuf-to-blue-700 hover:wpuf-text-white focus:wpuf-from-purple-700 focus:wpuf-to-blue-700 focus:wpuf-text-white focus:wpuf-shadow-none hover:wpuf-cursor-pointer wpuf-inline-flex wpuf-items-center disabled:wpuf-opacity-50 disabled:wpuf-cursor-not-allowed wpuf-border-0">
+                    <svg v-if="!ai_loading" class="wpuf-w-5 wpuf-h-5 wpuf-pr-1" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M8.17766 13.2532L7.5 15.625L6.82234 13.2532C6.4664 12.0074 5.4926 11.0336 4.24682 10.6777L1.875 10L4.24683 9.32234C5.4926 8.9664 6.4664 7.9926 6.82234 6.74682L7.5 4.375L8.17766 6.74683C8.5336 7.9926 9.5074 8.9664 10.7532 9.32234L13.125 10L10.7532 10.6777C9.5074 11.0336 8.5336 12.0074 8.17766 13.2532Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M15.2157 7.26211L15 8.125L14.7843 7.26212C14.5324 6.25444 13.7456 5.46764 12.7379 5.21572L11.875 5L12.7379 4.78428C13.7456 4.53236 14.5324 3.74556 14.7843 2.73789L15 1.875L15.2157 2.73788C15.4676 3.74556 16.2544 4.53236 17.2621 4.78428L18.125 5L17.2621 5.21572C16.2544 5.46764 15.4676 6.25444 15.2157 7.26211Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M14.0785 17.1394L13.75 18.125L13.4215 17.1394C13.2348 16.5795 12.7955 16.1402 12.2356 15.9535L11.25 15.625L12.2356 15.2965C12.7955 15.1098 13.2348 14.6705 13.4215 14.1106L13.75 13.125L14.0785 14.1106C14.2652 14.6705 14.7045 15.1098 15.2644 15.2965L16.25 15.625L15.2644 15.9535C14.7045 16.1402 14.2652 16.5795 14.0785 17.1394Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <i v-if="ai_loading" class="fa fa-spinner fa-spin wpuf-mr-1"></i>
+                    {{ ai_loading ? '<?php esc_attr_e( 'Generating...', 'wp-user-frontend' ); ?>' : '<?php esc_attr_e( 'Generate', 'wp-user-frontend' ); ?>' }}
+                </button>
+                <button v-else type="button" @click="import_ai_options" class="wpuf-rounded-md wpuf-text-center wpuf-bg-gradient-to-r wpuf-from-purple-600 wpuf-to-blue-600 wpuf-px-3 wpuf-py-2 wpuf-text-sm wpuf-font-semibold wpuf-text-white wpuf-shadow-sm hover:wpuf-from-purple-700 hover:wpuf-to-blue-700 hover:wpuf-text-white focus:wpuf-from-purple-700 focus:wpuf-to-blue-700 focus:wpuf-text-white focus:wpuf-shadow-none hover:wpuf-cursor-pointer wpuf-inline-flex wpuf-items-center wpuf-border-0">
+                    <?php esc_attr_e( 'Import Selected', 'wp-user-frontend' ); ?>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Provider Configuration Modal -->
+    <div v-if="show_ai_config_modal" class="wpuf-fixed wpuf-top-0 wpuf-left-0 wpuf-w-screen wpuf-h-screen wpuf-bg-black wpuf-bg-opacity-50 wpuf-z-[1000000] wpuf-flex wpuf-items-center wpuf-justify-center">
+        <div class="wpuf-bg-white wpuf-rounded-md wpuf-p-8 wpuf-max-w-xl wpuf-w-full wpuf-mx-5 wpuf-relative">
+            <!-- Key Icon -->
+            <div class="wpuf-flex wpuf-justify-center wpuf-mb-8">
+                <svg width="110" height="110" viewBox="0 0 110 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="110" height="110" rx="55" fill="#D1FAE5"/>
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M60 41C55.0294 41 51 45.0294 51 50C51 50.525 51.0451 51.0402 51.1317 51.5419C51.2213 52.0604 51.089 52.4967 50.8369 52.7489L42.1716 61.4142C41.4214 62.1644 41 63.1818 41 64.2426V68C41 68.5523 41.4477 69 42 69H47C47.5523 69 48 68.5523 48 68V66H50C50.5523 66 51 65.5523 51 65V63H53C53.2652 63 53.5196 62.8946 53.7071 62.7071L57.2511 59.1631C57.5033 58.911 57.9396 58.7787 58.4581 58.8683C58.9598 58.9549 59.475 59 60 59C64.9706 59 69 54.9706 69 50C69 45.0294 64.9706 41 60 41ZM60 45C59.4477 45 59 45.4477 59 46C59 46.5523 59.4477 47 60 47C61.6569 47 63 48.3431 63 50C63 50.5523 63.4477 51 64 51C64.5523 51 65 50.5523 65 50C65 47.2386 62.7614 45 60 45Z" fill="#065F46"/>
+                </svg>
+            </div>
+
+            <!-- Title -->
+            <h2 class="wpuf-text-2xl wpuf-font-medium wpuf-text-center wpuf-text-gray-900 wpuf-mb-4">
+                <?php esc_attr_e( 'AI Provider Not Configured', 'wp-user-frontend' ); ?>
+            </h2>
+
+            <!-- Description -->
+            <p class="wpuf-text-lg wpuf-text-center wpuf-text-gray-400 wpuf-mb-16">
+                <?php esc_attr_e( 'To use AI Form Generation, please connect an AI provider by adding your API key in the settings', 'wp-user-frontend' ); ?>
+            </p>
+
+            <!-- Buttons -->
+            <div class="wpuf-flex wpuf-justify-center wpuf-gap-3">
+                <button
+                    type="button"
+                    @click="close_ai_config_modal"
+                    class="wpuf-px-6 wpuf-py-3 wpuf-border wpuf-border-gray-300 wpuf-rounded-md wpuf-text-gray-700 hover:wpuf-bg-gray-50 wpuf-text-lg wpuf-transition-colors wpuf-min-w-[101px]">
+                    <?php esc_attr_e( 'Cancel', 'wp-user-frontend' ); ?>
+                </button>
+                <button
+                    type="button"
+                    @click="go_to_ai_settings"
+                    class="wpuf-px-6 wpuf-py-3 wpuf-bg-emerald-700 hover:wpuf-bg-emerald-800 wpuf-text-white wpuf-rounded-md wpuf-text-lg wpuf-transition-colors wpuf-min-w-[158px]">
+                    <?php esc_attr_e( 'Go to Settings', 'wp-user-frontend' ); ?>
+                </button>
+            </div>
+        </div>
+    </div>
+    <?php do_action( 'wpuf_field_option_data_after' ); ?>
 </div>
 </script>
 
@@ -425,7 +675,7 @@
     <label
         class="wpuf-pro-text-alert wpuf-ml-2 wpuf-tooltip-top"
         data-tip="<?php esc_attr_e( 'Available in PRO version', 'wp-user-frontend' ); ?>">
-        <a :href="pro_link" target="_blank"><img src="<?php echo wpuf_get_pro_icon() ?>" alt="pro icon"></a>
+        <a :href="pro_link" target="_blank"><img src="<?php echo esc_url( wpuf_get_pro_icon() ) ?>" alt="pro icon"></a>
     </label>
 </div>
 </script>
@@ -433,19 +683,17 @@
 <script type="text/x-template" id="tmpl-wpuf-field-options">
 <div class="wpuf-form-builder-field-options">
     <div v-if="!parseInt(editing_field_id)" class="options-fileds-section text-center">
-        <p>
-            <span class="loader"></span>
-        </p>
+        <p class="wpuf-text-gray-500 wpuf-text-lg wpuf-font-medium">{{ i18n.empty_field_options_msg }}</p>
     </div>
 
     <div v-else>
         <div class="option-fields-section wpuf-mt-6">
             <h3
-                :class="show_basic_settings ? 'wpuf-text-green-600' : 'wpuf-text-gray-500'"
+                :class="show_basic_settings ? 'wpuf-text-primary' : 'wpuf-text-gray-500'"
                 class="wpuf-flex wpuf-mt-0 wpuf-mb-6 wpuf-justify-between hover:wpuf-cursor-pointer wpuf-font-medium wpuf-text-lg"
                 @click="show_basic_settings = !show_basic_settings">
                 {{ form_field_type_title }}
-                <i :class="show_basic_settings ? 'fa fa-angle-down wpuf-text-green-600' : 'fa fa-angle-right wpuf-text-gray-500'"></i>
+                <i :class="show_basic_settings ? 'fa fa-angle-down wpuf-text-primary' : 'fa fa-angle-right wpuf-text-gray-500'"></i>
             </h3>
 
             <transition name="slide-fade">
@@ -463,11 +711,11 @@
 
         <div v-if="advanced_settings.length" class="option-fields-section">
             <h3
-                :class="show_advanced_settings ? 'wpuf-text-green-600' : 'wpuf-text-gray-500'"
+                :class="show_advanced_settings ? 'wpuf-text-primary' : 'wpuf-text-gray-500'"
                 class="wpuf-flex wpuf-mt-0 wpuf-mb-6 wpuf-justify-between hover:wpuf-cursor-pointer wpuf-font-medium wpuf-text-lg"
                 @click="show_advanced_settings = !show_advanced_settings">
                 {{ i18n.advanced_options }}
-                <i :class="show_advanced_settings ? 'fa fa-angle-down wpuf-text-green-600' : 'fa fa-angle-right wpuf-text-gray-500'"></i>
+                <i :class="show_advanced_settings ? 'fa fa-angle-down wpuf-text-primary' : 'fa fa-angle-right wpuf-text-gray-500'"></i>
             </h3>
 
             <transition name="slide-fade">
@@ -550,7 +798,7 @@
 </script>
 
 <script type="text/x-template" id="tmpl-wpuf-field-select">
-<div class="panel-field-opt panel-field-opt-select">
+<div v-if="met_dependencies" class="panel-field-opt panel-field-opt-select">
     <div class="wpuf-flex">
         <label v-if="option_field.title" class="!wpuf-mb-0">
             {{ option_field.title }} <help-text v-if="option_field.help_text" :text="option_field.help_text"></help-text>
@@ -558,15 +806,15 @@
     </div>
 
     <div class="option-fields-section wpuf-relative">
-        <p
+        <div
             @click="showOptions = !showOptions"
-            class="wpuf-w-full wpuf-min-w-full !wpuf-py-[10px] !wpuf-px-[14px] wpuf-text-gray-700 wpuf-font-medium !wpuf-shadow-sm wpuf-border !wpuf-border-gray-300 !wpuf-rounded-[6px] focus:!wpuf-ring-transparent focus:checked:!wpuf-ring-transparent hover:checked:!wpuf-ring-transparent hover:!wpuf-text-gray-700 wpuf-flex wpuf-justify-between wpuf-items-center !wpuf-text-base"
+            class="wpuf-my-4 wpuf-w-full wpuf-min-w-full !wpuf-py-[10px] !wpuf-px-[14px] wpuf-text-gray-700 wpuf-font-medium !wpuf-shadow-sm wpuf-border !wpuf-border-gray-300 !wpuf-rounded-[6px] focus:!wpuf-ring-transparent focus:checked:!wpuf-ring-transparent hover:checked:!wpuf-ring-transparent hover:!wpuf-text-gray-700 wpuf-flex wpuf-justify-between wpuf-items-center !wpuf-text-base"
         >
             {{ selectedOption }}
             <i
                 :class="showOptions ? 'fa-angle-up' : 'fa-angle-down'"
                 class="fa wpuf-text-base"></i>
-        </p>
+        </div>
 
         <div
             v-if="showOptions"
@@ -606,6 +854,8 @@
         v-model="value"
         @focusout="on_focusout"
         @keyup="on_keyup"
+        :disabled="option_field.disabled"
+        :readonly="option_field.readonly"
         :class="builder_class_names('text')">
 </div>
 </script>
@@ -622,6 +872,7 @@
         <input
             type="text"
             v-model="value"
+            :readonly="option_field.is_read_only"
             :class="builder_class_names('text')">
     </div>
 </div>
@@ -655,6 +906,7 @@
             class="wpuf-block text-sm/6 wpuf-font-medium wpuf-text-gray-900">
             <input
                 type="radio"
+                :name="'visibility_' + editing_form_field.id"
                 :value="key"
                 v-model="selected"
                 class="checked:!wpuf-bg-primary checked:before:!wpuf-bg-transparent">
@@ -671,6 +923,7 @@
                 class="wpuf-block wpuf-my-1 wpuf-mr-2 wpuf-font-medium wpuf-text-gray-900">
                 <input
                     type="radio"
+                    :name="'visibility_' + editing_form_field.id"
                     :value="key"
                     v-model="selected"
                     :class="builder_class_names('radio')">
@@ -731,7 +984,7 @@
     	<ul>
     		<?php
 
-                if ( class_exists( 'WPUF_Subscription' ) ) {
+                if ( class_exists( 'WeDevs\Wpuf\Admin\Subscription' ) ) {
                     $subscriptions  = wpuf()->subscription->get_subscriptions();
 
                     if ( $subscriptions ) {
@@ -864,7 +1117,7 @@
                         ('custom_hidden_field' === field.template) ? 'hidden-field' : '',
                         parseInt(editing_form_id) === parseInt(field.id) ? 'wpuf-bg-green-50' : ''
                       ]">
-                    <div class="wpuf-flex wpuf-flex-col md:wpuf-flex-row wpuf-gap-2 wpuf-p-4 wpuf-border-transparent group-hover/column-inner:wpuf-border-green-400 wpuf-rounded-t-md wpuf-border-t wpuf-border-r wpuf-border-l wpuf-border-dashed wpuf-border-green-400">
+                    <div class="wpuf-flex wpuf-flex-col md:wpuf-flex-row wpuf-gap-2 wpuf-p-4 wpuf-border-transparent group-hover/column-inner:wpuf-border-primary wpuf-rounded-t-md wpuf-border-t wpuf-border-r wpuf-border-l wpuf-border-dashed wpuf-border-emerald-400">
                         <div
                             v-if="!(is_full_width(field.template) || is_pro_preview(field.template))">
                             <label v-if="!is_invisible(field)"
@@ -900,7 +1153,7 @@
                         </div>
                     </div>
                     <div
-                        class="wpuf-column-field-control-buttons wpuf-opacity-0 group-hover/column-inner:wpuf-opacity-100 wpuf-rounded-b-lg wpuf-bg-green-600 wpuf-items-center wpuf-transition wpuf-duration-150 wpuf-ease-out wpuf-flex wpuf-justify-center">
+                        class="wpuf-column-field-control-buttons wpuf-opacity-0 group-hover/column-inner:wpuf-opacity-100 wpuf-rounded-b-lg wpuf-bg-primary wpuf-items-center wpuf-transition wpuf-duration-150 wpuf-ease-out wpuf-flex wpuf-justify-center">
                         <div class="wpuf-items-center wpuf-text-green-200 wpuf-flex wpuf-justify-evenly wpuf-p-1">
                             <template v-if="!is_failed_to_validate(field.template)">
                                 <span class="!wpuf-mt-2.5">
@@ -939,12 +1192,12 @@
                         </span>
                             <span :class="action_button_classes"
                                 v-if="is_pro_preview(field.template)"
-                                class="hover:wpuf-bg-green-700">
+                                class="hover:wpuf-bg-primary">
                             <a
                                 :href="pro_link"
                                 target="_blank"
                                 class="wpuf-rounded-r-md hover:wpuf-bg-slate-500 hover:wpuf-cursor-pointer wpuf-transition wpuf-duration-150 wpuf-ease-out hover:wpuf-transition-all">
-                                <img src="<?php esc_attr_e( WPUF_ASSET_URI . '/images/pro-badge.svg' ); ?>" alt="">
+                                <img src="<?php echo esc_attr( WPUF_ASSET_URI . '/images/pro-badge.svg' ); ?>" alt="">
                             </a>
                         </span>
                         </div>
@@ -1117,12 +1370,12 @@
             v-for="(section, index) in panel_sections">
             <div v-if="section.fields.length" class="panel-form-field-group wpuf-mb-8">
                 <h3
-                    :class="section.show ? 'wpuf-text-green-600' : 'wpuf-text-gray-500'"
+                    :class="section.show ? 'wpuf-text-primary' : 'wpuf-text-gray-500'"
                     class="wpuf-flex wpuf-justify-between hover:wpuf-cursor-pointer wpuf-text-base wpuf-m-0 !wpuf-font-medium"
                     @click="panel_toggle(index)">
                     {{ section.title }}
                     <i
-                        :class="[section.show ? 'fa fa-angle-down wpuf-text-green-600' : 'fa fa-angle-right wpuf-text-gray-500']"
+                        :class="[section.show ? 'fa fa-angle-down wpuf-text-primary' : 'fa fa-angle-right wpuf-text-gray-500']"
                         class="wpuf-text-[24px]"></i>
                 </h3>
                 <div
@@ -1138,7 +1391,7 @@
                             data-source="panel"
                             @click="alert_pro_feature(field)"
                             class="wpuf-relative wpuf-group/pro-field">
-                                <div class="wpuf-opacity-50 wpuf-field-button wpuf-flex wpuf-items-center wpuf-rounded-lg wpuf-border wpuf-border-gray-200 wpuf-bg-white wpuf-shadow-sm wpuf-px-4 wpuf-py-3 hover:wpuf-border-gray-300 hover:wpuf-cursor-pointer">
+                                <div class="wpuf-opacity-50 wpuf-field-button wpuf-flex wpuf-items-center wpuf-rounded-lg wpuf-border wpuf-border-gray-200 wpuf-bg-white wpuf-shadow-sm wpuf-p-4 hover:wpuf-border-gray-300 hover:wpuf-cursor-pointer">
                                     <div
                                         v-if="field_settings[field].icon"
                                         class="wpuf-shrink-0 wpuf-mr-2 wpuf-text-gray-400">
@@ -1153,7 +1406,7 @@
                                 </div>
                             <div
                                 class="wpuf-absolute wpuf-top-4 wpuf-right-4 wpuf-opacity-0 group-hover/pro-field:wpuf-opacity-100 wpuf-transition-all">
-                                <img src="<?php esc_attr_e( WPUF_ASSET_URI . '/images/pro-badge.svg' ); ?>" alt="">
+                                <img src="<?php echo esc_attr( WPUF_ASSET_URI . '/images/pro-badge.svg' ); ?>" alt="">
                             </div>
                         </div>
                         <div
@@ -1348,10 +1601,11 @@
             class="wpuf-flex wpuf-items-center">
             <input
                 type="radio"
-                :class="builder_class_names('radio')">
-            <label
                 :value="val"
-                :checked="is_selected(val)">{{ label }}</label>
+                :checked="is_selected(val)"
+                :id="'radio-' + field.name + '-' + val"
+                :class="builder_class_names('radio')">
+            <label :for="'radio-' + field.name + '-' + val">{{ label }}</label>
         </div>
     </div>
 
@@ -1361,11 +1615,13 @@
         <div
             v-if="has_options" v-for="(label, val) in field.options"
             class="wpuf-flex wpuf-items-center">
-            <input type="radio" :class="builder_class_names('radio')">
-            <label
+            <input
+                type="radio"
                 :value="val"
                 :checked="is_selected(val)"
-                :class="builder_class_names('radio')">{{ label }}</label>
+                :id="'radio-' + field.name + '-' + val"
+                :class="builder_class_names('radio')">
+            <label :for="'radio-' + field.name + '-' + val">{{ label }}</label>
         </div>
     </div>
 

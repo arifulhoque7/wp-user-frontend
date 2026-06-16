@@ -38,7 +38,7 @@ class Form_Field_Post_Excerpt extends Field_Contract {
         <li <?php $this->print_list_attributes( $field_settings ); ?>>
             <?php $this->print_label( $field_settings, $form_id ); ?>
 
-            <?php if ( in_array( $field_settings['rich'], [ 'yes', 'teeny' ] ) ) { ?>
+            <?php if ( ! empty( $field_settings['rich'] ) && in_array( $field_settings['rich'], [ 'yes', 'teeny' ] ) ) { ?>
                 <div class="wpuf-fields wpuf-rich-validation <?php printf( 'wpuf_%s_%s', esc_attr( $field_settings['name'] ), esc_attr( $form_id ) ); ?>" data-type="rich" data-required="<?php echo esc_attr( $field_settings['required'] ); ?>" data-id="<?php echo esc_attr( $field_settings['name'] ) . '_' . esc_attr( $form_id ); ?>" data-name="<?php echo esc_attr( $field_settings['name'] ); ?>">
             <?php } else { ?>
                 <div class="wpuf-fields">
@@ -46,7 +46,7 @@ class Form_Field_Post_Excerpt extends Field_Contract {
 
                 <?php
 
-                if ( $field_settings['rich'] == 'yes' ) {
+                if ( ! empty( $field_settings['rich'] ) && $field_settings['rich'] == 'yes' ) {
                     $editor_settings = [
                         // 'textarea_rows' => $field_settings['rows'],
                         'quicktags'     => false,
@@ -56,8 +56,9 @@ class Form_Field_Post_Excerpt extends Field_Contract {
                     ];
 
                     $editor_settings = apply_filters( 'wpuf_textarea_editor_args', $editor_settings );
+
                     wp_editor( $value, $textarea_id, $editor_settings );
-                } elseif ( $field_settings['rich'] == 'teeny' ) {
+                } elseif ( ! empty( $field_settings['rich'] ) && $field_settings['rich'] == 'teeny' ) {
                     $editor_settings = [
                         'textarea_rows' => $field_settings['rows'],
                         'quicktags'     => false,
@@ -68,6 +69,7 @@ class Form_Field_Post_Excerpt extends Field_Contract {
                     ];
 
                     $editor_settings = apply_filters( 'wpuf_textarea_editor_args', $editor_settings );
+
                     wp_editor( $value, $textarea_id, $editor_settings );
                 } else {
                     ?>
@@ -151,7 +153,7 @@ class Form_Field_Post_Excerpt extends Field_Contract {
     public function prepare_entry( $field ) {
         check_ajax_referer( 'wpuf_form_add' );
 
-        $field = isset( $_POST[ $field['name'] ] ) ? sanitize_text_field( wp_unslash( $_POST[ $field['name'] ] ) ) : '';
+        $field = isset( $_POST[ $field['name'] ] ) ? strip_shortcodes( sanitize_text_field( wp_unslash( $_POST[ $field['name'] ] ) ) ) : '';
 
         return wp_kses_post( $field );
     }

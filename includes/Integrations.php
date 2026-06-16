@@ -18,15 +18,25 @@ class Integrations {
     public $container = [];
 
     private $integrations = [
-        'WeDevs_Dokan' => 'WPUF_Dokan_Integration',
-        'WC_Vendors'   => 'WPUF_WC_Vendors_Integration',
-        'WCMp'         => 'WPUF_WCMp_Integration',
-        'ACF'          => 'WPUF_ACF_Compatibility',
+        'WeDevs_Dokan'        => 'WPUF_Dokan_Integration',
+        'WC_Vendors'          => 'WPUF_WC_Vendors_Integration',
+        'WCMp'                => 'WPUF_WCMp_Integration',
+        'ACF'                 => 'WPUF_ACF_Compatibility',
+        'Tribe__Events__Main' => 'Events_Calendar\Events_Calendar_Integration',
+        'N8N'                 => 'WPUF_N8N_Integration',
     ];
 
     public function __construct() {
         foreach ( $this->integrations as $external_class => $integration_class ) {
-            if ( class_exists( $external_class ) ) {
+            // Special case for N8N - always load since it's a service integration
+            if ( $external_class === 'N8N' ) {
+                $full_class_name = __NAMESPACE__ . '\\Integrations\\' . $integration_class;
+                try {
+                    $this->container[ strtolower( $external_class ) ] = new $full_class_name();
+                } catch ( \Exception $e ) {
+                    \WP_User_Frontend::log( 'integration', print_r( $external_class . ' integration failed', true ) );
+                }
+            } elseif ( class_exists( $external_class ) ) {
                 $full_class_name = __NAMESPACE__ . '\\Integrations\\' . $integration_class;
                 try {
                     $this->container[ strtolower( $external_class ) ] = new $full_class_name();
@@ -34,6 +44,24 @@ class Integrations {
                     \WP_User_Frontend::log( 'integration', print_r( $external_class . ' integration failed', true ) );
                 }
             }
+        }
+
+        add_action( 'elementor/init', [ $this, 'init_elementor' ] );
+    }
+
+    /**
+     * Initialize Elementor integration
+     *
+     * @since 4.3.1
+     *
+     * @return void
+     */
+    public function init_elementor() {
+        try {
+            require_once __DIR__ . '/Integrations/Elementor/Elementor.php';
+            $this->container['elementor'] = new Integrations\Elementor\Elementor();
+        } catch ( \Exception $e ) {
+            \WP_User_Frontend::log( 'integration', 'Elementor integration failed: ' . $e->getMessage() );
         }
     }
 

@@ -228,10 +228,11 @@ class WPUF_Render_Form {
         foreach ( $meta_vars as $key => $value ) {
             $value_name = isset( $_POST[$value['name']] ) ? sanitize_text_field( wp_unslash( $_POST[$value['name']] ) ) : '';
             if ( isset( $_POST['wpuf_files'][$value['name']] ) ) {
-                $wpuf_files = isset( $_POST['wpuf_files'] ) ? sanitize_text_field( wp_unslash( $_POST['wpuf_files'][$value['name']] ) ) : [];
-            } else {
-                $wpuf_files = [];
-            }
+            $raw_files = wp_unslash( $_POST['wpuf_files'][$value['name']] );
+            $wpuf_files = absint( $raw_files );
+        } else {
+            $wpuf_files = [];
+        }
             switch ( $value['input_type'] ) {
 
                 // put files in a separate array, we'll process it later
@@ -1761,7 +1762,7 @@ class WPUF_Render_Form {
         }
 
         if ( $enable_invisible_recaptcha ) { ?>
-            <script src="https://www.google.com/recaptcha/api.js?onload=wpufreCaptchaLoaded&render=explicit&hl=en" async defer></script>
+            <?php wp_enqueue_script( 'wpuf-recaptcha-invisible', 'https://www.google.com/recaptcha/api.js?onload=wpufreCaptchaLoaded&render=explicit&hl=en', array(), null, true ); ?>
             <script>
                 jQuery(document).ready(function($) {
                     jQuery('[name="submit"]').removeClass('wpuf-submit-button').addClass('g-recaptcha').attr('data-sitekey', '<?php echo esc_html( wpuf_get_option( 'recaptcha_public', 'wpuf_general' ) ); ?>');
