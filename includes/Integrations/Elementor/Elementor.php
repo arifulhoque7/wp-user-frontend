@@ -364,9 +364,8 @@ class Elementor {
         // Keep a queryable meta flag so register_elementor_page_rewrite_rules() can find
         // these pages efficiently without scanning all _elementor_data values on every init.
         if ( $has_widget ) {
+            // The meta flag puts this page on the fast meta_query path, so no back-fill re-scan is needed.
             update_post_meta( $post_id, '_wpuf_has_ud_elementor_widget', '1' );
-            // Allow the back-fill scan to re-run so this page is picked up.
-            delete_transient( 'wpuf_ud_elementor_backfill_done' );
             flush_rewrite_rules();
         } else {
             delete_post_meta( $post_id, '_wpuf_has_ud_elementor_widget' );
