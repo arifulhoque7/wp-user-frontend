@@ -365,6 +365,8 @@ class Elementor {
         // these pages efficiently without scanning all _elementor_data values on every init.
         if ( $has_widget ) {
             update_post_meta( $post_id, '_wpuf_has_ud_elementor_widget', '1' );
+            // Allow the back-fill scan to re-run so this page is picked up.
+            delete_transient( 'wpuf_ud_elementor_backfill_done' );
             flush_rewrite_rules();
         } else {
             delete_post_meta( $post_id, '_wpuf_has_ud_elementor_widget' );
@@ -401,7 +403,11 @@ class Elementor {
         // Fallback: if no flagged pages exist (e.g. first deploy, meta not yet written),
         // scan _elementor_data for existing pages and back-fill the meta flag so future
         // requests use the fast path. This only runs once until a page is found.
-        if ( empty( $pages ) ) {
+        // Run the expensive all-pages back-fill scan at most once per cache window
+        // instead of on every front-end init. The meta flag is written on page save,
+        // so the fast path above handles new widget pages; this scan only migrates
+        // pages that pre-date the flag.
+        if ( empty( $pages ) && false === get_transient( 'wpuf_ud_elementor_backfill_done' ) ) {
             $all_pages = get_posts( [
                 'post_type'      => 'page',
                 'post_status'    => 'publish',
@@ -415,6 +421,8 @@ class Elementor {
                     $pages[] = $page;
                 }
             }
+
+            set_transient( 'wpuf_ud_elementor_backfill_done', 1, DAY_IN_SECONDS );
 
             // If we found pages via the fallback scan, flush so the new rules take effect.
             if ( ! empty( $pages ) ) {
