@@ -2241,8 +2241,10 @@ function wpuf_is_license_expired() {
  * @return array
  */
 function wpuf_get_post_form_templates() {
-    $integrations['post_form_template_post'] = new WeDevs\Wpuf\Admin\Forms\Post\Templates\Post_Form_Template_Post();
-    $integrations['post_form_template_video'] = new WeDevs\Wpuf\Admin\Forms\Post\Templates\Post_Form_Template_Video();
+    $integrations['post_form_template_post']                 = new WeDevs\Wpuf\Admin\Forms\Post\Templates\Post_Form_Template_Post();
+    $integrations['post_form_template_video']                = new WeDevs\Wpuf\Admin\Forms\Post\Templates\Post_Form_Template_Video();
+    $integrations['post_form_template_paid_guest_post']      = new WeDevs\Wpuf\Admin\Forms\Post\Templates\Post_Form_Template_Paid_Guest_Post();
+    $integrations['post_form_template_guest_post_recurring'] = new WeDevs\Wpuf\Admin\Forms\Post\Templates\Post_Form_Template_Guest_Post_Recurring();
 
     return apply_filters( 'wpuf_get_post_form_templates', $integrations );
 }
@@ -5710,17 +5712,19 @@ function wpuf_get_post_form_builder_setting_menu_contents() {
     unset( $post_types['oembed_cache'] );
 
     $template_options = [
-        ''                                     => __( '-- Select Template --', 'wp-user-frontend' ),
-        'post_form_template_post'              => __( 'Post Form', 'wp-user-frontend' ),
-        'post_form_template_woocommerce'       => __( 'WooCommerce Product Form', 'wp-user-frontend' ),
-        'post_form_template_edd'               => __( 'EDD Download Form', 'wp-user-frontend' ),
-        'post_form_template_events_calendar'   => __( 'Event Form', 'wp-user-frontend' ),
-        'post_form_template_video'             => __( 'Video Form', 'wp-user-frontend' ),
-        'post_form_template_professional_video' => __( 'Professional Video Form', 'wp-user-frontend' ),
-        'post_form_template_artwork'           => __( 'Artwork Form', 'wp-user-frontend' ),
-        'post_form_template_press_release'     => __( 'Press Release Form', 'wp-user-frontend' ),
-        'post_form_template_portfolio'         => __( 'Portfolio Form', 'wp-user-frontend' ),
-        'post_form_template_volunteer'         => __( 'Volunteer Opportunity Form', 'wp-user-frontend' ),
+        ''                                        => __( '-- Select Template --', 'wp-user-frontend' ),
+        'post_form_template_post'                 => __( 'Post Form', 'wp-user-frontend' ),
+        'post_form_template_woocommerce'          => __( 'WooCommerce Product Form', 'wp-user-frontend' ),
+        'post_form_template_edd'                  => __( 'EDD Download Form', 'wp-user-frontend' ),
+        'post_form_template_events_calendar'      => __( 'Event Form', 'wp-user-frontend' ),
+        'post_form_template_video'                => __( 'Video Form', 'wp-user-frontend' ),
+        'post_form_template_paid_guest_post'      => __( 'Paid Guest Post', 'wp-user-frontend' ),
+        'post_form_template_guest_post_recurring' => __( 'Guest Post (Recurring Subscription)', 'wp-user-frontend' ),
+        'post_form_template_professional_video'   => __( 'Professional Video Form', 'wp-user-frontend' ),
+        'post_form_template_artwork'              => __( 'Artwork Form', 'wp-user-frontend' ),
+        'post_form_template_press_release'        => __( 'Press Release Form', 'wp-user-frontend' ),
+        'post_form_template_portfolio'            => __( 'Portfolio Form', 'wp-user-frontend' ),
+        'post_form_template_volunteer'            => __( 'Volunteer Opportunity Form', 'wp-user-frontend' ),
     ];
 
     $registry = wpuf_get_post_form_templates();
@@ -6717,7 +6721,7 @@ function wpuf_user_can_edit_post( $post_id, $check_settings = true ) {
         );
     }
 
-    if ( ! current_user_can( 'edit_post', $post_id ) ) {
+    if ( $current_user_id !== $post_author_id && ! current_user_can( 'edit_post', $post_id ) ) {
         return new WP_Error(
             'wpuf_unauthorized_edit',
             __( 'You are not authorized to edit this post.', 'wp-user-frontend' )
