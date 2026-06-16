@@ -1,5 +1,5 @@
 import * as dotenv from 'dotenv';
-dotenv.config();
+dotenv.config({ quiet: true });
 import { expect, Page } from '@playwright/test';
 import { Selectors } from './selectors';
 import { Urls } from '../utils/testData';
@@ -24,5 +24,22 @@ export class BasicLogoutPage extends Base {
         console.log('LogOut Done');
 
 
+    }
+
+    async logoutFE() {
+        await this.navigateToURL(this.wpAdminPage );
+
+        await this.validateAndClick(Selectors.logout.basicLogout.logoutButtonFE);
+        await this.validateAndClick(Selectors.logout.basicLogout.confirmLogoutFE);
+
+        //Validate LOGOUT
+        await this.assertionValidate(Selectors.logout.basicLogout.logoutSuccess);
+        console.log('LogOut Done');
+    }
+
+    async signOutFE(){
+        await this.navigateToURL(this.accountPage);
+
+        await this.validateAndClick(Selectors.logout.basicLogout.signOutButton);
     }
 }

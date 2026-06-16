@@ -1,11 +1,11 @@
 import * as dotenv from 'dotenv';
-dotenv.config();
+dotenv.config({ quiet: true });
 import { expect, type Page } from '@playwright/test';
 import { Base } from './base';
 import { Urls } from '../utils/testData';
 import { Selectors } from './selectors';
 import { FieldAddPage } from './fieldAdd';
-import { BasicLogoutPage } from './basicLogout';
+import { faker } from '@faker-js/faker';
 
 export class PostFormSettingsPage extends Base {
     constructor(page: Page) {
@@ -969,6 +969,8 @@ export class PostFormSettingsPage extends Base {
         if (flag == false) {
             await this.navigateToURL(this.wpufPostPage);
 
+            await this.validateAndClick(Selectors.postFormSettings.threeDotButton);
+
             await this.validateAndClick(Selectors.postFormSettings.editPostButton);
 
             await expect(this.page.locator(Selectors.postFormSettings.submitPostButtonText(buttonText))).toBeVisible();
@@ -978,6 +980,8 @@ export class PostFormSettingsPage extends Base {
     async validatePostUpdateStatusInForm(postTitle: string, postContent: string, postExcerpt: string, value: string) {
         // Go to form edit page
         await this.navigateToURL(this.wpufPostPage);
+
+        await this.validateAndClick(Selectors.postFormSettings.threeDotButton);
 
         await this.validateAndClick(Selectors.postFormSettings.editPostButton);
 
@@ -1043,6 +1047,8 @@ export class PostFormSettingsPage extends Base {
     async validatePostUpdateMessageInForm(postTitle: string, postContent: string, postExcerpt: string, expectedMessage: string) {
         // Go to form edit page
         await this.navigateToURL(this.wpufPostPage);
+
+        await this.validateAndClick(Selectors.postFormSettings.threeDotButton);
 
         await this.validateAndClick(Selectors.postFormSettings.editPostButton);
 
@@ -1215,6 +1221,8 @@ export class PostFormSettingsPage extends Base {
         // Go to form edit page
         await this.navigateToURL(this.wpufPostPage);
 
+        await this.validateAndClick(Selectors.postFormSettings.threeDotButton);
+
         await this.validateAndClick(Selectors.postFormSettings.editPostButton);
 
 
@@ -1239,6 +1247,8 @@ export class PostFormSettingsPage extends Base {
         // Go to form edit page
         await this.navigateToURL(this.wpufPostPage);
 
+        await this.validateAndClick(Selectors.postFormSettings.threeDotButton);
+
         await this.validateAndClick(Selectors.postFormSettings.editPostButton);
 
         // Fill post title
@@ -1261,6 +1271,8 @@ export class PostFormSettingsPage extends Base {
     async validateUpdatePostRedirectionToPage(postTitle: string, postContent: string, postExcerpt: string, pageTitle: string) {
         // Go to form edit page
         await this.navigateToURL(this.wpufPostPage);
+
+        await this.validateAndClick(Selectors.postFormSettings.threeDotButton);
 
         await this.validateAndClick(Selectors.postFormSettings.editPostButton);
 
@@ -1285,6 +1297,8 @@ export class PostFormSettingsPage extends Base {
     async validateUpdatePostRedirectionToUrl(postTitle: string, postContent: string, postExcerpt: string, expectedUrl: string) {
         // Go to form edit page
         await this.navigateToURL(this.wpufPostPage);
+
+        await this.validateAndClick(Selectors.postFormSettings.threeDotButton);
 
         await this.validateAndClick(Selectors.postFormSettings.editPostButton);
 
@@ -1397,8 +1411,6 @@ export class PostFormSettingsPage extends Base {
         await this.validateAndFillStrings(Selectors.postForms.postFormsFrontendCreate.postExcerptFormsFE, postExcerpt);
 
         await this.validateAndClick(Selectors.postFormSettings.submitPostButton);
-
-        //await this.page.waitForTimeout(2000);
 
         await this.checkElementText(Selectors.postFormSettings.validatePayPerPostCost, `$${cost}`);
 
@@ -2063,6 +2075,8 @@ export class PostFormSettingsPage extends Base {
         // Go to frontend post submission page
         await this.navigateToURL(this.wpufPostPage);
 
+        await this.validateAndClick(Selectors.postFormSettings.threeDotButton);
+
         await this.validateAndClick(Selectors.postFormSettings.editPostButton);
 
 
@@ -2316,6 +2330,161 @@ export class PostFormSettingsPage extends Base {
             if (isChecked) {
                 await this.validateAndClick(Selectors.postFormSettings.advancedSettingsSection.limitFormEntriesToggle);
             }
+
+            // Save settings
+            await this.validateAndClick(Selectors.postFormSettings.saveButton);
+
+            // Wait for save message
+            flag = await this.waitForFormSaved(Selectors.postFormSettings.messages.formSaved, Selectors.postFormSettings.saveButton);
+
+        }
+    }
+
+    async enableConditionalLogicForAnyCondition(formName:string){
+        let flag = true;
+
+        while (flag == true) {
+            // Go to form edit page
+            await this.navigateToURL(this.wpufPostFormPage);
+
+            // Click on the form
+            try {
+                await this.validateAndClick(Selectors.postFormSettings.clickForm(formName));
+            } catch (error) {
+                await this.navigateToURL(this.wpufPostFormPage);
+                await this.validateAndClick(Selectors.postFormSettings.clickForm(formName));
+            }
+
+            const FieldAdd = new FieldAddPage(this.page);
+            await FieldAdd.addTextRelatedFields();
+
+            // Save settings
+            await this.validateAndClick(Selectors.postFormSettings.saveButton);
+
+            // Wait for save message
+            flag = await this.waitForFormSaved(Selectors.postFormSettings.messages.formSaved, Selectors.postFormSettings.saveButton);
+            
+            // Click Settings tab
+            await this.validateAndClick(Selectors.postFormSettings.clickFormEditorSettings);
+
+            // Click Advanced Settings tab
+            await this.validateAndClick(Selectors.postFormSettings.advancedSettingsTab);
+
+            // Wait for notification settings to load
+            await this.assertionValidate(Selectors.postFormSettings.advancedSettingsSection.advancedSettingsHeader);
+
+            await this.validateAndClick(Selectors.postFormSettings.advancedSettingsSection.condtonalLogicOn);
+
+            await this.selectOptionWithValue(Selectors.postFormSettings.advancedSettingsSection.meetRules, 'any');
+
+            await this.validateAndClick(Selectors.postFormSettings.advancedSettingsSection.addConditionButton);
+            await this.selectOptionWithValue(Selectors.postFormSettings.advancedSettingsSection.selectField1, 'text');
+            await this.selectOptionWithValue(Selectors.postFormSettings.advancedSettingsSection.selectAction1, '=');
+            await this.validateAndFillStrings(Selectors.postFormSettings.advancedSettingsSection.setValue1, 'test');
+            await this.selectOptionWithValue(Selectors.postFormSettings.advancedSettingsSection.selectField2, 'textarea');
+            await this.selectOptionWithValue(Selectors.postFormSettings.advancedSettingsSection.selectAction2, '!=empty');
+
+            // Save settings
+            await this.validateAndClick(Selectors.postFormSettings.saveButton);
+
+            // Wait for save message
+            flag = await this.waitForFormSaved(Selectors.postFormSettings.messages.formSaved, Selectors.postFormSettings.saveButton);
+
+        }
+    }
+
+    async validateConditionalLogicForAnyCondition(){
+        // Go to form edit page
+        await this.navigateToURL(this.wpufPostSubmitPage);
+        await this.page.reload();
+        await expect(this.page.locator(Selectors.postFormSettings.advancedSettingsSection.submitButton)).not.toBeVisible();
+        await this.validateAndFillStrings(Selectors.postFormSettings.advancedSettingsSection.inputText, 'test');
+        await this.validateAndClick(Selectors.postFormSettings.advancedSettingsSection.clickTitle);
+        await expect(this.page.locator(Selectors.postFormSettings.advancedSettingsSection.submitButton)).toBeVisible();
+        await this.validateAndFillStrings(Selectors.postFormSettings.advancedSettingsSection.inputText, '');
+        await this.validateAndClick(Selectors.postFormSettings.advancedSettingsSection.clickTitle);
+        await expect(this.page.locator(Selectors.postFormSettings.advancedSettingsSection.submitButton)).not.toBeVisible();
+        await this.validateAndFillStrings(Selectors.postFormSettings.advancedSettingsSection.inputTextarea, faker.word.words(1));
+        await this.validateAndClick(Selectors.postFormSettings.advancedSettingsSection.clickTitle);
+        await expect(this.page.locator(Selectors.postFormSettings.advancedSettingsSection.submitButton)).toBeVisible();
+    }
+
+    async conditionalLogicForAllConditions(formName:string){
+        let flag = true;
+
+        while (flag == true) {
+            // Go to form edit page
+            await this.navigateToURL(this.wpufPostFormPage);
+
+            // Click on the form
+            try {
+                await this.validateAndClick(Selectors.postFormSettings.clickForm(formName));
+            } catch (error) {
+                await this.navigateToURL(this.wpufPostFormPage);
+                await this.validateAndClick(Selectors.postFormSettings.clickForm(formName));
+            }
+            
+            // Click Settings tab
+            await this.validateAndClick(Selectors.postFormSettings.clickFormEditorSettings);
+
+            // Click Advanced Settings tab
+            await this.validateAndClick(Selectors.postFormSettings.advancedSettingsTab);
+
+            // Wait for notification settings to load
+            await this.assertionValidate(Selectors.postFormSettings.advancedSettingsSection.advancedSettingsHeader);
+
+            await this.selectOptionWithValue(Selectors.postFormSettings.advancedSettingsSection.meetRules, 'all');
+            await this.selectOptionWithValue(Selectors.postFormSettings.advancedSettingsSection.selectField1, 'text');
+            await this.selectOptionWithValue(Selectors.postFormSettings.advancedSettingsSection.selectAction1, '!=');
+            await this.validateAndFillStrings(Selectors.postFormSettings.advancedSettingsSection.setValue1, 'test');
+            await this.selectOptionWithValue(Selectors.postFormSettings.advancedSettingsSection.selectField2, 'textarea');
+            await this.selectOptionWithValue(Selectors.postFormSettings.advancedSettingsSection.selectAction2, '==contains');
+            await this.validateAndFillStrings(Selectors.postFormSettings.advancedSettingsSection.setValue2, 'test');
+            // Save settings
+            await this.validateAndClick(Selectors.postFormSettings.saveButton);
+
+            // Wait for save message
+            flag = await this.waitForFormSaved(Selectors.postFormSettings.messages.formSaved, Selectors.postFormSettings.saveButton);
+        }
+    }
+
+    async validateConditionalLogicForAllCondition(){
+        // Go to form edit page
+        await this.navigateToURL(this.wpufPostSubmitPage);
+        await expect(this.page.locator(Selectors.postFormSettings.advancedSettingsSection.submitButton)).not.toBeVisible();
+        await this.validateAndFillStrings(Selectors.postFormSettings.advancedSettingsSection.inputText, 'text');
+        await this.validateAndClick(Selectors.postFormSettings.advancedSettingsSection.clickTitle);
+        await expect(this.page.locator(Selectors.postFormSettings.advancedSettingsSection.submitButton)).not.toBeVisible();
+        await this.validateAndFillStrings(Selectors.postFormSettings.advancedSettingsSection.inputTextarea, faker.word.words(1)+' test');
+        await this.validateAndClick(Selectors.postFormSettings.advancedSettingsSection.clickTitle);
+        await expect(this.page.locator(Selectors.postFormSettings.advancedSettingsSection.submitButton)).toBeVisible();
+    }
+
+    async disableConditionalLogic(formName:string){
+        let flag = true;
+
+        while (flag == true) {
+            // Go to form edit page
+            await this.navigateToURL(this.wpufPostFormPage);
+
+            // Click on the form
+            try {
+                await this.validateAndClick(Selectors.postFormSettings.clickForm(formName));
+            } catch (error) {
+                await this.navigateToURL(this.wpufPostFormPage);
+                await this.validateAndClick(Selectors.postFormSettings.clickForm(formName));
+            }
+            
+            // Click Settings tab
+            await this.validateAndClick(Selectors.postFormSettings.clickFormEditorSettings);
+
+            // Click Advanced Settings tab
+            await this.validateAndClick(Selectors.postFormSettings.advancedSettingsTab);
+
+            // Wait for notification settings to load
+            await this.assertionValidate(Selectors.postFormSettings.advancedSettingsSection.advancedSettingsHeader);
+
+            await this.validateAndClick(Selectors.postFormSettings.advancedSettingsSection.condtonalLogicOff);
 
             // Save settings
             await this.validateAndClick(Selectors.postFormSettings.saveButton);

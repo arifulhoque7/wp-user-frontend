@@ -50,7 +50,7 @@ wpuf_mixins.form_field_mixin = {
                     break;
 
                 case 'dropdown':
-                    commonClasses = 'wpuf-block wpuf-w-full wpuf-min-w-full !wpuf-py-[10px] !wpuf-px-[14px] wpuf-text-gray-700 wpuf-font-normal !wpuf-leading-none !wpuf-shadow-sm wpuf-border !wpuf-border-gray-300 !wpuf-rounded-[6px] focus:!wpuf-ring-transparent focus:checked:!wpuf-ring-transparent hover:checked:!wpuf-ring-transparent hover:!wpuf-text-gray-700 !wpuf-text-base !leading-6';
+                    commonClasses = 'wpuf-block wpuf-w-full wpuf-min-w-full !wpuf-py-[10px] !wpuf-px-[14px] wpuf-text-gray-700 wpuf-font-normal !wpuf-leading-none !wpuf-shadow-sm wpuf-border !wpuf-border-gray-300 !wpuf-rounded-[6px] focus:!wpuf-ring-transparent focus:checked:!wpuf-ring-transparent hover:checked:!wpuf-ring-transparent hover:!wpuf-text-gray-700 !wpuf-text-base';
                     break;
 
                 default:
@@ -80,6 +80,21 @@ wpuf_mixins.form_field_mixin = {
             }
 
             return false;
+        },
+
+        format_price: function (price) {
+            // Safely format price with validation
+            if (price === null || price === undefined || price === '') {
+                return '0.00';
+            }
+
+            var numPrice = parseFloat(price);
+
+            if (isNaN(numPrice)) {
+                return '0.00';
+            }
+
+            return numPrice.toFixed(2);
         }
     }
 };

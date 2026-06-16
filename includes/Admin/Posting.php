@@ -15,11 +15,57 @@ class Posting {
 
     private static $_instance;
 
+    /**
+     * Tribe events custom fields
+     *
+     * @var array
+     */
+    protected $tribe_events_custom_fields = [];
+
     public function __construct() {
+        $this->tribe_events_custom_fields = [
+            '_EventAllDay',
+            '_EventStartDate',
+            '_EventEndDate',
+            '_EventStartDateUTC',
+            '_EventEndDateUTC',
+            '_EventDuration',
+            'venue',
+            '_EventVenueID',
+            'venue_name',
+            'venue_website',
+            'venue_phone',
+            'venue_address',
+            'organizer',
+            '_EventOrganizerID',
+            'organizer_name',
+            'organizer_website',
+            'organizer_email',
+            'organizer_phone',
+            '_EventShowMapLink',
+            '_EventShowMap',
+            '_EventCurrencySymbol',
+            '_EventCurrencyCode',
+            '_EventCurrencyPosition',
+            '_EventCost',
+            '_EventCostMin',
+            '_EventCostMax',
+            '_EventURL',
+            '_EventOrganizerID',
+            '_EventPhone',
+            '_EventHideFromUpcoming',
+            '_EventTimezone',
+            '_EventTimezoneAbbr',
+            '_tribe_events_errors',
+            '_EventOrigin',
+            '_tribe_featured',
+        ];
+
         // meta boxes
         add_action( 'add_meta_boxes', [ $this, 'add_meta_boxes'] );
         add_action( 'add_meta_boxes', [ $this, 'add_meta_box_form_select'] );
         add_action( 'add_meta_boxes', [ $this, 'add_meta_box_post_lock'] );
+        // Remove global CSS loading to prevent leaks - only load on WPUF pages via hook
         // add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_script'] );
         add_action( 'wpuf_load_post_forms', [ $this, 'enqueue_script' ] );
         // add_action( 'admin_enqueue_scripts', [ $this, 'dequeue_assets' ] );
@@ -97,6 +143,26 @@ class Posting {
                 'type_error'       => __( 'You have uploaded an incorrect file type. Please try again.', 'wp-user-frontend' ),
             ],
         ] );
+
+        // Enqueue field initialization script for admin metabox
+
+        // Enqueue Selectize for country fields
+        wp_enqueue_style( 'wpuf-selectize' );
+        wp_enqueue_script( 'wpuf-selectize' );
+
+        // Enqueue international telephone input for phone fields
+        wp_enqueue_style( 'wpuf-intlTelInput' );
+        wp_enqueue_script( 'wpuf-intlTelInput' );
+
+        // Try to load the field initialization script using the registered handle
+        wp_enqueue_script( 'wpuf-field-initialization' );
+
+        // Localize script with asset URI
+        wp_localize_script( 'wpuf-field-initialization', 'wpuf_field_initializer', [
+            'asset_uri' => defined( 'WPUF_PRO_ASSET_URI' ) ? WPUF_PRO_ASSET_URI : '',
+        ] );
+
+
     }
 
     /**
@@ -362,6 +428,14 @@ class Posting {
 
         list( $post_fields, $taxonomy_fields, $custom_fields ) = $this->get_input_fields( $form_id );
 
+        // check if this is an event post type
+        if ( 'tribe_events' === $post->post_type ) {
+            // remove the custom fields that are in the tribe_events_custom_fields array
+            $custom_fields = array_filter( $custom_fields, function( $field ) {
+                return ! in_array( $field['name'], $this->tribe_events_custom_fields );
+            } );
+        }
+
         if ( empty( $custom_fields ) ) {
             esc_html_e( 'No custom fields found.', 'wp-user-frontend' );
 
@@ -375,26 +449,57 @@ class Posting {
         <table class="form-table wpuf-cf-table">
             <tbody>
 
-            <script type="text/javascript">
-                if ( typeof wpuf_conditional_items === 'undefined' ) {
-                    wpuf_conditional_items = [];
-                }
+                    <script type="text/javascript">
+            if ( typeof wpuf_conditional_items === 'undefined' ) {
+                wpuf_conditional_items = [];
+            }
 
-                if ( typeof wpuf_plupload_items === 'undefined' ) {
-                    wpuf_plupload_items = [];
-                }
+            if ( typeof wpuf_plupload_items === 'undefined' ) {
+                wpuf_plupload_items = [];
+            }
 
-                if ( typeof wpuf_map_items === 'undefined' ) {
-                    wpuf_map_items = [];
-                }
-            </script>
+            if ( typeof wpuf_map_items === 'undefined' ) {
+                wpuf_map_items = [];
+            }
+
+        </script>
 
             <?php
             $atts = [];
-            wpuf()->fields->render_fields( $custom_fields, $form_id, $atts, $type = 'post', $post->ID );
+
+            // Render all fields including repeat fields
+            if ( ! empty( $custom_fields ) ) {
+                foreach ( $custom_fields as $field ) {
+                    // Check if this is a repeat field
+                    if ( isset( $field['template'] ) && $field['template'] === 'repeat_field' &&
+                         isset( $field['input_type'] ) && $field['input_type'] === 'repeat' ) {
+                        // Use special admin metabox rendering for repeat fields
+                        if ( class_exists( 'WeDevs\Wpuf\Pro\Fields\Field_Repeat' ) ) {
+                            $repeat_field_obj = new \WeDevs\Wpuf\Pro\Fields\Field_Repeat();
+                            $repeat_field_obj->render_admin_metabox( $field, $form_id, 'post', $post->ID );
+                        }
+                    } else {
+                        // Render other fields normally
+                        if ( $field_object = wpuf()->fields->field_exists( $field['template'] ) ) {
+                            if ( wpuf()->fields->check_field_visibility( $field ) ) {
+                                if ( is_object( $field_object ) ) {
+                                    $field_object->render( $field, $form_id, 'post', $post->ID );
+                                    $field_object->conditional_logic( $field, $form_id );
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             // wp_nonce_field( 'wpuf_form_add' ); ?>
             </tbody>
         </table>
+        <style>
+            .wpuf-add-repeat.button {
+                margin-right: 5px;
+            }
+        </style>
+
         <?php
         $this->scripts_styles();
     }
@@ -408,6 +513,7 @@ class Posting {
                         $('.wpuf-cf-table').on('click', 'img.wpuf-clone-field', this.cloneField);
                         $('.wpuf-cf-table').on('click', 'img.wpuf-remove-field', this.removeField);
                         $('.wpuf-cf-table').on('click', 'a.wpuf-delete-avatar', this.deleteAvatar);
+                        this.initRepeatField();
                     },
                     cloneField: function(e) {
                         e.preventDefault();
@@ -447,14 +553,251 @@ class Posting {
                                 window.location.reload();
                             });
                         }
+                    },
+
+                    initRepeatField: function() {
+                        $('.wpuf-repeat-container').each(function() {
+                            var $container = $(this);
+                            var fieldName = $container.data('field-name');
+                            var maxRepeats = parseInt($container.data('max-repeats')) || -1;
+
+
+                            wpuf.updateRepeatButtons($container);
+
+                            $container.on('click', '.wpuf-add-repeat', function() {
+                                var $instance = $(this).closest('.wpuf-repeat-instance');
+                                var instanceIndex = $instance.attr('data-instance');
+                                wpuf.addRepeatInstance($container, fieldName, maxRepeats);
+                            });
+
+                            $container.on('click', '.wpuf-remove-repeat', function() {
+                                var $instance = $(this).closest('.wpuf-repeat-instance');
+                                var instanceIndex = $instance.attr('data-instance');
+                                wpuf.removeRepeatInstance($instance, $container);
+                            });
+                        });
+                    },
+
+                    addRepeatInstance: function($container, fieldName, maxRepeats) {
+                        var $instances = $container.find('.wpuf-repeat-instance');
+                        var currentInstances = $instances.length;
+
+
+                        if (maxRepeats !== -1 && currentInstances >= maxRepeats) {
+                            return;
+                        }
+
+                        var $firstInstance = $instances.first();
+                        var $newInstance = $firstInstance.clone();
+                        var newInstanceIndex = currentInstances;
+
+                        $newInstance.attr('data-instance', newInstanceIndex);
+
+                        // Clear all input/textarea/select values in the new instance
+                        $newInstance.find('input, textarea, select').each(function() {
+                            var $input = $(this);
+                            if ($input.is(':checkbox') || $input.is(':radio')) {
+                                $input.prop('checked', false);
+                            } else {
+                                $input.val('');
+                            }
+                        });
+                        // Also clear any textareas' inner text (for browsers that don't use .val() for <textarea>)
+                        $newInstance.find('textarea').text('');
+
+                        // Update names and ids for the new instance
+                        $newInstance.find('[name], [id], [for]').each(function() {
+                            var $element = $(this);
+                            var originalName = $element.attr('name');
+                            var originalId = $element.attr('id');
+                            var originalFor = $element.attr('for');
+
+                            if (originalName && originalName.includes('[')) {
+                                var newName = originalName.replace(/\[\d+\]/, '[' + newInstanceIndex + ']');
+                                $element.attr('name', newName);
+                            }
+                            if (originalId && originalId.includes('[')) {
+                                var newId = originalId.replace(/\[\d+\]/, '[' + newInstanceIndex + ']');
+                                $element.attr('id', newId);
+                            }
+                            if (originalFor && originalFor.includes('[')) {
+                                var newFor = originalFor.replace(/\[\d+\]/, '[' + newInstanceIndex + ']');
+                                $element.attr('for', newFor);
+                            }
+                        });
+
+                        $container.append($newInstance);
+                        wpuf.reindexInstances($container, fieldName);
+                        wpuf.updateRepeatButtons($container);
+
+                        // Set up MutationObserver for new buttons
+                        if (window.MutationObserver && typeof observer !== 'undefined') {
+                            $newInstance.find('.wpuf-add-repeat, .wpuf-remove-repeat').each(function() {
+                                observer.observe(this, { attributes: true, attributeFilter: ['style', 'class'] });
+                            });
+                        }
+
+                        // Initialize fields in the new instance
+                        if (typeof WPUF_Field_Initializer !== 'undefined') {
+                            WPUF_Field_Initializer.init();
+
+                            // Re-apply button visibility after field initializer runs on new instance
+                            setTimeout(function() {
+                                wpuf.updateRepeatButtons($container);
+                            }, 100);
+                        }
+                    },
+
+                    removeRepeatInstance: function($instance, $container) {
+                        var fieldName = $container.data('field-name');
+                        var instanceIndex = $instance.attr('data-instance');
+                        $instance.remove();
+                        wpuf.reindexInstances($container, fieldName);
+                        wpuf.updateRepeatButtons($container);
+                    },
+
+                    reindexInstances: function($container, fieldName) {
+                        $container.find('.wpuf-repeat-instance').each(function(index) {
+                            var $instance = $(this);
+                            var oldIndex = $instance.attr('data-instance');
+                            $instance.attr('data-instance', index);
+
+                            $instance.find('[name], [id], [for]').each(function() {
+                                var $element = $(this);
+                                var originalName = $element.attr('name');
+                                var originalId = $element.attr('id');
+                                var originalFor = $element.attr('for');
+
+                                if (originalName && originalName.includes('[')) {
+                                    var newName = originalName.replace(/\[\d+\]/, '[' + index + ']');
+                                    $element.attr('name', newName);
+                                }
+
+                                if (originalId && originalId.includes('[')) {
+                                    var newId = originalId.replace(/\[\d+\]/, '[' + index + ']');
+                                    $element.attr('id', newId);
+                                }
+
+                                if (originalFor && originalFor.includes('[')) {
+                                    var newFor = originalFor.replace(/\[\d+\]/, '[' + index + ']');
+                                    $element.attr('for', newFor);
+                                }
+                            });
+                        });
+                    },
+
+                    updateRepeatButtons: function($container) {
+                        var $instances = $container.find('.wpuf-repeat-instance');
+                        var count = $instances.length;
+
+
+                        // Prevent rapid successive calls
+                        if ($container.data('updating-buttons')) {
+                            return;
+                        }
+                        $container.data('updating-buttons', true);
+
+
+                        $instances.each(function(i) {
+                            var $instance = $(this);
+                            var $controls = $instance.find('.wpuf-repeat-controls');
+                            var isLast = i === count - 1;
+                            var isOnlyInstance = count === 1;
+
+                            // Clear existing buttons first
+                            $controls.empty();
+
+                            // Create and add buttons based on logic
+                            var addButtonHtml = '<button type="button" class="wpuf-add-repeat button" data-instance="' + i + '">+</button>';
+                            var removeButtonHtml = '<button type="button" class="wpuf-remove-repeat button" data-instance="' + i + '">-</button>';
+
+                            // Add button: show only on last instance
+                            if (isLast) {
+                                $controls.append(addButtonHtml);
+                            }
+
+                            // Remove button: show on all instances EXCEPT when there's only 1 instance
+                            if (!isOnlyInstance) {
+                                $controls.append(removeButtonHtml);
+                            }
+                        });
+
+                        // Clear the flag after a short delay
+                        setTimeout(function() {
+                            $container.removeData('updating-buttons');
+                        }, 100);
+
                     }
                 };
 
                 wpuf.init();
+
+                // Set up MutationObserver to watch for button visibility changes
+                if (window.MutationObserver) {
+                    var observer = new MutationObserver(function(mutations) {
+                        var shouldUpdate = false;
+                        mutations.forEach(function(mutation) {
+                            if (mutation.type === 'attributes' &&
+                                (mutation.attributeName === 'style' || mutation.attributeName === 'class')) {
+                                var $target = $(mutation.target);
+                                if ($target.hasClass('wpuf-add-repeat') || $target.hasClass('wpuf-remove-repeat')) {
+                                    shouldUpdate = true;
+                                }
+                            }
+                        });
+
+                        if (shouldUpdate) {
+                            setTimeout(function() {
+                                $('.wpuf-repeat-container').each(function() {
+                                    var $container = $(this);
+                                    wpuf.updateRepeatButtons($container);
+                                });
+                            }, 50);
+                        }
+                    });
+
+                    // Start observing
+                    $('.wpuf-repeat-container').each(function() {
+                        var $container = $(this);
+                        $container.find('.wpuf-add-repeat, .wpuf-remove-repeat').each(function() {
+                            observer.observe(this, { attributes: true, attributeFilter: ['style', 'class'] });
+                        });
+                    });
+                }
+
+                // Initialize fields after the form is rendered with a delay to ensure DOM is ready
+                setTimeout(function() {
+                    // First, render all repeat field buttons
+                    $('.wpuf-repeat-container').each(function() {
+                        var $container = $(this);
+                        wpuf.updateRepeatButtons($container);
+                    });
+
+                    if (typeof WPUF_Field_Initializer !== 'undefined') {
+                        WPUF_Field_Initializer.init();
+                    } else {
+                        // Re-apply button visibility after field initializer runs
+                        setTimeout(function() {
+                            $('.wpuf-repeat-container').each(function() {
+                                var $container = $(this);
+                                wpuf.updateRepeatButtons($container);
+                            });
+                        }, 100);
+
+                        // Also re-apply after a longer delay to catch any async field initialization
+                        setTimeout(function() {
+                            $('.wpuf-repeat-container').each(function() {
+                                var $container = $(this);
+                                wpuf.updateRepeatButtons($container);
+                            });
+                        }, 1000);
+                    }
+
+                }, 500);
             });
 
         </script>
-        <style type="text/css">
+        <style>
             ul.wpuf-attachment-list li {
                 display: inline-block;
                 border: 1px solid #dfdfdf;
@@ -492,7 +835,6 @@ class Posting {
                 background-color: #fff !important;
                 text-overflow: ellipsis !important;
                 width: 170px !important;
-                font-family: Roboto !important;
                 font-size: 15px !important;
                 font-weight: 300 !important;
                 padding: 0 11px 0 13px !important;
@@ -506,6 +848,64 @@ class Posting {
             }
             .wpuf-form-google-map-container.hide-search-box .gm-style input[type="text"].wpuf-google-map-search {
                 display: none;
+            }
+
+            /* Repeat field styles for admin metabox */
+            .wpuf-repeat-container {
+                margin: 10px 0;
+            }
+
+            .wpuf-repeat-instance {
+                border: 1px solid #ddd;
+                padding: 15px;
+                margin-bottom: 10px;
+                background: #f9f9f9;
+                border-radius: 4px;
+                position: relative;
+            }
+
+            .wpuf-repeat-controls {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+            }
+
+            .wpuf-repeat-controls button {
+                border: 1px solid #ccc !important;
+                background: #fff;
+                padding: 2px 8px;
+                margin-left: 5px;
+                border-radius: 3px;
+                cursor: pointer;
+                font-size: 12px;
+                line-height: 1.4;
+            }
+
+            .wpuf-repeat-controls button:hover {
+                background: #f0f0f0;
+            }
+
+            .wpuf-repeat-controls .wpuf-add-repeat {
+                color: #0073aa;
+            }
+
+            .wpuf-repeat-controls .wpuf-remove-repeat {
+                color: #dc3232;
+            }
+
+            /* Field initialization styles for admin metabox */
+            .wpuf-cf-table .wpuf-date-field,
+            .wpuf-cf-table .wpuf-ratings,
+            .wpuf-cf-table select[data-countries] {
+                width: 100%;
+                max-width: 400px;
+            }
+
+            .wpuf-cf-table .wpuf-repeat-instance .wpuf-date-field,
+            .wpuf-cf-table .wpuf-repeat-instance .wpuf-ratings,
+            .wpuf-cf-table .wpuf-repeat-instance select[data-countries] {
+                width: 100%;
+                max-width: 100%;
             }
 
         </style>
@@ -543,7 +943,11 @@ class Posting {
             return $post_id;
         }
 
-        list( $post_vars, $tax_vars, $meta_vars ) = self::get_input_fields( $wpuf_cf_form_id );
+        list( $post_vars, $tax_vars, $meta_vars ) = ( new Posting )->get_input_fields( $wpuf_cf_form_id );
+
+        $meta_vars = array_filter( $meta_vars, function( $field ) {
+            return !in_array( $field['name'], $this->tribe_events_custom_fields );
+        } );
 
         // WPUF_Frontend_Form_Post::update_post_meta( $meta_vars, $post_id );
         $this->update_post_meta( $meta_vars, $post_id );

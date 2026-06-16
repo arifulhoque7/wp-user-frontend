@@ -69,6 +69,22 @@ trait FieldableTrait {
     public function set_wp_post_types() {
         $args = [ '_builtin' => true ];
         $wpuf_post_types = wpuf_get_post_types( $args );
+
+        // Add tribe_events if The Events Calendar post type is registered
+        if ( post_type_exists( 'tribe_events' ) && ! in_array( 'tribe_events', $wpuf_post_types, true ) ) {
+            $wpuf_post_types[] = 'tribe_events';
+        }
+
+        // Add product if WooCommerce post type is registered
+        if ( post_type_exists( 'product' ) && ! in_array( 'product', $wpuf_post_types, true ) ) {
+            $wpuf_post_types[] = 'product';
+        }
+
+        // Add download if Easy Digital Downloads post type is registered
+        if ( post_type_exists( 'download' ) && ! in_array( 'download', $wpuf_post_types, true ) ) {
+            $wpuf_post_types[] = 'download';
+        }
+
         $ignore_taxonomies = apply_filters( 'wpuf-ignore-taxonomies', [
             'post_format',
         ] );
@@ -86,6 +102,36 @@ trait FieldableTrait {
                         'hide_empty' => false,
                     ] );
                 }
+            }
+
+            // Special handling for tribe_events to include post_tag in free version
+            if ( 'tribe_events' === $post_type && ! isset( $this->wp_post_types[ $post_type ]['post_tag'] ) ) {
+                // Add post_tag as a canonical field for Event Calendar forms
+                $this->wp_post_types[ $post_type ]['post_tag'] = [
+                    'title'        => __( 'Tags', 'wp-user-frontend' ),
+                    'hierarchical' => false,
+                    'terms'        => [],
+                ];
+            }
+
+            // Special handling for product to include product_tag in free version
+            if ( 'product' === $post_type && ! isset( $this->wp_post_types[ $post_type ]['product_tag'] ) ) {
+                // Add product_tag as a canonical field for WooCommerce forms
+                $this->wp_post_types[ $post_type ]['product_tag'] = [
+                    'title'        => __( 'Product Tags', 'wp-user-frontend' ),
+                    'hierarchical' => false,
+                    'terms'        => [],
+                ];
+            }
+
+            // Special handling for download to include download_tag in free version
+            if ( 'download' === $post_type && ! isset( $this->wp_post_types[ $post_type ]['download_tag'] ) ) {
+                // Add download_tag as a canonical field for EDD forms
+                $this->wp_post_types[ $post_type ]['download_tag'] = [
+                    'title'        => __( 'Download Tags', 'wp-user-frontend' ),
+                    'hierarchical' => false,
+                    'terms'        => [],
+                ];
             }
         }
     }
@@ -204,6 +250,14 @@ trait FieldableTrait {
         if ( $this->search( $post_vars, 'input_type', 'really_simple_captcha' ) ) {
             $this->validate_rs_captcha();
         }
+
+        // check Cloudflare Turnstile
+        $check_turnstile = $this->search( $this->form_fields, 'input_type', 'cloudflare_turnstile' );
+
+        if ( $check_turnstile ) {
+            $this->validate_cloudflare_turnstile();
+        }
+
         $no_captcha = '';
         $invisible_captcha = '';
         $recaptcha_type = '';
@@ -231,6 +285,60 @@ trait FieldableTrait {
                 }
             }
             $this->validate_re_captcha( $no_captcha, $invisible_captcha );
+        }
+    }
+
+    /**
+     * Cloudflare Turnstile validation
+     *
+     * @since 4.0.13
+     *
+     * @return void
+     */
+    public function validate_cloudflare_turnstile() {
+        $enable_turnstile = wpuf_get_option( 'enable_turnstile', 'wpuf_general', 'off' );
+
+        if ( ! wpuf_is_checkbox_or_toggle_on( $enable_turnstile ) ) {
+            return;
+        }
+
+        $secret = wpuf_get_option( 'turnstile_secret_key', 'wpuf_general', '' );
+
+        if ( empty( $secret ) ) {
+            return;
+        }
+
+        $token = ! empty( $_POST['cf-turnstile-response'] ) ? sanitize_text_field( wp_unslash( $_POST['cf-turnstile-response'] ) ) : '';
+
+        if ( empty( $token ) ) {
+            wpuf()->ajax->send_error( __( 'Cloudflare Turnstile verification failed. Please complete the challenge.', 'wp-user-frontend' ) );
+        }
+
+        $remote_addr = ! empty( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
+
+        $response = wp_remote_post(
+            'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+            [
+                'body' => [
+                    'secret'   => $secret,
+                    'response' => $token,
+                    'remoteip' => $remote_addr,
+                ],
+            ]
+        );
+
+        $body = json_decode( wp_remote_retrieve_body( $response ), true );
+
+        if ( empty( $body['success'] ) ) {
+            $errors = ! empty( $body['error-codes'] ) ? implode( ', ', $body['error-codes'] ) : '';
+
+            wpuf()->ajax->send_error(
+                sprintf(
+                    // translators: %s is the error codes from Cloudflare
+                    __( 'Cloudflare Turnstile verification failed. Reasons: [%s]', 'wp-user-frontend' ),
+                    $errors
+                )
+            );
         }
     }
 
@@ -322,7 +430,14 @@ trait FieldableTrait {
      * @return array
      */
     private function adjust_thumbnail_id( $postarr ) {
-        $wpuf_files = ! empty( $_POST['wpuf_files'] ) ? wp_unslash( $_POST['wpuf_files'] ) : [];
+        $wpuf_files_raw = ! empty( $_POST['wpuf_files'] ) ? wp_unslash( $_POST['wpuf_files'] ) : [];
+        $wpuf_files = [];
+
+        if ( ! empty( $wpuf_files_raw ) ) {
+            foreach ( $wpuf_files_raw as $key => $value ) {
+                $wpuf_files[ $key ] = array_map( 'absint', (array) $value );
+            }
+        }
 
         if ( ! empty( $wpuf_files['featured_image'] ) ) {
             $attachment_id            = reset( $wpuf_files['featured_image'] );
@@ -349,15 +464,22 @@ trait FieldableTrait {
         do_action( 'wpuf_before_updating_post_meta_fields', $post_id, $meta_key_value, $multi_repeated, $files );
 
         // @codingStandardsIgnoreStart
-        $wpuf_files = isset( $_POST['wpuf_files'] ) ? $_POST['wpuf_files'] : [];
+        $wpuf_files_raw = isset( $_POST['wpuf_files'] ) ? wp_unslash( $_POST['wpuf_files'] ) : [];
+        $wpuf_files = [];
+
+        if ( ! empty( $wpuf_files_raw ) ) {
+            foreach ( $wpuf_files_raw as $key => $value ) {
+                $wpuf_files[ $key ] = array_map( 'absint', (array) $value );
+            }
+        }
 
         if ( isset( $wpuf_files['featured_image'] ) ) {
-            $attachment_id = $wpuf_files['featured_image'][0];
+                $attachment_id = reset( $wpuf_files['featured_image'] );
 
-            wpuf_associate_attachment( $attachment_id, $post_id );
-            set_post_thumbnail( $post_id, $attachment_id );
+                wpuf_associate_attachment( $attachment_id, $post_id );
+                set_post_thumbnail( $post_id, $attachment_id );
 
-            $file_data = isset( $_POST['wpuf_files_data'][ $attachment_id ] ) ? $_POST['wpuf_files_data'][ $attachment_id ] : false;
+                $file_data = isset( $_POST['wpuf_files_data'][ $attachment_id ] ) ? $_POST['wpuf_files_data'][ $attachment_id ] : false;
 
             // @codingStandardsIgnoreEnd
             if ( $file_data ) {
@@ -425,7 +547,8 @@ trait FieldableTrait {
                 // file title, caption, desc update
 
                 // @codingStandardsIgnoreStart
-                $file_data = isset( $_POST['wpuf_files_data'][ $attachment_id ] ) ? wp_unslash( $_POST['wpuf_files_data'][ $attachment_id ] ) : false;
+                $file_data = isset( $_POST['wpuf_files_data'][ $attachment_id ] ) ?
+                    array_map( 'sanitize_text_field', wp_unslash( $_POST['wpuf_files_data'][ $attachment_id ] ) ) : false;
 
                 // @codingStandardsIgnoreEnd
                 if ( $file_data ) {
@@ -1090,8 +1213,26 @@ trait FieldableTrait {
      * Handle regular (non-WooCommerce) taxonomies
      */
     protected function handle_regular_taxonomy( $post_id, $taxonomy_name, $posted_terms, $taxonomy ) {
+        $post_type = isset( $this->form_settings['post_type'] ) ? $this->form_settings['post_type'] : '';
+
+        // Auto-register tag taxonomies for their post types if not already registered.
+        if ( 'tribe_events' === $post_type && 'post_tag' === $taxonomy_name
+            && ! is_object_in_taxonomy( $post_type, $taxonomy_name ) ) {
+            register_taxonomy_for_object_type( 'post_tag', 'tribe_events' );
+        }
+
+        if ( 'product' === $post_type && 'product_tag' === $taxonomy_name
+            && ! is_object_in_taxonomy( $post_type, $taxonomy_name ) ) {
+            register_taxonomy_for_object_type( 'product_tag', 'product' );
+        }
+
+        if ( 'download' === $post_type && 'download_tag' === $taxonomy_name
+            && ! is_object_in_taxonomy( $post_type, $taxonomy_name ) ) {
+            register_taxonomy_for_object_type( 'download_tag', 'download' );
+        }
+
         $is_hierarchical = is_taxonomy_hierarchical( $taxonomy_name );
-        
+
         if ( isset( $taxonomy['type'] ) && 'text' === $taxonomy['type'] ) {
             // Handle text input (comma-separated values)
             $this->handle_text_taxonomy( $post_id, $taxonomy_name, $posted_terms );
@@ -1235,13 +1376,13 @@ trait FieldableTrait {
                 $meta_key_value[ $value['name'] ] = $wpuf_field->sanitize_field_data( $posted_field_data, $value );
                 continue;
             } elseif ( isset( $post_data[ $value['name'] ] ) && is_array( $post_data[ $value['name'] ] ) ) {
-                $value_name = isset( $post_data[ $value['name'] ] ) ? array_map( 'sanitize_text_field', wp_unslash( $post_data[ $value['name'] ] ) ) : '';
+                $value_name = isset( $post_data[ $value['name'] ] ) ? array_map( function( $item ) { return strip_shortcodes( sanitize_text_field( $item ) ); }, wp_unslash( $post_data[ $value['name'] ] ) ) : '';
             } else {
-                $value_name = isset( $post_data[ $value['name'] ] ) ? sanitize_text_field( wp_unslash( $post_data[ $value['name'] ] ) ) : '';
+                $value_name = isset( $post_data[ $value['name'] ] ) ? strip_shortcodes( sanitize_text_field( wp_unslash( $post_data[ $value['name'] ] ) ) ) : '';
             }
 
             if ( isset( $post_data['wpuf_files'][ $value['name'] ] ) ) {
-                $wpuf_files = isset( $post_data['wpuf_files'] ) ? array_map( 'sanitize_text_field', wp_unslash( $post_data['wpuf_files'][ $value['name'] ] ) ) : [];
+                $wpuf_files = isset( $post_data['wpuf_files'] ) ? array_map( 'absint', wp_unslash( $post_data['wpuf_files'][ $value['name'] ] ) ) : [];
             } else {
                 $wpuf_files = [];
             }
@@ -1264,41 +1405,44 @@ trait FieldableTrait {
                     break;
 
                 case 'repeat':
-                    $repeater_value = wp_unslash( $_POST[ $value['name'] ] ); // WPCS: sanitization ok.
+                    $repeater_value = isset( $_POST[ $value['name'] ] ) ? wp_unslash( $_POST[ $value['name'] ] ) : [];
 
-                    // if it is a multi column repeat field
-                    if ( isset( $value['multiple'] ) && 'true' === $value['multiple'] ) {
+                    // If this repeat field has inner_fields and the value is an array of rows (ACF-style)
+                    if ( ! empty( $value['inner_fields'] ) && is_array(
+                            $repeater_value
+                        ) && isset( $repeater_value[0] ) && is_array( $repeater_value[0] ) ) {
+                        $rows = [];
+                        foreach ( $repeater_value as $row ) {
+                            $sanitized_row = [];
+                            foreach ( $value['inner_fields'] as $inner_field ) {
+                                $fname = $inner_field['name'];
 
-                        // if there's any items in the array, process it
-                        if ( $repeater_value ) {
-                            $ref_arr = array();
-                            $cols    = count( $value['columns'] );
-                            $values  = array_values( $repeater_value );
-                            $first   = array_shift( $values ); //first element
-                            $rows    = count( $first );
-
-                            // loop through columns
-                            for ( $i = 0; $i < $rows; $i++ ) {
-
-                                // loop through the rows and store in a temp array
-                                $temp = array();
-                                for ( $j = 0; $j < $cols; $j++ ) {
-                                    $temp[] = $repeater_value[ $j ][ $i ];
+                                // Handle different field types appropriately
+                                if ( isset( $row[ $fname ] ) ) {
+                                    if ( in_array( $inner_field['template'], [ 'checkbox_field', 'multiple_select' ] ) ) {
+                                        // For checkbox and multiselect, keep as array and sanitize each element
+                                        if ( is_array( $row[ $fname ] ) ) {
+                                            $sanitized_row[ $fname ] = array_map( function( $item ) { return strip_shortcodes( sanitize_text_field( $item ) ); }, $row[ $fname ] );
+                                        } else {
+                                            $sanitized_row[ $fname ] = strip_shortcodes( sanitize_text_field( $row[ $fname ] ) );
+                                        }
+                                    } else {
+                                        // For other fields, sanitize as string
+                                        $sanitized_row[ $fname ] = strip_shortcodes( sanitize_text_field( $row[ $fname ] ) );
+                                    }
+                                } else {
+                                    $sanitized_row[ $fname ] = '';
                                 }
-
-                                // store all fields in a row with self::$separator separated
-                                $ref_arr[] = implode( self::$separator, $temp );
                             }
-
-                            // now, if we found anything in $ref_arr, store to $multi_repeated
-                            if ( $ref_arr ) {
-                                $multi_repeated[ $value['name'] ] = array_slice( $ref_arr, 0, $rows );
-                            }
+                            $rows[] = $sanitized_row;
                         }
+                        $meta_key_value[ $value['name'] ] = $rows;
                     } else {
-                        $meta_key_value[ $value['name'] ] = implode( self::$separator, $repeater_value );
+                        // Fallback to old logic for single-field repeaters or legacy structure
+                        $meta_key_value[ $value['name'] ] = is_array( $repeater_value ) ? implode(
+                            self::$separator, $repeater_value
+                        ) : '';
                     }
-
                     break;
 
                 case 'address':
@@ -1313,9 +1457,11 @@ trait FieldableTrait {
                 case 'text':
                 case 'email':
                 case 'number':
+                    $meta_key_value[ $value['name'] ] = $value_name;
+                    break;
+
                 case 'date':
                     $meta_key_value[ $value['name'] ] = $value_name;
-
                     break;
 
                 case 'textarea':

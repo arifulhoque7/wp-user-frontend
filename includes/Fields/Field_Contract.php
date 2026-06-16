@@ -310,6 +310,50 @@ abstract class Field_Contract {
             ],
 
             [
+                'name'      => 'show_icon',
+                'title'     => __( 'Show Icon', 'wp-user-frontend' ),
+                'type'      => 'radio',
+                'options'   => [
+                    'yes'   => __( 'Yes', 'wp-user-frontend' ),
+                    'no'    => __( 'No', 'wp-user-frontend' ),
+                ],
+                'section'   => 'basic',
+                'priority'  => 22,
+                'default'   => 'no',
+                'inline'    => true,
+                'help_text' => __( 'Enable to show an icon with this field', 'wp-user-frontend' ),
+            ],
+            [
+                'name'      => 'field_icon',
+                'title'     => __( 'Field Icon', 'wp-user-frontend' ),
+                'type'      => 'icon_selector',
+                'section'   => 'basic',
+                'priority'  => 23,
+                'default'   => 'fas fa-user',
+                'help_text' => __( 'Select an icon to display with this field', 'wp-user-frontend' ),
+                'dependencies' => [
+                    'show_icon' => 'yes'
+                ],
+            ],
+
+            [
+                'name'      => 'icon_position',
+                'title'     => __( 'Icon Position', 'wp-user-frontend' ),
+                'type'      => 'select',
+                'options'   => [
+                    'left_label'  => __( 'Left of Label', 'wp-user-frontend' ),
+                    'right_label' => __( 'Right of Label', 'wp-user-frontend' ),
+                ],
+                'section'   => 'basic',
+                'priority'  => 23,
+                'default'   => 'left_label',
+                'help_text' => __( 'Choose where to display the icon', 'wp-user-frontend' ),
+                'dependencies' => [
+                    'show_icon' => 'yes'
+                ],
+            ],
+
+            [
                 'name'      => 'width',
                 'title'     => __( 'Field Size', 'wp-user-frontend' ),
                 'type'      => 'radio',
@@ -629,7 +673,7 @@ abstract class Field_Contract {
      * @return array
      */
     public function get_default_option_dropdown_settings( $is_multiple = false ) {
-        return [
+        $defaults = [
             'name'          => 'options',
             'title'         => __( 'Options', 'wp-user-frontend' ),
             'type'          => 'option-data',
@@ -638,6 +682,8 @@ abstract class Field_Contract {
             'priority'      => 12,
             'help_text'     => __( 'Add options for the form field', 'wp-user-frontend' ),
         ];
+
+        return apply_filters( 'get_default_option_dropdown_settings', $defaults );
     }
 
     /**
@@ -718,13 +764,40 @@ abstract class Field_Contract {
     }
 
     /**
+     * Check if we should render admin-style markup
+     *
+     * Returns true for admin dashboard, but false for Elementor editor
+     * since Elementor editor needs frontend-style markup for proper preview.
+     *
+     * @since 4.3.1
+     *
+     * @return bool
+     */
+    protected function use_admin_markup() {
+        if ( ! is_admin() ) {
+            return false;
+        }
+
+        // Check if we're in Elementor editor mode
+        // Elementor editor needs frontend markup for proper preview
+        if ( class_exists( '\Elementor\Plugin' ) ) {
+            $elementor = \Elementor\Plugin::$instance;
+            if ( $elementor && $elementor->editor && $elementor->editor->is_edit_mode() ) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * Prints form input label for admin
      *
      * @param array $attr
      * @param int   $form_id
      */
     public function field_print_label( $field, $form_id = 0 ) {
-        if ( is_admin() ) { ?>
+        if ( $this->use_admin_markup() ) { ?>
             <tr <?php $this->print_list_attributes( $field ); ?>> <th><strong> <?php echo wp_kses_post( $field['label'] . $this->required_mark( $field ) ); ?> </strong></th> <td>
         <?php } else { ?>
 
@@ -736,7 +809,7 @@ abstract class Field_Contract {
     }
 
     public function after_field_print_label() {
-        if ( is_admin() ) {
+        if ( $this->use_admin_markup() ) {
             ?>
                 </td></tr>
             <?php
@@ -774,7 +847,33 @@ abstract class Field_Contract {
     public function print_label( $field, $form_id = 0 ) {
         ?>
         <div class="wpuf-label">
-            <label for="<?php echo isset( $field['name'] ) ? esc_attr( $field['name'] ) . '_' . esc_attr( $form_id ) : 'cls'; ?>"><?php echo wp_kses_post( $field['label'] . $this->required_mark( $field ) ); ?></label>
+            <label for="<?php echo isset( $field['name'] ) ? esc_attr( $field['name'] ) . '_' . esc_attr( $form_id ) : 'cls'; ?>">
+                <?php
+                // Render icon before label if position is left
+                if ( ! empty( $field['show_icon'] ) && $field['show_icon'] === 'yes' && ! empty( $field['field_icon'] ) && ! empty( $field['icon_position'] ) && $field['icon_position'] === 'left_label' ) {
+                    $icon_val = $field['field_icon'];
+
+                    if ( filter_var( $icon_val, FILTER_VALIDATE_URL ) || strpos( $icon_val, '/' ) === 0 ) {
+                        echo '<img src="' . esc_url( $icon_val ) . '" alt="" class="wpuf-field-icon wpuf-field-icon-img wpuf-field-icon-left" style="width: 1em; height: 1em; object-fit: contain; vertical-align: middle; display: inline-block;" /> ';
+                    } else {
+                        echo '<i class="' . esc_attr( $icon_val ) . ' wpuf-field-icon wpuf-field-icon-left"></i> ';
+                    }
+                }
+
+                echo wp_kses_post( $field['label'] . $this->required_mark( $field ) );
+
+                // Render icon after label if position is right
+                if ( ! empty( $field['show_icon'] ) && $field['show_icon'] === 'yes' && ! empty( $field['field_icon'] ) && ! empty( $field['icon_position'] ) && $field['icon_position'] === 'right_label' ) {
+                    $icon_val = $field['field_icon'];
+
+                    if ( filter_var( $icon_val, FILTER_VALIDATE_URL ) || strpos( $icon_val, '/' ) === 0 ) {
+                        echo ' <img src="' . esc_url( $icon_val ) . '" alt="" class="wpuf-field-icon wpuf-field-icon-img wpuf-field-icon-right" style="width: 1em; height: 1em; object-fit: contain; vertical-align: middle; display: inline-block;" />';
+                    } else {
+                        echo ' <i class="' . esc_attr( $icon_val ) . ' wpuf-field-icon wpuf-field-icon-right"></i>';
+                    }
+                }
+                ?>
+            </label>
         </div>
         <?php
     }
@@ -805,6 +904,7 @@ abstract class Field_Contract {
         if ( $this->is_required( $field ) ) {
             return ' <span class="required">*</span>';
         }
+        return '';
     }
 
     /**
@@ -869,7 +969,7 @@ abstract class Field_Contract {
     public function prepare_entry( $field ) {
         check_ajax_referer( 'wpuf_form_add' );
 
-        $value = ! empty( $_POST[ $field['name'] ] ) ? sanitize_text_field( wp_unslash( $_POST[ $field['name'] ] ) ) :
+        $value = ! empty( $_POST[ $field['name'] ] ) ? strip_shortcodes( sanitize_text_field( wp_unslash( $_POST[ $field['name'] ] ) ) ) :
             '';
 
         if ( is_array( $value ) ) {

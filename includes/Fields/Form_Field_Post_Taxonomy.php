@@ -42,6 +42,23 @@ class Form_Field_Post_Taxonomy extends Field_Contract {
     }
 
     /**
+     * Check if this field should be treated as a pro feature
+     *
+     * @return bool
+     */
+    public function is_pro() {
+        // Get free taxonomies (built-in + taxonomies for post/page)
+        $free_taxonomies = wpuf_get_free_taxonomies();
+
+        // If this is a custom taxonomy (not in free list) and pro is not active, treat it as a pro feature
+        if ( ! in_array( $this->tax_name, $free_taxonomies, true ) && ! wpuf_is_pro_active() ) {
+            return true;
+        }
+        
+        return false;
+    }
+
+    /**
      * Render the Post Taxonomy field
      *
      * @param array  $field_settings
@@ -52,6 +69,15 @@ class Form_Field_Post_Taxonomy extends Field_Contract {
      * @return void
      */
     public function render( $field_settings, $form_id, $type = 'post', $post_id = null ) {
+        // Check if this is a custom taxonomy and pro is not active
+        $free_taxonomies = wpuf_get_free_taxonomies();
+        $taxonomy_name = isset( $field_settings['name'] ) ? $field_settings['name'] : $this->tax_name;
+
+        if ( ! in_array( $taxonomy_name, $free_taxonomies, true ) && ! wpuf_is_pro_active() ) {
+            // Don't render custom taxonomies on frontend when pro is not active
+            return;
+        }
+
         $this->field_settings = $field_settings;
         $this->form_id = $form_id; ?>
 
@@ -497,7 +523,7 @@ class Form_Field_Post_Taxonomy extends Field_Contract {
         // return sanitize_text_field($_POST[$field['name']]);
         check_ajax_referer( 'wpuf_form_add' );
 
-        $val = isset( $_POST[ $field['name'] ] ) ? sanitize_text_field( wp_unslash( $_POST[ $field['name'] ] ) ) : '';
+        $val = isset( $_POST[ $field['name'] ] ) ? strip_shortcodes( sanitize_text_field( wp_unslash( $_POST[ $field['name'] ] ) ) ) : '';
 
         return isset( $field['options'][ $val ] ) ? $field['options'][ $val ] : '';
     }

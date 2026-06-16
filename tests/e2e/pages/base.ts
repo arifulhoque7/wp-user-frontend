@@ -1,9 +1,13 @@
 import * as dotenv from 'dotenv';
-dotenv.config();
+dotenv.config({ quiet: true });
 import { expect, type Page } from '@playwright/test';
 import { Urls } from '../utils/testData';
+import { faker } from '@faker-js/faker';
 
 export class Base {
+    static generateWordWithMinLength(arg0: number): string {
+        throw new Error('Method not implemented.');
+    }
     readonly page: Page;
     readonly wpAdminPage: string = Urls.baseUrl + '/wp-admin/';
     readonly pluginsPage: string = Urls.baseUrl + '/wp-admin/plugins.php';
@@ -30,10 +34,16 @@ export class Base {
     readonly postHerePage: string = Urls.baseUrl + '/post-here/';
     readonly siteHomePage: string = Urls.baseUrl;
     readonly wpufTransactionPage: string = Urls.baseUrl + '/wp-admin/admin.php?page=wpuf_transaction';
+    readonly wpufSubscriptionPage: string = Urls.baseUrl + '/wp-admin/admin.php?page=wpuf_subscription';
+    readonly subscriptionFrontendPage: string = Urls.baseUrl + '/subscription/';
+    readonly accountSubscriptionPage: string = Urls.baseUrl + '/account/?section=subscription';
+    readonly wpufModulesPage: string = Urls.baseUrl + '/wp-admin/admin.php?page=wpuf-modules';
+    readonly paymentPage: string = Urls.baseUrl + '/payment/';
     readonly wpufRegistrationFormPage: string = Urls.baseUrl + '/wp-admin/admin.php?page=wpuf-profile-forms';
     readonly wpufRegistrationPage: string = Urls.baseUrl + '/registration-page/';
     readonly newRegFormPage: string = Urls.baseUrl + '/reg-here/';
     readonly wpufLoginPage: string = Urls.baseUrl + '/login/';
+    readonly productsPage: string = Urls.baseUrl + '/wp-admin/edit.php?post_type=product';
     readonly productBrandPage: string = Urls.baseUrl + '/wp-admin/edit-tags.php?taxonomy=product_brand&post_type=product';
     readonly productCategoryPage: string = Urls.baseUrl + '/wp-admin/edit-tags.php?taxonomy=product_cat&post_type=product';
     readonly productTagPage: string = Urls.baseUrl + '/wp-admin/edit-tags.php?taxonomy=product_tag&post_type=product';
@@ -43,6 +53,13 @@ export class Base {
     readonly eddTagPage: string = Urls.baseUrl + '/wp-admin/edit-tags.php?taxonomy=download_tag&post_type=download';
     readonly addDownloadsPage: string = Urls.baseUrl + '/add-downloads/';
     readonly downloadsPage: string = Urls.baseUrl + '/wp-admin/edit.php?post_type=download';
+    readonly dokanVendorRegistrationPage: string = Urls.baseUrl + '/reg-vendor/';
+    readonly dokanVendorStorePage: string = Urls.baseUrl + '/wp-admin/admin.php?page=dokan#/vendors';
+    readonly wcVendorRegistrationPage: string = Urls.baseUrl + '/reg-wc-vendor/';
+    readonly wcVendorsPage: string = Urls.baseUrl + '/wp-admin/admin.php?page=wcv-all-vendors#/';
+    readonly wcfmMemberRegistrationPage: string = Urls.baseUrl + '/reg-member/';
+    readonly accessFormWithId: string = Urls.baseUrl + '/wp-admin/admin.php?page=wpuf-post-forms&action=edit&id=';
+    readonly accessFormPreview: string = Urls.baseUrl + '/wpuf-preview/?wpuf_preview=1&form_id=';
 
     constructor(page: Page) {
         this.page = page;
@@ -74,6 +91,19 @@ export class Base {
         } catch (error) {
             console.log('\x1b[31m%s\x1b[0m', `❌ Failed to assert ${locator}: ${error}`);
             throw error;
+        }
+    }
+
+    // Extract form ID from URL (can be current page URL or provided URL)
+    async getFormId(): Promise<string> {
+        try {
+            const targetUrl = this.page.url();
+            const urlObj = new URL(targetUrl);
+            const idParam = urlObj.searchParams.get('id');
+            return idParam;
+        } catch (error) {
+            console.log('\x1b[31m%s\x1b[0m', `❌ Failed to extract form ID from URL: ${error}`);
+            return null;
         }
     }
 
@@ -276,5 +306,14 @@ export class Base {
             console.log('\x1b[31m%s\x1b[0m', `❌ Failed to check element text ${locator}: ${error}`);
             return false;
         }
+    }
+
+    // Helper function to generate words with minimum length
+    generateWordWithMinLength(minLength: number = 5): string {
+        let word = faker.word.words(1);
+        while (word.length < minLength) {
+            word = faker.word.words(1);
+        }
+        return word;
     }
 }

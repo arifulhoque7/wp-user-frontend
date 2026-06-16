@@ -1,5 +1,3 @@
-import * as dotenv from 'dotenv';
-dotenv.config();
 import { Browser, BrowserContext, Page, test, chromium } from "@playwright/test";
 import { faker } from '@faker-js/faker';
 import { PostFormSettingsPage } from '../pages/postFormSettings';
@@ -88,9 +86,9 @@ test.describe('Post Form Settings Tests', () => {
      * @Test_PFS0055 : Admin is enabling form title showing
      * @Test_PFS0056 : Admin is showing form description
      * @Test_PFS0057 : Admin is enabling pay per post
-     * @Test_PFS0058 : Admin is creating post with payment
+     * @Test_PFS0058 : User is creating post with payment
      * @Test_PFS0059 : Admin is accepting payment for post
-     * @Test_PFS0060 : Admin is validating paid post is live
+     * @Test_PFS0060 : User is validating paid post is live
      * @Test_PFS0061 : Admin is disabling pay per post
      * @Test_PFS0062 : Admin is enabling new post notification
      * @Test_PFS0063 : Admin is validating new post notification settings enabled
@@ -117,11 +115,14 @@ test.describe('Post Form Settings Tests', () => {
      * @Test_PFS0084 : Admin is limiting form entries
      * @Test_PFS0085 : Admin is validating limit form entries
      * @Test_PFS0086 : Admin is unlimiting form entries
-     * @Test_PFS0087 : Admin is enabling conditional logic on form submission
-     * @Test_PFS0088 : Admin is validating conditional logic on form submission
-     * @Test_PFS0089 : Admin is enabling post expiration
-     * @Test_PFS0090 : Admin is setting post permission to role based
-     * @Test_PFS0091 : Admin is validating post permission role based
+     * @Test_PFS0087 : Admin is enabling conditional logic for any condition
+     * @Test_PFS0088 : Admin is validating conditional logic for any condition
+     * @Test_PFS0089 : Admin is enabling conditional logic for all condition
+     * @Test_PFS0090 : Admin is validating conditional logic for all condition
+     * @Test_PFS0091 : Admin is disabling conditional logic
+     * @Test_PFS0092 : Admin is enabling post expiration
+     * @Test_PFS0093 : Admin is setting post permission role based
+     * @Test_PFS0094 : Admin is validating post permission restriction
      */
 
     let formName: string;
@@ -530,24 +531,41 @@ test.describe('Post Form Settings Tests', () => {
     test('PFS0057 : Admin is enabling pay per post', { tag: ['@Lite'] }, async () => {
         const postFormSettings = new PostFormSettingsPage(page);
         await postFormSettings.enablePayPerPost(formName, '2.00', 'Order Received');
+        const BasicLogout = new BasicLogoutPage(page);
+        await BasicLogout.logOut();
     });
 
-    test('PFS0058 : Admin is creating post with payment', { tag: ['@Lite'] }, async () => {
+    test('PFS0058 : User is creating post with payment', { tag: ['@Lite'] }, async () => {
+        const BasicLogin = new BasicLoginPage(page);
+        await BasicLogin.basicLogin(Users.userEmail, Users.userPassword);
+
         postTitle = faker.word.words(3);
         postContent = faker.lorem.paragraph();
         postExcerpt = postContent;
         const postFormSettings = new PostFormSettingsPage(page);
         await postFormSettings.createPostWithPayment(postTitle, postContent, postExcerpt, '2.00', 'Order Received');
+        const BasicLogout = new BasicLogoutPage(page);
+        await BasicLogout.signOutFE();
+        await new BasicLoginPage(page).basicLogin(Users.adminUsername, Users.adminPassword);
+
     });
 
     test('PFS0059 : Admin is accepting payment for post', { tag: ['@Lite'] }, async () => {
+        
         const postFormSettings = new PostFormSettingsPage(page);
         await postFormSettings.acceptPayment();
+        const BasicLogout = new BasicLogoutPage(page);
+        await BasicLogout.logOut();
     });
 
-    test('PFS0060 : Admin is validating paid post is live', { tag: ['@Lite'] }, async () => {
+    test('PFS0060 : User is validating paid post is live', { tag: ['@Lite'] }, async () => {
+        const BasicLogin = new BasicLoginPage(page);
+        await BasicLogin.basicLogin(Users.userEmail, Users.userPassword);
         const postFormSettings = new PostFormSettingsPage(page);
         await postFormSettings.validatePayPerPost(postTitle);
+        const BasicLogout = new BasicLogoutPage(page);
+        await BasicLogout.signOutFE();
+        await new BasicLoginPage(page).basicLogin(Users.adminUsername, Users.adminPassword);
     });
 
     test('PFS0061 : Admin is disabling pay per post', { tag: ['@Lite'] }, async () => {
@@ -714,27 +732,42 @@ test.describe('Post Form Settings Tests', () => {
         await postFormSettings.unlimitFormEntries(formName);
     });
 
-    test.skip('PFS0087 : Admin is enabling conditional logic on form submission', { tag: ['@Pro'] }, async () => {
+    test('PFS0087 : Admin is enabling conditional logic for any condition', { tag: ['@Pro'] }, async () => {
         const postFormSettings = new PostFormSettingsPage(page);
-
+        await postFormSettings.enableConditionalLogicForAnyCondition(formName);
     });
 
-    test.skip('PFS0088 : Admin is validating conditional logic on form submission', { tag: ['@Pro'] }, async () => {
+    test('PFS0088 : Admin is validating conditional logic for any condition', { tag: ['@Pro'] }, async () => {
         const postFormSettings = new PostFormSettingsPage(page);
-
+        await postFormSettings.validateConditionalLogicForAnyCondition();
     });
 
-    test('PFS0089 : Admin is enabling post expiration', { tag: ['@Pro'] }, async () => {
+    test('PFS0089 : Admin is enabling conditional logic for all condition', { tag: ['@Pro'] }, async () => {
+        const postFormSettings = new PostFormSettingsPage(page);
+        await postFormSettings.conditionalLogicForAllConditions(formName);
+    });
+
+    test('PFS0090 : Admin is validating conditional logic for all condition', { tag: ['@Pro'] }, async () => {
+        const postFormSettings = new PostFormSettingsPage(page);
+        await postFormSettings.validateConditionalLogicForAllCondition();
+    });
+
+    test('PFS0091 : Admin is disabling conditional logic', { tag: ['@Pro'] }, async () => {
+        const postFormSettings = new PostFormSettingsPage(page);
+        await postFormSettings.disableConditionalLogic(formName);
+    });
+
+    test('PFS0092 : Admin is enabling post expiration', { tag: ['@Pro'] }, async () => {
         const postFormSettings = new PostFormSettingsPage(page);
         await postFormSettings.enablePostExpiration(formName);
     });
 
-    test('PFS0090 : Admin is setting post permission role based', { tag: ['@Lite'] }, async () => {
+    test('PFS0093 : Admin is setting post permission role based', { tag: ['@Lite'] }, async () => {
         const postFormSettings = new PostFormSettingsPage(page);
         await postFormSettings.setPostPermissionRoleBased(formName);
     });
 
-    test('PFS0091 : Admin is validating post permission restriction', { tag: ['@Lite'] }, async () => {
+    test('PFS0094 : Admin is validating post permission restriction', { tag: ['@Lite'] }, async () => {
         const postFormSettings = new PostFormSettingsPage(page);
         await postFormSettings.validatePostPermissionRoleBased(formName);
     });

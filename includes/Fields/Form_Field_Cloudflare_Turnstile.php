@@ -31,7 +31,7 @@ class Form_Field_Cloudflare_Turnstile extends Field_Contract {
         $size             = ! empty( $field_settings['turnstile_size'] ) ? $field_settings['turnstile_size'] : 'normal';
         $action           = ! empty( $field_settings['turnstile_type'] ) ? $field_settings['turnstile_type'] : 'non-interactive';
 
-        if ( wpuf_is_checkbox_or_toggle_on( $enable_turnstile ) || empty( $site_key ) ) {
+        if ( ! wpuf_is_checkbox_or_toggle_on( $enable_turnstile ) || empty( $site_key ) ) {
             return;
         }
 
@@ -77,7 +77,7 @@ class Form_Field_Cloudflare_Turnstile extends Field_Contract {
                 __( 'Site key and Secret key', 'wp-user-frontend' )
             ),
             'msg' => sprintf(
-                '<span class="wpuf-text-xl wpuf-text-gray-500">%1$s <a class="wpuf-text-primary" href="%2$s" target="_blank">%3$s</a> %4$s <a class="wpuf-text-primary" href="%5$s" target="_blank">%6$s</a></span>',
+                '<span class="wpuf-text-xl wpuf-text-gray-500">%1$s <a class="wpuf-text-primary wpuf-italic wpuf-font-bold" style="text-decoration: underline;" href="%2$s" target="_blank">%3$s</a> %4$s <a class="wpuf-text-primary" href="%5$s" target="_blank">%6$s</a></span>',
                 __( 'You need to set Site key and Secret key in', 'wp-user-frontend' ),
                 admin_url( 'admin.php?page=wpuf-settings' ),
                 __( 'Settings', 'wp-user-frontend' ),

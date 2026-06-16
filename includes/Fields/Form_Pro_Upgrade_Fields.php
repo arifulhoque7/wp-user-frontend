@@ -23,6 +23,11 @@ class Form_Pro_Upgrade_Fields {
         $this->fields['toc']                   = new Form_Field_Toc();
         $this->fields['math_captcha']          = new Form_Field_Math_Captcha();
         $this->fields['qr_code']               = new Form_Field_QR_Code();
+        $this->fields['pricing_radio']         = new Form_Field_Pricing_Radio();
+        $this->fields['pricing_checkbox']      = new Form_Field_Pricing_Checkbox();
+        $this->fields['pricing_dropdown']      = new Form_Field_Pricing_Dropdown();
+        $this->fields['pricing_multiselect']   = new Form_Field_Pricing_MultiSelect();
+        $this->fields['cart_total']            = new Form_Field_Cart_Total();
     }
 
     public function get_fields() {
@@ -57,7 +62,18 @@ class Form_Field_Country extends Form_Field_Pro {
  */
 class Form_Field_Date extends Form_Field_Pro {
     public function __construct() {
-        $this->name       = __( 'Date / Time', 'wp-user-frontend' );
+        // Check if we're in Events Calendar context using centralized helper
+        $is_events_calendar = class_exists( '\WeDevs\Wpuf\Integrations\Events_Calendar\Utils\Events_Calendar_Context' )
+            ? \WeDevs\Wpuf\Integrations\Events_Calendar\Utils\Events_Calendar_Context::is_current_context()
+            : false;
+        
+        // Set the appropriate name based on context with filter for customization
+        $default_label = $is_events_calendar 
+            ? __( 'Event Date / Event Time', 'wp-user-frontend' ) 
+            : __( 'Date / Time', 'wp-user-frontend' );
+            
+        $this->name = apply_filters( 'wpuf_date_field_label', $default_label, $is_events_calendar );
+        
         $this->input_type = 'date_field';
         $this->icon       = 'clock';
     }
@@ -83,7 +99,7 @@ class Form_Field_Time extends Form_Field_Pro {
  */
 class Form_Field_Phone extends Form_Field_Pro {
     public function __construct() {
-        $this->name       = __( 'Phone Field', 'wpuf-pro' );
+        $this->name       = __( 'Phone Field', 'wp-user-frontend' );
         $this->input_type = 'phone_field';
         $this->icon       = 'phone';
     }
@@ -261,5 +277,65 @@ class Form_Field_QR_Code extends Form_Field_Pro {
         $this->name       = __( 'QR Code', 'wp-user-frontend' );
         $this->input_type = 'qr_code';
         $this->icon       = 'qrcode';
+    }
+}
+
+/**
+ * Pricing Radio Field Class
+ */
+class Form_Field_Pricing_Radio extends Form_Field_Pro {
+
+    public function __construct() {
+        $this->name       = __( 'Pricing Radio', 'wp-user-frontend' );
+        $this->input_type = 'pricing_radio';
+        $this->icon       = 'currency-dollar';
+    }
+}
+
+/**
+ * Pricing Checkbox Field Class
+ */
+class Form_Field_Pricing_Checkbox extends Form_Field_Pro {
+
+    public function __construct() {
+        $this->name       = __( 'Pricing Checkbox', 'wp-user-frontend' );
+        $this->input_type = 'pricing_checkbox';
+        $this->icon       = 'currency-dollar';
+    }
+}
+
+/**
+ * Pricing Dropdown Field Class
+ */
+class Form_Field_Pricing_Dropdown extends Form_Field_Pro {
+
+    public function __construct() {
+        $this->name       = __( 'Pricing Dropdown', 'wp-user-frontend' );
+        $this->input_type = 'pricing_dropdown';
+        $this->icon       = 'currency-dollar';
+    }
+}
+
+/**
+ * Pricing Multi Select Field Class
+ */
+class Form_Field_Pricing_MultiSelect extends Form_Field_Pro {
+
+    public function __construct() {
+        $this->name       = __( 'Pricing Multi Select', 'wp-user-frontend' );
+        $this->input_type = 'pricing_multiselect';
+        $this->icon       = 'currency-dollar';
+    }
+}
+
+/**
+ * Cart Total Field Class
+ */
+class Form_Field_Cart_Total extends Form_Field_Pro {
+
+    public function __construct() {
+        $this->name       = __( 'Cart Total', 'wp-user-frontend' );
+        $this->input_type = 'cart_total';
+        $this->icon       = 'receipt-percent';
     }
 }

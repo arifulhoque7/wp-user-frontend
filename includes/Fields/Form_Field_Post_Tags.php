@@ -31,7 +31,7 @@ class Form_Field_Post_Tags extends Field_Contract {
             }
             $value = implode( ', ', $tagsarray );
         } else {
-            $value = $field_settings['default'];
+            $value = ! empty( $field_settings['default'] ) ? $field_settings['default'] : '';
         }
 
         $query_string = '?action=wpuf_ajax_tag_search&tax=post_tag';
@@ -49,9 +49,9 @@ class Form_Field_Post_Tags extends Field_Contract {
                     type="text"
                     data-required="<?php echo esc_attr( $field_settings['required'] ); ?>"
                     data-type="text" name="<?php echo esc_attr( $field_settings['name'] ); ?>"
-                    placeholder="<?php echo esc_attr( $field_settings['placeholder'] ); ?>"
+                    placeholder="<?php echo esc_attr( ! empty( $field_settings['placeholder'] ) ? $field_settings['placeholder'] : '' ); ?>"
                     value="<?php echo esc_attr( $value ); ?>"
-                    size="<?php echo esc_attr( $field_settings['size'] ); ?>"
+                    size="<?php echo esc_attr( ! empty( $field_settings['size'] ) ? $field_settings['size'] : 40 ); ?>"
                 />
 
                 <span class="wpuf-wordlimit-message wpuf-help"></span>
@@ -61,7 +61,7 @@ class Form_Field_Post_Tags extends Field_Contract {
               <script type="text/javascript">
                 ;(function($) {
                     $(document).ready( function(){
-                        $('li.tags input[name=tags]').suggest( wpuf_frontend.ajaxurl + '<?php echo $query_string; ?>', { delay: 500, minchars: 2, multiple: true, multipleSep: ', ' } );
+                        $('li.tags input[name=tags]').suggest( wpuf_frontend.ajaxurl + <?php echo wp_json_encode( $query_string ); ?>, { delay: 500, minchars: 2, multiple: true, multipleSep: ', ' } );
                     });
                 })(jQuery);
             </script>
@@ -114,7 +114,7 @@ class Form_Field_Post_Tags extends Field_Contract {
     public function prepare_entry( $field ) {
         check_ajax_referer( 'wpuf_form_add' );
 
-        $field = isset( $_POST[$field['name']] ) ? sanitize_text_field( wp_unslash( $_POST[$field['name']] ) ) : '';
+        $field = isset( $_POST[$field['name']] ) ? strip_shortcodes( sanitize_text_field( wp_unslash( $_POST[$field['name']] ) ) ) : '';
         return $field;
     }
 }

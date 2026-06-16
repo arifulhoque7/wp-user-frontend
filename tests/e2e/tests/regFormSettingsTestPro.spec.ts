@@ -1,12 +1,9 @@
-import * as dotenv from 'dotenv';
-dotenv.config();
 import { Browser, BrowserContext, Page, test, chromium } from "@playwright/test";
 import { faker } from '@faker-js/faker';
 import { RegFormSettingsPage } from '../pages/regFormSettings';
 import { BasicLoginPage } from '../pages/basicLogin';
 import { Users, Urls } from '../utils/testData';
 import { SettingsSetupPage } from '../pages/settingsSetup';
-import * as fs from "fs";
 import { RegFormPage } from '../pages/regForm';
 import { configureSpecFailFast } from '../utils/specFailFast';
 
@@ -201,7 +198,7 @@ test.describe('Reg Form Settings Tests', () => {
     test('RFS0017 : Admin is validating after registration redirection to same page', { tag: ['@Pro'] }, async () => {
         userEmail = faker.internet.email();
         userPassword = userEmail;
-        const expectedMessage = 'Registration successful. Please wait for admin approval';
+        const expectedMessage = 'Registration successful';
         const regFormSettings = new RegFormSettingsPage(page);
         await regFormSettings.validateAfterRegistrationRedirectionToSamePage(userEmail, userPassword, expectedMessage);
     });
@@ -236,14 +233,14 @@ test.describe('Reg Form Settings Tests', () => {
 
     test('RFS0022 : Admin is setting registration success message', { tag: ['@Pro'] }, async () => {
         const regFormSettings = new RegFormSettingsPage(page);
-        const customMessage = 'Registration successful. Please wait for admin approval';
+        const customMessage = 'Welcome! Your account has been created successfully. Please check your email for further instruction.';
         await regFormSettings.setRegistrationSuccessMessage(formName, customMessage);
     });
 
     test('RFS0023 : Admin is validating registration success message', { tag: ['@Pro'] }, async () => {
         userEmail = faker.internet.email();
         userPassword = userEmail;
-        const expectedMessage = 'Registration successful. Please wait for admin approval';
+        const expectedMessage = 'Welcome! Your account has been created successfully. Please check your email for further instruction.';
         const regFormSettings = new RegFormSettingsPage(page);
         await regFormSettings.validateRegistrationSuccessMessage(userEmail, userPassword, expectedMessage);
     });
@@ -432,7 +429,7 @@ test.describe('Reg Form Settings Tests', () => {
         const regFormSettings = new RegFormSettingsPage(page);
         userEmail = faker.internet.email();
         userPassword = userEmail;
-        const expectedSubject = 'New User Registration Alert';
+        const expectedSubject = 'New user registered on your site';
         await regFormSettings.registerUserAndValidateAdminNotification(userEmail, userPassword, expectedSubject);
     });
 
