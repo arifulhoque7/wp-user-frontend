@@ -462,22 +462,30 @@ trait FieldableTrait {
         if ( isset( $wpuf_files['featured_image'] ) ) {
                 $attachment_id = reset( $wpuf_files['featured_image'] );
 
+            // @codingStandardsIgnoreEnd
+            // Make sure the supplied id is really an attachment that belongs to
+            // this post. Without this an attacker could point featured_image at
+            // an arbitrary post id and overwrite its title/content/excerpt.
+            if ( self::is_attachment_associable( $attachment_id, $post_id ) ) {
                 wpuf_associate_attachment( $attachment_id, $post_id );
                 set_post_thumbnail( $post_id, $attachment_id );
 
-                $file_data = isset( $_POST['wpuf_files_data'][ $attachment_id ] ) ? $_POST['wpuf_files_data'][ $attachment_id ] : false;
+                // @codingStandardsIgnoreStart
+                $file_data = isset( $_POST['wpuf_files_data'][ $attachment_id ] ) ?
+                    array_map( 'sanitize_text_field', wp_unslash( $_POST['wpuf_files_data'][ $attachment_id ] ) ) : false;
+                // @codingStandardsIgnoreEnd
 
-            // @codingStandardsIgnoreEnd
-            if ( $file_data ) {
-                $args = [
-                    'ID'           => $attachment_id,
-                    'post_title'   => $file_data['title'],
-                    'post_content' => $file_data['desc'],
-                    'post_excerpt' => $file_data['caption'],
-                ];
-                wpuf_update_post( $args );
+                if ( $file_data ) {
+                    $args = [
+                        'ID'           => $attachment_id,
+                        'post_title'   => $file_data['title'],
+                        'post_content' => $file_data['desc'],
+                        'post_excerpt' => $file_data['caption'],
+                    ];
+                    wpuf_update_post( $args );
 
-                update_post_meta( $attachment_id, '_wp_attachment_image_alt', $file_data['title'] );
+                    update_post_meta( $attachment_id, '_wp_attachment_image_alt', $file_data['title'] );
+                }
             }
         }
 
@@ -521,6 +529,13 @@ trait FieldableTrait {
 
             foreach ( $file_input['value'] as $attachment_id ) {
 
+                // Reject ids that are not attachments owned by / attachable to
+                // this post, so a crafted wpuf_files value cannot hijack,
+                // overwrite or delete an arbitrary post.
+                if ( ! self::is_attachment_associable( $attachment_id, $post_id ) ) {
+                    continue;
+                }
+
                 //if file numbers are greated than allowed number, prevent it from being uploaded
                 if ( $file_numbers >= $file_input['count'] ) {
                     wp_delete_attachment( $attachment_id );
@@ -551,6 +566,45 @@ trait FieldableTrait {
                 $file_numbers++;
             }
         }
+    }
+
+    /**
+     * Check whether an attachment may be associated with / edited for a post
+     *
+     * Guards against an IDOR where a crafted wpuf_files value points to an
+     * arbitrary post id or another user's attachment. Only real attachments
+     * that are unattached ( freshly uploaded ) or already belong to the given
+     * post are allowed.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int $attachment_id
+     * @param int $post_id
+     *
+     * @return bool
+     */
+    protected static function is_attachment_associable( $attachment_id, $post_id ) {
+        $attachment_id = absint( $attachment_id );
+        $post_id       = absint( $post_id );
+
+        if ( ! $attachment_id || ! $post_id ) {
+            return false;
+        }
+
+        $attachment = get_post( $attachment_id );
+
+        if ( ! $attachment || 'attachment' !== $attachment->post_type ) {
+            return false;
+        }
+
+        $parent = (int) $attachment->post_parent;
+
+        // Allow only unattached uploads or files already belonging to this post.
+        if ( $parent && $parent !== $post_id ) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
