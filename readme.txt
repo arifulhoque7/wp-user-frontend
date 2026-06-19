@@ -4,7 +4,7 @@ Donate link: https://tareq.co/donate/
 Tags: frontend post, user directory, membership, user profile, user registration, content restriction, guest post, submit post, subscriptions, directory, login form, registration form, user profile, profile builder, forms
 Requires at least: 5.0
 Tested up to: 7.0
-Stable tag: 4.3.7
+Stable tag: 4.3.8
 Requires PHP: 7.4
 License: GPLv2
 License URL: https://www.gnu.org/licenses/gpl-2.0.html
@@ -381,6 +381,11 @@ Please report security bugs found in the source code of the User Frontend plugin
 15. Create AI Powered Post Form
 
 == Changelog ==
+
+= v4.3.8 (19 June, 2026) =
+* Fix – Security: hardened file upload handling to prevent unauthorized deletion of media attachments and modification of posts via crafted form submissions.
+* Fix – Credit Card payment gateway now displays correctly on the Payment settings page when the Pro add-on is inactive.
+
 = v4.3.7 (4 June, 2026) =
 * Fix – Tags suggestions not loading in form builder
 * Fix – Checkbox styling in form builder
