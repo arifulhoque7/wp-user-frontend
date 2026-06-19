@@ -15,10 +15,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Use Node.js 18
+      - name: Use Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 22
           cache: 'npm'
 
       - name: Use desired version of PHP
@@ -39,15 +39,22 @@ jobs:
       - name: Composer install (no dev)
         run: composer install --no-dev --optimize-autoloader
 
-      # Built assets are committed, but CI rebuilds them so the package is always
-      # fresh. Hard gate: if a build output is missing the package would ship broken.
+      # Generated assets are gitignored and built fresh here; the 10up deploy ships
+      # them from the working tree. Hard gate: if any build output is missing the
+      # package would ship broken (the failure mode this whole model guards against).
       - name: Verify built assets exist on disk
         run: |
-          test -f assets/js/forms-list.min.js \
-            || { echo "::error::assets/js/forms-list.min.js missing — build failed"; exit 1; }
-          test -f languages/wp-user-frontend.pot \
-            || { echo "::error::languages/wp-user-frontend.pot missing — POT failed"; exit 1; }
-          echo "OK: built assets + POT present"
+          for f in \
+            assets/js/forms-list.min.js \
+            assets/js/frontend-form.min.js \
+            assets/js/upload.min.js \
+            assets/js/wpuf-form-builder.js \
+            assets/css/admin.css \
+            assets/css/frontend-forms.css \
+            languages/wp-user-frontend.pot; do
+            test -f "$f" || { echo "::error::$f missing — build failed"; exit 1; }
+          done
+          echo "OK: generated assets present on disk"
 
       # Distributable zip (mirrors what ships to wp.org, via .distignore).
       - name: Generate plugin zip

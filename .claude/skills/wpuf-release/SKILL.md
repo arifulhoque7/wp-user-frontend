@@ -6,7 +6,7 @@ description: Release WP User Frontend (free) to wp.org via the 10up GitHub Actio
 # WP User Frontend (Free) Release — 10up pipeline
 
 Orchestrator: `~/wpuf-release.sh`. Pushing tag `vX.Y.Z` triggers
-`.github/workflows/deploy-org.yml` (Node 18 + npm + Grunt + Composer + PHP 7.4):
+`.github/workflows/deploy-org.yml` (Node 22 + npm + Grunt + Composer + PHP 7.4):
 build → POT (grunt-wp-i18n) → composer `--no-dev` → disk-gate → **zip + GitHub
 Release** → **wp.org SVN deploy** (10up, LAST). SVN secrets `SVN_USERNAME` /
 `SVN_PASSWORD` live on the upstream repo only.
@@ -16,13 +16,14 @@ Release** → **wp.org SVN deploy** (10up, LAST). SVN secrets `SVN_USERNAME` /
 The old flow pushed `master` and let **Appsero** auto-deploy to wp.org. That is
 replaced: `deploy-org.yml` (10up) is now the only publisher. Key model facts:
 
-- **Built assets are committed** (the 14 `assets/js/*.min.js`, Vue/Vite output,
-  tailwind CSS). CI rebuilds them anyway (`npm run build` + `npx grunt release`)
-  so every package is fresh, then the 10up action ships the **working tree**
-  minus `.distignore`. (This differs from weDocs, which ships an *untracked*
-  build — WPUF keeps assets tracked.)
-- **NEVER set `BUILD_DIR`** on the 10up action — it would sync only the
-  git-tracked set and could strip CI-refreshed files. Leave it unset.
+- **Generated assets are UNTRACKED (gitignored)** — built in CI (`npm run build`
+  + `npx grunt release`) and shipped by the 10up action from the **working tree**
+  minus `.distignore` (same model as weDocs). `guard-build-untracked.yml` fails any
+  PR/push that re-tracks them. Only the generated outputs are ignored — third-party
+  libs and the hand-written vite/less sources stay tracked.
+- **NEVER set `BUILD_DIR`** on the 10up action — it would sync only the git-tracked
+  set and **strip the untracked, CI-built assets** (the package would ship with no
+  built JS/CSS). Leave it unset.
 - `.distignore` controls what ships (excludes `src`, `node_modules`, `.github`,
   `.claude`, `Gruntfile.js`, `vite.config.mjs`, `appsero.json`, tests, etc.).
 - POT comes from `grunt-wp-i18n` (`npx grunt release` runs `i18n`) — **no WP-CLI
@@ -112,5 +113,5 @@ the deploy step fails (the GitHub Release still publishes).
 ## Repo facts
 - Repo `weDevsOfficial/wp-user-frontend` · branch `develop` · slug `wp-user-frontend`
   · fork `arifulhoque7/wp-user-frontend`
-- Main file `wpuf.php` · tag `vX.Y.Z` · build Node 18 + npm + Grunt + Composer + PHP 7.4
-- Built assets are **committed** (rebuilt in CI); `.distignore` controls the package.
+- Main file `wpuf.php` · tag `vX.Y.Z` · build Node 22 + npm + Grunt + Composer + PHP 7.4
+- Generated assets are **gitignored** (built in CI); `.distignore` controls the package.
