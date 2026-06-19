@@ -8,8 +8,8 @@ description: Release WP User Frontend (free) to wp.org via the 10up GitHub Actio
 Orchestrator: `~/wpuf-release.sh`. Pushing tag `vX.Y.Z` triggers
 `.github/workflows/deploy-org.yml` (Node 22 + npm + Grunt + Composer + PHP 7.4):
 build → POT (grunt-wp-i18n) → composer `--no-dev` → disk-gate → **zip + GitHub
-Release** → **wp.org SVN deploy** (10up, LAST). SVN secrets `SVN_USERNAME` /
-`SVN_PASSWORD` live on the upstream repo only.
+Release** → **wp.org SVN deploy** (10up, LAST). SVN secrets `WPORG_SVN_USERNAME` /
+`WPORG_SVN_PASS` live on the upstream repo only.
 
 ## 🚨 10up is the sole publisher (Appsero auto-release is OFF)
 
@@ -99,7 +99,7 @@ only — never put dev/chore/refactor commits in the changelog.**
   for banners/icons — add it if/when assets exist).
 
 ## Required repo secrets (set on weDevsOfficial/wp-user-frontend)
-`SVN_USERNAME`, `SVN_PASSWORD` — the wp.org committer credentials. Without them
+`WPORG_SVN_USERNAME`, `WPORG_SVN_PASS` — the wp.org committer credentials. Without them
 the deploy step fails (the GitHub Release still publishes).
 
 ## Gotchas
