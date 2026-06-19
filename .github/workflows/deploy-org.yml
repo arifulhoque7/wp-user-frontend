@@ -1,0 +1,85 @@
+name: Deploy to WordPress.org
+# 10up-based release pipeline (replaces the Appsero auto-deploy).
+# Pushing a tag (vX.Y.Z) builds the assets in CI, publishes a GitHub Release
+# with the packaged zip, then deploys to the wp.org SVN repo via 10up.
+on:
+  push:
+    tags:
+      - "*"
+permissions:
+  contents: write
+jobs:
+  tag:
+    name: Deploy plugin for new Tag
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: Use desired version of PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+
+      - name: Install and build
+        run: |
+          npm ci
+          npm run build
+
+      # POT + legacy assets (less/concat/uglify/tailwind) + readme.md.
+      # grunt-wp-i18n generates the POT, so no separate WP-CLI install is needed.
+      - name: Build legacy assets + POT
+        run: npx grunt release
+
+      - name: Composer install (no dev)
+        run: composer install --no-dev --optimize-autoloader
+
+      # Built assets are committed, but CI rebuilds them so the package is always
+      # fresh. Hard gate: if a build output is missing the package would ship broken.
+      - name: Verify built assets exist on disk
+        run: |
+          test -f assets/js/forms-list.min.js \
+            || { echo "::error::assets/js/forms-list.min.js missing — build failed"; exit 1; }
+          test -f languages/wp-user-frontend.pot \
+            || { echo "::error::languages/wp-user-frontend.pot missing — POT failed"; exit 1; }
+          echo "OK: built assets + POT present"
+
+      # Distributable zip (mirrors what ships to wp.org, via .distignore).
+      - name: Generate plugin zip
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          rm -rf /tmp/pkg && mkdir -p /tmp/pkg/wp-user-frontend
+          rsync -a --exclude-from=.distignore ./ /tmp/pkg/wp-user-frontend/
+          ( cd /tmp/pkg && zip -rq "$GITHUB_WORKSPACE/wp-user-frontend.v${VERSION}.zip" wp-user-frontend )
+          echo "Built wp-user-frontend.v${VERSION}.zip"
+
+      # Pull this version's changelog block out of readme.txt for the release notes.
+      - name: Extract changelog
+        run: |
+          { echo "## Changelog"; echo ""; \
+            awk '/^= v?[0-9]/{n++; if(n>1) exit} n>=1{print}' readme.txt; } > RELEASE_NOTES.md
+          echo "---- release notes ----"; cat RELEASE_NOTES.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          files: wp-user-frontend.v*.zip
+          body_path: RELEASE_NOTES.md
+
+      # wp.org SVN deploy last — the zip/Release above survive a deploy retry.
+      # NO BUILD_DIR: the default 10up flow rsyncs the working tree (with the
+      # freshly built, committed assets) to SVN, applying .distignore.
+      - name: WordPress Plugin Deploy
+        uses: 10up/action-wordpress-plugin-deploy@stable
+        with:
+          dry-run: false
+        env:
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SLUG: wp-user-frontend
