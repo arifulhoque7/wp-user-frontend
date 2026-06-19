@@ -1539,12 +1539,20 @@ body.wpuf-modal-open {
   opacity: 0.6;
   cursor: not-allowed;
 }
-.wpuf-gateway-card__checkbox {
+.wpuf-gateway-cards .wpuf-gateway-card__checkbox {
   position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  border: 0;
   opacity: 0;
-  width: 0;
-  height: 0;
   pointer-events: none;
+  -webkit-appearance: none;
+  appearance: none;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  overflow: hidden;
 }
 .wpuf-gateway-card__toggle {
   position: absolute;
@@ -1593,6 +1601,18 @@ body.wpuf-modal-open {
   color: #1d2327;
   text-align: center;
   line-height: 1.3;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+.wpuf-gateway-card__pro {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+.wpuf-gateway-card__pro img {
+  height: 14px;
+  width: auto;
 }
 tr.wpuf-gateway-setting-row {
   transition: opacity 0.15s ease;
