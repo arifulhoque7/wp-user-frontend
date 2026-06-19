@@ -82,7 +82,7 @@ curl -sI "https://plugins.svn.wordpress.org/wp-user-frontend/tags/$V/wpuf.php" |
 
 ## Changelog (WPUF free format)
 `readme.txt` uses `== Changelog ==`. Block:
-```
+```text
 = vX.Y.Z (D Month, YYYY) =
 * Fix – ...
 * New – ...

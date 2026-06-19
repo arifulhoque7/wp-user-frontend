@@ -5,7 +5,7 @@ name: Deploy to WordPress.org
 on:
   push:
     tags:
-      - "*"
+      - "v*"
 permissions:
   contents: write
 jobs:
@@ -14,6 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Use Node.js 22
         uses: actions/setup-node@v4
@@ -45,16 +47,27 @@ jobs:
       - name: Verify built assets exist on disk
         run: |
           for f in \
+            assets/js/account.min.js \
+            assets/js/ai-form-builder.min.js \
             assets/js/forms-list.min.js \
+            assets/js/forms-list.min.js.map \
             assets/js/frontend-form.min.js \
+            assets/js/frontend-subscriptions.min.js \
+            assets/js/subscriptions.min.js \
             assets/js/upload.min.js \
             assets/js/wpuf-form-builder.js \
+            assets/js/wpuf-form-builder-mixins.js \
+            assets/js/wpuf-form-builder-components.js \
+            assets/js-templates/form-components.php \
             assets/css/admin.css \
+            assets/css/elementor-frontend-forms.css \
             assets/css/frontend-forms.css \
+            assets/css/registration-forms.css \
+            assets/css/wpuf-form-builder.css \
             languages/wp-user-frontend.pot; do
             test -f "$f" || { echo "::error::$f missing — build failed"; exit 1; }
           done
-          echo "OK: generated assets present on disk"
+          echo "OK: all generated assets present on disk"
 
       # Distributable zip (mirrors what ships to wp.org, via .distignore).
       - name: Generate plugin zip
@@ -81,7 +94,7 @@ jobs:
 
       # wp.org SVN deploy last — the zip/Release above survive a deploy retry.
       # NO BUILD_DIR: the default 10up flow rsyncs the working tree (with the
-      # freshly built, committed assets) to SVN, applying .distignore.
+      # freshly built, gitignored assets) to SVN, applying .distignore.
       - name: WordPress Plugin Deploy
         uses: 10up/action-wordpress-plugin-deploy@stable
         with:

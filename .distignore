@@ -1,6 +1,6 @@
 # Files and directories that must NOT ship to wp.org (applied by the 10up
 # deploy action and by the release zip step). Built assets under assets/ ARE
-# shipped — they are committed/rebuilt in CI.
+# shipped — generated outputs are untracked (gitignored) and rebuilt fresh in CI.
 #
 # IMPORTANT: generic dir names (src, bin, tests, build) are ANCHORED with a
 # leading slash so they only match the PLUGIN's own top-level dirs. Without the
