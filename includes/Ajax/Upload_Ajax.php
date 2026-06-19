@@ -264,8 +264,7 @@ class Upload_Ajax {
 
     public function delete_file() {
         check_ajax_referer( 'wpuf_nonce', 'nonce' );
-        $post_data     = wp_unslash( $_POST );
-        $attachment_id = isset( $post_data['attach_id'] ) ? absint( $post_data['attach_id'] ) : 0;
+        $attachment_id = isset( $_POST['attach_id'] ) ? absint( wp_unslash( $_POST['attach_id'] ) ) : 0;
         if ( empty( $attachment_id ) ) {
             wp_send_json_error( [ 'message' => __( 'attach_id is required.', 'wp-user-frontend' ) ], 422 );
         }
@@ -352,14 +351,19 @@ class Upload_Ajax {
         if ( empty( $token ) ) {
             $token = wp_generate_password( 32, false );
 
+            // SameSite=Lax keeps the token from being sent on cross-site
+            // requests, adding defense in depth to the delete handler.
             setcookie(
                 'wpuf_guest_upload',
                 $token,
-                time() + DAY_IN_SECONDS,
-                COOKIEPATH ? COOKIEPATH : '/',
-                COOKIE_DOMAIN,
-                is_ssl(),
-                true
+                [
+                    'expires'  => time() + DAY_IN_SECONDS,
+                    'path'     => COOKIEPATH ? COOKIEPATH : '/',
+                    'domain'   => COOKIE_DOMAIN,
+                    'secure'   => is_ssl(),
+                    'httponly' => true,
+                    'samesite' => 'Lax',
+                ]
             );
 
             // Make the token available within the current request as well.

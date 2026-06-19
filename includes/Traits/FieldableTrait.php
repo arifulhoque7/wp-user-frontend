@@ -426,8 +426,19 @@ trait FieldableTrait {
         }
 
         if ( ! empty( $wpuf_files['featured_image'] ) ) {
-            $attachment_id            = reset( $wpuf_files['featured_image'] );
-            $postarr['_thumbnail_id'] = $attachment_id;
+            $attachment_id = absint( reset( $wpuf_files['featured_image'] ) );
+            $attachment    = $attachment_id ? get_post( $attachment_id ) : null;
+
+            // Only set the thumbnail from a real attachment owned by the current
+            // requester. Otherwise an attacker could set _thumbnail_id to an
+            // arbitrary attachment, bypassing the guarded featured-image path.
+            if (
+                $attachment
+                && 'attachment' === $attachment->post_type
+                && self::current_user_owns_attachment( $attachment )
+            ) {
+                $postarr['_thumbnail_id'] = $attachment_id;
+            }
         }
 
         return $postarr;
@@ -470,10 +481,7 @@ trait FieldableTrait {
                 wpuf_associate_attachment( $attachment_id, $post_id );
                 set_post_thumbnail( $post_id, $attachment_id );
 
-                // @codingStandardsIgnoreStart
-                $file_data = isset( $_POST['wpuf_files_data'][ $attachment_id ] ) ?
-                    array_map( 'sanitize_text_field', wp_unslash( $_POST['wpuf_files_data'][ $attachment_id ] ) ) : false;
-                // @codingStandardsIgnoreEnd
+                $file_data = self::get_sanitized_file_data( $attachment_id );
 
                 if ( $file_data ) {
                     $args = [
@@ -512,6 +520,21 @@ trait FieldableTrait {
 
             $image_ids = '';
 
+            // Reject ids that are not attachments owned by / attachable to this
+            // post BEFORE storing them, so a crafted wpuf_files value cannot
+            // hijack, overwrite, delete or get persisted against an arbitrary post.
+            $valid_ids = [];
+
+            foreach ( $file_input['value'] as $attachment_id ) {
+                $attachment_id = absint( $attachment_id );
+
+                if ( self::is_attachment_associable( $attachment_id, $post_id ) ) {
+                    $valid_ids[] = $attachment_id;
+                }
+            }
+
+            $file_input['value'] = $valid_ids;
+
             if ( count( $file_input['value'] ) > 1 ) {
                 $image_ids = $file_input['value'];
             }
@@ -529,13 +552,6 @@ trait FieldableTrait {
 
             foreach ( $file_input['value'] as $attachment_id ) {
 
-                // Reject ids that are not attachments owned by / attachable to
-                // this post, so a crafted wpuf_files value cannot hijack,
-                // overwrite or delete an arbitrary post.
-                if ( ! self::is_attachment_associable( $attachment_id, $post_id ) ) {
-                    continue;
-                }
-
                 //if file numbers are greated than allowed number, prevent it from being uploaded
                 if ( $file_numbers >= $file_input['count'] ) {
                     wp_delete_attachment( $attachment_id );
@@ -546,12 +562,8 @@ trait FieldableTrait {
                 //add_post_meta( $post_id, $file_input['name'], $attachment_id );
 
                 // file title, caption, desc update
+                $file_data = self::get_sanitized_file_data( $attachment_id );
 
-                // @codingStandardsIgnoreStart
-                $file_data = isset( $_POST['wpuf_files_data'][ $attachment_id ] ) ?
-                    array_map( 'sanitize_text_field', wp_unslash( $_POST['wpuf_files_data'][ $attachment_id ] ) ) : false;
-
-                // @codingStandardsIgnoreEnd
                 if ( $file_data ) {
                     $args = [
                         'ID'           => $attachment_id,
@@ -573,8 +585,8 @@ trait FieldableTrait {
      *
      * Guards against an IDOR where a crafted wpuf_files value points to an
      * arbitrary post id or another user's attachment. Only real attachments
-     * that are unattached ( freshly uploaded ) or already belong to the given
-     * post are allowed.
+     * that already belong to the given post, or that are unattached AND owned
+     * by the current requester, are allowed.
      *
      * @since WPUF_SINCE
      *
@@ -599,12 +611,77 @@ trait FieldableTrait {
 
         $parent = (int) $attachment->post_parent;
 
-        // Allow only unattached uploads or files already belonging to this post.
-        if ( $parent && $parent !== $post_id ) {
+        // Already belongs to this post (e.g. editing an existing submission).
+        if ( $parent === $post_id ) {
+            return true;
+        }
+
+        // Attached to a different post — never allow hijacking it.
+        if ( $parent ) {
             return false;
         }
 
-        return true;
+        // Unattached: only the owner may associate it, otherwise an attacker
+        // could target another user's freshly-uploaded or library media.
+        return self::current_user_owns_attachment( $attachment );
+    }
+
+    /**
+     * Check whether the current request owns an unattached attachment
+     *
+     * @since WPUF_SINCE
+     *
+     * @param \WP_Post $attachment Attachment post object.
+     *
+     * @return bool
+     */
+    protected static function current_user_owns_attachment( $attachment ) {
+        $author_id = (int) $attachment->post_author;
+
+        if ( is_user_logged_in() ) {
+            if ( $author_id > 0 && get_current_user_id() === $author_id ) {
+                return true;
+            }
+
+            return current_user_can( 'edit_post', $attachment->ID );
+        }
+
+        // Guests: only author-less WPUF uploads bound to their session token.
+        if ( 0 !== $author_id || ! get_post_meta( $attachment->ID, '_wpuf_attachment', true ) ) {
+            return false;
+        }
+
+        $stored_token = (string) get_post_meta( $attachment->ID, '_wpuf_guest_token', true );
+        $cookie_token = isset( $_COOKIE['wpuf_guest_upload'] )
+            ? sanitize_text_field( wp_unslash( $_COOKIE['wpuf_guest_upload'] ) )
+            : '';
+
+        return '' !== $stored_token && '' !== $cookie_token && hash_equals( $stored_token, $cookie_token );
+    }
+
+    /**
+     * Get sanitized, validated file meta (title/desc/caption) for an attachment
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int $attachment_id
+     *
+     * @return array|false
+     */
+    protected static function get_sanitized_file_data( $attachment_id ) {
+        // @codingStandardsIgnoreStart
+        if ( empty( $_POST['wpuf_files_data'][ $attachment_id ] ) || ! is_array( $_POST['wpuf_files_data'][ $attachment_id ] ) ) {
+            return false;
+        }
+
+        $raw = array_map( 'sanitize_text_field', wp_unslash( $_POST['wpuf_files_data'][ $attachment_id ] ) );
+        // @codingStandardsIgnoreEnd
+
+        return [
+            'title'   => isset( $raw['title'] ) ? $raw['title'] : '',
+            'desc'    => isset( $raw['desc'] ) ? $raw['desc'] : '',
+            'caption' => isset( $raw['caption'] ) ? $raw['caption'] : '',
+        ];
     }
 
     /**
