@@ -140,6 +140,13 @@ body .wpuf-premium-page h4 {
     outline: none;
 }
 
+/* Preserve accessible keyboard focus visibility. */
+.wpuf-premium-page a:focus-visible,
+.wpuf-premium-page button:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+}
+
 /* Centered content column; the full-width bands wrap their own copy of this. */
 .wpuf-premium-page__inner {
     max-width: 1256px;

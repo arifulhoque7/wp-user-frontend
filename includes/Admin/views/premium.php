@@ -358,7 +358,7 @@ $wpuf_plans = [
 
             <div class="wpuf-pp-plans">
                 <?php foreach ( $wpuf_plans as $plan ) : ?>
-                    <div class="wpuf-pp-plan<?php echo $plan['featured'] ? ' wpuf-pp-plan--featured' : ''; ?>">
+                    <div class="wpuf-pp-plan<?php echo esc_attr( $plan['featured'] ? ' wpuf-pp-plan--featured' : '' ); ?>">
                         <div class="wpuf-pp-plan__top">
                             <div>
                                 <p class="wpuf-pp-plan__name"><?php echo esc_html( $plan['name'] ); ?></p>
@@ -373,7 +373,7 @@ $wpuf_plans = [
                                 <span class="wpuf-pp-plan__period"><?php esc_html_e( '/y', 'wp-user-frontend' ); ?></span>
                             </div>
                         </div>
-                        <a class="wpuf-pp-btn <?php echo $plan['featured'] ? 'wpuf-pp-btn--primary' : 'wpuf-pp-btn--outline'; ?>" href="<?php echo esc_url( $wpuf_pricing_url ); ?>" target="_blank" rel="noopener" style="<?php echo $plan['featured'] ? 'justify-content:space-between;width:100%;' : ''; ?>">
+                        <a class="wpuf-pp-btn <?php echo esc_attr( $plan['featured'] ? 'wpuf-pp-btn--primary' : 'wpuf-pp-btn--outline' ); ?>" href="<?php echo esc_url( $wpuf_pricing_url ); ?>" target="_blank" rel="noopener" style="<?php echo esc_attr( $plan['featured'] ? 'justify-content:space-between;width:100%;' : '' ); ?>">
                             <?php esc_html_e( 'Buy Now', 'wp-user-frontend' ); ?>
                             <svg class="wpuf-pp-ico" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 0 0 1.06 0l7.22-7.22v5.69a.75.75 0 0 0 1.5 0v-7.5a.75.75 0 0 0-.75-.75h-7.5a.75.75 0 0 0 0 1.5h5.69l-7.22 7.22a.75.75 0 0 0 0 1.06Z" clip-rule="evenodd"/></svg>
                         </a>
