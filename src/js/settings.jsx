@@ -70,16 +70,6 @@ const SettingsApp = () => {
     };
 
     const didInit = useRef( false );
-    const prevTab = useRef( null );
-
-    // Reset the active sub-tab only on a real top-level tab CHANGE (not on the
-    // initial set, so a sub-tab restored from the URL isn't wiped).
-    useEffect( () => {
-        if ( prevTab.current !== null && prevTab.current !== activeTab ) {
-            setActiveSub( null );
-        }
-        prevTab.current = activeTab;
-    }, [ activeTab ] );
 
     // Load the settings payload once on mount.
     useEffect( () => {
@@ -141,6 +131,8 @@ const SettingsApp = () => {
                 setPendingTab( tabId );
                 return;
             }
+            // Real user tab switch — start the new tab at its first sub-tab.
+            setActiveSub( null );
             setActiveTab( tabId );
         },
         [ activeTab, isDirty, setActiveTab ]
@@ -149,6 +141,7 @@ const SettingsApp = () => {
     const handleDiscard = useCallback( () => {
         discard();
         if ( pendingTab ) {
+            setActiveSub( null );
             setActiveTab( pendingTab );
         }
         setPendingTab( null );
