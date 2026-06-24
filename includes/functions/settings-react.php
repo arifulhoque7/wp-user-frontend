@@ -225,7 +225,7 @@ function wpuf_ai_react_inject_data( $data ) {
     $ai   = get_option( 'wpuf_ai', [] );
     $ai   = is_array( $ai ) ? $ai : [];
     $keys = [];
-    foreach ( [ 'openai', 'anthropic', 'google', 'gemini' ] as $provider ) {
+    foreach ( [ 'openai', 'anthropic', 'google' ] as $provider ) {
         $keys[ $provider ] = isset( $ai[ $provider . '_api_key' ] ) ? $ai[ $provider . '_api_key' ] : '';
     }
 
@@ -262,7 +262,7 @@ function wpuf_ai_react_persist_keys( $saved, $incoming, $extra ) {
     $ai = get_option( 'wpuf_ai', [] );
     $ai = is_array( $ai ) ? $ai : [];
 
-    foreach ( [ 'openai', 'anthropic', 'google', 'gemini' ] as $provider ) {
+    foreach ( [ 'openai', 'anthropic', 'google' ] as $provider ) {
         if ( isset( $extra['ai']['keys'][ $provider ] ) ) {
             $ai[ $provider . '_api_key' ] = sanitize_text_field( wp_unslash( $extra['ai']['keys'][ $provider ] ) );
         }

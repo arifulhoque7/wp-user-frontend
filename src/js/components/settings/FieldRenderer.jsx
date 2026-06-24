@@ -154,6 +154,8 @@ export default function FieldRenderer( { sectionId, field, value, onChange, forc
     // Pro role-based email templates register with an ARRAY php callback that
     // can't be matched by name in JSON — route by the field-name suffix instead.
     const isRoleTemplates = typeof field.name === 'string' && /_role_templates$/.test( field.name );
+    // Email "Select Roles" — a callback in legacy, a role multiselect in React.
+    const isDefaultRoles = typeof field.name === 'string' && /_default_roles$/.test( field.name );
     // Role → profile-form mapping table (nested wpuf_profile['roles'] storage).
     const isProfileRoles = field.name === 'profile_form_roles';
     // Tax base country/state + rate table (own-option storage).
@@ -164,7 +166,9 @@ export default function FieldRenderer( { sectionId, field, value, onChange, forc
             ? PicRadioField
             : isRoleTemplates
                 ? RoleEmailTemplates
-                : isProfileRoles
+                : isDefaultRoles
+                    ? MultiSelectChips
+                    : isProfileRoles
                     ? ProfileFormRoles
                     : isTax
                         ? TaxSettings

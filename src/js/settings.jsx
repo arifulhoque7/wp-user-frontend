@@ -86,8 +86,12 @@ const SettingsApp = () => {
         const urlTab = params.get( 'tab' );
         const urlSub = params.get( 'sub' );
 
-        setActiveTab( urlTab && ia.find( ( t ) => t.id === urlTab ) ? urlTab : ia[ 0 ].id );
-        if ( urlSub ) {
+        const restoredTab = ( urlTab && ia.find( ( t ) => t.id === urlTab ) ) || ia[ 0 ];
+        setActiveTab( restoredTab.id );
+
+        // Only restore the sub-tab if it actually belongs to the restored tab,
+        // so a stale/hand-edited `?sub=` doesn't show an empty panel.
+        if ( urlSub && Array.isArray( restoredTab.sections ) && restoredTab.sections.includes( urlSub ) ) {
             setActiveSub( urlSub );
         }
         didInit.current = true;

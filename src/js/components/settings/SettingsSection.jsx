@@ -43,6 +43,37 @@ const PROVIDER_SECTIONS = {
 
 const stripTags = ( str ) => ( typeof str === 'string' ? str.replace( /<[^>]*>/g, '' ).trim() : '' );
 
+/**
+ * Conditional fields: a field with `depends_on` only shows when its controlling
+ * field's value matches. `depends_on_value` requires an exact match (e.g. n8n
+ * authentication_type === 'basic_auth'); without it, any "on"/truthy value shows
+ * the field (e.g. turnstile keys when enable_turnstile is on). Re-evaluated on
+ * every value change since `values` comes from the store.
+ */
+const dependencyMet = ( field, values ) => {
+    if ( ! field.depends_on ) {
+        return true;
+    }
+
+    // Object form — `{ field: requiredValue, … }` — every condition must match
+    // (e.g. n8n JWT keys: authentication_type=jwt_auth AND jwt_key_type=passphrase).
+    if ( typeof field.depends_on === 'object' && ! Array.isArray( field.depends_on ) ) {
+        return Object.keys( field.depends_on ).every(
+            ( key ) => String( values[ key ] ) === String( field.depends_on[ key ] )
+        );
+    }
+
+    const depValue = values[ field.depends_on ];
+
+    if ( field.depends_on_value !== undefined && field.depends_on_value !== null && field.depends_on_value !== '' ) {
+        return String( depValue ) === String( field.depends_on_value );
+    }
+
+    // Truthy "enabled" check (on/yes/1/true) for boolean-style controllers.
+    return depValue === 'on' || depValue === 'yes' || depValue === '1'
+        || depValue === 1 || depValue === true;
+};
+
 const matchesSearch = ( field, search ) => {
     if ( ! search ) {
         return true;
@@ -107,7 +138,7 @@ export default function SettingsSection( { sectionId, tabTitle } ) {
 
     const { setValue } = useDispatch( STORE_NAME );
 
-    const visibleFields = fields.filter( ( f ) => f.name && matchesSearch( f, search ) );
+    const visibleFields = fields.filter( ( f ) => f.name && matchesSearch( f, search ) && dependencyMet( f, values ) );
 
     if ( ! visibleFields.length ) {
         return null;
