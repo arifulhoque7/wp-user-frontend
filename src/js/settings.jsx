@@ -47,18 +47,26 @@ const SettingsApp = () => {
     const [ activeSub, setActiveSub ] = useState( null );
     const [ footerLeft, setFooterLeft ] = useState( 160 );
     const [ justSaved, setJustSaved ] = useState( false );
-    const prevSaving = useRef( false );
+    const savedTimer = useRef( null );
 
-    // Show a transient "Saved" confirmation when a save completes successfully.
-    useEffect( () => {
-        if ( prevSaving.current && ! isSaving && ! error ) {
+    // Explicit "Saved" confirmation: driven by the save() thunk's boolean result,
+    // not inferred from isSaving/error transitions.
+    const handleSave = useCallback( async () => {
+        const ok = await save();
+        if ( ok ) {
             setJustSaved( true );
-            const t = setTimeout( () => setJustSaved( false ), 2500 );
-            prevSaving.current = isSaving;
-            return () => clearTimeout( t );
+            if ( savedTimer.current ) {
+                clearTimeout( savedTimer.current );
+            }
+            savedTimer.current = setTimeout( () => setJustSaved( false ), 2500 );
         }
-        prevSaving.current = isSaving;
-    }, [ isSaving, error ] );
+    }, [ save ] );
+
+    useEffect( () => () => {
+        if ( savedTimer.current ) {
+            clearTimeout( savedTimer.current );
+        }
+    }, [] );
 
     // Keep the fixed footer aligned with the content area by tracking the live
     // WordPress admin-menu width (changes on fold toggle + responsive breakpoints).
@@ -343,7 +351,7 @@ const SettingsApp = () => {
                         <button
                             type="button"
                             disabled={ isSaving || ! isDirty }
-                            onClick={ () => save() }
+                            onClick={ handleSave }
                             className="wpuf-rounded-md wpuf-bg-primary wpuf-px-8 wpuf-py-2.5 wpuf-text-sm wpuf-font-medium !wpuf-text-white hover:wpuf-bg-primaryHover disabled:wpuf-opacity-50"
                         >
                             { isSaving ? __( 'Saving…', 'wp-user-frontend' ) : __( 'Save', 'wp-user-frontend' ) }

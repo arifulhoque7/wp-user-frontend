@@ -61,6 +61,7 @@ export default function AISettings( { fields, renderField } ) {
     const [ testing, setTesting ] = useState( false );
     const [ testResult, setTestResult ] = useState( null );
     const [ fetching, setFetching ] = useState( false );
+    const [ fetchMsg, setFetchMsg ] = useState( null );
 
     const AI_BASE = '/wpuf/v1/ai-form-builder';
 
@@ -68,12 +69,14 @@ export default function AISettings( { fields, renderField } ) {
         setTesting( true );
         setTestResult( null );
         try {
+            // The endpoint returns HTTP 400 on failure, so a resolved response is
+            // a success; real failures land in catch.
             const res = await apiFetch( {
                 path: `${ AI_BASE }/test`,
                 method: 'POST',
                 data: { provider, api_key: keys[ provider ] || '', model: values.ai_model || '' },
             } );
-            setTestResult( { ok: !! res.success, message: res.message || ( res.success ? __( 'Connection successful.', 'wp-user-frontend' ) : __( 'Connection failed.', 'wp-user-frontend' ) ) } );
+            setTestResult( { ok: true, message: ( res && res.message ) || __( 'Connection successful.', 'wp-user-frontend' ) } );
         } catch ( e ) {
             setTestResult( { ok: false, message: ( e && e.message ) || __( 'Connection failed.', 'wp-user-frontend' ) } );
         }
@@ -82,10 +85,16 @@ export default function AISettings( { fields, renderField } ) {
 
     const fetchModels = async () => {
         setFetching( true );
+        setFetchMsg( null );
         try {
             if ( provider === 'google' ) {
-                // Refresh the Google model cache from the API before reading.
-                await apiFetch( { path: `${ AI_BASE }/refresh-google-models`, method: 'POST' } ).catch( () => {} );
+                // Google's refresh reads the SAVED key from the DB, so a freshly
+                // typed (unsaved) key won't be used — surface that on failure.
+                const r = await apiFetch( { path: `${ AI_BASE }/refresh-google-models`, method: 'POST' } )
+                    .catch( ( e ) => ( { success: false, message: e && e.message } ) );
+                if ( r && r.success === false ) {
+                    setFetchMsg( r.message || __( 'Save your Google API key first, then fetch the latest models.', 'wp-user-frontend' ) );
+                }
             }
             const res = await apiFetch( { path: `${ AI_BASE }/models`, method: 'GET' } );
             const rebuilt = {};
@@ -145,6 +154,9 @@ export default function AISettings( { fields, renderField } ) {
                         value={ values.ai_model || '' }
                         onChange={ ( n, v ) => setValue( 'wpuf_ai', 'ai_model', v ) }
                     />
+                    { fetchMsg && (
+                        <p className="wpuf-mt-2 wpuf-mb-0 wpuf-text-sm wpuf-text-amber-600">{ fetchMsg }</p>
+                    ) }
                 </div>
             ) }
 

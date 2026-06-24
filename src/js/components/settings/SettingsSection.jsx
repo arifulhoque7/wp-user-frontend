@@ -50,6 +50,15 @@ const stripTags = ( str ) => ( typeof str === 'string' ? str.replace( /<[^>]*>/g
  * the field (e.g. turnstile keys when enable_turnstile is on). Re-evaluated on
  * every value change since `values` comes from the store.
  */
+// A controller value satisfies a dependency when it equals the required value;
+// when no specific value is required, any "enabled"/truthy value satisfies it.
+const valueMatches = ( stored, required ) => {
+    if ( required === undefined || required === null || required === '' ) {
+        return stored === 'on' || stored === 'yes' || stored === '1' || stored === 1 || stored === true;
+    }
+    return String( stored ) === String( required );
+};
+
 const dependencyMet = ( field, values ) => {
     if ( ! field.depends_on ) {
         return true;
@@ -59,19 +68,12 @@ const dependencyMet = ( field, values ) => {
     // (e.g. n8n JWT keys: authentication_type=jwt_auth AND jwt_key_type=passphrase).
     if ( typeof field.depends_on === 'object' && ! Array.isArray( field.depends_on ) ) {
         return Object.keys( field.depends_on ).every(
-            ( key ) => String( values[ key ] ) === String( field.depends_on[ key ] )
+            ( key ) => valueMatches( values[ key ], field.depends_on[ key ] )
         );
     }
 
-    const depValue = values[ field.depends_on ];
-
-    if ( field.depends_on_value !== undefined && field.depends_on_value !== null && field.depends_on_value !== '' ) {
-        return String( depValue ) === String( field.depends_on_value );
-    }
-
-    // Truthy "enabled" check (on/yes/1/true) for boolean-style controllers.
-    return depValue === 'on' || depValue === 'yes' || depValue === '1'
-        || depValue === 1 || depValue === true;
+    // String form — optional `depends_on_value`, else a truthy "enabled" check.
+    return valueMatches( values[ field.depends_on ], field.depends_on_value );
 };
 
 const matchesSearch = ( field, search ) => {

@@ -95,6 +95,8 @@ export function save() {
     return async ( { dispatch, select } ) => {
         dispatch.setIsSaving( true );
         dispatch.setError( null );
+
+        let succeeded = false;
         try {
             const values = select.getValues();
             const extra = select.getExtra();
@@ -108,6 +110,7 @@ export function save() {
                 // Discard doesn't roll back persisted own-option settings.
                 dispatch.setExtraSaved();
                 dispatch.setIsDirty( false );
+                succeeded = true;
             } else {
                 dispatch.setError(
                     ( response && response.message ) || __( 'Failed to save settings.', 'wp-user-frontend' )
@@ -117,5 +120,9 @@ export function save() {
             dispatch.setError( e.message || __( 'Failed to save settings.', 'wp-user-frontend' ) );
         }
         dispatch.setIsSaving( false );
+
+        // Explicit success signal so the UI can confirm a save without inferring
+        // it from isSaving/error transitions.
+        return succeeded;
     };
 }
