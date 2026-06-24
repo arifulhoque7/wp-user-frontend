@@ -2112,4 +2112,24 @@ export const Selectors = {
             cancelButton: '//a[contains(text(),"Cancel") or contains(@class,"cancel")]',
         },
     },
+
+    // React settings screen (WPUF > Settings). Selectors are text/role/structure
+    // based since the React app uses Tailwind classes (no test ids). The POM
+    // (pages/settingsReact.ts) builds dynamic tab/sub-tab/field locators on top.
+    settingsReact: {
+        root: '#wpuf-settings-root',
+        loadingSkeleton: '#wpuf-settings-root .wpuf-animate-pulse',
+        nav: '#wpuf-settings-root nav.wpuf-space-y-1',
+        panelTitle: '#wpuf-settings-root h2',
+        searchInput: '#wpuf-settings-root input[placeholder^="Search"]',
+        searchClearButton: '#wpuf-settings-root button[aria-label="Clear search"]',
+        noResults: 'text=No settings found',
+        savedIndicator: 'text=Saved',
+        unsavedModalTitle: 'text=Unsaved Changes',
+        unsavedDiscardButton: 'button:has-text("Discard Changes")',
+        unsavedContinueButton: 'button:has-text("Continue Editing")',
+        classicViewLink: 'a:has-text("Classic view")',
+        switchToNewLink: 'a:has-text("Switch to new settings")',
+        legacyScreenWrap: '.wpuf-settings-wrap',
+    },
 };
