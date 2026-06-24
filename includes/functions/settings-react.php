@@ -430,3 +430,49 @@ function wpuf_settings_ui_switch_url() {
         'wpuf_switch_settings_ui'
     );
 }
+
+/**
+ * Dev guard: warn (in WP_DEBUG) about settings fields the LEGACY screen can't
+ * render, so the classic-fallback never silently breaks. The legacy
+ * WeDevs_Settings_API renders by `callback_{type}`; a field with an unsupported
+ * type and no explicit `callback` would fatal/blank the classic screen — exactly
+ * the regression to avoid now that legacy is a supported fallback.
+ *
+ * Read-only, dev-only — never runs in production, changes no data.
+ *
+ * @since WPUF_SINCE
+ *
+ * @return void
+ */
+function wpuf_settings_legacy_compat_check() {
+    if ( ! ( defined( 'WP_DEBUG' ) && WP_DEBUG ) ) {
+        return;
+    }
+
+    $supported = [
+        'text', 'hidden', 'url', 'number', 'checkbox', 'multicheck', 'gateway_selector',
+        'radio', 'radio_inline', 'select', 'textarea', 'html', 'wysiwyg', 'file', 'password',
+        'color', 'toggle',
+    ];
+
+    foreach ( wpuf_settings_fields() as $section_id => $section_fields ) {
+        if ( ! is_array( $section_fields ) ) {
+            continue;
+        }
+
+        foreach ( $section_fields as $field ) {
+            $type = isset( $field['type'] ) ? $field['type'] : 'text';
+
+            if ( ! in_array( $type, $supported, true ) && empty( $field['callback'] ) ) {
+                $name = isset( $field['name'] ) ? $field['name'] : '?';
+                error_log( // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+                    sprintf(
+                        'WPUF settings: field "%1$s" (section "%2$s") uses type "%3$s" which the legacy WeDevs_Settings_API cannot render and has no callback — the classic settings screen will break for this field. Use a supported type, add a callback, or a React render hint.',
+                        $name, $section_id, $type
+                    )
+                );
+            }
+        }
+    }
+}
+add_action( 'admin_init', 'wpuf_settings_legacy_compat_check', 99 );

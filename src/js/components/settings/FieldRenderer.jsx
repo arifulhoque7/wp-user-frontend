@@ -160,19 +160,22 @@ export default function FieldRenderer( { sectionId, field, value, onChange, forc
     const isProfileRoles = field.name === 'profile_form_roles';
     // Tax base country/state + rate table (own-option storage).
     const isTax = field.name === 'wpuf_base_country_state' || field.name === 'wpuf_tax_rates';
-    const Component = isAiProvider
-        ? RadioCardsField
-        : isLayoutPicker
-            ? PicRadioField
-            : isRoleTemplates
-                ? RoleEmailTemplates
-                : isDefaultRoles
-                    ? MultiSelectChips
-                    : isProfileRoles
-                    ? ProfileFormRoles
-                    : isTax
-                        ? TaxSettings
-                        : ( field.callback && pickByCallback( field.callback ) ) || pickComponent( type );
+    let Component;
+    if ( isAiProvider ) {
+        Component = RadioCardsField;
+    } else if ( isLayoutPicker ) {
+        Component = PicRadioField;
+    } else if ( isRoleTemplates ) {
+        Component = RoleEmailTemplates;
+    } else if ( isDefaultRoles ) {
+        Component = MultiSelectChips;
+    } else if ( isProfileRoles ) {
+        Component = ProfileFormRoles;
+    } else if ( isTax ) {
+        Component = TaxSettings;
+    } else {
+        Component = ( field.callback && pickByCallback( field.callback ) ) || pickComponent( type );
+    }
 
     // Adapt the kit's onChange( name, value ) to the section-scoped store setter.
     const handleChange = ( name, val ) => onChange( sectionId, name, val );
