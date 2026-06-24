@@ -138,10 +138,37 @@ export default function SettingsSection( { sectionId, tabTitle } ) {
 
     const { setValue } = useDispatch( STORE_NAME );
 
-    const visibleFields = fields.filter( ( f ) => f.name && matchesSearch( f, search ) && dependencyMet( f, values ) );
+    const providers = PROVIDER_SECTIONS[ sectionId ];
+    const searchActive = !! ( search && search.trim() );
+    const term = searchActive ? search.trim().toLowerCase() : '';
+    const sectionTitleText = stripTags( section && section.title ).toLowerCase();
 
-    if ( ! visibleFields.length ) {
-        return null;
+    // Dependency gating always applies (a field hidden by depends_on never shows).
+    const depFields = fields.filter( ( f ) => f.name && dependencyMet( f, values ) );
+
+    // A provider-section search can match on the provider (label/key) so its
+    // otherwise-generic credential fields ("App Id", "App Secret") surface too.
+    const providerMatches = providers && providers.some( ( p ) =>
+        ( p.label || '' ).toLowerCase().includes( term ) || ( p.key || '' ).toLowerCase().includes( term )
+    );
+
+    let visibleFields;
+    if ( providers ) {
+        // Keep ALL dependency-valid fields — ProviderTabs does its own
+        // provider-aware filtering (and search auto-selects the matched provider).
+        if ( searchActive && ! providerMatches
+            && ! depFields.some( ( f ) => matchesSearch( f, search ) )
+            && ! sectionTitleText.includes( term ) ) {
+            return null;
+        }
+        visibleFields = depFields;
+    } else {
+        visibleFields = searchActive
+            ? depFields.filter( ( f ) => matchesSearch( f, search ) || sectionTitleText.includes( term ) )
+            : depFields;
+        if ( ! visibleFields.length ) {
+            return null;
+        }
     }
 
     const renderField = ( field ) => (
@@ -155,7 +182,6 @@ export default function SettingsSection( { sectionId, tabTitle } ) {
         />
     );
 
-    const providers = PROVIDER_SECTIONS[ sectionId ];
     const hasHeadings = ! providers && visibleFields.some( isHeading );
     const groups = hasHeadings ? groupFields( visibleFields ) : null;
 
@@ -192,7 +218,7 @@ export default function SettingsSection( { sectionId, tabTitle } ) {
                     onGatewayChange={ ( v ) => setValue( sectionId, 'active_gateways', v ) }
                 />
             ) : providers ? (
-                <ProviderTabs providers={ providers } fields={ visibleFields } renderField={ renderField } values={ values } pro={ forcePro } />
+                <ProviderTabs providers={ providers } fields={ visibleFields } renderField={ renderField } values={ values } pro={ forcePro } search={ search } />
             ) : groups
                 ? groups.map( ( group, idx ) =>
                     group.title ? (

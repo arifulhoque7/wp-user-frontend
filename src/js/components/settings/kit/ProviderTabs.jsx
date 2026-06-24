@@ -33,17 +33,36 @@ const ProviderIcon = ( { provider } ) =>
         />
     ) : null;
 
-export default function ProviderTabs( { providers: allProviders, fields, renderField, values = {}, pro = false } ) {
+export default function ProviderTabs( { providers: allProviders, fields, renderField, values = {}, pro = false, search = '' } ) {
     const prefixesOf = ( p ) => ( Array.isArray( p.prefix ) ? p.prefix : [ p.prefix ] );
+    const hasFields = ( p ) => fields.some( ( f ) => f.name && prefixesOf( p ).some( ( pre ) => f.name.indexOf( pre ) === 0 ) );
 
-    // Only show providers that actually have registered fields — a provider whose
-    // fields aren't registered (e.g. Instagram is deprecated/commented out in Pro,
-    // or GitHub is license-gated off) would otherwise render an empty card.
-    const providers = allProviders.filter( ( p ) =>
-        fields.some( ( f ) => f.name && prefixesOf( p ).some( ( pre ) => f.name.indexOf( pre ) === 0 ) )
-    );
+    const term = ( search || '' ).trim().toLowerCase();
+
+    // A provider matches the search by its own label/key, or by any of its fields.
+    const providerMatchesSearch = ( p ) => {
+        if ( ! term ) {
+            return true;
+        }
+        if ( ( p.label || '' ).toLowerCase().includes( term ) || ( p.key || '' ).toLowerCase().includes( term ) ) {
+            return true;
+        }
+        const prefixes = prefixesOf( p );
+        return fields.some( ( f ) =>
+            f.name && prefixes.some( ( pre ) => f.name.indexOf( pre ) === 0 )
+            && `${ f.label || '' } ${ f.desc || '' } ${ f.name }`.toLowerCase().includes( term )
+        );
+    };
+
+    // Only show providers with registered fields (Instagram deprecated / GitHub
+    // license-gated drop out), narrowed to the search match when searching.
+    const providers = allProviders.filter( ( p ) => hasFields( p ) && providerMatchesSearch( p ) );
 
     const [ active, setActive ] = useState( providers[ 0 ] ? providers[ 0 ].key : '' );
+
+    // While searching, force the matched provider active so its fields are shown
+    // (don't rely on the user clicking the card).
+    const activeKey = term ? ( providers[ 0 ] ? providers[ 0 ].key : '' ) : active;
 
     const matchProvider = ( field ) =>
         providers.find( ( p ) => {
@@ -71,7 +90,7 @@ export default function ProviderTabs( { providers: allProviders, fields, renderF
     const standalone = fields.filter( ( f ) => ! matchProvider( f ) );
     const activeFields = fields.filter( ( f ) => {
         const p = matchProvider( f );
-        return p && p.key === active;
+        return p && p.key === activeKey;
     } );
 
     return (
@@ -99,7 +118,7 @@ export default function ProviderTabs( { providers: allProviders, fields, renderF
                         );
                     }
 
-                    const isViewed = active === p.key;
+                    const isViewed = activeKey === p.key;
                     const configured = isConfigured( p );
                     return (
                         <button

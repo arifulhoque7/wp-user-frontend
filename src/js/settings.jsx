@@ -26,11 +26,12 @@ import { STORE_NAME } from './stores-react/settings/constants';
 // double-prefix the path and break requests.
 
 const SettingsApp = () => {
-    const { ia, sections, activeTab, isLoading, isSaving, isDirty, error, search } = useSelect( ( select ) => {
+    const { ia, sections, fields, activeTab, isLoading, isSaving, isDirty, error, search } = useSelect( ( select ) => {
         const store = select( STORE_NAME );
         return {
             ia: store.getIa(),
             sections: store.getSections(),
+            fields: store.getFields(),
             activeTab: store.getActiveTab(),
             isLoading: store.isLoading(),
             isSaving: store.isSaving(),
@@ -45,6 +46,19 @@ const SettingsApp = () => {
     const [ pendingTab, setPendingTab ] = useState( null );
     const [ activeSub, setActiveSub ] = useState( null );
     const [ footerLeft, setFooterLeft ] = useState( 160 );
+    const [ justSaved, setJustSaved ] = useState( false );
+    const prevSaving = useRef( false );
+
+    // Show a transient "Saved" confirmation when a save completes successfully.
+    useEffect( () => {
+        if ( prevSaving.current && ! isSaving && ! error ) {
+            setJustSaved( true );
+            const t = setTimeout( () => setJustSaved( false ), 2500 );
+            prevSaving.current = isSaving;
+            return () => clearTimeout( t );
+        }
+        prevSaving.current = isSaving;
+    }, [ isSaving, error ] );
 
     // Keep the fixed footer aligned with the content area by tracking the live
     // WordPress admin-menu width (changes on fold toggle + responsive breakpoints).
@@ -128,6 +142,8 @@ const SettingsApp = () => {
     // Intercept tab switches when there are unsaved edits.
     const handleSelectTab = useCallback(
         ( tabId ) => {
+            // Clicking a tab exits an active search to that tab.
+            setSearch( '' );
             if ( tabId === activeTab ) {
                 return;
             }
@@ -139,7 +155,7 @@ const SettingsApp = () => {
             setActiveSub( null );
             setActiveTab( tabId );
         },
-        [ activeTab, isDirty, setActiveTab ]
+        [ activeTab, isDirty, setActiveTab, setSearch ]
     );
 
     const handleDiscard = useCallback( () => {
@@ -153,12 +169,63 @@ const SettingsApp = () => {
 
     const currentTab = ia.find( ( t ) => t.id === activeTab ) || ia[ 0 ];
 
+    // Global search: when a term is entered, search across EVERY section (not just
+    // the active tab), so e.g. "social" finds the Social Login fields under
+    // Login & Registration. Each SettingsSection renders null when it has no
+    // matching field, so only sections with hits appear.
+    const searching = !! ( search && search.trim() );
+    const searchTerm = searching ? search.trim().toLowerCase() : '';
+    const allSectionIds = [ ...new Set( ia.flatMap( ( t ) => t.sections || [] ) ) ];
+    const renderedSections = searching
+        ? allSectionIds
+        : ( currentTab
+            ? ( currentTab.sections || [] ).filter(
+                ( sectionId ) => ! currentTab.subtabs || ( activeSub || currentTab.sections[ 0 ] ) === sectionId
+            )
+            : [] );
+
+    // Whether any section has a field / title matching the search (coarse — used
+    // only to decide between rendering results vs the empty state).
+    const searchHasResults = ! searching || allSectionIds.some( ( sid ) => {
+        const secFields = fields[ sid ] || [];
+        if ( secFields.some( ( f ) =>
+            `${ f.label || '' } ${ f.desc || '' } ${ f.name || '' }`.toLowerCase().includes( searchTerm )
+        ) ) {
+            return true;
+        }
+        const sec = sections.find( ( s ) => s.id === sid );
+        return sec && String( sec.title || '' ).replace( /<[^>]*>/g, '' ).toLowerCase().includes( searchTerm );
+    } );
+
     return (
         <div className="wpuf-settings-react wpuf-min-h-screen">
             <Header utm="wpuf-settings" />
 
             { isLoading ? (
-                <p className="wpuf-p-8 wpuf-text-gray-500">{ __( 'Loading…', 'wp-user-frontend' ) }</p>
+                <div className="wpuf-px-[32px] wpuf-pt-[32px] wpuf-pb-[100px]">
+                    <div className="wpuf-flex wpuf-animate-pulse wpuf-gap-8 wpuf-rounded-lg wpuf-border wpuf-border-gray-200 wpuf-bg-white wpuf-p-8 wpuf-shadow-sm">
+                        {/* Left nav skeleton */}
+                        <div className="wpuf-w-[280px] wpuf-shrink-0 wpuf-space-y-3">
+                            <div className="wpuf-h-[42px] wpuf-rounded-md wpuf-bg-gray-100" />
+                            { Array.from( { length: 8 } ).map( ( _, i ) => (
+                                <div key={ i } className="wpuf-h-10 wpuf-rounded-md wpuf-bg-gray-100" />
+                            ) ) }
+                        </div>
+                        {/* Content skeleton */}
+                        <div className="wpuf-min-w-0 wpuf-flex-1 wpuf-border-l wpuf-border-gray-200 wpuf-pl-8">
+                            <div className="wpuf-h-7 wpuf-w-44 wpuf-rounded wpuf-bg-gray-200" />
+                            <div className="wpuf-my-8 wpuf-border-b wpuf-border-gray-200" />
+                            <div className="wpuf-space-y-6">
+                                { Array.from( { length: 5 } ).map( ( _, i ) => (
+                                    <div key={ i }>
+                                        <div className="wpuf-mb-2 wpuf-h-4 wpuf-w-32 wpuf-rounded wpuf-bg-gray-100" />
+                                        <div className="wpuf-h-[42px] wpuf-w-full wpuf-rounded-md wpuf-bg-gray-100" />
+                                    </div>
+                                ) ) }
+                            </div>
+                        </div>
+                    </div>
+                </div>
             ) : (
             <div className="wpuf-px-[32px] wpuf-pt-[32px] wpuf-pb-[100px]">
             { error ? (
@@ -178,20 +245,22 @@ const SettingsApp = () => {
 
                 <div className="wpuf-min-w-0 wpuf-flex-1 wpuf-max-w-full wpuf-border-l wpuf-border-gray-200 wpuf-pl-8">
                     <h2 className="wpuf-mt-0 wpuf-mb-0 wpuf-text-2xl wpuf-font-bold wpuf-leading-7 wpuf-text-gray-900">
-                        { currentTab ? currentTab.title : '' }
+                        { searching
+                            ? __( 'Search results', 'wp-user-frontend' )
+                            : ( currentTab ? currentTab.title : '' ) }
                     </h2>
 
                     {/* Figma: full-width divider under the tab title, 32px above + below. */}
                     <div className="wpuf-my-8 wpuf-border-b wpuf-border-gray-200" />
 
-                    { currentTab && currentTab.notice ? (
+                    { ! searching && currentTab && currentTab.notice ? (
                         <div className="wpuf-mb-8 wpuf-flex wpuf-items-start wpuf-gap-2 wpuf-rounded-md wpuf-border-l-4 wpuf-border-amber-400 wpuf-bg-amber-50 wpuf-px-4 wpuf-py-3 wpuf-text-sm wpuf-text-amber-700">
                             <svg className="wpuf-mt-0.5 wpuf-h-4 wpuf-w-4 wpuf-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M8.257 3.1c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
                             { currentTab.notice }
                         </div>
                     ) : null }
 
-                    { currentTab && currentTab.subtabs && currentTab.sections.length > 1 ? (
+                    { ! searching && currentTab && currentTab.subtabs && currentTab.sections.length > 1 ? (
                         <div className="wpuf-mb-8 wpuf-inline-flex wpuf-rounded-lg wpuf-bg-gray-100 wpuf-p-2">
                             { currentTab.sections.map( ( sid ) => {
                                 const active = ( activeSub || currentTab.sections[ 0 ] ) === sid;
@@ -211,20 +280,28 @@ const SettingsApp = () => {
                         </div>
                     ) : null }
 
-                    { currentTab
-                        ? ( currentTab.sections || [] )
-                            .filter( ( sectionId ) =>
-                                ! currentTab.subtabs || ( activeSub || currentTab.sections[ 0 ] ) === sectionId
-                            )
-                            .map( ( sectionId ) => (
-                                <ErrorBoundary key={ sectionId }>
-                                    <SettingsSection
-                                        sectionId={ sectionId }
-                                        tabTitle={ currentTab.subtabs ? null : currentTab.title }
-                                    />
-                                </ErrorBoundary>
-                            ) )
-                        : null }
+                    { searching && ! searchHasResults ? (
+                        <div className="wpuf-flex wpuf-flex-col wpuf-items-center wpuf-justify-center wpuf-py-16 wpuf-text-center">
+                            <svg className="wpuf-mb-4 wpuf-h-12 wpuf-w-12 wpuf-text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                            </svg>
+                            <p className="wpuf-m-0 wpuf-text-base wpuf-font-medium wpuf-text-gray-700">
+                                { __( 'No settings found', 'wp-user-frontend' ) }
+                            </p>
+                            <p className="wpuf-mt-1 wpuf-mb-0 wpuf-text-sm wpuf-text-gray-400">
+                                { __( 'Try a different keyword.', 'wp-user-frontend' ) }
+                            </p>
+                        </div>
+                    ) : (
+                        renderedSections.map( ( sectionId ) => (
+                            <ErrorBoundary key={ sectionId }>
+                                <SettingsSection
+                                    sectionId={ sectionId }
+                                    tabTitle={ ! searching && currentTab && ! currentTab.subtabs ? currentTab.title : null }
+                                />
+                            </ErrorBoundary>
+                        ) )
+                    ) }
                 </div>
             </div>
             </div>
@@ -244,7 +321,12 @@ const SettingsApp = () => {
                         { __( 'Cancel', 'wp-user-frontend' ) }
                     </button>
                     <div className="wpuf-flex wpuf-items-center wpuf-gap-3">
-                        { isDirty ? (
+                        { justSaved ? (
+                            <span className="wpuf-flex wpuf-items-center wpuf-gap-1 wpuf-text-xs wpuf-font-medium wpuf-text-emerald-600">
+                                <svg className="wpuf-h-4 wpuf-w-4" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                                { __( 'Saved', 'wp-user-frontend' ) }
+                            </span>
+                        ) : isDirty ? (
                             <span className="wpuf-text-xs wpuf-text-gray-400">
                                 { __( 'Unsaved changes', 'wp-user-frontend' ) }
                             </span>
