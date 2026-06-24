@@ -94,6 +94,11 @@ export class SettingsReactPage extends Base {
         await expect(this.page.getByText('Saved', { exact: true })).toBeVisible({ timeout: 15000 });
     }
 
+    /** Click the footer Cancel button (reverts unsaved edits in place). */
+    async cancel() {
+        await this.page.getByRole('button', { name: 'Cancel', exact: true }).click();
+    }
+
     async expectUnsavedModal() {
         await expect(this.page.locator(this.S.unsavedModalTitle)).toBeVisible();
     }

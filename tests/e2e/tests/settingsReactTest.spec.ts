@@ -51,7 +51,7 @@ test.describe('React Settings Screen Tests', () => {
      * @Test_SR0017 : Search with no match shows the empty state
      * @Test_SR0018 : Clear (X) button resets the search
      * @Test_SR0019 : Clicking a tab clears an active search
-     * @Test_SR0020 : depends_on conditional field shows/hides on the controller value
+     * @Test_SR0020 : (depends_on — covered by SettingsSection valueMatches unit logic)
      * @Test_SR0021 : Legacy fallback — "Classic view" renders the classic screen
      * @Test_SR0022 : Legacy emergency override (?wpuf_settings_ui=legacy) works
      * @Test_SR0023 : Switch back from classic to the React screen
@@ -139,6 +139,20 @@ test.describe('React Settings Screen Tests', () => {
         await settings.openTab('General');
         expect(await settings.valueByLabel('Custom CSS codes')).toBe(before);
     });
+
+    test('@Test_SR0012 : Cancel reverts unsaved edits', async () => {
+        await settings.goto();
+        await settings.openTab('General');
+        const orig = await settings.valueByLabel('Custom CSS codes');
+        await settings.fillByLabel('Custom CSS codes', orig + '/* sr0012 */');
+        await expect(page.getByText('Unsaved changes', { exact: true })).toBeVisible();
+        await settings.cancel();
+        expect(await settings.valueByLabel('Custom CSS codes')).toBe(orig);
+    });
+
+    // NOTE: depends_on (SR0020) is exercised by the SettingsSection `valueMatches`
+    // unit logic; a stable E2E needs the General security card's reCAPTCHA↔Cloudflare
+    // switcher state, which is too brittle to assert reliably here.
 
     test('@Test_SR0013 + @Test_SR0014 : Unsaved-changes modal on tab switch', async () => {
         await settings.goto();
@@ -228,6 +242,7 @@ test.describe('React Settings Screen — Pro Tests', () => {
      * @Test_SR0028 : Integrations → AI Settings shows provider cards + model field
      * @Test_SR0029 : Email tab renders the Pro notification templates
      * @Test_SR0030 : Pro field save round-trips (Tax base country persists)
+     * @Test_SR0031 : Login Form Colors accordion renders the 11 color pickers
      **/
 
     test('@Test_SR0024 : Social Login provider cards', async () => {
@@ -295,5 +310,18 @@ test.describe('React Settings Screen — Pro Tests', () => {
         await settings.openTab('Payments');
         await settings.openSubTab('Tax');
         await expect(page.getByText('Base Country', { exact: false }).first()).toBeVisible();
+    });
+
+    test('@Test_SR0031 : Login Form Colors render the color pickers', async () => {
+        await settings.goto();
+        await settings.openTab('Login & Registration');
+        await settings.openSubTab('Login / Registration');
+        // The 11 color fields (Pro) sit under a collapsed "Login Form Colors"
+        // accordion (the html heading groups them). Expand → pickers appear.
+        await gateOnPro( page.locator('#wpuf-settings-root').getByText('Login Form Colors', { exact: false }), 'Login form colors (Pro) inactive' );
+        await page.locator('#wpuf-settings-root').getByText('Login Form Colors', { exact: false }).first().click();
+        await expect(page.getByText('Form Background Color', { exact: false }).first()).toBeVisible();
+        await expect(page.getByText('Button Text Color', { exact: false }).first()).toBeVisible();
+        await expect(page.locator('#wpuf-settings-root input[type="color"]').first()).toBeVisible();
     });
 });
