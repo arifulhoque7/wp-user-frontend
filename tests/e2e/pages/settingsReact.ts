@@ -48,10 +48,10 @@ export class SettingsReactPage extends Base {
         await expect(this.page.locator(this.S.panelTitle).first()).toContainText(text);
     }
 
-    /** Locate a field input by its visible label text (label sits above the input). */
+    /** Locate a field control by its visible label text (label sits above the input/textarea). */
     fieldByLabel(label: string): Locator {
         return this.page.locator(
-            `xpath=//*[@id="wpuf-settings-root"]//label[normalize-space()="${label}"]/following::input[1]`
+            `xpath=//*[@id="wpuf-settings-root"]//label[normalize-space()="${label}"]/following::*[self::input or self::textarea][1]`
         );
     }
 
