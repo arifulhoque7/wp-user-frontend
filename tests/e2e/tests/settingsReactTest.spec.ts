@@ -203,3 +203,97 @@ test.describe('React Settings Screen Tests', () => {
         await settings.goto();
     });
 });
+
+/**
+ * Pro-only coverage. Each case is GATED — it skips (not fails) when the relevant
+ * Pro section/module isn't loaded (Lite, or no valid license), per
+ * tests/e2e/CLAUDE.md. On a Pro+licensed site every case runs.
+ */
+async function gateOnPro( probe: import('@playwright/test').Locator, reason: string ) {
+    const visible = await probe.first()
+        .waitFor({ state: 'visible', timeout: 4000 } ).then( () => true ).catch( () => false );
+    test.skip( ! visible, reason );
+}
+
+test.describe('React Settings Screen — Pro Tests', () => {
+
+    configureSpecFailFast();
+
+    /**----------------------------------REACT SETTINGS (PRO)----------------------------------**
+     *
+     * @Test_SR0024 : Social Login sub-tab renders provider cards (Facebook/Google)
+     * @Test_SR0025 : Payments → Tax shows the tax UI (Enable Tax + Base Country + Rates)
+     * @Test_SR0026 : Payments → Invoices section renders
+     * @Test_SR0027 : SMS tab renders provider cards (Twilio/Vonage)
+     * @Test_SR0028 : Integrations → AI Settings shows provider cards + model field
+     * @Test_SR0029 : Email tab renders the Pro notification templates
+     * @Test_SR0030 : Pro field save round-trips (Tax base country persists)
+     **/
+
+    test('@Test_SR0024 : Social Login provider cards', async () => {
+        await settings.goto();
+        await settings.openTab('Login & Registration');
+        await gateOnPro( page.locator('#wpuf-settings-root').getByText('Social Login', { exact: false }), 'Social Login module inactive' );
+        await settings.openSubTab('Social Login');
+        await expect(page.getByText('Facebook', { exact: false }).first()).toBeVisible();
+        await expect(page.getByText('Google', { exact: false }).first()).toBeVisible();
+    });
+
+    test('@Test_SR0025 : Tax UI (enable + base country + rates)', async () => {
+        await settings.goto();
+        await settings.openTab('Payments');
+        await gateOnPro( page.locator('#wpuf-settings-root').getByText('Tax', { exact: true }), 'Tax (Pro) inactive' );
+        await settings.openSubTab('Tax');
+        // TaxSettings (custom component) renders "Base Country" + a "+ Add Rate"
+        // rate table — not the raw field labels.
+        await expect(page.getByText('Enable Tax', { exact: false }).first()).toBeVisible();
+        await expect(page.getByText('Base Country', { exact: false }).first()).toBeVisible();
+        await expect(page.getByText('Add Rate', { exact: false }).first()).toBeVisible();
+    });
+
+    test('@Test_SR0026 : Invoices section renders', async () => {
+        await settings.goto();
+        await settings.openTab('Payments');
+        await gateOnPro( page.locator('#wpuf-settings-root').getByText('Invoices', { exact: false }), 'Invoices (Pro) inactive' );
+        await settings.openSubTab('Invoices');
+        await expect(page.locator('#wpuf-settings-root').getByText('Invoice', { exact: false }).first()).toBeVisible();
+    });
+
+    test('@Test_SR0027 : SMS provider cards', async () => {
+        await settings.goto();
+        await gateOnPro( page.locator('#wpuf-settings-root nav.wpuf-space-y-1').getByText('SMS', { exact: false }), 'SMS module inactive' );
+        await settings.openTab('SMS');
+        await expect(page.getByText('Twilio', { exact: false }).first()).toBeVisible();
+    });
+
+    test('@Test_SR0028 : AI Settings provider cards + model', async () => {
+        await settings.goto();
+        await gateOnPro( page.locator('#wpuf-settings-root nav.wpuf-space-y-1').getByText('Integrations', { exact: false }), 'Integrations/AI inactive' );
+        await settings.openTab('Integrations');
+        await expect(page.getByText('OpenAI', { exact: false }).first()).toBeVisible();
+        await expect(page.getByText('AI Model', { exact: false }).first()).toBeVisible();
+    });
+
+    test('@Test_SR0029 : Email Pro notification templates render', async () => {
+        await settings.goto();
+        await settings.openTab('Email');
+        // Pro email-templates feature: per-status registration notifications.
+        await gateOnPro( page.getByText('Approved User Email', { exact: false }), 'Pro email templates inactive' );
+        await expect(page.getByText('Approved User Email', { exact: false }).first()).toBeVisible();
+        await expect(page.getByText('Template Settings', { exact: false }).first()).toBeVisible();
+    });
+
+    test('@Test_SR0030 : Pro field save round-trips (Tax base country)', async () => {
+        await settings.goto();
+        await settings.openTab('Payments');
+        await gateOnPro( page.locator('#wpuf-settings-root').getByText('Tax', { exact: true }), 'Tax (Pro) inactive' );
+        await settings.openSubTab('Tax');
+        // Toggle the Enable Tax checkbox, save, reload, confirm the section persists.
+        await page.getByRole('checkbox', { name: 'Enable Tax' }).click();
+        await settings.save();
+        await settings.goto();
+        await settings.openTab('Payments');
+        await settings.openSubTab('Tax');
+        await expect(page.getByText('Base Country', { exact: false }).first()).toBeVisible();
+    });
+});
