@@ -67,12 +67,17 @@ export default function MultiSelectChips( { field, name, value, onChange } ) {
             ! searchTerm.trim() || displayText( key ).toLowerCase().includes( searchTerm.toLowerCase() )
         );
 
-    const summary =
-        selected.length === 0
-            ? ( field.placeholder || __( 'Select…', 'wp-user-frontend' ) )
-            : selected.length > 3
-                ? `${ selected.length } ${ __( 'selected', 'wp-user-frontend' ) }`
-                : selected.map( displayText ).join( ', ' );
+    // Trigger label: placeholder when empty, "N selected" past this many, else
+    // the comma-joined names.
+    const MAX_NAMES_IN_SUMMARY = 3;
+    let summary;
+    if ( selected.length === 0 ) {
+        summary = field.placeholder || __( 'Select…', 'wp-user-frontend' );
+    } else if ( selected.length > MAX_NAMES_IN_SUMMARY ) {
+        summary = `${ selected.length } ${ __( 'selected', 'wp-user-frontend' ) }`;
+    } else {
+        summary = selected.map( displayText ).join( ', ' );
+    }
 
     return (
         <>

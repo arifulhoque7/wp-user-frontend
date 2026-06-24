@@ -28,8 +28,7 @@ import TaxSettings from './kit/fields/TaxSettings';
 import ProBadge from './kit/ProBadge';
 import ProPreviewWrapper from './kit/ProPreviewWrapper';
 import ProNote from './kit/fields/ProNote';
-
-const stripTags = ( str ) => ( typeof str === 'string' ? str.replace( /<[^>]*>/g, '' ).trim() : '' );
+import { stripTags } from './utils';
 
 /**
  * Normalize a legacy field definition to the kit field shape.

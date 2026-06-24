@@ -20,7 +20,6 @@ import HtmlField from './HtmlField';
  * `wpuf_ai_react_persist_keys` — so switching providers never drops another
  * provider's saved key.
  */
-const stripTags = ( s ) => ( typeof s === 'string' ? s.replace( /<[^>]*>/g, '' ).trim() : s );
 
 export default function AISettings( { fields, renderField } ) {
     const { values, ai } = useSelect( ( select ) => {

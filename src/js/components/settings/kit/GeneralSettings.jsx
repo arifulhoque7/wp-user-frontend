@@ -98,13 +98,14 @@ export default function GeneralSettings( { fields, renderField, values = {}, onF
     const isPro = !! wpuf.is_pro;
     const [ securityView, setSecurityView ] = useState( 'recaptcha' );
 
+    const byName = ( name ) => fields.find( ( f ) => f.name === name );
+
     // A pro-preview field is upsell-only in the free build.
     const fieldIsPro = ( name ) => {
         const f = byName( name );
         return ! isPro && !! ( f && f.is_pro_preview );
     };
 
-    const byName = ( name ) => fields.find( ( f ) => f.name === name );
     const renderByName = ( name ) => {
         const f = byName( name );
         return f ? renderField( f ) : null;

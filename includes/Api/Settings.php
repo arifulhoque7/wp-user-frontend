@@ -123,10 +123,7 @@ class Settings extends WP_REST_Controller {
             // Free_Loader with `is_pro_preview => true`. When Pro is active it
             // re-registers them functionally (flag absent). Use that flag as the
             // source of truth; fall back to the legacy pro-icon title marker.
-            $is_pro_preview = ! empty( $section['is_pro_preview'] )
-                || ( ! empty( $section['title'] ) && preg_match( '/pro-icon|pro-badge|pro_badge/i', $section['title'] ) );
-
-            if ( $is_pro_preview ) {
+            if ( $this->is_pro_preview_section( $section ) ) {
                 $pro_sections[] = $section_id;
             }
 
@@ -366,16 +363,7 @@ class Settings extends WP_REST_Controller {
                 return esc_url_raw( wp_unslash( $value ) );
 
             case 'number':
-                // Preserve the original scalar form (string vs int) so a no-op
-                // save stays byte-identical to existing stored data — coercing
-                // "100" → 100 would silently rewrite every site's stored numbers.
-                // Guard against non-numeric and obviously-malformed forms only.
-                if ( ! is_numeric( $value ) ) {
-                    return '';
-                }
-                // Reject exponential/hex notation (a real number input never
-                // sends these); keep plain integer/decimal strings verbatim.
-                return preg_match( '/^-?\d+(\.\d+)?$/', (string) $value ) ? $value : ( $value + 0 );
+                return $this->sanitize_number( $value );
 
             default:
                 if ( is_array( $value ) ) {
@@ -384,5 +372,49 @@ class Settings extends WP_REST_Controller {
 
                 return sanitize_text_field( wp_unslash( $value ) );
         }
+    }
+
+    /**
+     * Whether a section is a Pro-preview (upsell) section.
+     *
+     * Pro-feature sections are registered by Free_Loader with
+     * `is_pro_preview => true`; older ones only carry a pro badge in the title.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param array $section Section definition.
+     *
+     * @return bool
+     */
+    protected function is_pro_preview_section( $section ) {
+        if ( ! empty( $section['is_pro_preview'] ) ) {
+            return true;
+        }
+
+        return ! empty( $section['title'] )
+            && (bool) preg_match( '/pro-icon|pro-badge|pro_badge/i', $section['title'] );
+    }
+
+    /**
+     * Sanitize a number field while preserving its stored scalar form.
+     *
+     * Keeps the original string/int form so a no-op save stays byte-identical to
+     * existing data — coercing "100" → 100 would silently rewrite every site's
+     * stored numbers. Rejects non-numeric and exponential/hex notation (a real
+     * number input never sends those); plain integer/decimal strings pass through
+     * verbatim.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param mixed $value Raw value.
+     *
+     * @return mixed Empty string when not numeric, else the verbatim value.
+     */
+    protected function sanitize_number( $value ) {
+        if ( ! is_numeric( $value ) ) {
+            return '';
+        }
+
+        return preg_match( '/^-?\d+(\.\d+)?$/', (string) $value ) ? $value : ( $value + 0 );
     }
 }

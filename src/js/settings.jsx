@@ -13,6 +13,7 @@ import { __ } from '@wordpress/i18n';
 import Header from './components/settings/Header';
 import SettingsNav from './components/settings/SettingsNav';
 import SettingsSection, { PROVIDER_SECTIONS } from './components/settings/SettingsSection';
+import { stripTags } from './components/settings/utils';
 import UnsavedChanges from './components/settings/UnsavedChanges';
 import MessageModal from './components/settings/MessageModal';
 import ErrorBoundary from './components/settings/ErrorBoundary';
@@ -89,7 +90,7 @@ const SettingsApp = () => {
 
     const sectionTitle = ( id ) => {
         const s = sections.find( ( x ) => x.id === id );
-        return s ? s.title.replace( /<[^>]*>/g, '' ).trim() : id;
+        return s ? stripTags( s.title ) : id;
     };
 
     const didInit = useRef( false );
@@ -212,7 +213,7 @@ const SettingsApp = () => {
             return true;
         }
         const sec = sections.find( ( s ) => s.id === sid );
-        return sec && String( sec.title || '' ).replace( /<[^>]*>/g, '' ).toLowerCase().includes( searchTerm );
+        return sec && stripTags( sec.title ).toLowerCase().includes( searchTerm );
     } );
 
     return (
