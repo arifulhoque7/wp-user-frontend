@@ -3,6 +3,7 @@ import { useState } from '@wordpress/element';
 import apiFetch from '@wordpress/api-fetch';
 import { __ } from '@wordpress/i18n';
 import { STORE_NAME } from '../../../../stores-react/settings/constants';
+import { stripTags } from '../../utils';
 import RadioCardsField from './RadioCardsField';
 import SelectDropdown from './SelectDropdown';
 import TextField from './TextField';
