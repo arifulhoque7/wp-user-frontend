@@ -1,6 +1,5 @@
 import { useCallback } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
-import { SETTING_CLASS_NAMES } from '../SettingsField';
 import HelpTextIcon from './HelpTextIcon';
 
 /**
@@ -47,7 +46,7 @@ export default function FileField( { field, name, value, onChange } ) {
                     id={ name }
                     value={ current }
                     onChange={ handleInput }
-                    className={ SETTING_CLASS_NAMES.text }
+                    className="wpuf-min-w-0 wpuf-flex-1 !wpuf-py-2.5 !wpuf-px-3.5 wpuf-text-gray-700 !wpuf-shadow-sm placeholder:wpuf-text-gray-400 wpuf-border !wpuf-border-gray-300 !wpuf-rounded-md"
                     placeholder={ field.placeholder || __( 'No file selected', 'wp-user-frontend' ) }
                 />
                 <button

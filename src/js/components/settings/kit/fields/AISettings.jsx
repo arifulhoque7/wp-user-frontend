@@ -167,7 +167,17 @@ export default function AISettings( { fields, renderField } ) {
             { tempField && (
                 <div className="wpuf-mt-6">
                     <NumberField
-                        field={ { label: stripTags( tempField.label ) || __( 'Temperature', 'wp-user-frontend' ), help_text: stripTags( tempField.desc ) } }
+                        field={ {
+                            label: stripTags( tempField.label ) || __( 'Temperature', 'wp-user-frontend' ),
+                            // Range 0–1 (step 0.1) — without these NumberField
+                            // defaults to step=1, which makes the browser reject
+                            // decimals so the value never updates / persists.
+                            min: 0,
+                            max: 1,
+                            step: 0.1,
+                            default: '0.7',
+                            help_text: stripTags( tempField.desc ) || __( 'Controls randomness in responses. Lower values (0.1–0.3) are more focused; higher values (0.7–1.0) are more creative.', 'wp-user-frontend' ),
+                        } }
                         name="temperature"
                         value={ values.temperature }
                         onChange={ ( n, v ) => setValue( 'wpuf_ai', 'temperature', v ) }
