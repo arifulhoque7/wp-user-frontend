@@ -14,6 +14,7 @@ import Header from './components/settings/Header';
 import SettingsNav from './components/settings/SettingsNav';
 import SettingsSection, { PROVIDER_SECTIONS } from './components/settings/SettingsSection';
 import UnsavedChanges from './components/settings/UnsavedChanges';
+import MessageModal from './components/settings/MessageModal';
 import ErrorBoundary from './components/settings/ErrorBoundary';
 
 // Register the store.
@@ -41,7 +42,7 @@ const SettingsApp = () => {
         };
     }, [] );
 
-    const { setActiveTab, setSearch, save, discard, loadSettings } = useDispatch( STORE_NAME );
+    const { setActiveTab, setSearch, save, discard, loadSettings, setError } = useDispatch( STORE_NAME );
 
     const [ pendingTab, setPendingTab ] = useState( null );
     const [ activeSub, setActiveSub ] = useState( null );
@@ -246,9 +247,12 @@ const SettingsApp = () => {
             ) : (
             <div className="wpuf-px-[32px] wpuf-pt-[32px] wpuf-pb-[100px]">
             { error ? (
-                <div className="wpuf-mb-4 wpuf-rounded-md wpuf-bg-red-50 wpuf-px-4 wpuf-py-3 wpuf-text-sm wpuf-text-red-700">
-                    { error }
-                </div>
+                <MessageModal
+                    title={ __( 'Couldn’t save settings', 'wp-user-frontend' ) }
+                    message={ error }
+                    tone="error"
+                    onClose={ () => setError( null ) }
+                />
             ) : null }
 
             <div className="wpuf-flex wpuf-gap-8 wpuf-rounded-lg wpuf-border wpuf-border-gray-200 wpuf-bg-white wpuf-p-8 wpuf-shadow-sm">
