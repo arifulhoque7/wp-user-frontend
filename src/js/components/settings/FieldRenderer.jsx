@@ -78,7 +78,9 @@ const pickByCallback = ( callback ) => {
         case 'wpuf_ai_temperature_field':
             return NumberField;
         case 'wpuf_descriptive_text':
-            // Static help/description block, not an input.
+        case 'wpuf_render_login_settings_section_header':
+            // Static heading/description block, not an input. The PHP callback
+            // emits classic-screen markup; React renders the field's `desc` HTML.
             return HtmlField;
         case 'wpuf_settings_password_preview':
             // n8n auth secrets (basic_auth_password, header_auth_value, jwt_*).
