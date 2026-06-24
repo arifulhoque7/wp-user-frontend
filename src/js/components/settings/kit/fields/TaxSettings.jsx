@@ -1,7 +1,6 @@
 import { useSelect, useDispatch } from '@wordpress/data';
 import { __ } from '@wordpress/i18n';
 import { STORE_NAME } from '../../../../stores-react/settings/constants';
-import { SETTING_CLASS_NAMES } from '../SettingsField';
 import SelectDropdown from './SelectDropdown';
 
 /**
@@ -87,16 +86,18 @@ function Rates() {
                                 onChange={ ( n, val ) => update( i, { state: val } ) }
                             />
                         </div>
-                        <input
-                            type="number"
-                            step="0.0001"
-                            min="0"
-                            max="99"
-                            value={ row.rate || 0 }
-                            onChange={ ( e ) => update( i, { rate: e.target.value } ) }
-                            className={ `${ SETTING_CLASS_NAMES.number } !wpuf-w-24` }
-                            placeholder="%"
-                        />
+                        <div className="wpuf-relative wpuf-w-24 wpuf-shrink-0">
+                            <input
+                                type="number"
+                                step="0.0001"
+                                min="0"
+                                max="100"
+                                value={ row.rate || 0 }
+                                onChange={ ( e ) => update( i, { rate: e.target.value } ) }
+                                className="wpuf-no-spinner wpuf-w-full wpuf-rounded-md wpuf-border wpuf-border-gray-300 wpuf-py-2.5 wpuf-pl-3 wpuf-pr-7 wpuf-text-gray-700 wpuf-shadow-sm focus:wpuf-border-gray-300"
+                            />
+                            <span className="wpuf-pointer-events-none wpuf-absolute wpuf-inset-y-0 wpuf-right-3 wpuf-flex wpuf-items-center wpuf-text-sm wpuf-text-gray-400">%</span>
+                        </div>
                         <button
                             type="button"
                             onClick={ () => remove( i ) }

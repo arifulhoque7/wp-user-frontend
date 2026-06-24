@@ -42,7 +42,6 @@ if ( ! function_exists( 'wpuf_settings_react_ia' ) ) {
                 'title'    => __( 'Frontend Posting', 'wp-user-frontend' ),
                 'icon'     => 'document',
                 'sections' => [ 'wpuf_frontend_posting', 'wpuf_dashboard' ],
-                'notice'   => __( 'For better organization of user settings, we moved some items to User Center.', 'wp-user-frontend' ),
             ],
             [
                 'id'       => 'login_registration',
@@ -350,3 +349,84 @@ function wpuf_profile_roles_react_save( $saved, $incoming, $extra ) {
     update_option( 'wpuf_profile', $val );
 }
 add_action( 'wpuf_settings_saved', 'wpuf_profile_roles_react_save', 10, 3 );
+
+/**
+ * Whether the legacy (WeDevs_Settings_API) settings screen should render instead
+ * of the React app.
+ *
+ * Resolution order (first match wins):
+ *   1. `?wpuf_settings_ui=legacy|react` — per-request emergency override that
+ *      needs no DB write, so a broken React build can still be bypassed.
+ *   2. `WPUF_LEGACY_SETTINGS` constant.
+ *   3. `wpuf_settings_ui_mode` option ('react' default | 'legacy').
+ *
+ * Both screens read/write the SAME wpuf_* options, so switching never loses or
+ * forks data — they stay in sync by construction.
+ *
+ * @since WPUF_SINCE
+ *
+ * @return bool
+ */
+function wpuf_settings_use_legacy() {
+    if ( isset( $_GET['wpuf_settings_ui'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only view switch.
+        return 'legacy' === sanitize_key( wp_unslash( $_GET['wpuf_settings_ui'] ) );
+    }
+
+    if ( defined( 'WPUF_LEGACY_SETTINGS' ) && WPUF_LEGACY_SETTINGS ) {
+        return true;
+    }
+
+    $mode = get_option( 'wpuf_settings_ui_mode', 'react' );
+
+    /**
+     * Filter whether the legacy settings screen renders.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param bool $is_legacy
+     */
+    return (bool) apply_filters( 'wpuf_use_legacy_settings', 'legacy' === $mode );
+}
+
+/**
+ * Toggle the persisted settings UI mode (nonce + capability protected), then
+ * redirect back to the settings page.
+ *
+ * @since WPUF_SINCE
+ *
+ * @return void
+ */
+function wpuf_settings_ui_switch() {
+    if ( ! isset( $_GET['wpuf_action'] ) || 'switch_settings_ui' !== sanitize_key( wp_unslash( $_GET['wpuf_action'] ) ) ) {
+        return;
+    }
+
+    if ( ! current_user_can( wpuf_admin_role() ) ) {
+        return;
+    }
+
+    if ( ! isset( $_GET['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), 'wpuf_switch_settings_ui' ) ) {
+        return;
+    }
+
+    $mode = get_option( 'wpuf_settings_ui_mode', 'react' );
+    update_option( 'wpuf_settings_ui_mode', 'legacy' === $mode ? 'react' : 'legacy' );
+
+    wp_safe_redirect( admin_url( 'admin.php?page=wpuf-settings' ) );
+    exit;
+}
+add_action( 'admin_init', 'wpuf_settings_ui_switch' );
+
+/**
+ * Nonce-protected URL that toggles the settings UI mode.
+ *
+ * @since WPUF_SINCE
+ *
+ * @return string
+ */
+function wpuf_settings_ui_switch_url() {
+    return wp_nonce_url(
+        admin_url( 'admin.php?page=wpuf-settings&wpuf_action=switch_settings_ui' ),
+        'wpuf_switch_settings_ui'
+    );
+}

@@ -46,13 +46,12 @@ const UnsavedChanges = ( { onDiscard, onContinue } ) => {
                     </svg>
                 </button>
 
-                <span className="wpuf-flex wpuf-h-[88px] wpuf-w-[88px] wpuf-items-center wpuf-justify-center wpuf-rounded-full wpuf-bg-amber-100">
-                    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                        <line x1="12" y1="9" x2="12" y2="13" />
-                        <line x1="12" y1="17" x2="12.01" y2="17" />
-                    </svg>
-                </span>
+                <img
+                    src={ `${ ( window.wpuf_settings || {} ).asset_url || '' }/images/modal/unsaved-changes.svg` }
+                    alt=""
+                    aria-hidden="true"
+                    className="wpuf-h-[100px] wpuf-w-[100px]"
+                />
 
                 <h1 id="wpuf-unsaved-modal-title" className="wpuf-m-0 wpuf-mt-7 wpuf-text-2xl wpuf-font-extrabold wpuf-text-gray-700">
                     { __( 'Unsaved Changes', 'wp-user-frontend' ) }

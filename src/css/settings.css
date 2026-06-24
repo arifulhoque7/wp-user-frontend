@@ -16,6 +16,18 @@
     min-height: 100vh;
 }
 
+/* Hide the native number-input spinner arrows on the tax-rate field so the
+   trailing "%" suffix doesn't collide with them. */
+#wpuf-settings-root .wpuf-no-spinner::-webkit-inner-spin-button,
+#wpuf-settings-root .wpuf-no-spinner::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+#wpuf-settings-root .wpuf-no-spinner {
+    -moz-appearance: textfield;
+}
+
 /* Dynamic merge-tag hints under email bodies / long help: render the legacy
    `<code>{tag}</code>` markers as readable pills, kept on a single line
    ("You may use: …" + all tags) with horizontal scroll on overflow. */

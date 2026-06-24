@@ -365,6 +365,12 @@ class Menu {
      * @return void
      */
     public function enqueue_settings_page_scripts() {
+        // Legacy mode renders the WeDevs_Settings_API screen (which enqueues its
+        // own assets via admin_init) — skip the React bundle entirely.
+        if ( function_exists( 'wpuf_settings_use_legacy' ) && wpuf_settings_use_legacy() ) {
+            return;
+        }
+
         wp_enqueue_style( 'wpuf-admin' );
         wp_enqueue_style( 'wp-components' );
 
@@ -409,8 +415,10 @@ class Menu {
                 'is_pro'      => class_exists( 'WP_User_Frontend_Pro' ),
                 'asset_url'   => WPUF_ASSET_URI,
                 'version'     => WPUF_VERSION,
-                'upgrade_url' => 'https://wedevs.com/wp-user-frontend-pro/pricing/',
-                'support_url' => 'https://wedevs.com/docs/wp-user-frontend-pro/',
+                'upgrade_url'   => 'https://wedevs.com/wp-user-frontend-pro/pricing/',
+                'support_url'   => 'https://wedevs.com/docs/wp-user-frontend-pro/',
+                // Nonce-protected link to fall back to the classic settings UI.
+                'switch_ui_url' => function_exists( 'wpuf_settings_ui_switch_url' ) ? wpuf_settings_ui_switch_url() : '',
             ]
         );
     }
@@ -421,6 +429,12 @@ class Menu {
      * @return void
      */
     public function plugin_settings_page() {
+        // Fallback to the legacy WeDevs_Settings_API screen when requested — both
+        // screens use the same wpuf_* options, so the data stays in sync.
+        if ( function_exists( 'wpuf_settings_use_legacy' ) && wpuf_settings_use_legacy() ) {
+            wpuf()->admin->settings->plugin_page();
+            return;
+        }
         ?>
         <div id="wpuf-settings-root" class="!wpuf-ml-[-20px] wpuf-min-h-screen wpuf-w-[calc(100%+20px)]">
             <noscript>

@@ -21,7 +21,7 @@ const Header = ( { utm = 'wpuf-settings' } ) => {
                     <img src={ logoUrl } alt="WPUF Icon" className="wpuf-w-12 wpuf-mr-4" />
                 ) }
                 <h2 className="wpuf-text-2xl wpuf-leading-7 wpuf-font-bold wpuf-m-0">
-                    WP User Frontend
+                    { wpuf.is_pro ? 'WP User Frontend Pro' : 'WP User Frontend' }
                 </h2>
                 { wpuf.version && (
                     <span className="wpuf-ml-2 wpuf-inline-flex wpuf-items-center wpuf-rounded-full wpuf-bg-green-100 wpuf-px-2 wpuf-py-1 wpuf-text-xs wpuf-font-medium wpuf-text-green-700 wpuf-ring-1 wpuf-ring-inset wpuf-ring-green-600/20">
@@ -40,6 +40,15 @@ const Header = ( { utm = 'wpuf-settings' } ) => {
                 ) }
             </div>
             <div className="wpuf-flex wpuf-justify-end wpuf-items-center wpuf-w-2/4">
+                { wpuf.switch_ui_url && (
+                    <a
+                        href={ wpuf.switch_ui_url }
+                        title={ __( 'Switch back to the classic settings screen', 'wp-user-frontend' ) }
+                        className="wpuf-border wpuf-border-gray-100 wpuf-mr-[16px] wpuf-text-center wpuf-rounded-md wpuf-px-3 wpuf-py-2 wpuf-text-sm wpuf-font-medium wpuf-text-gray-600 wpuf-shadow-sm hover:wpuf-bg-slate-100"
+                    >
+                        { __( 'Classic view', 'wp-user-frontend' ) }
+                    </a>
+                ) }
                 <span
                     id="wpuf-headway-icon"
                     className="wpuf-border wpuf-border-gray-100 wpuf-mr-[16px] wpuf-rounded-full wpuf-p-1 wpuf-shadow-sm hover:wpuf-bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
