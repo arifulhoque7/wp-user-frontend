@@ -20,7 +20,7 @@ export default function SettingsNav( { ia, activeTab, onSelect, search, onSearch
                         borderRadius: '6px',
                         borderWidth: '1px',
                         paddingTop: '9px',
-                        paddingRight: search ? '36px' : '13px',
+                        paddingRight: '38px',
                         paddingBottom: '9px',
                         paddingLeft: '13px',
                         backgroundColor: '#FFFFFF',
@@ -31,7 +31,7 @@ export default function SettingsNav( { ia, activeTab, onSelect, search, onSearch
                         fontSize: '16px',
                     } }
                 />
-                { search && (
+                { search ? (
                     <button
                         type="button"
                         onClick={ () => onSearch( '' ) }
@@ -42,6 +42,12 @@ export default function SettingsNav( { ia, activeTab, onSelect, search, onSearch
                             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
+                ) : (
+                    <span className="wpuf-pointer-events-none wpuf-absolute wpuf-right-3 wpuf-top-1/2 wpuf--translate-y-1/2 wpuf-text-gray-400">
+                        <svg className="wpuf-h-5 wpuf-w-5" fill="none" viewBox="0 0 24 24" strokeWidth="1.8" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                        </svg>
+                    </span>
                 ) }
             </div>
             <nav className="wpuf-space-y-1">

@@ -12,7 +12,7 @@ import { __ } from '@wordpress/i18n';
 
 import Header from './components/settings/Header';
 import SettingsNav from './components/settings/SettingsNav';
-import SettingsSection from './components/settings/SettingsSection';
+import SettingsSection, { PROVIDER_SECTIONS } from './components/settings/SettingsSection';
 import UnsavedChanges from './components/settings/UnsavedChanges';
 import ErrorBoundary from './components/settings/ErrorBoundary';
 
@@ -190,6 +190,15 @@ const SettingsApp = () => {
         const secFields = fields[ sid ] || [];
         if ( secFields.some( ( f ) =>
             `${ f.label || '' } ${ f.desc || '' } ${ f.name || '' }`.toLowerCase().includes( searchTerm )
+        ) ) {
+            return true;
+        }
+        // Provider sections can match on the provider's display name/key (e.g.
+        // "facebook" / "vonage") even when no field label contains it — mirror
+        // SettingsSection/ProviderTabs so the empty state isn't shown falsely.
+        const providers = PROVIDER_SECTIONS[ sid ];
+        if ( providers && providers.some( ( p ) =>
+            ( p.label || '' ).toLowerCase().includes( searchTerm ) || ( p.key || '' ).toLowerCase().includes( searchTerm )
         ) ) {
             return true;
         }

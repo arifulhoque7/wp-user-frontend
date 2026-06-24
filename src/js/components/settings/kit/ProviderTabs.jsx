@@ -87,7 +87,12 @@ export default function ProviderTabs( { providers: allProviders, fields, renderF
         } );
     };
 
-    const standalone = fields.filter( ( f ) => ! matchProvider( f ) );
+    // Non-provider fields (e.g. the global "Enable Social Login" toggle). While
+    // searching a provider, hide standalone fields that don't match the term so
+    // they don't appear as noise above the matched provider's card.
+    const standalone = fields
+        .filter( ( f ) => ! matchProvider( f ) )
+        .filter( ( f ) => ! term || `${ f.label || '' } ${ f.desc || '' } ${ f.name || '' }`.toLowerCase().includes( term ) );
     const activeFields = fields.filter( ( f ) => {
         const p = matchProvider( f );
         return p && p.key === activeKey;
