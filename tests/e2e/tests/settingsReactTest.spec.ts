@@ -180,10 +180,9 @@ test.describe('React Settings Screen Tests', () => {
         await settings.search('facebook');
         await settings.expectPanelTitle('Search results');
         // Facebook lives in the Social Login Pro module — gate so a Lite/no-license
-        // run skips instead of failing (per tests/e2e/CLAUDE.md).
-        const hasFacebook = await page.getByText('Facebook', { exact: false }).first()
-            .waitFor({ state: 'visible', timeout: 4000 }).then(() => true).catch(() => false);
-        test.skip(! hasFacebook, 'Social Login (Pro module) inactive — provider fields unavailable');
+        // run skips instead of failing (per tests/e2e/CLAUDE.md). gateOnPro is
+        // function-hoisted, so it's usable here ahead of its declaration.
+        await gateOnPro( page.getByText('Facebook', { exact: false }), 'Social Login (Pro module) inactive — provider fields unavailable' );
         await expect(page.getByText('Facebook', { exact: false }).first()).toBeVisible();
     });
 
@@ -303,13 +302,19 @@ test.describe('React Settings Screen — Pro Tests', () => {
         await settings.openTab('Payments');
         await gateOnPro( page.locator('#wpuf-settings-root').getByText('Tax', { exact: true }), 'Tax (Pro) inactive' );
         await settings.openSubTab('Tax');
-        // Toggle the Enable Tax checkbox, save, reload, confirm the section persists.
+        // Capture the prior state so the run is idempotent, then toggle + save.
+        const original = await page.getByRole('checkbox', { name: 'Enable Tax' }).isChecked();
         await page.getByRole('checkbox', { name: 'Enable Tax' }).click();
         await settings.save();
         await settings.goto();
         await settings.openTab('Payments');
         await settings.openSubTab('Tax');
         await expect(page.getByText('Base Country', { exact: false }).first()).toBeVisible();
+        // The toggled value must actually persist across reload (round-trip).
+        await expect(page.getByRole('checkbox', { name: 'Enable Tax' })).toBeChecked({ checked: ! original });
+        // Restore the original setting so repeated runs don't depend on mutated state.
+        await page.getByRole('checkbox', { name: 'Enable Tax' }).click();
+        await settings.save();
     });
 
     test('@Test_SR0031 : Login Form Colors render the color pickers', async () => {
