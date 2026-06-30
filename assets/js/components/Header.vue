@@ -40,7 +40,7 @@ const headerPlan = computed(() => {
         <div class="wpuf-flex wpuf-justify-start wpuf-items-center">
             <img :src="logoUrl" alt="WPUF Icon" class="wpuf-w-12 wpuf-mr-4" />
             <h2 class="wpuf-text-2xl wpuf-leading-7 wpuf-font-bold">{{ headerTitle }}</h2>
-            <span v-if="headerPlan" class="wpuf-ml-2 wpuf-inline-flex wpuf-items-center wpuf-rounded-full wpuf-bg-indigo-100 wpuf-px-2 wpuf-py-1 wpuf-text-xs wpuf-font-semibold wpuf-text-indigo-700 wpuf-ring-1 wpuf-ring-inset wpuf-ring-indigo-600/20">{{ headerPlan }}</span>
+            <span v-if="headerPlan" class="wpuf-ml-2 wpuf-inline-flex wpuf-items-center wpuf-rounded-full wpuf-bg-green-100 wpuf-px-2 wpuf-py-1 wpuf-text-xs wpuf-font-semibold wpuf-text-green-700 wpuf-ring-1 wpuf-ring-inset wpuf-ring-green-600/20">{{ headerPlan }}</span>
             <span class="wpuf-ml-2 wpuf-inline-flex wpuf-items-center wpuf-rounded-full wpuf-bg-green-100 wpuf-px-2 wpuf-py-1 wpuf-text-xs wpuf-font-medium wpuf-text-green-700 wpuf-ring-1 wpuf-ring-inset wpuf-ring-green-600/20">v{{ headerVersion }}</span>
             <a
                 v-if="!wpuf.isProActive"

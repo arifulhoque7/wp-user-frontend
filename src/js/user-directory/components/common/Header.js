@@ -39,7 +39,7 @@ const Header = ({ utm = 'wpuf-user-directory' }) => {
                 <img src={logoUrl} alt="WPUF Icon" className="wpuf-w-12 wpuf-mr-4" />
                 <h2 className="wpuf-text-2xl wpuf-leading-7 wpuf-font-bold wpuf-m-0">{__('WP User Frontend', 'wp-user-frontend')}</h2>
                 {plan && (
-                    <span className="wpuf-ml-2 wpuf-inline-flex wpuf-items-center wpuf-rounded-full wpuf-bg-indigo-100 wpuf-px-2 wpuf-py-1 wpuf-text-xs wpuf-font-semibold wpuf-text-indigo-700 wpuf-ring-1 wpuf-ring-inset wpuf-ring-indigo-600/20">
+                    <span className="wpuf-ml-2 wpuf-inline-flex wpuf-items-center wpuf-rounded-full wpuf-bg-green-100 wpuf-px-2 wpuf-py-1 wpuf-text-xs wpuf-font-semibold wpuf-text-green-700 wpuf-ring-1 wpuf-ring-inset wpuf-ring-green-600/20">
                         {plan}
                     </span>
                 )}
