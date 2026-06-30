@@ -1827,6 +1827,10 @@ input:where([type='file']):focus {
   --tw-bg-opacity: 1;
   background-color: rgb(21 128 61 / var(--tw-bg-opacity, 1));
 }
+.wpuf-bg-indigo-100 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(224 231 255 / var(--tw-bg-opacity, 1));
+}
 .wpuf-bg-indigo-50 {
   --tw-bg-opacity: 1;
   background-color: rgb(238 242 255 / var(--tw-bg-opacity, 1));
@@ -2366,6 +2370,10 @@ input:where([type='file']):focus {
   --tw-text-opacity: 1;
   color: rgb(79 70 229 / var(--tw-text-opacity, 1));
 }
+.wpuf-text-indigo-700 {
+  --tw-text-opacity: 1;
+  color: rgb(67 56 202 / var(--tw-text-opacity, 1));
+}
 .wpuf-text-primary {
   --tw-text-opacity: 1;
   color: rgb(5 150 105 / var(--tw-text-opacity, 1));
@@ -2485,6 +2493,9 @@ input:where([type='file']):focus {
 }
 .wpuf-ring-green-600\/20 {
   --tw-ring-color: rgb(22 163 74 / 0.2);
+}
+.wpuf-ring-indigo-600\/20 {
+  --tw-ring-color: rgb(79 70 229 / 0.2);
 }
 .wpuf-ring-primary {
   --tw-ring-opacity: 1;
