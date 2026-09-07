@@ -38,6 +38,16 @@ class Frontend_Form_Ajax {
         @header( 'Content-Type: application/json; charset=' . get_option( 'blog_charset' ) );
 
         $form_id               = isset( $_POST['form_id'] ) ? intval( wp_unslash( $_POST['form_id'] ) ) : 0;
+
+        // The nonce is action-wide, not bound to a form, so form_id is fully
+        // attacker-controlled. Pointing it at an ordinary post/page id yields a
+        // form with empty settings, which then defaults to publishing a `post`
+        // authored by the requester regardless of their capabilities. Only accept
+        // a real WPUF form id.
+        if ( ! $form_id || 'wpuf_forms' !== get_post_type( $form_id ) ) {
+            wpuf()->ajax->send_error( __( 'Invalid form.', 'wp-user-frontend' ) );
+        }
+
         $form                  = new Form( $form_id );
         $this->form_settings   = $form->get_settings();
         // Load notification settings and merge them with existing notification data
@@ -445,7 +455,12 @@ class Frontend_Form_Ajax {
                         $url           = str_replace( [ '"', "'", '\\' ], '', $url );
                         $attachment_id = wpuf_get_attachment_id_from_url( $url );
 
-                        if ( $attachment_id ) {
+                        // Only reparent an attachment the requester may actually
+                        // associate: one that already belongs to this post, or is
+                        // unattached AND owned by the requester. Without this a
+                        // crafted post_content <img> could reparent any Media
+                        // Library item (the first half of the file-deletion IDOR).
+                        if ( $attachment_id && self::is_attachment_associable( $attachment_id, $post_id ) ) {
                             wpuf_associate_attachment( $attachment_id, $post_id );
                         }
                     }
@@ -734,9 +749,22 @@ class Frontend_Form_Ajax {
     }
 
     public function wpuf_get_post_user() {
-        $nonce = isset( $_REQUEST['_wpnonce'] ) ? sanitize_key( wp_unslash( $_REQUEST['_wpnonce'] ) ) : '';
+        // submit_post() gates the request with check_ajax_referer( 'wpuf_form_add' ),
+        // which accepts the nonce in either _ajax_nonce or _wpnonce. Reading only
+        // _wpnonce here let an attacker move a valid nonce into _ajax_nonce: this
+        // check then failed on an empty value and returned null, and the caller
+        // persisted post_author = 0 for a logged-out request, minting the
+        // author-less post the email-verification publisher looks for. Verify the
+        // same nonce the referer check honoured.
+        $nonce = '';
 
-        if ( isset( $nonce ) && ! wp_verify_nonce( $nonce, 'wpuf_form_add' ) ) {
+        if ( isset( $_REQUEST['_wpnonce'] ) ) {
+            $nonce = sanitize_key( wp_unslash( $_REQUEST['_wpnonce'] ) );
+        } elseif ( isset( $_REQUEST['_ajax_nonce'] ) ) {
+            $nonce = sanitize_key( wp_unslash( $_REQUEST['_ajax_nonce'] ) );
+        }
+
+        if ( ! wp_verify_nonce( $nonce, 'wpuf_form_add' ) ) {
             return;
         }
 

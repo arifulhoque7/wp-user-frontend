@@ -432,9 +432,26 @@ class Frontend_Form extends Frontend_Render_Form {
             wp_die( esc_html__( 'This post has already been published.', 'wp-user-frontend' ) );
         }
 
-        $form_settings  = wpuf_get_form_settings( $form_id );
+        // p_id and f_id are encrypted independently with the same primitive and
+        // are never bound to each other. Replaying the post-id token as f_id makes
+        // the charging decision run against a non-form object, whose empty settings
+        // read as uncharged and publish the post for free. Trust only the form id
+        // the post itself was submitted through, and refuse a f_id that does not
+        // match it, so the paywall is always evaluated against the real form.
+        $real_form_id = absint( get_post_meta( $post_id, self::$config_id, true ) );
+        $form_id      = absint( $form_id );
+
+        if ( ! $real_form_id || get_post_type( $real_form_id ) !== 'wpuf_forms' ) {
+            wp_die( esc_html__( 'Invalid post.', 'wp-user-frontend' ) );
+        }
+
+        if ( $form_id !== $real_form_id ) {
+            wp_die( esc_html__( 'This post cannot be published via email verification.', 'wp-user-frontend' ) );
+        }
+
+        $form_settings  = wpuf_get_form_settings( $real_form_id );
         $payment_status = new Subscription();
-        $form           = new Form( $form_id );
+        $form           = new Form( $real_form_id );
         $pay_per_post   = $form->is_enabled_pay_per_post();
         $force_pack     = $form->is_enabled_force_pack();
 

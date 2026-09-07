@@ -225,6 +225,18 @@ class Paypal {
                     }
                     break;
 
+                // A subscription that PayPal expires or suspends is no longer
+                // paying. Previously only an explicit CANCELLED event revoked the
+                // local pack, so these states left the entitlement active. Revoke
+                // it here too; a later ACTIVATED / PAYMENT.SALE.COMPLETED re-grants
+                // it if the buyer reactivates.
+                case 'BILLING.SUBSCRIPTION.EXPIRED':
+                case 'BILLING.SUBSCRIPTION.SUSPENDED':
+                    if ( isset( $event['resource'] ) ) {
+                        $this->handle_subscription_revoked( $event['resource'], $event['event_type'] );
+                    }
+                    break;
+
                 case 'BILLING.SUBSCRIPTION.CREATED':
                     if ( isset( $event['resource'] ) ) {
                         $this->handle_subscription_created( $event['resource'] );
@@ -672,6 +684,19 @@ class Paypal {
                 throw new \Exception( 'Invalid custom data in subscription' );
             }
 
+            // BILLING.SUBSCRIPTION.CREATED only means the merchant created the
+            // subscription. Until the buyer approves it, PayPal keeps it in
+            // APPROVAL_PENDING with no payment, so an attacker can start checkout,
+            // abandon the approval page and still receive this signed event.
+            // Granting the pack here handed out the entitlement for free. Only act
+            // once PayPal reports the subscription genuinely ACTIVE; every other
+            // state waits for ACTIVATED / PAYMENT.SALE.COMPLETED to grant it.
+            $paypal_status = isset( $subscription['status'] ) ? strtoupper( $subscription['status'] ) : '';
+
+            if ( 'ACTIVE' !== $paypal_status ) {
+                return;
+            }
+
             $user_id = $custom_data['user_id'];
             $subscription_id = $subscription['id']; // This is the PayPal subscription ID
             $trial_period_days = isset( $custom_data['trial_period_days'] ) ? $custom_data['trial_period_days'] : 0;
@@ -700,10 +725,21 @@ class Paypal {
             $period = isset( $pack_meta['_cycle_period'] ) ? $pack_meta['_cycle_period'] : 'month';
             $interval = isset( $pack_meta['_billing_cycle_number'] ) ? intval( $pack_meta['_billing_cycle_number'] ) : 1;
 
+            // WPUF stores per-post-type quotas under _post_type_name (+ any
+            // additional_cpt_options), not _post_types. Reading the wrong key left
+            // this empty and fell through to the unlimited (-1) default below, so a
+            // limited pack silently became unlimited. Read the real keys, matching
+            // User_Subscription::add_pack().
+            $pack_post_types = isset( $pack_meta['_post_type_name'] ) && is_array( $pack_meta['_post_type_name'] )
+                ? $pack_meta['_post_type_name'] : [];
+            $pack_additional_cpt = isset( $pack_meta['additional_cpt_options'] ) && is_array( $pack_meta['additional_cpt_options'] )
+                ? $pack_meta['additional_cpt_options'] : [];
+            $pack_quota = array_merge( $pack_post_types, $pack_additional_cpt );
+
             // Create subscription data structure with all necessary meta
             $subscription_data = [
                 'pack_id' => $custom_data['item_number'],
-                'posts' => isset( $pack_meta['_post_types'] ) ? $pack_meta['_post_types'] : [],
+                'posts' => $pack_quota,
                 'total_feature_item' => isset( $pack_meta['_total_feature_item'] ) ? $pack_meta['_total_feature_item'] : '-1',
                 'remove_feature_item' => isset( $pack_meta['_remove_feature_item'] ) ? $pack_meta['_remove_feature_item'] : '-1',
                 'status' => 'completed',
@@ -1807,6 +1843,59 @@ class Paypal {
     }
 
     /**
+     * Whether a cached PayPal plan still matches the pack's current terms
+     *
+     * Compares the plan's REGULAR billing cycle price, currency and
+     * period/interval against the pack settings the current checkout is using.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param array      $plan     Plan representation returned by PayPal.
+     * @param int|float  $amount   Current pack amount.
+     * @param string     $period   Current billing period (day|week|month|year).
+     * @param int        $interval Current billing interval count.
+     *
+     * @return bool
+     */
+    private function plan_matches_pack( $plan, $amount, $period, $interval ) {
+        if ( empty( $plan['billing_cycles'] ) || ! is_array( $plan['billing_cycles'] ) ) {
+            return false;
+        }
+
+        $regular = null;
+
+        foreach ( $plan['billing_cycles'] as $cycle ) {
+            if ( isset( $cycle['tenure_type'] ) && 'REGULAR' === $cycle['tenure_type'] ) {
+                $regular = $cycle;
+                break;
+            }
+        }
+
+        if ( null === $regular ) {
+            return false;
+        }
+
+        $expected_currency = wpuf_get_option( 'currency', 'wpuf_payment', 'USD' );
+        $expected_value    = number_format( (float) $amount, 2, '.', '' );
+        $expected_unit     = strtoupper( (string) $period );
+        $expected_count    = max( 1, intval( $interval ) );
+
+        $plan_value    = isset( $regular['pricing_scheme']['fixed_price']['value'] )
+            ? number_format( (float) $regular['pricing_scheme']['fixed_price']['value'], 2, '.', '' ) : '';
+        $plan_currency = isset( $regular['pricing_scheme']['fixed_price']['currency_code'] )
+            ? $regular['pricing_scheme']['fixed_price']['currency_code'] : '';
+        $plan_unit     = isset( $regular['frequency']['interval_unit'] )
+            ? strtoupper( $regular['frequency']['interval_unit'] ) : '';
+        $plan_count    = isset( $regular['frequency']['interval_count'] )
+            ? intval( $regular['frequency']['interval_count'] ) : 0;
+
+        return $plan_value === $expected_value
+            && $plan_currency === $expected_currency
+            && $plan_unit === $expected_unit
+            && $plan_count === $expected_count;
+    }
+
+    /**
      * Get or create a PayPal subscription plan
      */
     private function get_or_create_plan( $pack, $amount, $period, $interval, $trial_period_days = 0 ) {
@@ -1837,7 +1926,16 @@ class Paypal {
 
                 if ( ! is_wp_error( $response ) ) {
                     $body = json_decode( wp_remote_retrieve_body( $response ), true );
-                    if ( isset( $body['status'] ) && 'ACTIVE' === $body['status'] ) {
+
+                    // Reuse the cached plan only when it still matches the pack's
+                    // current price, currency and billing period/interval. The id
+                    // is cached pack-wide and never invalidated on a pack edit,
+                    // currency change or a first buyer's coupon, so a later buyer
+                    // could otherwise be billed an old/discounted amount on a stale
+                    // ACTIVE plan. On any mismatch fall through and mint a fresh
+                    // plan bound to the current settings.
+                    if ( isset( $body['status'] ) && 'ACTIVE' === $body['status']
+                        && $this->plan_matches_pack( $body, $amount, $period, $interval ) ) {
                         return $plan_id;
                     }
                 }
@@ -2268,6 +2366,78 @@ class Paypal {
 
             // Trigger action for other plugins
             do_action( 'wpuf_paypal_subscription_cancelled', $user_id, $subscription_id );
+        } catch ( \Exception $e ) {
+            throw $e;
+        }
+    }
+
+    /**
+     * Revoke a subscription that PayPal expired or suspended
+     *
+     * Mirrors the CANCELLED path: the local pack is reduced to a terminal record
+     * with no pack_id, so the subscription-based posting gate treats the user as
+     * having no active pack. A later reactivation re-grants it through the
+     * ACTIVATED / PAYMENT.SALE.COMPLETED handlers.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param array  $subscription PayPal subscription resource.
+     * @param string $event_type   Originating webhook event type.
+     *
+     * @return void
+     */
+    private function handle_subscription_revoked( $subscription, $event_type ) {
+        try {
+            $custom_data = [];
+
+            if ( isset( $subscription['custom_id'] ) ) {
+                $custom_data = json_decode( $subscription['custom_id'], true );
+            }
+
+            if ( ! $custom_data || ! isset( $custom_data['user_id'] ) ) {
+                throw new \Exception( 'Invalid custom data in subscription' );
+            }
+
+            $user_id         = $custom_data['user_id'];
+            $subscription_id = isset( $subscription['id'] ) ? $subscription['id'] : '';
+            $status          = 'BILLING.SUBSCRIPTION.EXPIRED' === $event_type ? 'expired' : 'suspended';
+
+            update_user_meta(
+                $user_id,
+                '_wpuf_subscription_pack',
+                [
+                    'profile_id' => $subscription_id,
+                    'status'     => $status,
+                    'updated'    => gmdate( 'Y-m-d H:i:s' ),
+                ]
+            );
+
+            global $wpdb;
+            $wpdb->update(
+                $wpdb->prefix . 'wpuf_subscribers',
+                [
+                    'subscribtion_status' => $status,
+                    'expire'              => gmdate( 'd-m-Y' ),
+                ],
+                [
+                    'user_id'        => $user_id,
+                    'transaction_id' => $subscription_id,
+                    'gateway'        => 'PayPal',
+                ],
+                [ '%s', '%s' ],
+                [ '%d', '%s', '%s' ]
+            );
+
+            /**
+             * Fires after a PayPal subscription is revoked on expiry or suspension.
+             *
+             * @since WPUF_SINCE
+             *
+             * @param int    $user_id
+             * @param string $subscription_id
+             * @param string $event_type
+             */
+            do_action( 'wpuf_paypal_subscription_revoked', $user_id, $subscription_id, $event_type );
         } catch ( \Exception $e ) {
             throw $e;
         }
