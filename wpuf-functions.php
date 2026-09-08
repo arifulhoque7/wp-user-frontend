@@ -87,12 +87,14 @@ function wpuf_admin_post_status( $status ) {
  * @param <type> $post_id
  */
 function wpuf_upload_attachment( $post_id ) {
+    // phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce is verified by the submit/draft handler that calls this.
     if ( ! isset( $_FILES['wpuf_post_attachments'] ) ) {
         return false;
     }
 
     $fields = (int) wpuf_get_option( 'attachment_num' );
 
+    // phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce is verified by the submit/draft handler that calls this.
     $wpuf_post_attachments = isset( $_FILES['wpuf_post_attachments'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_FILES['wpuf_post_attachments'] ) ) : [];
 
     for ( $i = 0; $i < $fields; $i++ ) {
@@ -277,6 +279,7 @@ add_filter( 'get_edit_post_link', 'wpuf_override_admin_edit_link', 10, 2 );
  *
  * @uses Walker
  */
+// phpcs:ignore Universal.Files.SeparateFunctionsFromOO.Mixed -- legacy file: these walkers have always lived alongside the helper functions; moving them would change the include contract.
 class WPUF_Walker_Category_Multi extends Walker {
 
     /**
@@ -330,6 +333,7 @@ class WPUF_Walker_Category_Multi extends Walker {
  *
  * @since 0.8
  */
+// phpcs:ignore Generic.Files.OneObjectStructurePerFile.MultipleFound -- legacy file: see the note on WPUF_Walker_Category_Multi above.
 class WPUF_Walker_Category_Checklist extends Walker {
     public $tree_type = 'category';
 
@@ -483,8 +487,8 @@ function wpuf_get_field_settings_excludes( $field_settings, $exclude_type ) {
     if ( ! empty( $attributes ) ) {
         foreach ( $attributes as $attr ) {
             $terms = get_terms(
-                $field_settings['name'],
                 [
+                    'taxonomy'   => $field_settings['name'],
                     'hide_empty' => false,
                     'parent'     => $attr,
                 ]
@@ -845,7 +849,7 @@ function wpuf_get_user_avatar_data( $user, $size = 96 ) {
     if ( $first_name && $last_name ) {
         $initials = strtoupper( substr( $first_name, 0, 1 ) . substr( $last_name, 0, 1 ) );
     } else {
-        $name       = $user->display_name ?: $user->user_login;
+        $name       = $user->display_name ? $user->display_name : $user->user_login;
         $name_parts = explode( ' ', $name );
 
         if ( count( $name_parts ) >= 2 ) {
@@ -1098,13 +1102,11 @@ function wpuf_show_custom_fields( $content ) {
                     if ( isset( $attr['wpuf_cond']['cond_option'][ $field_key ] ) ) {
                         if ( is_array( $cond_field_value ) ) {
                             continue;
-                        } else {
-                            if ( (string) $attr['wpuf_cond']['cond_option'][ $field_key ] !== (string) $cond_field_value ) {
+                        } elseif ( (string) $attr['wpuf_cond']['cond_option'][ $field_key ] !== (string) $cond_field_value ) {
                                 $return_for_no_cond = 1;
-                            } else {
-                                $return_for_no_cond = 0;
-                                break;
-                            }
+                        } else {
+                            $return_for_no_cond = 0;
+                            break;
                         }
                     }
                 }

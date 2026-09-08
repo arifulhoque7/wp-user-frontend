@@ -264,7 +264,7 @@ class Admin_Tools {
         $date           = date( 'Y-m-d' ); // phpcs:ignore
         $json_name      = $blogname . '-wpuf-' . $post_type . '-' . $date; // Namming the filename will be generated.
 
-        if ( !empty( $post_ids ) ) {
+        if ( ! empty( $post_ids ) ) {
             foreach ( $post_ids as $key => $value ) {
                 array_push( $ids, $value );
             }
@@ -273,7 +273,7 @@ class Admin_Tools {
         $args = [
             'post_status' => 'publish',
             'post_type'   => $post_type,
-            'post__in'    => ( !empty( $ids ) ) ? $ids : '',
+            'post__in'    => ( ! empty( $ids ) ) ? $ids : '',
         ];
 
         $query = new WP_Query( $args );
@@ -314,10 +314,10 @@ class Admin_Tools {
      * @return array
      */
     public function formetted_meta_key_value( $array ) {
-        $result = [ ];
+        $result = [];
 
         foreach ( $array as $key => $val ) {
-            $result[$key] = $val[0];
+            $result[ $key ] = $val[0];
         }
 
         return $result;
@@ -362,7 +362,8 @@ class Admin_Tools {
                 </p>
             </div>
 
-        <?php }
+            <?php
+        }
 
         if ( $error_text ) {
             ?>
