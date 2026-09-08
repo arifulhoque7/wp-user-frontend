@@ -177,6 +177,39 @@ class Frontend_Form_Ajax {
             wpuf()->ajax->send_error( __( 'You must be logged in to submit posts.', 'wp-user-frontend' ) );
         }
 
+        // Enforce the form's submission gate (mandatory subscription, pack ownership,
+        // post-count limit) for new posts. The renderer checks this before showing the
+        // form, but the AJAX handler must re-check server-side — otherwise a scraped
+        // site-wide guest nonce can be replayed against a subscription-gated form to
+        // create a post with no order and no pending-payment status.
+        //
+        // Whether this is a new submission is decided from server state, never from a
+        // client-supplied field. Keying it on the request shape let a caller carry a
+        // post_id and omit wpuf_form_status to have the request treated as an edit, which
+        // skipped the gate entirely while the update branch still published the post.
+        //
+        // A draft that has not been submitted yet still counts as new: draft_post() flags
+        // it with _wpuf_draft_pending and that flag is cleared once the submission goes
+        // through, so finishing a draft is gated exactly once. Posts without the flag are
+        // genuine edits (including everything created before this flag existed) and are
+        // not re-gated, matching [wpuf_edit], which the renderer never gates.
+        $posted_post_id    = isset( $_POST['post_id'] ) ? absint( wp_unslash( $_POST['post_id'] ) ) : 0;
+        $is_new_submission = ! $posted_post_id || (bool) get_post_meta( $posted_post_id, '_wpuf_draft_pending', true );
+
+        if ( $is_new_submission ) {
+            [ $user_can_post, $submission_info ] = $form->is_submission_open( $form, $this->form_settings );
+            $user_can_post                       = apply_filters( 'wpuf_can_post', $user_can_post, $form_id, $this->form_settings );
+            $submission_info                     = apply_filters( 'wpuf_addpost_notice', $submission_info, $form_id, $this->form_settings );
+
+            if ( ! wpuf_is_option_on( $user_can_post ) ) {
+                wpuf()->ajax->send_error(
+                    ! empty( $submission_info )
+                        ? $submission_info
+                        : __( 'You are not allowed to submit to this form.', 'wp-user-frontend' )
+                );
+            }
+        }
+
         [ $post_vars, $taxonomy_vars, $meta_vars ] = $this->get_input_fields( $this->form_fields );
 
         if ( ! isset( $_POST['post_id'] ) ) {
@@ -381,6 +414,13 @@ class Frontend_Form_Ajax {
             $this->update_post_meta( $meta_vars, $post_id );
             // set the post form_id for later usage
             update_post_meta( $post_id, self::$config_id, $form_id );
+
+            // The submission went through, so the post is no longer an unsubmitted draft.
+            // Clearing the flag means later edits are treated as edits and are not gated
+            // again, which keeps someone whose pack has since expired able to edit their
+            // own content.
+            delete_post_meta( $post_id, '_wpuf_draft_pending' );
+
             // if user has a subscription pack
             $this->wpuf_user_subscription_pack( $this->form_settings, $post_id );
             // set the post form_id for later usage
@@ -884,7 +924,8 @@ class Frontend_Form_Ajax {
 
         if ( $replace ) {
             foreach ( $replace as $index => $meta_key ) {
-                $value = get_post_meta( $post_id, $meta_key, false );
+                $value      = get_post_meta( $post_id, $meta_key, false );
+                $input_type = $this->get_field_input_type( $meta_key );
 
                 if ( isset( $value[0] ) && is_array( $value[0] ) ) {
                     $new_value = implode( '; ', $value[0] );
@@ -899,26 +940,16 @@ class Frontend_Form_Ajax {
                     $is_first = true;
 
                     foreach ( $value as $val ) {
+                        $resolved = $this->maybe_attachment_url( $val, $input_type );
+
                         if ( $is_first ) {
-                            if ( get_post_mime_type( (int) $val ) ) {
-                                $meta_val = wp_get_attachment_url( $val );
-                            } else {
-                                $meta_val = $val;
-                            }
+                            $meta_val = $resolved;
                             $is_first = false;
                         } else {
-                            if ( get_post_mime_type( (int) $val ) ) {
-                                $meta_val = $meta_val . ', ' . wp_get_attachment_url( $val );
-                            } else {
-                                $meta_val = $meta_val . ', ' . $val;
-                            }
+                            $meta_val = $meta_val . ', ' . $resolved;
                         }
 
-                        if ( get_post_mime_type( (int) $val ) ) {
-                            $meta_val = $meta_val . ',' . wp_get_attachment_url( $val );
-                        } else {
-                            $meta_val = $meta_val . ',' . $val;
-                        }
+                        $meta_val = $meta_val . ',' . $resolved;
                     }
                     $original_value = $original_value . $meta_val;
                 } else {
@@ -927,11 +958,7 @@ class Frontend_Form_Ajax {
                         $new_value = implode( ', ', $value );
                     }
 
-                    if ( get_post_mime_type( (int) $new_value ) ) {
-                        $original_value = wp_get_attachment_url( $new_value );
-                    } else {
-                        $original_value = $new_value;
-                    }
+                    $original_value = $this->maybe_attachment_url( $new_value, $input_type );
                 }
 
                 $content = str_replace( $search[ $index ], $original_value, $content );
@@ -939,6 +966,64 @@ class Frontend_Form_Ajax {
         }
 
         return $content;
+    }
+
+    /**
+     * Get a form field's input type from its meta key
+     *
+     * The meta key of a custom field is the field `name` set in the form builder.
+     *
+     * @since 4.3.9
+     *
+     * @param string $meta_key Custom field meta key.
+     *
+     * @return string Input type, or an empty string when the field is unknown.
+     */
+    private function get_field_input_type( $meta_key ) {
+        if ( empty( $this->form_fields ) || ! is_array( $this->form_fields ) ) {
+            return '';
+        }
+
+        foreach ( $this->form_fields as $field ) {
+            if (
+                isset( $field['name'], $field['input_type'] )
+                && $field['name'] === $meta_key
+            ) {
+                return $field['input_type'];
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * Resolve a meta value to an attachment URL when the field is an upload field
+     *
+     * Numeric values of non-upload fields are left untouched — previously any
+     * value that happened to match an attachment ID was replaced by its URL.
+     *
+     * @since 4.3.9
+     *
+     * @param mixed  $value      Stored meta value.
+     * @param string $input_type Field input type, empty when unknown.
+     *
+     * @return mixed Attachment URL for upload fields, otherwise the value itself.
+     */
+    private function maybe_attachment_url( $value, $input_type ) {
+        $is_upload = in_array( $input_type, [ 'image_upload', 'file_upload' ], true );
+
+        // Field type unknown, fall back to the legacy attachment lookup.
+        if ( ! $is_upload && '' === $input_type && get_post_mime_type( (int) $value ) ) {
+            $is_upload = true;
+        }
+
+        if ( ! $is_upload ) {
+            return $value;
+        }
+
+        $url = wp_get_attachment_url( $value );
+
+        return $url ? $url : $value;
     }
 
 }

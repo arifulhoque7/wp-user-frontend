@@ -4,6 +4,7 @@ import { expect, type Page, type Dialog } from '@playwright/test';
 import { Selectors } from './selectors';
 import { Urls } from '../utils/testData';
 import { Base } from './base';
+import { waitForSiteReady } from '../utils/siteReady';
 export class SettingsSetupPage extends Base {
 
     constructor(page: Page) {
@@ -131,18 +132,27 @@ export class SettingsSetupPage extends Base {
     }
 
     async validateWPUFpages() {
-        await this.navigateToURL(this.pagesPage);
+        // Validate each WPUF page independently of pagination. The pages list is sorted
+        // alphabetically and other plugins (WooCommerce, MailPoet, Dokan, EDD) add their own
+        // pages, so which pagination page a WPUF row lands on is not stable — relying on a
+        // fixed "page 1 then Next" split makes this flaky (a shifted row times out). Instead
+        // search the list for each page (WP admin `s=` param) so its row is always on screen.
+        const wpufPages: Array<[string, string]> = [
+            [ 'Account', Selectors.settingsSetup.wpufPages.wpufAccountPage ],
+            [ 'Dashboard', Selectors.settingsSetup.wpufPages.wpufDashboardPage ],
+            [ 'Edit', Selectors.settingsSetup.wpufPages.wpufEditPage ],
+            [ 'Login', Selectors.settingsSetup.wpufPages.wpufLoginPage ],
+            [ 'Order Received', Selectors.settingsSetup.wpufPages.orderReceivedPage ],
+            [ 'Payment', Selectors.settingsSetup.wpufPages.paymentPage ],
+            [ 'Subscription', Selectors.settingsSetup.wpufPages.wpufSubscriptionPage ],
+            [ 'Thank You', Selectors.settingsSetup.wpufPages.thankYouPage ],
+        ];
 
-        //Validate WPUF Pages
-        await this.assertionValidate(Selectors.settingsSetup.wpufPages.wpufAccountPage);
-        await this.assertionValidate(Selectors.settingsSetup.wpufPages.wpufDashboardPage);
-        await this.assertionValidate(Selectors.settingsSetup.wpufPages.wpufEditPage);
-        await this.assertionValidate(Selectors.settingsSetup.wpufPages.wpufLoginPage);
-        await this.assertionValidate(Selectors.settingsSetup.wpufPages.orderReceivedPage);
-        await this.assertionValidate(Selectors.settingsSetup.wpufPages.paymentPage);
-        await this.validateAndClick(Selectors.settingsSetup.wpufPages.clickNextPage);
-        await this.assertionValidate(Selectors.settingsSetup.wpufPages.wpufSubscriptionPage);
-        await this.assertionValidate(Selectors.settingsSetup.wpufPages.thankYouPage);
+        for (const [ pageName, selector ] of wpufPages) {
+            await this.navigateToURL(`${this.pagesPage}&s=${encodeURIComponent(pageName)}`);
+            await this.page.waitForLoadState('domcontentloaded');
+            await this.assertionValidate(selector);
+        }
         console.log('WPUF Pages are validated. all pages created successfully');
     }
 
@@ -193,30 +203,14 @@ export class SettingsSetupPage extends Base {
             }
         };
         this.page.on('dialog', dialogHandler);
-        try {
-            await this.validateAndClick(Selectors.settingsSetup.pluginStatusCheck.clickRunUpdater);
-        } catch (error) {
-            console.log('Failed to click Run Updater:', error);
-        }
+        await this.clickIfAvailable(Selectors.settingsSetup.pluginStatusCheck.clickRunUpdater);
         this.page.off('dialog', dialogHandler);
 
-        try {
-            await this.validateAndClick(Selectors.settingsSetup.pluginStatusCheck.clickAllow1);
-        } catch (error) {
-            console.log('Failed to click Allow1:', error);
-        }
+        await this.clickIfAvailable(Selectors.settingsSetup.pluginStatusCheck.clickAllow1);
 
-        try {
-            await this.validateAndClick(Selectors.settingsSetup.pluginStatusCheck.clickAllow);
-        } catch (error) {
-            console.log('Failed to click Allow:', error);
-        }
+        await this.clickIfAvailable(Selectors.settingsSetup.pluginStatusCheck.clickAllow);
 
-        try {
-            await this.validateAndClick(Selectors.settingsSetup.pluginStatusCheck.clickSkipSetup);
-        } catch (error) {
-            console.log('Failed to click Skip Setup:', error);
-        }
+        await this.clickIfAvailable(Selectors.settingsSetup.pluginStatusCheck.clickSkipSetup);
 
         // try {
         //     await this.validateAndClick(Selectors.settingsSetup.pluginStatusCheck.clickSwitchCart);
@@ -230,17 +224,9 @@ export class SettingsSetupPage extends Base {
         //     console.log('Failed to click Dismiss:', error);
         // }
 
-        try {
-            await this.validateAndClick(Selectors.settingsSetup.pluginStatusCheck.clickEDDnoticeCross);
-        } catch (error) {
-            console.log('Failed to click EDD notice Cross:', error);
-        }
+        await this.clickIfAvailable(Selectors.settingsSetup.pluginStatusCheck.clickEDDnoticeCross);
 
-        try {
-            await this.validateAndClick(Selectors.settingsSetup.pluginStatusCheck.clickPayPalCross);
-        } catch (error) {
-            console.log('Failed to click PayPal Cross:', error);
-        }
+        await this.clickIfAvailable(Selectors.settingsSetup.pluginStatusCheck.clickPayPalCross);
 
         if (ifWPUFLite == true) {
             //Activate Plugin
@@ -329,6 +315,20 @@ export class SettingsSetupPage extends Base {
             await this.validateAndClick(Selectors.login.basicNavigation.clickWPUFSidebar);
         }
         await this.validateAndClick(Selectors.login.basicNavigation.licenseTab);
+
+        // Already activated? The key input renders readonly with a masked value and
+        // "Activations Remaining" is shown. Filling it then blocks until the test
+        // timeout ("element is not editable"), so short-circuit instead.
+        const alreadyActivated = await this.page
+            .locator(Selectors.settingsSetup.pluginStatusCheck.activationRemaining)
+            .first()
+            .isVisible()
+            .catch(() => false);
+        if (alreadyActivated) {
+            console.log('WPUF-Pro Status: License was already Activated');
+            return;
+        }
+
         //Activate Plugin
         await this.validateAndFillStrings(Selectors.settingsSetup.pluginStatusCheck.fillLicenseKey, process.env.WPUF_PRO_LICENSE_KEY?.toString() || '');
         await this.page.waitForTimeout(200);
@@ -354,10 +354,20 @@ export class SettingsSetupPage extends Base {
                 await this.validateAndClick(Selectors.settingsSetup.pluginStatusCheck.clickDokanLite);
 
                 await this.navigateToURL(this.pluginsPage);
+                // Activation is confirmed by the Deactivate control appearing.
                 await this.assertionValidate(Selectors.settingsSetup.pluginStatusCheck.clickDokanLiteDeactivate);
 
-                await this.validateAndClick(Selectors.settingsSetup.pluginStatusCheck.clickAllow);
-
+                // Some Dokan versions surface an Appsero opt-in ("Allow") after activation and
+                // some do not. Dismiss it when present, but never block on it — it is optional
+                // UI, and activation is already verified above. Blocking here hung LS0030 for
+                // the full test timeout on builds where the notice never appears.
+                const dokanAllow = this.page.locator(Selectors.settingsSetup.pluginStatusCheck.clickAllow).first();
+                try {
+                    await dokanAllow.waitFor({ timeout: 5000 });
+                    await dokanAllow.click();
+                } catch (e) {
+                    console.log('Dokan Appsero opt-in not shown; continuing');
+                }
 
                 await this.navigateToURL(this.wpAdminPage);
                 await this.validateAndClick(Selectors.login.basicNavigation.clickDokanSidebar);
@@ -592,17 +602,36 @@ export class SettingsSetupPage extends Base {
     }
 
     async createPostCategories() {
-        //Go to Admin-Users
-        await this.navigateToURL(this.categoriesPage);
-        //Add New Category
-        //await this.validateAndClick(Selectors.settingsSetup.categories.clickCategoryMenu);
-        await this.page.waitForLoadState('domcontentloaded');
         const categoryNames: string[] = ['Science', 'Music'];
         for (let i = 0; i < categoryNames.length; i++) {
+            // Reload the categories screen for every term. WordPress's "Add New Category"
+            // form falls back to a full-page POST when its AJAX handler isn't bound, so filling
+            // the next term into a form left over from the previous submit races that reload and
+            // posts an empty name. A fresh page guarantees a stable form for each term.
+            await this.navigateToURL(this.categoriesPage);
+            await this.page.waitForLoadState('domcontentloaded');
+
+            const categoryRow = this.page
+                .locator(Selectors.settingsSetup.categories.validateCategory(categoryNames[i]))
+                .first();
+
+            // Idempotent: skip terms that already exist (e.g. a re-run against a used site).
+            if ( await categoryRow.count() > 0 ) {
+                continue;
+            }
+
             await this.validateAndFillStrings(Selectors.settingsSetup.categories.addNewCategory, categoryNames[i]);
             await this.validateAndClick(Selectors.settingsSetup.categories.submitCategory);
             await this.page.waitForTimeout(500);
-            await this.assertionValidate(Selectors.settingsSetup.categories.validateCategory(categoryNames[i]));
+
+            // The add completes either via AJAX (row injected in place) or a full-page POST (the
+            // submit navigates and the row is present after the redirect). Settle the page, then
+            // wait on the row; .first() tolerates any duplicate left on a re-used site.
+            await this.page.waitForLoadState('domcontentloaded').catch(() => {});
+            await this.page
+                .locator(Selectors.settingsSetup.categories.validateCategory(categoryNames[i]))
+                .first()
+                .waitFor({ timeout: 20000 });
         }
     }
     async createPostTags() {
@@ -772,6 +801,89 @@ export class SettingsSetupPage extends Base {
         await this.validateAndClick(Selectors.settingsSetup.AI.settingsTabAISave);
     }
 
+    /*****************************************************************/
+    /********** @Settings Persistence Verification *******************/
+    /*** Reload each settings surface and assert the config saved  ***/
+    /*** during LS setup actually persisted server-side. Closes the **/
+    /*** "config toggles, not behavior / no persistence assertion"  **/
+    /*** gap for section 1 of coverage-gap.md.                       **/
+    /*****************************************************************/
+
+    // Reload Permalinks and assert the post-name structure set by setPermalink() stuck.
+    async validatePermalinkPersistence() {
+        await this.navigateToURL(this.settingsPermalinkPage);
+        await this.page.reload();
+        await expect(this.page.locator(Selectors.settingsSetup.setPermalink.fillCustomStructure))
+            .toHaveValue('/%postname%/');
+        console.log('\x1b[32m%s\x1b[0m', '✅ Permalink structure persisted: /%postname%/');
+    }
+
+    // Reload WP General settings and assert "anyone can register" stuck.
+    async validateAllowRegistrationPersistence() {
+        await this.navigateToURL(this.settingsPage);
+        await this.page.reload();
+        await expect(this.page.locator(Selectors.settingsSetup.allowRegistration.clickAnyoneRegister))
+            .toBeChecked();
+        console.log('\x1b[32m%s\x1b[0m', '✅ Anyone-can-register persisted');
+    }
+
+    // Reload WPUF > Settings > Payments and assert payments + the bank/stripe/paypal
+    // gateways enabled during setup persisted (incl. PayPal sandbox/test mode).
+    async validatePaymentGatewayPersistence() {
+        await this.navigateToURL(this.wpufSettingsPage);
+        await this.page.reload();
+        await this.validateAndClick(Selectors.settingsSetup.payment.clickPaymentTab);
+        const p = Selectors.settingsSetup.persistence;
+        await expect(this.page.locator(p.enablePaymentCheckbox)).toBeChecked();
+        await expect(this.page.locator(p.gatewayBankCheckbox)).toBeChecked();
+        await expect(this.page.locator(p.gatewayStripeCheckbox)).toBeChecked();
+        await expect(this.page.locator(p.gatewayPaypalCheckbox)).toBeChecked();
+        await expect(this.page.locator(p.paypalSandboxCheckbox)).toBeChecked();
+        console.log('\x1b[32m%s\x1b[0m', '✅ Payment gateways (bank/stripe/paypal) + sandbox persisted');
+    }
+
+    // Reload WPUF > Settings > AI and assert the active provider selection persisted.
+    // @param provider one of 'openai' | 'google' | 'anthropic'
+    async validateAIProviderPersistence(provider: string) {
+        await this.navigateToURL(this.wpufSettingsPage);
+        await this.page.reload();
+        await this.validateAndClick(Selectors.settingsSetup.AI.clickAITab);
+        await expect(this.page.locator(Selectors.settingsSetup.persistence.aiProviderRadio(provider)))
+            .toBeChecked();
+        console.log('\x1b[32m%s\x1b[0m', `✅ AI provider persisted: ${provider}`);
+    }
+
+    // Prove WPUF general settings persist end-to-end via a deterministic round-trip:
+    // write a sentinel Google Map API key, save, reload, assert it stuck, then restore
+    // the original value. Env-independent (the .env keys are stubs), so this is the real
+    // "does a setting persist" assertion. Also asserts the Turnstile enable toggle
+    // (set in LS0020) persisted.
+    async validateGeneralSettingsPersistenceRoundTrip() {
+        const sentinel = 'wpuf-qa-gmap-persist-check';
+        await this.navigateToURL(this.wpufSettingsPage);
+        await this.page.reload();
+        await this.validateAndClick(Selectors.settingsSetup.keys.clickSettingsTabGeneral);
+
+        // Turnstile enable toggle from setup persisted.
+        await expect(this.page.locator(Selectors.settingsSetup.persistence.turnstileEnableCheckbox))
+            .toBeChecked();
+
+        // Round-trip a text setting: capture original -> write sentinel -> save -> reload -> assert.
+        const gmapField = Selectors.settingsSetup.keys.fillGoogleMapAPIKey;
+        const original = await this.page.locator(gmapField).inputValue();
+        await this.page.locator(gmapField).fill(sentinel);
+        await this.validateAndClick(Selectors.settingsSetup.keys.settingsTabGeneralSave);
+        await this.page.reload();
+        await this.validateAndClick(Selectors.settingsSetup.keys.clickSettingsTabGeneral);
+        await expect(this.page.locator(gmapField)).toHaveValue(sentinel);
+        console.log('\x1b[32m%s\x1b[0m', '✅ WPUF general setting round-trip persisted (Google Map API key)');
+
+        // Restore the original value so downstream tests see the pre-existing state.
+        await this.page.locator(gmapField).fill(original);
+        await this.validateAndClick(Selectors.settingsSetup.keys.settingsTabGeneralSave);
+        await this.page.reload();
+    }
+
     /***********************************************/
     /********** @Rest WorPress Site ***************/
     /*********************************************/
@@ -785,7 +897,10 @@ export class SettingsSetupPage extends Base {
         await this.validateAndFillStrings(Selectors.resetWordpreseSite.wpResetInputBox, 'reset');
         await this.validateAndClick(Selectors.resetWordpreseSite.wpResetSubmitButton);
         await this.validateAndClick(Selectors.resetWordpreseSite.wpResetConfirmWordpressReset);
-        await this.page.waitForTimeout(20000);
+        // WP Reset wipes the DB then reloads; poll until the site answers again
+        // instead of a fixed 20s sleep (same worst-case ceiling, faster when done).
+        await this.page.waitForTimeout(3000);
+        await waitForSiteReady(this.page, 60000);
         await this.navigateToURL(this.pluginsPage);
         await this.page.reload();
         await this.validateAndClick(Selectors.settingsSetup.pluginStatusCheck.clickWCvendors);

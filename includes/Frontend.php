@@ -54,7 +54,8 @@ class Frontend {
             || ( isset( $post->ID ) && ( $pay_page == $post->ID ) )
             || isset( $_GET['wpuf_preview'] )
             || class_exists( '\Elementor\Plugin' )
-            || $this->dokan_is_seller_dashboard() ) {
+            || $this->dokan_is_seller_dashboard()
+            || ( isset( $post->post_content ) && has_block( 'wpuf/post-form', $post ) ) ) {
             wp_enqueue_style( 'wpuf-layout1' );
             wp_enqueue_style( 'wpuf-frontend-forms' );
             wp_enqueue_style( 'wpuf-sweetalert2' );
@@ -152,6 +153,10 @@ class Frontend {
                         'password_warning_weak'        => __( 'Your password should be at least weak in strength', 'wp-user-frontend' ),
                         'password_warning_medium'      => __( 'Your password needs to be medium strength for better protection', 'wp-user-frontend' ),
                         'password_warning_strong'      => __( 'Create a strong password for maximum security', 'wp-user-frontend' ),
+                        // translators: %step% is the step number
+                        'step_label'                   => __( 'Step %step%', 'wp-user-frontend' ),
+                        // translators: %step% is the current step number, %total% is the total number of steps
+                        'step_progress'                => __( 'Step %step% of %total%', 'wp-user-frontend' ),
                     ]
                 )
             );

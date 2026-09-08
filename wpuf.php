@@ -4,8 +4,10 @@ Plugin Name: WP User Frontend
 Plugin URI: https://wordpress.org/plugins/wp-user-frontend/
 Description: Create, edit, delete, manages your post, pages or custom post types from frontend. Create registration forms, frontend profile and more...
 Author: weDevs
-Version: 4.3.8
+Version: 4.3.11
 Author URI: https://wedevs.com/?utm_source=WPUF_Author_URI
+Requires at least: 5.0
+Requires PHP: 7.4
 License: GPL2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Text Domain: wp-user-frontend
@@ -23,7 +25,7 @@ if ( file_exists( $autoload ) ) {
     require_once $autoload;
 }
 
-define( 'WPUF_VERSION', '4.3.8' );
+define( 'WPUF_VERSION', '4.3.11' );
 define( 'WPUF_FILE', __FILE__ );
 define( 'WPUF_ROOT', __DIR__ );
 define( 'WPUF_ROOT_URI', plugins_url( '', __FILE__ ) );
@@ -31,6 +33,32 @@ define( 'WPUF_ASSET_URI', WPUF_ROOT_URI . '/assets' );
 define( 'WPUF_INCLUDES', WPUF_ROOT . '/includes' );
 
 use WeDevs\WpUtils\SingletonTrait;
+
+// vendor/ (the Composer dependencies, including wedevs/wp-utils which provides
+// the SingletonTrait used below) is intentionally not committed to the git
+// repository. A checkout that has not run `composer install` would otherwise
+// fatal on the missing trait when this class is declared, taking the whole
+// site down with a white screen. Fail soft with an admin notice instead so a
+// fresh clone is recoverable.
+if ( ! trait_exists( SingletonTrait::class ) ) {
+    add_action(
+        'admin_notices',
+        function () {
+            $message = sprintf(
+                /* translators: %s: the composer install command, shown as code */
+                esc_html__( 'WP User Frontend could not load its dependencies. Please run %s inside the plugin directory.', 'wp-user-frontend' ),
+                '<code>composer install</code>'
+            );
+
+            printf(
+                '<div class="notice notice-error"><p>%s</p></div>',
+                wp_kses( $message, [ 'code' => [] ] )
+            );
+        }
+    );
+
+    return;
+}
 
 /**
  * Main bootstrap class for WP User Frontend
@@ -190,6 +218,7 @@ final class WP_User_Frontend {
         $this->container['api']          = new WeDevs\Wpuf\API();
         $this->container['integrations'] = new WeDevs\Wpuf\Integrations();
         $this->container['ai_manager']   = new WeDevs\Wpuf\AI_Manager();
+        $this->container['post_form_block'] = new WeDevs\Wpuf\Blocks\PostForm();
 
         if ( is_admin() ) {
             $this->container['admin']        = new WeDevs\Wpuf\Admin();

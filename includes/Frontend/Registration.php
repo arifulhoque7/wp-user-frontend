@@ -153,6 +153,75 @@ class Registration {
     }
 
     /**
+     * Whether a role may be assigned by frontend registration
+     *
+     * The role a form offers is configurable — sites legitimately register
+     * contributors, authors, editors and marketplace roles such as Dokan's or
+     * WooCommerce's shop_manager — so this is deliberately not an allow-list of
+     * role names, which would break those installs. It only refuses roles that
+     * could take the site over, whatever they are named.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param string $role Role slug decoded from the submitted registration form.
+     *
+     * @return bool
+     */
+    protected function is_role_allowed_for_registration( $role ) {
+        if ( 'administrator' === $role ) {
+            return false;
+        }
+
+        $role_object = get_role( $role );
+
+        if ( ! $role_object ) {
+            return false;
+        }
+
+        // Capabilities that amount to control of the site: running code on it (plugin,
+        // theme and core install/update/edit), changing its settings, or promoting
+        // yourself. A role holding any of them is never handed out by a public
+        // registration form, whatever the form was configured with.
+        //
+        // Deliberately *not* listed: unfiltered_html, which the stock editor role holds,
+        // and edit_users, which some marketplace plugins grant to store-manager roles.
+        // Including either would refuse roles sites legitimately register into. Verified
+        // against a WooCommerce + Dokan install: no non-administrator role holds any
+        // capability in this list.
+        $default_site_control_caps = [
+            'manage_options',
+            'activate_plugins',
+            'install_plugins',
+            'update_plugins',
+            'edit_plugins',
+            'edit_themes',
+            'update_core',
+            'edit_files',
+            'promote_users',
+            'manage_network',
+        ];
+
+        $site_control_caps = apply_filters(
+            'wpuf_registration_forbidden_capabilities',
+            $default_site_control_caps
+        );
+
+        // A third-party filter returning a non-array must not fatal here, and returning
+        // empty must not silently turn the check off.
+        $site_control_caps = ! empty( $site_control_caps ) && is_array( $site_control_caps )
+            ? $site_control_caps
+            : $default_site_control_caps;
+
+        foreach ( $site_control_caps as $capability ) {
+            if ( ! empty( $role_object->capabilities[ $capability ] ) ) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * Process registration form
      *
      * @return void
@@ -161,9 +230,37 @@ class Registration {
         if ( ! empty( $_POST['wpuf_registration'] ) && ! empty( $_POST['_wpnonce'] ) ) {
             $userdata = [];
             $user     = '';
-            if ( isset( $_POST['_wpnonce'] ) ) {
-                $nonce = sanitize_key( wp_unslash( $_POST['_wpnonce'] ) );
-                wp_verify_nonce( $nonce, 'wpuf_registration_action' );
+            $nonce = isset( $_POST['_wpnonce'] ) ? sanitize_key( wp_unslash( $_POST['_wpnonce'] ) ) : '';
+
+            if ( ! wp_verify_nonce( $nonce, 'wpuf_registration_action' ) ) {
+                return;
+            }
+
+            // The registration form only ever renders for logged-out visitors, so a
+            // request arriving with an authenticated session did not come from it.
+            //
+            // This guard is what actually stops the reported session fixation: the nonce
+            // cannot, because wp_nonce_field() on a logged-out-only template mints it at
+            // user id 0 with an empty session token, so every anonymous visitor is served
+            // the same value and it stays valid for around a day. Anyone can fetch the
+            // page once and embed that value in a cross-site form. Without this check the
+            // handler runs on init for a logged-in victim, and the autologin below then
+            // clears their session and hands their browser a cookie for the account it
+            // just created.
+            //
+            // Reported by Yaswanth Reddy Sunkara (WPScan).
+            if ( is_user_logged_in() ) {
+                return;
+            }
+
+            // Honour the site's registration setting on the account-creation path,
+            // the same way the Register link in get_action_links() already does.
+            // Without this, a POST to the init-hooked handler creates an account
+            // even when registration is switched off. WordPress maps
+            // users_can_register onto the network setting on multisite.
+            // Reported by Murad Akhmedov (WPScan).
+            if ( ! get_option( 'users_can_register' ) ) {
+                return;
             }
             $validation_error = new WP_Error();
             $reg_fname  = isset( $_POST['reg_fname'] ) ? sanitize_text_field( wp_unslash( $_POST['reg_fname'] ) ) : '';
@@ -268,9 +365,9 @@ class Registration {
             $userdata['user_email'] = $reg_email;
             $userdata['user_pass']  = $pwd1;
             if ( get_role( $dec_role ) ) {
-                $userdata['role'] = empty( $dec_role ) || 'administrator' === $dec_role ? get_option(
-                    'default_role'
-                ) : $dec_role;
+                $userdata['role'] = empty( $dec_role ) || ! $this->is_role_allowed_for_registration( $dec_role )
+                    ? get_option( 'default_role' )
+                    : $dec_role;
             }
             $user = wp_insert_user( $userdata );
             if ( is_wp_error( $user ) ) {
@@ -336,7 +433,7 @@ class Registration {
                 } else {
                     $redirect = $this->get_registration_url() . '?success=yes';
                 }
-                wp_redirect( apply_filters( 'wpuf_registration_redirect', $redirect, $user ) );
+                wp_safe_redirect( apply_filters( 'wpuf_registration_redirect', $redirect, $user ) );
                 exit;
             }
         }

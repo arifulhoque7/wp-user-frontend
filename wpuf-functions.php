@@ -534,7 +534,7 @@ function wpuf_get_image_sizes() {
 function wpuf_allowed_extensions() {
     $extesions = [
         'images' => [
-            'ext' => 'jpg,jpeg,gif,png,bmp,webp',
+            'ext' => 'jpg,jpeg,jfif,gif,png,bmp,webp',
             'label' => __( 'Images', 'wp-user-frontend' ),
         ],
         'audio'  => [
@@ -950,6 +950,37 @@ function wpuf_get_gateways( $context = 'admin' ) {
 }
 
 /**
+ * Unserialize a value without ever instantiating PHP objects.
+ *
+ * Stored post meta may hold a serialized object payload (e.g. submitted through a
+ * form field). Passing it to maybe_unserialize() would instantiate arbitrary
+ * classes, enabling PHP object injection. This restricts deserialization to plain
+ * data and strips any object, so a serialized-object payload can never be revived.
+ *
+ * @since 4.3.11
+ *
+ * @param mixed $value Possibly-serialized value.
+ *
+ * @return mixed Unserialized data with objects removed, or the original value.
+ */
+function wpuf_safe_unserialize( $value ) {
+    if ( ! is_string( $value ) || ! is_serialized( $value ) ) {
+        return $value;
+    }
+
+    if ( PHP_VERSION_ID >= 70000 ) {
+        return @unserialize( $value, [ 'allowed_classes' => false ] );
+    }
+
+    // PHP 5.6 fallback: refuse anything carrying an object marker (O:/C:).
+    if ( preg_match( '/(?:^|;|\{)[OC]:[0-9]+:/', $value ) ) {
+        return $value;
+    }
+
+    return maybe_unserialize( $value );
+}
+
+/**
  * Show custom fields in post content area
  *
  * @since 3.3.0 Introducing `render_field_data` to render field value
@@ -1107,7 +1138,7 @@ function wpuf_show_custom_fields( $content ) {
 
                     if ( $field_value ) {
                         if ( is_serialized( $field_value[0] ) ) {
-                            $field_value = maybe_unserialize( $field_value[0] );
+                            $field_value = wpuf_safe_unserialize( $field_value[0] );
                         }
 
                         if ( is_array( $field_value[0] ) ) {
@@ -1265,7 +1296,7 @@ function wpuf_show_custom_fields( $content ) {
 
                     // Unserialize if needed
                     if ( is_serialized( $repeat_data ) ) {
-                        $repeat_data = maybe_unserialize( $repeat_data );
+                        $repeat_data = wpuf_safe_unserialize( $repeat_data );
                     }
 
                     if ( ! is_array( $repeat_data ) ) {
@@ -1406,8 +1437,8 @@ function wpuf_show_custom_fields( $content ) {
                     if ( ! empty( $filter_html ) ) {
                         $html .= $filter_html;
                     } elseif ( is_serialized( $value[0] ) ) {
-                        $new            = maybe_unserialize( $value[0] );
-                        $modified_value = implode( $separator, $new );
+                        $new            = wpuf_safe_unserialize( $value[0] );
+                        $modified_value = is_array( $new ) ? implode( $separator, $new ) : '';
 
                         if ( $modified_value ) {
                             $html .= '<li>';
@@ -2298,6 +2329,7 @@ function wpuf_get_countries( $type = 'array' ) {
 function wpuf_get_account_sections() {
     $sections = [
         'edit-profile'    => __( 'Edit Profile', 'wp-user-frontend' ),
+        'change-password' => __( 'Change Password', 'wp-user-frontend' ),
         'subscription'    => __( 'Subscription', 'wp-user-frontend' ),
         'billing-address' => __( 'Billing Address', 'wp-user-frontend' ),
     ];
@@ -2445,14 +2477,16 @@ function wpuf_get_pending_transactions( $args = [] ) {
         }
 
         $tax      = ! empty( $info['tax'] ) ? $info['tax'] : 0;
-        $subtotal = ! empty( $info['cost'] ) ? $info['cost'] : $info['price'];
+        $subtotal = ! empty( $info['subtotal'] ) ? $info['subtotal'] : ( ! empty( $info['cost'] ) ? $info['cost'] : $info['price'] );
 
         $items[] = (object) [
             'id'               => $transaction->ID,
             'user_id'          => $info['user_info']['id'],
             'status'           => 'pending',
             'subtotal'         => $subtotal,
-            'cost'             => $subtotal - $tax,
+            'discount'         => ! empty( $info['discount'] ) ? $info['discount'] : 0,
+            'coupon_id'        => ! empty( $info['post_data']['coupon_id'] ) ? absint( $info['post_data']['coupon_id'] ) : 0,
+            'cost'             => ! empty( $info['cost'] ) ? floatval( $info['cost'] ) : ( ! empty( $info['price'] ) ? floatval( $info['price'] ) + floatval( $tax ) : $subtotal ),
             'tax'              => $tax,
             'post_id'          => ( $info['type'] === 'post' ) ? $info['item_number'] : 0,
             'pack_id'          => ( $info['type'] === 'pack' ) ? $info['item_number'] : 0,
@@ -2516,10 +2550,11 @@ function wpuf_get_all_transactions( $args = [] ) {
     // and pending transaction from post table
     $transactions = $wpdb->get_results(
         $wpdb->prepare(
-            "(SELECT id, user_id, status, tax, cost, post_id, pack_id, payer_first_name, payer_last_name, payer_email, payment_type, transaction_id, created FROM {$transaction_table})
+            "(SELECT id, user_id, status, subtotal, discount, coupon_id, tax, cost, post_id, pack_id, payer_first_name, payer_last_name, payer_email, payment_type, transaction_id, created FROM {$transaction_table})
             UNION ALL
-            (SELECT ID AS id, post_author AS user_id, null AS status, null AS tax, null AS cost, ID as post_id, null AS pack_id, null AS payer_first_name, null AS payer_last_name, null AS payer_email, null AS payment_type, 0 AS transaction_id, post_date AS created FROM {$wpdb->posts}
-            WHERE post_type = %s)
+            (SELECT ID AS id, post_author AS user_id, null AS status, null AS subtotal, null AS discount, null AS coupon_id, null AS tax, null AS cost, ID as post_id, null AS pack_id, null AS payer_first_name, null AS payer_last_name, null AS payer_email, null AS payment_type, 0 AS transaction_id, post_date AS created FROM {$wpdb->posts}
+            WHERE post_type = %s
+            AND post_status IN ('pending', 'publish'))
             ORDER BY {$orderby} {$sorting_order}
             LIMIT %d, %d",
             'wpuf_order', $offset, $number
@@ -2545,8 +2580,13 @@ function wpuf_get_all_transactions( $args = [] ) {
         // attach data to pending transactions
         $transaction->user_id          = isset( $info['user_info']['id'] ) ? $info['user_info']['id'] : 0;
         $transaction->status           = 'pending';
-        $transaction->cost             = isset( $info['price'] ) ? $info['price'] : 0;
-        $transaction->tax              = isset( $info['tax'] ) ? $info['tax'] : 0;
+        $tax                           = isset( $info['tax'] ) ? $info['tax'] : 0;
+        $subtotal                      = ! empty( $info['subtotal'] ) ? $info['subtotal'] : ( ! empty( $info['cost'] ) ? $info['cost'] : ( $info['price'] ?? 0 ) );
+        $transaction->subtotal         = $subtotal;
+        $transaction->discount         = ! empty( $info['discount'] ) ? $info['discount'] : 0;
+        $transaction->coupon_id        = ! empty( $info['post_data']['coupon_id'] ) ? absint( $info['post_data']['coupon_id'] ) : 0;
+        $transaction->cost             = ! empty( $info['cost'] ) ? floatval( $info['cost'] ) : ( ! empty( $info['price'] ) ? floatval( $info['price'] ) + floatval( $tax ) : $subtotal );
+        $transaction->tax              = $tax;
         $transaction->post_id          = ( 'post' === $type ) ? $item_number : 0;
         $transaction->pack_id          = ( 'pack' === $type ) ? $item_number : 0;
         $transaction->payer_first_name = isset( $info['user_info']['first_name'] ) ? $info['user_info']['first_name'] : '';
@@ -3941,7 +3981,9 @@ function wpuf_encryption( $id, $nonce = null ) {
     }
 
     $ciphertext_raw = openssl_encrypt( $id, Encryption_Helper::get_encryption_method(), $secret_key, OPENSSL_RAW_DATA, $secret_iv );
-    $hmac           = hash_hmac( 'sha256', $ciphertext_raw, $secret_key, true );
+    // Authenticate the IV together with the ciphertext so a tampered IV is
+    // rejected on the way back in (see wpuf_decryption()).
+    $hmac           = hash_hmac( 'sha256', $secret_iv . $ciphertext_raw, $secret_key, true );
 
     return base64_encode( $secret_iv.$hmac.$ciphertext_raw );
 }
@@ -3982,15 +4024,19 @@ function wpuf_decryption( $id, $nonce = null ) {
     $secret_iv      = substr( $c, 0, $ivlen );
     $hmac           = substr( $c, $ivlen, 32 );
     $ciphertext_raw = substr( $c, $ivlen + 32 );
-    $original_text  = openssl_decrypt( $ciphertext_raw, Encryption_Helper::get_encryption_method(), $secret_key, OPENSSL_RAW_DATA, $secret_iv );
-    $calcmac        = hash_hmac( 'sha256', $ciphertext_raw, $secret_key, true );
+    // The IV travels inside the payload, so it must be authenticated too: an
+    // unauthenticated IV lets an attacker flip the first CBC plaintext block and
+    // forge a different value under the unchanged ciphertext/HMAC (e.g. a higher
+    // role in registration). Cover IV + ciphertext and verify BEFORE decrypting.
+    // Reported by Murad Akhmedov (WPScan).
+    $calcmac        = hash_hmac( 'sha256', $secret_iv . $ciphertext_raw, $secret_key, true );
 
     // timing attack safe comparison
-    if ( hash_equals( $hmac, $calcmac ) ) {
-        return $original_text;
+    if ( ! hash_equals( $hmac, $calcmac ) ) {
+        return false;
     }
 
-    return false;
+    return openssl_decrypt( $ciphertext_raw, Encryption_Helper::get_encryption_method(), $secret_key, OPENSSL_RAW_DATA, $secret_iv );
 }
 
 /**
@@ -6127,7 +6173,34 @@ function wpuf_get_post_form_builder_setting_menu_contents() {
                         'wp-user-frontend'
                     ),
                     'fields' => [
-                        'use_theme_css'           => [
+                        'form_layout'    => [
+                            'label'     => __( 'Choose Form Style', 'wp-user-frontend' ),
+                            'type'      => 'pic-radio',
+                            'help_text' => __( 'Pick a form template to control the overall layout and visual style of your form.', 'wp-user-frontend' ),
+                            'options'   => [
+                                'layout1' => [
+                                    'label' => __( 'Template 1', 'wp-user-frontend' ),
+                                    'image' => WPUF_ASSET_URI . '/images/forms/layout1.png',
+                                ],
+                                'layout2' => [
+                                    'label' => __( 'Template 2', 'wp-user-frontend' ),
+                                    'image' => WPUF_ASSET_URI . '/images/forms/layout2.png',
+                                ],
+                                'layout3' => [
+                                    'label' => __( 'Template 3', 'wp-user-frontend' ),
+                                    'image' => WPUF_ASSET_URI . '/images/forms/layout3.png',
+                                ],
+                                'layout4' => [
+                                    'label' => __( 'Template 4', 'wp-user-frontend' ),
+                                    'image' => WPUF_ASSET_URI . '/images/forms/layout4.png',
+                                ],
+                                'layout5' => [
+                                    'label' => __( 'Template 5', 'wp-user-frontend' ),
+                                    'image' => WPUF_ASSET_URI . '/images/forms/layout5.png',
+                                ],
+                            ],
+                        ],
+                        'use_theme_css'  => [
                             'label'     => __( 'Use Theme CSS', 'wp-user-frontend' ),
                             'type'      => 'toggle',
                             'help_text' => __(
@@ -6301,6 +6374,7 @@ if ( ! function_exists( 'wpuf_field_profile_photo_allowed_extensions' ) ) {
         $allowed_extensions = [
             'jpg'  => __( 'JPG', 'wpuf-pro' ),
             'jpeg' => __( 'JPEG', 'wpuf-pro' ),
+            'jfif' => __( 'JFIF', 'wpuf-pro' ),
             'png'  => __( 'PNG', 'wpuf-pro' ),
             'gif'  => __( 'GIF', 'wpuf-pro' ),
         ];
