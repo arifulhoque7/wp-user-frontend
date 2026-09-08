@@ -85,22 +85,26 @@ trait FieldableTrait {
             $wpuf_post_types[] = 'download';
         }
 
-        $ignore_taxonomies = apply_filters( 'wpuf-ignore-taxonomies', [
-            'post_format',
-        ] );
+        $ignore_taxonomies = apply_filters(
+            'wpuf-ignore-taxonomies', [
+                'post_format',
+            ]
+        );
         foreach ( $wpuf_post_types as $post_type ) {
             $this->wp_post_types[ $post_type ] = [];
             $taxonomies = get_object_taxonomies( $post_type, 'object' );
             foreach ( $taxonomies as $tax_name => $taxonomy ) {
-                if ( ! in_array( $tax_name, $ignore_taxonomies ) ) {
+                if ( ! in_array( $tax_name, $ignore_taxonomies, true ) ) {
                     $this->wp_post_types[ $post_type ][ $tax_name ] = [
                         'title'        => $taxonomy->label,
                         'hierarchical' => $taxonomy->hierarchical,
                     ];
-                    $this->wp_post_types[ $post_type ][ $tax_name ]['terms'] = get_terms( [
-                        'taxonomy'   => $tax_name,
-                        'hide_empty' => false,
-                    ] );
+                    $this->wp_post_types[ $post_type ][ $tax_name ]['terms'] = get_terms(
+                        [
+                            'taxonomy'   => $tax_name,
+                            'hide_empty' => false,
+                        ]
+                    );
                 }
             }
 
@@ -150,7 +154,7 @@ trait FieldableTrait {
     }
 
     /**
-     * get Input fields
+     * Get input fields
      *
      * @param array $form_vars
      *
@@ -158,7 +162,9 @@ trait FieldableTrait {
      */
     public function get_input_fields( $form_vars ) {
         $ignore_lists = [ 'section_break', 'html' ];
-        $post_vars    = $meta_vars = $taxonomy_vars = [];
+        $post_vars     = [];
+        $meta_vars     = [];
+        $taxonomy_vars = [];
 
         foreach ( $form_vars as $key => $value ) {
             // get column field input fields
@@ -169,7 +175,7 @@ trait FieldableTrait {
                     if ( ! empty( $column_fields ) ) {
                         // ignore section break and HTML input type
                         foreach ( $column_fields as $column_field_key => $column_field ) {
-                            if ( in_array( $column_field['input_type'], $ignore_lists ) ) {
+                            if ( in_array( $column_field['input_type'], $ignore_lists, true ) ) {
                                 continue;
                             }
 
@@ -197,7 +203,7 @@ trait FieldableTrait {
             }
 
             // ignore section break and HTML input type
-            if ( in_array( $value['input_type'], $ignore_lists ) ) {
+            if ( in_array( $value['input_type'], $ignore_lists, true ) ) {
                 continue;
             }
 
@@ -294,6 +300,7 @@ trait FieldableTrait {
             return;
         }
 
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce is verified by the submit/draft handler that calls this.
         $token = ! empty( $_POST['cf-turnstile-response'] ) ? sanitize_text_field( wp_unslash( $_POST['cf-turnstile-response'] ) ) : '';
 
         if ( empty( $token ) ) {
@@ -356,7 +363,7 @@ trait FieldableTrait {
     }
 
     /**
-     * reCaptcha Validation
+     * Validate reCaptcha
      *
      * @return void
      */
@@ -376,9 +383,9 @@ trait FieldableTrait {
             }
 
             $response  = null;
-            $reCaptcha = new \WPUF_ReCaptcha( $private_key );
+            $re_captcha = new \WPUF_ReCaptcha( $private_key );
 
-            $resp = $reCaptcha->verifyResponse(
+            $resp = $re_captcha->verifyResponse(
                 $remote_addr,
                 $g_recaptcha_response
             );
@@ -402,7 +409,7 @@ trait FieldableTrait {
 
             $response = $object->verifyResponse( $recaptcha );
 
-            if ( isset( $response['success'] ) and $response['success'] != true ) {
+            if ( isset( $response['success'] ) && $response['success'] != true ) {
                 $this->send_error( __( 'Invisible reCAPTCHA validation failed', 'wp-user-frontend' ) );
             }
         }
@@ -416,6 +423,7 @@ trait FieldableTrait {
      * @return array
      */
     private function adjust_thumbnail_id( $postarr ) {
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Missing -- each element is cast with absint() immediately below; the nonce is verified by the submit/draft handler that calls this.
         $wpuf_files_raw = ! empty( $_POST['wpuf_files'] ) ? wp_unslash( $_POST['wpuf_files'] ) : [];
         $wpuf_files = [];
 
@@ -633,7 +641,7 @@ trait FieldableTrait {
             return true;
         }
 
-        // Attached to a different post — never allow hijacking it.
+        // Attached to a different post: never allow hijacking it.
         if ( $parent ) {
             return false;
         }
@@ -702,7 +710,7 @@ trait FieldableTrait {
     }
 
     /**
-     * set custom taxonomy
+     * Set custom taxonomy
      *
      * @param int   $post_id
      * @param array $taxonomy_vars
@@ -781,39 +789,34 @@ trait FieldableTrait {
                         if ( isset( $taxonomy['woo_attr'] ) && $taxonomy['woo_attr'] == 'yes' && ! empty( $taxonomy_name ) ) {
                             $woo_attr[ $taxonomy['name'] ] = $this->woo_attribute( $taxonomy );
                         }
-                    } else {
-                        if ( is_taxonomy_hierarchical( $taxonomy['name'] ) ) {
+                    } elseif ( is_taxonomy_hierarchical( $taxonomy['name'] ) ) {
                             wp_set_post_terms( $post_id, $taxonomy_name, $taxonomy['name'] );
 
                             // woocommerce check
-                            if ( isset( $taxonomy['woo_attr'] ) && $taxonomy['woo_attr'] == 'yes' && ! empty( $taxonomy_name ) ) {
-                                $woo_attr[ $taxonomy['name'] ] = $this->woo_attribute( $taxonomy );
+                        if ( isset( $taxonomy['woo_attr'] ) && $taxonomy['woo_attr'] == 'yes' && ! empty( $taxonomy_name ) ) {
+                            $woo_attr[ $taxonomy['name'] ] = $this->woo_attribute( $taxonomy );
+                        }
+                    } elseif ( $tax ) {
+                            $non_hierarchical = [];
+
+                        foreach ( $tax as $value ) {
+                            $term = get_term_by( 'id', $value, $taxonomy['name'] );
+
+                            if ( $term && ! is_wp_error( $term ) ) {
+                                $non_hierarchical[] = $term->name;
                             }
-                        } else {
-                            if ( $tax ) {
-                                $non_hierarchical = [];
+                        }
 
-                                foreach ( $tax as $value ) {
-                                    $term = get_term_by( 'id', $value, $taxonomy['name'] );
+                            wp_set_post_terms( $post_id, $non_hierarchical, $taxonomy['name'] );
 
-                                    if ( $term && ! is_wp_error( $term ) ) {
-                                        $non_hierarchical[] = $term->name;
-                                    }
-                                }
-
-                                wp_set_post_terms( $post_id, $non_hierarchical, $taxonomy['name'] );
-
-                                // woocommerce check
-                                if ( isset( $taxonomy['woo_attr'] ) && $taxonomy['woo_attr'] == 'yes' && ! empty( $_POST[ $taxonomy['name'] ] ) ) {
-                                    $woo_attr[ $taxonomy['name'] ] = $this->woo_attribute( $taxonomy );
-                                }
-                            }
-                        } // hierarchical
-                    } // is text
+                            // woocommerce check
+                        if ( isset( $taxonomy['woo_attr'] ) && $taxonomy['woo_attr'] == 'yes' && ! empty( $_POST[ $taxonomy['name'] ] ) ) {
+                            $woo_attr[ $taxonomy['name'] ] = $this->woo_attribute( $taxonomy );
+                        }
+                    } // hierarchical / is text
                 } // is object tax
-            } // isset tax
-
-            else {
+                // isset tax
+            } else {
                 if ( isset( $taxonomy_name ) && 0 === absint( $taxonomy_name ) ) {
                     wp_set_post_terms( $post_id, $taxonomy_name, $taxonomy['name'] );
                 }
@@ -833,7 +836,7 @@ trait FieldableTrait {
     }
 
     /**
-     * prepare meta fields
+     * Prepare meta fields
      *
      * @param array $meta_vars
      *
@@ -845,7 +848,8 @@ trait FieldableTrait {
         // process repeatable fields separately
         // if the input is array type, implode with separator in a field
         // /check_ajax_referer( 'wpuf_form_add' );
-        $post_data = wp_unslash( $_POST ); // phpcs:ignore WordPress.XSS.EscapeOutput.OutputNotEscaped
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce is verified by the submit/draft handler that calls this.
+        $post_data = wp_unslash( $_POST );
         $files          = [];
         $meta_key_value = [];
         $multi_repeated = []; //multi repeated fields will in sotre duplicated meta key
@@ -861,7 +865,11 @@ trait FieldableTrait {
                 $meta_key_value[ $value['name'] ] = $wpuf_field->sanitize_field_data( $posted_field_data, $value );
                 continue;
             } elseif ( isset( $post_data[ $value['name'] ] ) && is_array( $post_data[ $value['name'] ] ) ) {
-                $value_name = isset( $post_data[ $value['name'] ] ) ? array_map( function( $item ) { return strip_shortcodes( sanitize_text_field( $item ) ); }, wp_unslash( $post_data[ $value['name'] ] ) ) : '';
+                $value_name = isset( $post_data[ $value['name'] ] ) ? array_map(
+                    function ( $item ) {
+                        return strip_shortcodes( sanitize_text_field( $item ) );
+                    }, wp_unslash( $post_data[ $value['name'] ] )
+                ) : '';
             } else {
                 $value_name = isset( $post_data[ $value['name'] ] ) ? strip_shortcodes( sanitize_text_field( wp_unslash( $post_data[ $value['name'] ] ) ) ) : '';
             }
@@ -890,12 +898,13 @@ trait FieldableTrait {
                     break;
 
                 case 'repeat':
+                    // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.NonceVerification.Missing -- each element is sanitised below before use; the nonce is verified by the submit/draft handler that calls this.
                     $repeater_value = isset( $_POST[ $value['name'] ] ) ? wp_unslash( $_POST[ $value['name'] ] ) : [];
 
                     // If this repeat field has inner_fields and the value is an array of rows (ACF-style)
                     if ( ! empty( $value['inner_fields'] ) && is_array(
-                            $repeater_value
-                        ) && isset( $repeater_value[0] ) && is_array( $repeater_value[0] ) ) {
+                        $repeater_value
+                    ) && isset( $repeater_value[0] ) && is_array( $repeater_value[0] ) ) {
                         $rows = [];
                         foreach ( $repeater_value as $row ) {
                             $sanitized_row = [];
@@ -904,10 +913,14 @@ trait FieldableTrait {
 
                                 // Handle different field types appropriately
                                 if ( isset( $row[ $fname ] ) ) {
-                                    if ( in_array( $inner_field['template'], [ 'checkbox_field', 'multiple_select' ] ) ) {
+                                    if ( in_array( $inner_field['template'], [ 'checkbox_field', 'multiple_select' ], true ) ) {
                                         // For checkbox and multiselect, keep as array and sanitize each element
                                         if ( is_array( $row[ $fname ] ) ) {
-                                            $sanitized_row[ $fname ] = array_map( function( $item ) { return strip_shortcodes( sanitize_text_field( $item ) ); }, $row[ $fname ] );
+                                            $sanitized_row[ $fname ] = array_map(
+                                                function ( $item ) {
+                                                    return strip_shortcodes( sanitize_text_field( $item ) );
+                                                }, $row[ $fname ]
+                                            );
                                         } else {
                                             $sanitized_row[ $fname ] = strip_shortcodes( sanitize_text_field( $row[ $fname ] ) );
                                         }
@@ -1049,6 +1062,4 @@ trait FieldableTrait {
             'is_taxonomy'  => 1,
         ];
     }
-
-
 }

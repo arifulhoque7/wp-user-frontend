@@ -133,9 +133,12 @@ class Frontend_Form_Ajax {
             foreach ( $protected_shortcodes as $shortcode ) {
                 $search_for = '[' . $shortcode;
                 if ( strpos( $current_data, $search_for ) !== false ) {
-                    wpuf()->ajax->send_error( sprintf(
+                    wpuf()->ajax->send_error(
+                        sprintf(
                         // translators: %s is shortcode
-                        __( 'Using %s as shortcode is restricted', 'wp-user-frontend' ), $shortcode ) );
+                            __( 'Using %s as shortcode is restricted', 'wp-user-frontend' ), $shortcode
+                        )
+                    );
                 }
             }
         }
@@ -346,10 +349,8 @@ class Frontend_Form_Ajax {
             if ( 'pending' === get_post_meta( $post_id, '_wpuf_payment_status', true ) ) {
                 $postarr['post_status'] = 'pending';
             }
-        } else {
-            if ( isset( $this->form_settings['comment_status'] ) ) {
+        } elseif ( isset( $this->form_settings['comment_status'] ) ) {
                 $postarr['comment_status'] = $this->form_settings['comment_status'];
-            }
         }
 
         // check the form status, it might be already a draft
@@ -507,16 +508,14 @@ class Frontend_Form_Ajax {
             } else {
                 $redirect_to = get_permalink( $post_id );
             }
-        } else {
-            if ( $this->form_settings['redirect_to'] === 'page' ) {
+        } elseif ( $this->form_settings['redirect_to'] === 'page' ) {
                 $redirect_to = get_permalink( $this->form_settings['page_id'] );
-            } elseif ( $this->form_settings['redirect_to'] === 'url' ) {
-                $redirect_to = $this->form_settings['url'];
-            } elseif ( $this->form_settings['redirect_to'] === 'same' ) {
-                $show_message = true;
-            } else {
-                $redirect_to = get_permalink( $post_id );
-            }
+        } elseif ( $this->form_settings['redirect_to'] === 'url' ) {
+            $redirect_to = $this->form_settings['url'];
+        } elseif ( $this->form_settings['redirect_to'] === 'same' ) {
+            $show_message = true;
+        } else {
+            $redirect_to = get_permalink( $post_id );
         }
 
         if ( $charging_enabled === 'yes' && isset( $this->form_settings['payment_options'] )
@@ -583,15 +582,16 @@ class Frontend_Form_Ajax {
                 $to     = implode(
                     ',',
                     array_filter(
-                        array_map( static function ( $addr ) {
-                            $addr = trim( $addr );
-                            return is_email( $addr ) ? $addr : null;
-                        }, explode( ',', $to_raw ) )
+                        array_map(
+                            static function ( $addr ) {
+                                $addr = trim( $addr );
+                                return is_email( $addr ) ? $addr : null;
+                            }, explode( ',', $to_raw )
+                        )
                     )
                 );
-                if ( empty( $to ) ) {
-                    // Nothing valid to send to – skip mail sending
-                } else {
+                // Skip mail sending when there is no valid recipient.
+                if ( ! empty( $to ) ) {
                     $subject   = $this->prepare_mail_body( $edit_subject, $post_author, $post_id );
                     $subject   = wp_strip_all_tags( $subject );
                     $mail_body = get_formatted_mail_body( $mail_body, $subject );
@@ -613,15 +613,16 @@ class Frontend_Form_Ajax {
                 $to     = implode(
                     ',',
                     array_filter(
-                        array_map( static function ( $addr ) {
-                            $addr = trim( $addr );
-                            return is_email( $addr ) ? $addr : null;
-                        }, explode( ',', $to_raw ) )
+                        array_map(
+                            static function ( $addr ) {
+                                $addr = trim( $addr );
+                                return is_email( $addr ) ? $addr : null;
+                            }, explode( ',', $to_raw )
+                        )
                     )
                 );
-                if ( empty( $to ) ) {
-                    // Nothing valid to send to – skip mail sending
-                } else {
+                // Skip mail sending when there is no valid recipient.
+                if ( ! empty( $to ) ) {
                     $subject   = $this->prepare_mail_body( $new_notification['subject'], $post_author, $post_id );
                     $subject   = wp_strip_all_tags( $subject );
                     $mail_body = get_formatted_mail_body( $mail_body, $subject );
@@ -722,7 +723,7 @@ class Frontend_Form_Ajax {
                 $to      = isset( $notification_conf['to'] ) ? $notification_conf['to'] : '';
                 $subject = isset( $notification_conf['subject'] ) ? $notification_conf['subject'] : '';
 
-            // 2) Legacy flat flag: string 'on' at notification[type]
+                // 2) Legacy flat flag: string 'on' at notification[type]
             } elseif ( is_string( $notification_conf ) && wpuf_is_checkbox_or_toggle_on( $notification_conf ) ) {
                 $enabled = true;
                 $body    = isset( $this->form_settings['notification'][ $type . '_body' ] ) ? $this->form_settings['notification'][ $type . '_body' ] : '';
@@ -732,12 +733,12 @@ class Frontend_Form_Ajax {
         }
 
         // 3) Very old separate fields (only for edit notifications)
-        if ( ! $enabled && 'edit' === $type && ! empty( $this->form_settings['notification_' . $type ] )
-             && wpuf_is_checkbox_or_toggle_on( $this->form_settings['notification_' . $type ] ) ) {
+        if ( ! $enabled && 'edit' === $type && ! empty( $this->form_settings[ 'notification_' . $type ] )
+             && wpuf_is_checkbox_or_toggle_on( $this->form_settings[ 'notification_' . $type ] ) ) {
             $enabled = true;
-            $body    = isset( $this->form_settings['notification_' . $type . '_body' ] ) ? $this->form_settings['notification_' . $type . '_body' ] : '';
-            $to      = isset( $this->form_settings['notification_' . $type . '_to' ] ) ? $this->form_settings['notification_' . $type . '_to' ] : '';
-            $subject = isset( $this->form_settings['notification_' . $type . '_subject' ] ) ? $this->form_settings['notification_' . $type . '_subject' ] : '';
+            $body    = isset( $this->form_settings[ 'notification_' . $type . '_body' ] ) ? $this->form_settings[ 'notification_' . $type . '_body' ] : '';
+            $to      = isset( $this->form_settings[ 'notification_' . $type . '_to' ] ) ? $this->form_settings[ 'notification_' . $type . '_to' ] : '';
+            $subject = isset( $this->form_settings[ 'notification_' . $type . '_subject' ] ) ? $this->form_settings[ 'notification_' . $type . '_subject' ] : '';
         }
 
         return [
@@ -773,7 +774,7 @@ class Frontend_Form_Ajax {
         if ( ! is_user_logged_in() ) {
             if ( isset( $this->form_settings['post_permission'] ) && 'guest_post' === $this->form_settings['post_permission'] && ! empty( $this->form_settings['guest_details'] ) && wpuf_is_checkbox_or_toggle_on(
                 $this->form_settings['guest_details']
-            )) {
+            ) ) {
                 $guest_name = isset( $_POST['guest_name'] ) ? sanitize_text_field( wp_unslash( $_POST['guest_name'] ) ) : '';
                 $guest_email = isset( $_POST['guest_email'] ) ? sanitize_email(
                     wp_unslash( $_POST['guest_email'] )
@@ -1053,5 +1054,4 @@ class Frontend_Form_Ajax {
 
         return $url ? $url : $value;
     }
-
 }
