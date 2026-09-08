@@ -13,7 +13,7 @@
   "require": {
     "php": ">=7.4",
     "composer/installers": ">=1.4",
-    "wedevs/wp-utils": "dev-main"
+    "wedevs/wp-utils": "^1.1"
   },
   "require-dev": {
     "wp-coding-standards/wpcs": "dev-develop",
@@ -37,6 +37,9 @@
     ]
   },
   "config": {
+    "platform": {
+      "php": "7.4"
+    },
     "allow-plugins": {
       "composer/installers": true,
       "dealerdirect/phpcodesniffer-composer-installer": true

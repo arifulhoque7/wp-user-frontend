@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1fa30eae591844494a2c8a0926763809",
+    "content-hash": "0e78095930084009f0fd1293fa43efa1",
     "packages": [
         {
             "name": "composer/installers",
@@ -154,16 +154,16 @@
         },
         {
             "name": "wedevs/wp-utils",
-            "version": "dev-main",
+            "version": "v1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/weDevsOfficial/wp-utils.git",
-                "reference": "e5d072e9ed80b8af8fcd3cb0ca7a8a749568fa5f"
+                "reference": "ac0e390ddb7a26a963161ca50e554f88bc460998"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/weDevsOfficial/wp-utils/zipball/e5d072e9ed80b8af8fcd3cb0ca7a8a749568fa5f",
-                "reference": "e5d072e9ed80b8af8fcd3cb0ca7a8a749568fa5f",
+                "url": "https://api.github.com/repos/weDevsOfficial/wp-utils/zipball/ac0e390ddb7a26a963161ca50e554f88bc460998",
+                "reference": "ac0e390ddb7a26a963161ca50e554f88bc460998",
                 "shasum": ""
             },
             "require-dev": {
@@ -173,7 +173,6 @@
                 "tareq1988/wp-php-cs-fixer": "dev-master",
                 "wp-coding-standards/wpcs": "dev-master"
             },
-            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -200,9 +199,9 @@
             ],
             "support": {
                 "issues": "https://github.com/weDevsOfficial/wp-utils/issues",
-                "source": "https://github.com/weDevsOfficial/wp-utils/tree/main"
+                "source": "https://github.com/weDevsOfficial/wp-utils/tree/v1.1"
             },
-            "time": "2023-06-06T13:37:32+00:00"
+            "time": "2023-06-06T13:28:18+00:00"
         }
     ],
     "packages-dev": [
@@ -2588,16 +2587,18 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "wedevs/wp-utils": 20,
-        "wp-coding-standards/wpcs": 20,
+        "phpcompatibility/phpcompatibility-wp": 20,
         "tareq1988/wp-php-cs-fixer": 20,
-        "phpcompatibility/phpcompatibility-wp": 20
+        "wp-coding-standards/wpcs": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": ">=5.5"
+        "php": ">=7.4"
     },
-    "platform-dev": [],
-    "plugin-api-version": "2.6.0"
+    "platform-dev": {},
+    "platform-overrides": {
+        "php": "7.4"
+    },
+    "plugin-api-version": "2.9.0"
 }
