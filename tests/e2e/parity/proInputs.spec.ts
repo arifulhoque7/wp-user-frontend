@@ -64,7 +64,7 @@ test.describe('Parity pro option inputs', () => {
         const parts = panel.locator('.panel-field-opt-address > div');
         expect(await parts.count(), 'one row per stored address part').toBe(6);
         await parts.nth(4).locator('> div').first().click();
-        await expect(panel.locator('.address-country-default .selectize-control.single'), 'default country selectize').toBeVisible();
+        await expect(panel.locator('.address-country-default .selectize-control.single.default-country'), 'default country selectize').toBeVisible();
 
         // Pricing options: drag the second row above the first.
         await openOptions('pricing_checkbox');

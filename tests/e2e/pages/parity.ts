@@ -92,9 +92,16 @@ export class ParityPage {
             if (!dev || !br || !orig) {
                 return;
             }
+            // Develop's visibility watcher copies the visibility choice into
+            // `selected` (the option default), wiping a default the user picked; the
+            // branch keeps the picked default (agreed: do not copy the bug).
             const visibility = dev.wpuf_visibility as { selected?: unknown } | undefined;
-            if (!('selected' in orig) && !('selected' in br) && visibility && dev.selected === visibility.selected) {
-                delete dev.selected;
+            if (visibility && dev.selected === visibility.selected && dev.selected !== br.selected) {
+                if ('selected' in br) {
+                    dev.selected = br.selected;
+                } else if (!('selected' in orig)) {
+                    delete dev.selected;
+                }
             }
             // Develop never reveals "Visible on product page" on a taxonomy field
             // without a stored woo_attr (its store adds the key non-reactively);
@@ -444,10 +451,37 @@ export class ParitySitePage {
                 continue;
             }
             const actions: string[] = [];
+            // Option list editor (dropdown, radio, checkbox, pricing, ...): add a row,
+            // rename every row (and price it), then pick the last one as default.
+            if (await row.locator('.option-field-option-chooser').count()) {
+                await row.locator('.plus-buttons').last().click();
+                const optionRows = row.locator('.option-field-option');
+                const optionCount = await optionRows.count();
+                for (let o = 0; o < optionCount; o++) {
+                    const inputs = optionRows.nth(o).locator('input[type="text"], input[type="number"]');
+                    await inputs.first().fill(`Choice ${tag} ${o}`);
+                    await inputs.first().blur();
+                    if ((await inputs.count()) > 1) {
+                        await inputs.last().fill(String(10 + o));
+                        await inputs.last().blur();
+                    }
+                }
+                await optionRows.last().locator('input[type="radio"], input[type="checkbox"]').first().check({ force: true });
+                done.push(`${rowType} | ${label} | options=${optionCount}`);
+                continue;
+            }
             // Selectize hides the real <select> behind a search box: pick its last
             // option through the selectize API, as the native branch below does.
             const selectized = row.locator('select.selectized');
             for (let c = 0; c < await selectized.count(); c++) {
+                // Only lists a user can reach: skip controls that are hidden or locked.
+                const reachable = await selectized.nth(c).evaluate((el) => {
+                    const control = el.nextElementSibling as HTMLElement | null;
+                    return !(el as HTMLSelectElement).disabled && !!control && !!control.offsetParent;
+                });
+                if (!reachable) {
+                    continue;
+                }
                 const picked = await selectized.nth(c).evaluate((el) => {
                     const widget = (el as unknown as { selectize?: { options: Record<string, unknown>; addItem: (v: string) => void } }).selectize;
                     const values = Array.from((el as HTMLSelectElement).options).map((o) => o.value).filter(Boolean);
@@ -485,7 +519,7 @@ export class ParitySitePage {
                 await checks.nth(c).click({ force: true });
                 actions.push(`toggle=${await checks.nth(c).getAttribute('value')}`);
             }
-            const selects = row.locator('select:visible');
+            const selects = row.locator('select:visible:not([disabled])');
             for (let c = 0; c < await selects.count(); c++) {
                 const values = await selects.nth(c).locator('option').evaluateAll((options) => options.map((o) => (o as HTMLOptionElement).value));
                 if (values.length) {
