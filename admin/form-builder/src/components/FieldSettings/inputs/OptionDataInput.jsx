@@ -307,7 +307,7 @@ export default function OptionDataInput( { optionField, field, builderClassNames
                         </button>
                     </div>
                     { /* Bulk Add — pro can replace via filter, free shows teaser */ }
-                    { applyFilters( 'wpuf.formBuilder.optionDataBulkAdd', null, options, setOptions ) || (
+                    { applyFilters( 'wpuf.formBuilder.optionDataBulkAdd', null, options, setOptions, syncValue ) || (
                         <a
                             href={ ( window.wpuf_form_builder || {} ).pro_link || '' }
                             target="_blank"

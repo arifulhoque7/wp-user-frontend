@@ -17,6 +17,7 @@ import { fireRootInit } from './extensions/hooks';
 import { registerFreeFieldPreviews } from './components/FieldPreview';
 import { useFieldClasses, formatPrice } from './hooks/useFieldClasses';
 import HelpText from './components/FieldPreview/HelpText';
+import SettingHelpText from './components/FieldSettings/inputs/SettingHelpText';
 import FormBuilder from './components/FormBuilder';
 
 /**
@@ -88,6 +89,7 @@ window.wpuf.storeName = STORE_NAME;
 window.wpuf.useFieldClasses = useFieldClasses;
 window.wpuf.formatPrice = formatPrice;
 window.wpuf.HelpText = HelpText;
+window.wpuf.SettingHelpText = SettingHelpText;
 
 /**
  * Mount the React app.
