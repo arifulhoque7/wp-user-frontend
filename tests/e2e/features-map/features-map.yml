@@ -912,3 +912,5 @@ features:
     name: Pro settings and Feature_Lock reach WPUF REST routes without a request URL
   - id: CTR0001
     name: Admin screens keep the develop runtime contract
+  - id: PAR0014
+    name: Untouched subscription save leaves the pack byte-identical

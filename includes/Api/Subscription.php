@@ -630,6 +630,17 @@ class Subscription extends WP_REST_Controller {
                 }
             }
 
+            // The pack GET returns an empty posting restriction for every pack; an
+            // empty list that was never stored stays absent on save.
+            if (
+                isset( $request_subscription['meta_value'] )
+                && array_key_exists( '_sub_allowed_term_ids', (array) $request_subscription['meta_value'] )
+                && empty( $request_subscription['meta_value']['_sub_allowed_term_ids'] )
+                && ! metadata_exists( 'post', $id, '_sub_allowed_term_ids' )
+            ) {
+                unset( $request_subscription['meta_value']['_sub_allowed_term_ids'] );
+            }
+
             $request->set_param( 'subscription', $request_subscription );
 
             do_action( 'wpuf_before_update_subscription_pack_meta', $id, $request );

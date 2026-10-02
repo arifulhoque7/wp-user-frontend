@@ -185,4 +185,10 @@ test.describe('Parity builder shapes', () => {
         ]);
         expect(result.classic_hooks).toEqual(['wpuf_update_subscription_pack']);
     });
+
+    test('PAR0014 : untouched subscription save leaves the pack byte-identical (1.9, G3)', { tag: ['@Parity', '@Test_PAR0014'] }, () => {
+        const out = parityWp(paritySite('branch'), ['eval-file', path.join(parityDir, 'wp', 'check-subscription-noop.php')]);
+
+        expect(JSON.parse(out.trim().split('\n').pop() || '{}')).toEqual({ saved: true, post: true, changed: [] });
+    });
 });
