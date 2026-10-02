@@ -33,4 +33,20 @@ test.describe('Branch admin health', () => {
             expect.soft(found, path).toEqual({ errors: [], badAssets: [] });
         }
     });
+
+    test('HLT0002 : registration list shows the Pro shortcode pair and the AI entry', { tag: ['@Parity', '@Test_HLT0002'] }, async ({ browser }) => {
+        const branch = paritySite('branch');
+        const formId = new ParityPage().doSeedForm(branch, 'registration-form.json');
+        const admin = await ParitySitePage.doOpen(browser, branch);
+        await admin.page.goto('/wp-admin/admin.php?page=wpuf-profile-forms');
+        const codes = admin.page.locator('td code');
+        await expect(codes.first()).toBeVisible();
+        const all = await codes.allTextContents();
+        const ai = await admin.page.getByRole('button', { name: 'AI Form Builder' }).count();
+        await admin.doClose();
+
+        expect(all, 'registration shortcode').toContain(`[wpuf_profile type="registration" id="${formId}"]`);
+        expect(all, 'edit profile shortcode').toContain(`[wpuf_profile type="profile" id="${formId}"]`);
+        expect(ai, 'AI Form Builder button').toBe(1);
+    });
 });

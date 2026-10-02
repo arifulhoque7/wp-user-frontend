@@ -878,3 +878,5 @@ features:
     name: Settings screen posts only the edited field and writes nothing else
   - id: PAR0005
     name: Read only stores the develop shape; integrations kept
+  - id: HLT0002
+    name: Registration list shows the Pro shortcode pair and the AI entry

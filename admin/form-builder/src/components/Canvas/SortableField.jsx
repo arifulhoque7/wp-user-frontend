@@ -1,5 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { applyFilters } from '@wordpress/hooks';
 import { filterBuilderCssClasses } from '../../utils/canvasHelpers';
 import FieldPreview from './FieldPreview';
 import FieldActions from './FieldActions';
@@ -33,7 +34,9 @@ export default function SortableField( { field, index, container = TOP_LEVEL } )
 
     const isColumnOrRepeat = field.input_type === 'column_field' || field.input_type === 'repeat';
     const isHidden = field.template === 'custom_hidden_field';
-    const filteredCss = filterBuilderCssClasses( field.css );
+    // Classes that hide a field on the frontend are dropped on the stage; Pro
+    // and add-ons can adjust the rest.
+    const filteredCss = applyFilters( 'wpuf.formBuilder.fieldCssClasses', filterBuilderCssClasses( field.css ), field );
 
     const classNames = [
         'field-items',

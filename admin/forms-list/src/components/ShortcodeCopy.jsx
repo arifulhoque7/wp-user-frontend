@@ -5,12 +5,14 @@
  */
 import { COPY_SVG_PATH } from '../utils/constants';
 
-const ShortcodeCopy = ( { shortcode, copiedKey, currentCopiedKey, onCopy } ) => {
+const ShortcodeCopy = ( { shortcode, copiedKey, currentCopiedKey, onCopy, compact = false } ) => {
     const isCopied = currentCopiedKey === copiedKey;
+    // Compact: the smaller code box develop used for the profile shortcode pair.
+    const spacing = compact ? 'wpuf-mx-2 wpuf-py-[5px] wpuf-px-[10px]' : 'wpuf-mr-2 wpuf-py-[10px] wpuf-px-[14px]';
 
     return (
         <div className="wpuf-flex wpuf-items-center">
-            <code className="wpuf-mr-2 wpuf-bg-gray-50 wpuf-border wpuf-border-gray-300 wpuf-rounded-md wpuf-shadow-sm wpuf-py-[10px] wpuf-px-[14px]">
+            <code className={ `${ spacing } wpuf-bg-gray-50 wpuf-border wpuf-border-gray-300 wpuf-rounded-md wpuf-shadow-sm` }>
                 { isCopied ? 'Copied!' : shortcode }
             </code>
             <button

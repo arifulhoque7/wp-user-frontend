@@ -27,6 +27,7 @@ const FormsTable = ( {
     onSelectForm,
     onAction,
     postType,
+    formType,
     getShortcode,
     copiedKey,
     onCopyShortcode,
@@ -111,12 +112,21 @@ const FormsTable = ( {
             thClassName: 'wpuf-px-3 wpuf-py-3.5 wpuf-text-left wpuf-text-sm wpuf-font-semibold wpuf-text-gray-900',
             render: ( form ) => (
                 <td key="shortcode" className="wpuf-whitespace-nowrap wpuf-px-3 wpuf-py-4 wpuf-text-sm wpuf-font-medium wpuf-text-gray-500">
-                    <ShortcodeCopy
-                        shortcode={ getShortcode( form.ID ) }
-                        copiedKey={ `shortcode-${ form.ID }` }
-                        currentCopiedKey={ copiedKey }
-                        onCopy={ onCopyShortcode }
-                    />
+                    { /* Pro swaps in the registration + edit profile pair on profile forms. */ }
+                    { applyFilters(
+                        'wpuf.formsList.shortcodeRender',
+                        <ShortcodeCopy
+                            shortcode={ getShortcode( form.ID ) }
+                            copiedKey={ `shortcode-${ form.ID }` }
+                            currentCopiedKey={ copiedKey }
+                            onCopy={ onCopyShortcode }
+                        />,
+                        form,
+                        formType,
+                        ShortcodeCopy,
+                        copiedKey,
+                        onCopyShortcode
+                    ) }
                 </td>
             ),
         },
@@ -156,7 +166,7 @@ const FormsTable = ( {
                 </td>
             ),
         },
-    ], [ selectAllChecked, indeterminate, selectedForms, onSelectAll, onSelectForm, onAction, getShortcode, copiedKey, onCopyShortcode, menuItems ] );
+    ], [ selectAllChecked, indeterminate, selectedForms, onSelectAll, onSelectForm, onAction, formType, getShortcode, copiedKey, onCopyShortcode, menuItems ] );
 
     const columns = applyFilters( 'wpuf.formsList.tableColumns', defaultColumns, postType );
 

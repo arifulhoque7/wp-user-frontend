@@ -51,14 +51,14 @@ const EmptyState = ( { type, onAddNew, onAIFormBuilder } ) => {
                 </p>
 
                 <div className="wpuf-flex wpuf-gap-3 wpuf-justify-center">
-                    <button
+                    { onAIFormBuilder && ( <button
                         type="button"
                         onClick={ onAIFormBuilder }
                         className="wpuf-rounded-md wpuf-text-center wpuf-bg-gradient-to-r wpuf-from-purple-600 wpuf-to-blue-600 wpuf-px-3 wpuf-py-2 wpuf-text-sm wpuf-font-semibold wpuf-text-white wpuf-shadow-sm hover:wpuf-from-purple-700 hover:wpuf-to-blue-700 hover:wpuf-text-white focus:wpuf-from-purple-700 focus:wpuf-to-blue-700 focus:wpuf-text-white focus:wpuf-shadow-none hover:wpuf-cursor-pointer wpuf-inline-flex wpuf-items-center"
                     >
                         <AISvgIcon />
                         { __( 'AI Form Builder', 'wp-user-frontend' ) }
-                    </button>
+                    </button> ) }
                     <button
                         type="button"
                         onClick={ onAddNew }

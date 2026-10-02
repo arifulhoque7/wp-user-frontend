@@ -25,6 +25,8 @@ const FormsList = ( {
     pageTitle = 'Post Forms',
 } ) => {
     const filteredPageTitle = applyFilters( 'wpuf.formsList.pageTitle', pageTitle, formType );
+    // Pro hides the AI entry on the registration list when the free AI handler is missing.
+    const aiFormBuilderAvailable = applyFilters( 'wpuf.formsList.aiFormBuilderAvailable', true, formType );
 
     const isPlainPermalink = wpuf_forms_list.is_plain_permalink;
     const permalinkUrl = wpuf_forms_list.permalink_settings_url;
@@ -340,7 +342,7 @@ const FormsList = ( {
                     { filteredPageTitle }
                 </h3>
                 <div className="wpuf-flex wpuf-gap-3">
-                    <button
+                    { aiFormBuilderAvailable && ( <button
                         type="button"
                         onClick={ openAIFormBuilder }
                         className="wpuf-rounded-md wpuf-text-center wpuf-bg-gradient-to-r wpuf-from-purple-600 wpuf-to-blue-600 wpuf-px-3 wpuf-py-2 wpuf-text-sm wpuf-font-semibold wpuf-text-white wpuf-shadow-sm hover:wpuf-from-purple-700 hover:wpuf-to-blue-700 hover:wpuf-text-white focus:wpuf-from-purple-700 focus:wpuf-to-blue-700 focus:wpuf-text-white focus:wpuf-shadow-none hover:wpuf-cursor-pointer wpuf-inline-flex wpuf-items-center"
@@ -351,7 +353,7 @@ const FormsList = ( {
                             <path d="M14.0785 17.1394L13.75 18.125L13.4215 17.1394C13.2348 16.5795 12.7955 16.1402 12.2356 15.9535L11.25 15.625L12.2356 15.2965C12.7955 15.1098 13.2348 14.6705 13.4215 14.1106L13.75 13.125L14.0785 14.1106C14.2652 14.6705 14.7045 15.1098 15.2644 15.2965L16.25 15.625L15.2644 15.9535C14.7045 16.1402 14.2652 16.5795 14.0785 17.1394Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                         { __( 'AI Form Builder', 'wp-user-frontend' ) }
-                    </button>
+                    </button> ) }
                     <button
                         type="button"
                         onClick={ openModal }
@@ -422,7 +424,7 @@ const FormsList = ( {
                 <EmptyState
                     type={ getEmptyStateType() }
                     onAddNew={ openModal }
-                    onAIFormBuilder={ openAIFormBuilder }
+                    onAIFormBuilder={ aiFormBuilderAvailable ? openAIFormBuilder : null }
                 />
             ) }
 
@@ -438,6 +440,7 @@ const FormsList = ( {
                         onSelectForm={ handleSelectForm }
                         onAction={ handleAction }
                         postType={ postType }
+                        formType={ formType }
                         getShortcode={ getShortcode }
                         copiedKey={ copiedKey }
                         onCopyShortcode={ handleCopyShortcode }
