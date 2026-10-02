@@ -94,6 +94,7 @@ function NotificationSubSection( { subKey, subSection, settings, onChange } ) {
                         return (
                             <SettingsField
                                 key={ fieldName }
+                                slotKey={ fieldName }
                                 field={ fieldDef }
                                 name={ settingKey }
                                 value={ settings[ settingKey ] !== undefined ? settings[ settingKey ] : ( fieldDef.value || '' ) }

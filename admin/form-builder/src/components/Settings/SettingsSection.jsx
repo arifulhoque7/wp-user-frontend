@@ -141,16 +141,14 @@ export default function SettingsSection( { sectionKey, sectionData } ) {
                                 </p>
                             ) }
                             { subSection.fields && Object.entries( subSection.fields ).map( ( [ fieldName, fieldDef ] ) => {
-                                if ( ! isVisible( fieldName ) ) {
-                                    return null;
-                                }
-
                                 const settingName = fieldDef.name || fieldName;
                                 const settingValue = resolveSettingValue( settings, fieldName, fieldDef );
 
                                 return (
                                     <SettingsField
                                         key={ fieldName }
+                                        slotKey={ fieldName }
+                                        hideControl={ ! isVisible( fieldName ) }
                                         field={ fieldDef }
                                         name={ settingName }
                                         value={ settingValue }
@@ -187,16 +185,14 @@ export default function SettingsSection( { sectionKey, sectionData } ) {
                     if ( ! fieldDef || typeof fieldDef !== 'object' ) {
                         return null;
                     }
-                    if ( ! isVisible( fieldName ) ) {
-                        return null;
-                    }
-
                     const settingName = fieldDef.name || fieldName;
                     const settingValue = resolveSettingValue( settings, fieldName, fieldDef );
 
                     return (
                         <SettingsField
                             key={ fieldName }
+                            slotKey={ fieldName }
+                            hideControl={ ! isVisible( fieldName ) }
                             field={ fieldDef }
                             name={ settingName }
                             value={ settingValue }

@@ -3,6 +3,7 @@
 namespace WeDevs\Wpuf\Admin\Forms;
 
 use WeDevs\Wpuf\Free\Pro_Prompt;
+use WeDevs\Wpuf\Builder\HookBridge;
 
 /**
  * Form Builder framework
@@ -254,6 +255,16 @@ class Admin_Form_Builder {
             ]
         );
         $wpuf_form_builder = wpuf_unset_conditional( $wpuf_form_builder );
+
+        // Fire the PHP hooks the Vue builder views fired (settings rows, tabs, Vue
+        // slots) and hand other plugins' output to the React builder per slot.
+        $hook_bridge                       = new HookBridge(
+            $this->settings['form_type'],
+            isset( $wpuf_form_builder['form_settings'] ) ? $wpuf_form_builder['form_settings'] : []
+        );
+        $wpuf_form_builder['legacy_slots'] = $hook_bridge->collect(
+            isset( $wpuf_form_builder['settings_items'] ) ? $wpuf_form_builder['settings_items'] : []
+        );
 
         // The builder prints these setting texts as HTML, like develop's views did
         // (`wp_kses_post`), so they are filtered the same way before they leave PHP.

@@ -6,6 +6,7 @@ import Sidebar from './Sidebar/Sidebar';
 import BuilderCanvas from './Canvas/BuilderCanvas';
 import FormSettings from './Settings/FormSettings';
 import useDirtyState from '../hooks/useDirtyState';
+import LegacySlot, { getLegacySlots } from '../common/LegacySlot';
 
 export default function FormBuilder() {
     const { formType } = useSelect( ( select ) => {
@@ -36,6 +37,9 @@ export default function FormBuilder() {
             { activeTab === 'form-settings' && (
                 <FormSettings />
             ) }
+
+            { /* Tab contents other plugins printed on wpuf-form-builder-tab-contents-{type}. */ }
+            <LegacySlot id="tab-contents" html={ getLegacySlots().tabs.contents } className="wpuf-m-4" />
         </div>
     );
 }

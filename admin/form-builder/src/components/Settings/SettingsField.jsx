@@ -1,4 +1,5 @@
 import { RawHTML } from '@wordpress/element';
+import LegacySlot, { getLegacySlots } from '../../common/LegacySlot';
 import ToggleField from './fields/ToggleField';
 import TextField from './fields/TextField';
 import NumberField from './fields/NumberField';
@@ -47,7 +48,29 @@ export const SETTING_CLASS_NAMES = {
  * Wraps each field in Vue's `wpuf-mt-6 wpuf-input-container` div
  * matching the wpuf_render_settings_field() PHP function.
  */
-export default function SettingsField( { field, name, value, onChange, settings } ) {
+export default function SettingsField( { slotKey, hideControl = false, ...props } ) {
+    const row = slotKey ? getLegacySlots().settings[ slotKey ] : null;
+
+    if ( ! row ) {
+        return hideControl ? null : <SettingsFieldControl { ...props } />;
+    }
+
+    // Output other plugins printed before / after this row (develop's
+    // wpuf_before|after_{post,registration}_form_settings_field hooks). It stays
+    // when a dependency hides the row: develop hid only the row's input container.
+    return (
+        <>
+            <LegacySlot id={ `setting-before-${ slotKey }` } html={ row.before } />
+            { ! hideControl && <SettingsFieldControl { ...props } /> }
+            <LegacySlot id={ `setting-after-${ slotKey }` } html={ row.after } />
+        </>
+    );
+}
+
+/**
+ * The control for one settings row.
+ */
+function SettingsFieldControl( { field, name, value, onChange, settings } ) {
     // inline_fields is a special container type — Vue uses wpuf-mt-6 wpuf-flex wpuf-input-container
     if ( field.type === 'inline_fields' || ( ! field.type && field.fields ) ) {
         return (

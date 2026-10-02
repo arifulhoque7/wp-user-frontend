@@ -5,6 +5,7 @@ import { STORE_NAME } from '../store';
 import { fireBeforeSave, fireAfterSave } from '../extensions/hooks';
 import { showToast } from '../common/Toast';
 import { showAlert } from '../common/SwalModal';
+import { getLegacySettingsPayload } from '../common/LegacySlot';
 
 /**
  * Check if a toggle/checkbox value is considered "on".
@@ -165,12 +166,17 @@ export default function useFormSave() {
         // Serialize remaining PHP form elements (nonce, post_id, etc.)
         const formData = new URLSearchParams( new FormData( formElement ) ).toString();
 
+        // Settings other plugins printed on the builder hooks (legacy slots).
+        const legacy = getLegacySettingsPayload();
+
         wp.ajax.send( 'wpuf_form_builder_save_form', {
             data: {
                 form_data: formData,
                 form_fields: JSON.stringify( formFields ),
                 notifications: JSON.stringify( notifications ),
                 settings: JSON.stringify( settings ),
+                legacy_settings: legacy.data,
+                legacy_settings_keys: JSON.stringify( legacy.keys ),
             },
 
             success( response ) {

@@ -18,6 +18,7 @@ import { registerFreeFieldPreviews } from './components/FieldPreview';
 import { useFieldClasses, formatPrice } from './hooks/useFieldClasses';
 import HelpText from './components/FieldPreview/HelpText';
 import SettingHelpText from './components/FieldSettings/inputs/SettingHelpText';
+import LegacySlot from './common/LegacySlot';
 import FormBuilder from './components/FormBuilder';
 
 /**
@@ -90,6 +91,7 @@ window.wpuf.useFieldClasses = useFieldClasses;
 window.wpuf.formatPrice = formatPrice;
 window.wpuf.HelpText = HelpText;
 window.wpuf.SettingHelpText = SettingHelpText;
+window.wpuf.LegacySlot = LegacySlot;
 
 /**
  * Mount the React app.

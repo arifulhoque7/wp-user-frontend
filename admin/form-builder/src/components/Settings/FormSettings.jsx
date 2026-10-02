@@ -5,6 +5,7 @@ import { applyFilters } from '@wordpress/hooks';
 import { STORE_NAME } from '../../store';
 import SettingsNav from './SettingsNav';
 import SettingsSection from './SettingsSection';
+import LegacySlot, { getLegacySlots } from '../../common/LegacySlot';
 import ModulesEmptyState from './ModulesEmptyState';
 import useFormSave from '../../hooks/useFormSave';
 
@@ -77,6 +78,12 @@ export default function FormSettings() {
                     </h2>
                 </div>
 
+                { getLegacySlots().unsupported && (
+                    <div className="wpuf-mb-6 wpuf-p-4 wpuf-bg-yellow-50 wpuf-text-sm wpuf-text-yellow-800 wpuf-border-l-4 wpuf-border-yellow-400">
+                        { __( 'An extension added builder settings that need scripts or Vue templates. They are shown as static fields here; their interactive parts do not run.', 'wp-user-frontend' ) }
+                    </div>
+                ) }
+
                 { /* Section body */ }
                 <div className="wpuf-border-y wpuf-border-gray-200 wpuf-py-8">
                     <SettingsSection
@@ -94,6 +101,11 @@ export default function FormSettings() {
                         </div>
                     ) }
                 </div>
+
+                { /* Settings other plugins printed on the settings tab hooks
+                    (wpuf_form_builder_settings_tabs_{type}, wpuf_{post,profile}_form_tab). */ }
+                <LegacySlot id="tab-settings" html={ getLegacySlots().tabs.settings } className="wpuf-mt-8" />
+                <LegacySlot id="tab-form-tab" html={ getLegacySlots().tabs.form_tab } className="wpuf-mt-8" />
 
                 { /* Cancel + Save buttons */ }
                 <div className="wpuf-flex wpuf-space-x-4 wpuf-items-center wpuf-mt-8">

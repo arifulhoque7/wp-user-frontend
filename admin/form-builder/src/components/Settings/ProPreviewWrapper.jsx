@@ -32,6 +32,7 @@ export default function ProPreviewWrapper( { proPreview, settings } ) {
                 { Object.entries( proPreview.fields ).map( ( [ fieldName, fieldDef ] ) => (
                     <SettingsField
                         key={ fieldName }
+                        slotKey={ fieldName }
                         field={ fieldDef }
                         name={ fieldName }
                         value={ fieldDef.value !== undefined ? fieldDef.value : '' }

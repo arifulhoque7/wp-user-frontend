@@ -3,6 +3,7 @@
 namespace WeDevs\Wpuf\Ajax;
 
 use WeDevs\Wpuf\Admin\Forms\Admin_Form_Builder;
+use WeDevs\Wpuf\Builder\HookBridge;
 
 /**
  * Ajax handlers
@@ -72,6 +73,22 @@ class Admin_Form_Builder_Ajax {
             $settings = json_decode( $post_data['settings'], true );
         } else {
             $settings = isset( $form_data['wpuf_settings'] ) ? $form_data['wpuf_settings'] : [];
+        }
+
+        // Settings other plugins printed on the builder hooks (legacy slots): the
+        // posted value wins for the keys those slots own, as develop's form post.
+        if ( isset( $post_data['legacy_settings_keys'] ) ) {
+            $legacy_data = [];
+
+            if ( isset( $post_data['legacy_settings'] ) && is_string( $post_data['legacy_settings'] ) ) {
+                parse_str( $post_data['legacy_settings'], $legacy_data );
+            }
+
+            $settings = HookBridge::merge_posted_settings(
+                $settings,
+                $legacy_data,
+                json_decode( (string) $post_data['legacy_settings_keys'], true )
+            );
         }
 
         if ( isset( $post_data['integrations'] ) ) {

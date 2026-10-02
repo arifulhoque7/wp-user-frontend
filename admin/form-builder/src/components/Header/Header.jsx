@@ -3,6 +3,7 @@ import { useSelect, useDispatch } from '@wordpress/data';
 import { __ } from '@wordpress/i18n';
 import { STORE_NAME } from '../../store';
 import useFormSave from '../../hooks/useFormSave';
+import LegacySlot, { getLegacySlots } from '../../common/LegacySlot';
 
 export default function Header( { activeTab, onTabChange } ) {
     const { post, formType } = useSelect( ( select ) => {
@@ -191,6 +192,8 @@ export default function Header( { activeTab, onTabChange } ) {
                         </a>
                     ) ) }
                     <div id="wpuf-pro-tab-slot" />
+                    { /* Tabs other plugins printed on wpuf-form-builder-tabs-{type}. */ }
+                    <LegacySlot id="tab-nav" html={ getLegacySlots().tabs.nav } className="wpuf-flex wpuf-items-center" />
                 </div>
             </div>
         </div>
