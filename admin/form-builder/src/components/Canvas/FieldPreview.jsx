@@ -4,6 +4,17 @@ import { STORE_NAME } from '../../store';
 import { getFieldPreview } from '../../extensions/registry';
 import { hasHiddenCssClass } from '../../utils/canvasHelpers';
 
+/**
+ * Previews keep their inputs uncontrolled (defaultValue), so remount one when a
+ * shown default changes; develop's Vue bindings updated the stage live.
+ *
+ * @param {Object} field Field
+ * @return {string} Key
+ */
+function previewKey( field ) {
+    return JSON.stringify( [ field.default, field.country_list, field.address?.country_select?.value ] );
+}
+
 export default function FieldPreview( { field } ) {
     const { fieldSettings, isProActive, editingFieldId } = useSelect( ( select ) => {
         const store = select( STORE_NAME );
@@ -75,7 +86,7 @@ export default function FieldPreview( { field } ) {
             >
                 <div className="wpuf-absolute wpuf-w-full wpuf-h-full wpuf-z-10" />
                 { PreviewComponent && ! isProPreview ? (
-                    <PreviewComponent field={ field } />
+                    <PreviewComponent key={ previewKey( field ) } field={ field } />
                 ) : null }
                 { isProPreview && (
                     <div className="stage-pro-alert wpuf-text-center">

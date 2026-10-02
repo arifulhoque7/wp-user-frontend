@@ -354,6 +354,35 @@ export class ParitySitePage {
         }, template);
     }
 
+    /**
+     * Comparable shape of the last top level stage field: label, form controls and
+     * visible text, with the hover action bar left out (framework markup differs).
+     */
+    async getLastStageFieldShape(): Promise<{ label: string; controls: string[]; text: string }> {
+        return this.page.locator(Selectors.parity.stageFields).evaluateAll((items) => {
+            const top = items.filter((item) => !item.parentElement?.closest('li[class*="form-field-"]'));
+            const clone = top[top.length - 1].cloneNode(true) as HTMLElement;
+            // Action bars and dnd-kit screen reader hints are framework markup, not field preview.
+            clone.querySelectorAll('[class*="buttons"], [id^="DndDescribedBy"], [id^="DndLiveRegion"]').forEach((node) => node.remove());
+            const controls = Array.from(clone.querySelectorAll('input, select, textarea')).map((control) => {
+                const el = control as HTMLInputElement;
+                const options = 'SELECT' === el.tagName
+                    ? '[' + Array.from((el as unknown as HTMLSelectElement).options).map((option) => option.text.trim()).join('|') + ']'
+                    : '';
+                return `${el.tagName.toLowerCase()}:${el.type || ''}${el.placeholder ? ' ph=' + el.placeholder : ''}${options}`;
+            });
+            const label = (clone.querySelector('label')?.textContent || '').replace(/\s+/g, ' ').trim();
+            // Text compared without whitespace: Vue templates add spaces between nodes, JSX does not.
+            return { label, controls, text: (clone.textContent || '').replace(/\s+/g, '') };
+        });
+    }
+
+    /** Text of the open SweetAlert, or '' when none is open. */
+    async getAlertText(): Promise<string> {
+        const alert = this.page.locator(Selectors.parity.alertPopup);
+        return (await alert.count()) ? (await alert.first().innerText()).replace(/\s+/g, ' ').trim() : '';
+    }
+
     /** Confirm any open SweetAlert (info or refusal) so the builder accepts clicks again. */
     async doDismissAlerts() {
         const alert = this.page.locator(Selectors.parity.alertPopup);

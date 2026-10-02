@@ -16,6 +16,7 @@ import { __ } from '@wordpress/i18n';
 import { createField } from '../../utils/fieldUtils';
 import SortableField from './SortableField';
 import HelpText from '../FieldPreview/HelpText';
+import SettingHelpText from '../FieldSettings/inputs/SettingHelpText';
 
 /**
  * Repeat field canvas component, same layout as the Vue form-repeat_field
@@ -133,7 +134,7 @@ export default function RepeatField( { field } ) {
                 <SortableContext items={ fieldIds } strategy={ verticalListSortingStrategy }>
                     <div className="wpuf-fields wpuf-repeat-field-builder-container">
                         <label htmlFor={ field.name } className="wpuf-option-field-title wpuf-font-sm wpuf-text-gray-700 wpuf-font-medium">
-                            { field.label }
+                            { field.label } <SettingHelpText text={ field.help_text } />
                         </label>
                         <hr className="wpuf-mt-4" />
                         <ul
