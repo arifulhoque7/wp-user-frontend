@@ -10,6 +10,25 @@ import { paritySite, paritySitesConfigured } from '../utils/paritySites';
  * branch). Conditional logic rows are covered separately (task 4.4d).
  */
 const FIXTURE = 'post-form-all-fields.json';
+
+// Fields the filler cannot drive the same way on both builders yet (1.9 classification):
+// option-list editors and step_start (task 0.4c-3); country list and address, where
+// develop exposes controls a user cannot reach (lists hidden under "Show all", parts
+// that expand when their checkbox is clicked).
+const HARNESS_GAPS: Record<string, string> = {
+    dropdown_field: '0.4c-3 option list',
+    multiple_select: '0.4c-3 option list',
+    radio_field: '0.4c-3 option list',
+    checkbox_field: '0.4c-3 option list',
+    pricing_checkbox: '0.4c-3 option list',
+    pricing_radio: '0.4c-3 option list',
+    pricing_dropdown: '0.4c-3 option list',
+    pricing_multiselect: '0.4c-3 option list',
+    ratings: '0.4c-3 option list',
+    step_start: '0.4c-3 step_start',
+    country_list_field: 'develop exposes hidden list selects',
+    address_field: 'develop expands parts on checkbox click',
+};
 const SKIP_ROWS = ['panel-field-opt-conditional-logic'];
 
 const templates = new ParityPage().readFixture(FIXTURE).fields
@@ -20,6 +39,7 @@ test.describe('Parity field fill', () => {
 
     for (const [index, template] of templates.entries()) {
         test(`PAR0004 : field ${String(index).padStart(2, '0')} ${template}: filling every option stores the same on branch as on develop`, { tag: ['@Parity', '@Test_PAR0004'] }, async ({ browser }) => {
+            test.skip(template in HARNESS_GAPS, `harness gap: ${HARNESS_GAPS[template]}`);
             const parity = new ParityPage();
             const stored: Partial<Record<'develop' | 'branch', FormDump>> = {};
             const rows: Partial<Record<'develop' | 'branch', string[]>> = {};

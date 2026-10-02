@@ -102,6 +102,10 @@ export class ParityPage {
             if (!('woo_attr_vis' in orig) && !('woo_attr_vis' in dev) && 'woo_attr_vis' in br) {
                 dev.woo_attr_vis = br.woo_attr_vis;
             }
+            if (dev.template === 'column_field' && br.column_space !== orig.column_space) {
+                dev.column_space = br.column_space;
+                dev.css = br.css;
+            }
             if (JSON.stringify(br.wpuf_cond) === JSON.stringify(orig.wpuf_cond)) {
                 if ('wpuf_cond' in br) {
                     dev.wpuf_cond = br.wpuf_cond;
@@ -116,12 +120,18 @@ export class ParityPage {
     /**
      * Option-row readings with the agreed deviations folded in: a saved field's
      * Meta Key reads `readonly` on the branch (develop accepts typing but its
-     * store ignores it), and the woo_attr_vis row develop never reveals.
+     * store ignores it), the woo_attr_vis row develop never reveals, and the
+     * column_space row develop never rendered.
      */
     withoutAgreedRowDeviations(rows: string[] = []): string[] {
         return rows
             .filter((row) => !row.startsWith('panel-field-opt-checkbox | Visible on product page |'))
-            .map((row) => (row.startsWith('panel-field-opt-text | Meta Key |') ? 'panel-field-opt-text | Meta Key | (agreed)' : row));
+            // Develop has no Vue component for the `number` option type, so it never
+            // showed Space Between Columns; the branch does.
+            .filter((row) => !row.startsWith('panel-field-opt-text | Space Between Columns |'))
+            .map((row) => (row.startsWith('panel-field-opt-text | Meta Key |') ? 'panel-field-opt-text | Meta Key | (agreed)' : row))
+            // Filler values carry the row index, which shifts once a row is left out.
+            .map((row) => row.replace(/fill=P (\d+) \d+\.(\d+)/g, 'fill=P $1 #.$2'));
     }
 
     /** Assert two stored forms are identical (values and PHP types). */
