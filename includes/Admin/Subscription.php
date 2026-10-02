@@ -429,7 +429,8 @@ class Subscription {
         $enable_post_expir    = '';
         $expire_post_status   = '';
         $post_expire_msg      = '';
-        $billing_amount       = isset( $post_data['billing_amount'] ) ? absint( $post_data['billing_amount'] ) : 0;
+        // Prices keep their decimals, like the REST save.
+        $billing_amount       = isset( $post_data['billing_amount'] ) ? floatval( $post_data['billing_amount'] ) : 0;
         $mail_after_expire    = isset( $post_data['post_expiration_settings'] ) && isset( $post_data['post_expiration_settings']['enable_mail_after_expired'] ) ? $post_data['post_expiration_settings']['enable_mail_after_expired'] : '';
         $expiration_number    = ! empty( $post_data['expiration_number'] ) ? absint( $post_data['expiration_number'] ) : '';
         $billing_cycle_number = ! empty( $post_data['billing_cycle_number'] ) ? sanitize_text_field( wp_unslash( $post_data['billing_cycle_number'] ) ) : 0;
@@ -472,6 +473,10 @@ class Subscription {
         update_post_meta( $subscription_id, 'additional_cpt_options', array_map( 'sanitize_text_field', $post_data['additional_cpt_options'] ) );
         update_post_meta( $subscription_id, '_enable_post_expiration', $enable_post_expir );
         update_post_meta( $subscription_id, '_post_expiration_time', $expiration_time );
+        // Same number/period keys the REST save writes.
+        $expiration_parts = explode( ' ', $expiration_time );
+        update_post_meta( $subscription_id, '_post_expiration_number', isset( $expiration_parts[1] ) ? (int) $expiration_parts[0] : '' );
+        update_post_meta( $subscription_id, '_post_expiration_period', isset( $expiration_parts[1] ) ? $expiration_parts[1] : '' );
 
         // Handle sort order field
         $sort_order = isset( $post_data['sort_order'] ) ? absint( $post_data['sort_order'] ) : 1;

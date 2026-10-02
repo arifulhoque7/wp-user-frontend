@@ -77,4 +77,15 @@ test.describe('Branch admin health', () => {
 
         expect(found).toEqual({ wpuf_forms: true, wpuf_profile: true });
     });
+
+    test('HLT0005 : subscription notices render and clear (B34)', { tag: ['@Parity', '@Test_HLT0005'] }, async ({ browser }) => {
+        const admin = await ParitySitePage.doOpen(browser, paritySite('branch'));
+        await admin.page.goto('/wp-admin/admin.php?page=wpuf_subscription');
+        await admin.page.waitForFunction(() => !!(window as unknown as { wp?: { data?: { select: (s: string) => unknown } } }).wp?.data?.select('wpuf/subscriptions-notice'));
+        await admin.page.evaluate(() => (window as unknown as { wp: { data: { dispatch: (s: string) => { addNotice: (n: object) => void } } } }).wp.data.dispatch('wpuf/subscriptions-notice').addNotice({ type: 'success', message: 'HLT0005 notice' }));
+        const toast = admin.page.locator('#toast-success');
+        await expect(toast).toContainText('HLT0005 notice');
+        await expect(toast).toBeHidden({ timeout: 6000 });
+        await admin.doClose();
+    });
 });

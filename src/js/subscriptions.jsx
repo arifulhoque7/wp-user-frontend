@@ -16,6 +16,7 @@ import ContentHeader from './components/subscriptions/ContentHeader';
 import QuickEdit from './components/subscriptions/QuickEdit';
 import UnsavedChanges from './components/subscriptions/UnsavedChanges';
 import Preferences from './components/subscriptions/Preferences';
+import Notices from './components/subscriptions/Notices';
 
 // Import stores to register them
 import './stores-react/subscription';
@@ -144,6 +145,9 @@ const SubscriptionsApp = () => {
 
             {/* Quick Edit modal */}
             <QuickEdit />
+
+            {/* Toasts from quick edit / preferences (develop's Notice list) */}
+            <Notices />
         </>
     );
 };

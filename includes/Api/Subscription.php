@@ -650,6 +650,9 @@ class Subscription extends WP_REST_Controller {
             update_post_meta( $id, '_enable_post_expiration', $enable_post_expir );
             update_post_meta( $id, '_post_expiration_number', $post_expiration_number );
             update_post_meta( $id, '_post_expiration_period', $post_expiration_period );
+            // Readers (User_Subscription, the pack details) use the strtotime()
+            // duration the classic metabox stored, e.g. "7 day".
+            update_post_meta( $id, '_post_expiration_time', ( $post_expiration_number && $post_expiration_period ) ? $post_expiration_number . ' ' . $post_expiration_period : '' );
             update_post_meta( $id, '_expired_post_status', $expire_post_status );
             update_post_meta( $id, '_enable_mail_after_expired', $mail_after_expire );
             update_post_meta( $id, '_post_expiration_message', $post_expire_msg );
@@ -660,6 +663,17 @@ class Subscription extends WP_REST_Controller {
             update_post_meta( $id, 'postnum_rollback_on_delete', $postnum_rollback_on_delete );
 
             do_action( 'wpuf_after_update_subscription_pack_meta', $id, $request );
+
+            // The classic pack screen fired this after saving; listeners (pro
+            // postnum rollback) read the classic field names.
+            $pack_data = [];
+            foreach ( (array) $subscription['meta_value'] as $meta_key => $meta_value ) {
+                $pack_data[ ltrim( $meta_key, '_' ) ] = $meta_value;
+            }
+            $pack_data['post_title']                 = $name;
+            $pack_data['postnum_rollback_on_delete'] = $postnum_rollback_on_delete;
+
+            do_action( 'wpuf_update_subscription_pack', $id, $pack_data );
 
             // Update global taxonomy view restriction status
             $this->update_global_taxonomy_view_restriction_status( $view_allowed_term_ids );

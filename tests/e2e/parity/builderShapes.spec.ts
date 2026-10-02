@@ -169,4 +169,20 @@ test.describe('Parity builder shapes', () => {
 
         expect(dirty).toEqual({ dropdown: false, text: false });
     });
+
+    test('PAR0011 : both subscription save paths store one shape and fire the pack hooks (1.21, B36)', { tag: ['@Parity', '@Test_PAR0011'] }, () => {
+        const out = parityWp(paritySite('branch'), ['eval-file', path.join(parityDir, 'wp', 'check-subscription-save.php')]);
+        const result = JSON.parse(out.trim().split('\n').pop() || '{}');
+        const shape = { _billing_amount: '9.99', _post_expiration_time: '7 day', _post_expiration_number: '7', _post_expiration_period: 'day', postnum_rollback: 'yes' };
+
+        expect(result.rest, 'REST save').toEqual(shape);
+        expect(result.classic, 'classic metabox save').toEqual(shape);
+        expect(result.rest_hooks, 'REST hooks, once each, in order').toEqual([
+            'wpuf_before_update_subscription_pack',
+            'wpuf_before_update_subscription_pack_meta',
+            'wpuf_after_update_subscription_pack_meta',
+            'wpuf_update_subscription_pack',
+        ]);
+        expect(result.classic_hooks).toEqual(['wpuf_update_subscription_pack']);
+    });
 });
