@@ -21,7 +21,7 @@ export default function MultiSelectPreview( { field } ) {
                     <option key={ val } value={ label }>{ label }</option>
                 ) ) }
             </select>
-            <HelpText text={ field.help } />
+            <HelpText text={ field.help } className="wpuf-help" />
         </div>
     );
 }

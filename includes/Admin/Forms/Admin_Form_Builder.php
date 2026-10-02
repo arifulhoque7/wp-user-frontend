@@ -161,6 +161,11 @@ class Admin_Form_Builder {
         // wp_enqueue_script( 'wpuf-form-builder' );
         wp_enqueue_script( 'wp-color-picker' );
 
+        // The stage's rich text previews are a static TinyMCE mockup: they need the
+        // editor and skin styles, which the Vue text-editor template enqueued.
+        wp_enqueue_style( 'editor-css', includes_url( 'css/editor.css' ), [], get_bloginfo( 'version' ) );
+        wp_enqueue_style( 'skin-css', includes_url( 'js/tinymce/skins/lightgray/skin.min.css' ), [], get_bloginfo( 'version' ) );
+
         do_action( 'wpuf_form_builder_enqueue_after_mixins' );
         do_action( 'wpuf_form_builder_enqueue_after_components' );
 

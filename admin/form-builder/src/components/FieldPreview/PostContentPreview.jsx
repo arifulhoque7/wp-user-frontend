@@ -23,8 +23,8 @@ export default function PostContentPreview( { field } ) {
 
             { field.rich === 'no' ? (
                 <textarea
-                    rows={ field.rows || 5 }
-                    cols={ field.cols || 25 }
+                    rows={ field.rows }
+                    cols={ field.cols }
                     placeholder={ field.placeholder || '' }
                     className={ builderClassNames( 'textareafield' ) }
                     defaultValue={ field.default || '' }
@@ -34,7 +34,7 @@ export default function PostContentPreview( { field } ) {
                 <TextEditorPreview rich={ field.rich } defaultText={ field.default || '' } />
             ) }
 
-            <HelpText text={ field.help } />
+            <HelpText text={ field.help } className="wpuf-help" />
         </div>
     );
 }
