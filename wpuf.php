@@ -103,6 +103,25 @@ final class WP_User_Frontend {
     public $container = [];
 
     /**
+     * Platform service container (task 2.1), next to the legacy `$container`
+     * array whose keys stay as they are.
+     *
+     * @since WPUF_SINCE
+     *
+     * @var WeDevs\Wpuf\Platform\Container|null
+     */
+    private $platform = null;
+
+    /**
+     * Platform bootstrap.
+     *
+     * @since WPUF_SINCE
+     *
+     * @var WeDevs\Wpuf\Platform\Bootstrap|null
+     */
+    private $platform_bootstrap = null;
+
+    /**
      * Fire up the plugin
      */
     public function __construct() {
@@ -253,6 +272,41 @@ final class WP_User_Frontend {
             // Initialize the ajax class inside init hook for translation issue
             add_action( 'init', [ $this, 'init_ajax' ] );
         }
+
+        // Platform services boot after every legacy key is filled, so they can
+        // rely on wpuf()->x; fires `wpuf_platform_loaded` once.
+        $this->platform_bootstrap()->boot();
+    }
+
+    /**
+     * The platform service container.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return WeDevs\Wpuf\Platform\Container
+     */
+    public function platform() {
+        if ( null === $this->platform ) {
+            $this->platform = new WeDevs\Wpuf\Platform\Container();
+        }
+
+        return $this->platform;
+    }
+
+    /**
+     * The platform bootstrap (Pro registers its providers through it on
+     * `wpuf_platform_loaded`).
+     *
+     * @since WPUF_SINCE
+     *
+     * @return WeDevs\Wpuf\Platform\Bootstrap
+     */
+    public function platform_bootstrap() {
+        if ( null === $this->platform_bootstrap ) {
+            $this->platform_bootstrap = new WeDevs\Wpuf\Platform\Bootstrap( $this->platform() );
+        }
+
+        return $this->platform_bootstrap;
     }
 
     /**
@@ -471,6 +525,14 @@ final class WP_User_Frontend {
         if ( array_key_exists( $prop, $this->container ) ) {
             return $this->container[ $prop ];
         }
+
+        // New services live in the platform container; only shared ones are
+        // reachable here, anything else (unknown ids included) stays null.
+        if ( null !== $this->platform && $this->platform->is_shared( $prop ) ) {
+            return $this->platform->get( $prop );
+        }
+
+        return null;
     }
 
     /**

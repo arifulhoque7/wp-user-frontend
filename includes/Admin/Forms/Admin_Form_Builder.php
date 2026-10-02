@@ -258,7 +258,8 @@ class Admin_Form_Builder {
 
         // Fire the PHP hooks the Vue builder views fired (settings rows, tabs, Vue
         // slots) and hand other plugins' output to the React builder per slot.
-        $hook_bridge                       = new HookBridge(
+        $hook_bridge                       = wpuf()->platform()->get(
+            HookBridge::class,
             $this->settings['form_type'],
             isset( $wpuf_form_builder['form_settings'] ) ? $wpuf_form_builder['form_settings'] : []
         );

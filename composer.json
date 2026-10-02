@@ -21,7 +21,8 @@
     "dealerdirect/phpcodesniffer-composer-installer": "0.7.0",
     "tareq1988/wp-php-cs-fixer": "dev-master",
     "phpcompatibility/phpcompatibility-wp": "dev-master",
-    "phpunit/phpunit": "^9.6"
+    "phpunit/phpunit": "^9.6",
+    "yoast/phpunit-polyfills": "^1.1"
   },
   "autoload": {
     "psr-4": {
@@ -35,7 +36,9 @@
     ],
     "phpcbf": [
       "phpcbf -p"
-    ]
+    ],
+    "test": "phpunit",
+    "test:install": "tests/php/bin/install-wp-tests.sh wpuf_tests root '' localhost latest"
   },
   "config": {
     "platform": {
