@@ -1,3 +1,6 @@
+# Line endings: LF everywhere (normalized on feature/react-admin-revamp)
+* text=auto eol=lf
+
 # Items to ignore when downloading a zip
 .editorconfig export-ignore
 .gitattributes export-ignore
