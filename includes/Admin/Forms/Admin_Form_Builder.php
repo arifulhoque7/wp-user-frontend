@@ -46,8 +46,9 @@ class Admin_Form_Builder {
             // [ [ 'name' => 'wpuf_form', 'type' => 'profile' ], [ 'name' => 'wpuf_form', 'type' => 'registration' ] ]
         ];
         $this->settings = wp_parse_args( $settings, $defaults );
-        // set post data to global $post
-        $post = get_post( $this->settings['post_id'] );
+        // Set the form as the global $post: builder code in free and pro
+        // (Post_Form, Fields_Manager) reads it on this screen.
+        $post = get_post( $this->settings['post_id'] ); // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
         // if we have an existing post, then let's start
         if ( ! empty( $post->ID ) ) {
             add_action( 'in_admin_header', 'wpuf_remove_admin_notices' );
@@ -129,7 +130,7 @@ class Admin_Form_Builder {
 
         $single_objects = apply_filters(
             'wpuf_single_form_field',
-                [
+            [
                 'post_title',
                 'post_content',
                 'post_excerpt',
@@ -220,9 +221,11 @@ class Admin_Form_Builder {
                 'asset_url'        => WPUF_ASSET_URI,
                 'root_dir'         => WPUF_ROOT,
                 'recaptcha_site'   => wpuf_get_option( 'recaptcha_public', 'wpuf_general' ),
-                'recaptcha_secret' => wpuf_get_option( 'recaptcha_private', 'wpuf_general' ),
+                // Secret keys are never printed: the builder only needs to know a key
+                // is set, so these carry a marker ('1') instead of the value.
+                'recaptcha_secret' => '' !== (string) wpuf_get_option( 'recaptcha_private', 'wpuf_general' ) ? '1' : '',
                 'turnstile_site'   => wpuf_get_option( 'turnstile_site_key', 'wpuf_general' ),
-                'turnstile_secret' => wpuf_get_option( 'turnstile_secret_key', 'wpuf_general' ),
+                'turnstile_secret' => '' !== (string) wpuf_get_option( 'turnstile_secret_key', 'wpuf_general' ) ? '1' : '',
                 'nonce'            => wp_create_nonce( 'form-builder-setting-nonce' ),
                 'is_pro_active'    => wpuf_is_pro_active(),
                 'pro_asset_url'    => defined( 'WPUF_PRO_ASSET_URI' ) ? WPUF_PRO_ASSET_URI : '',
@@ -403,15 +406,17 @@ class Admin_Form_Builder {
     public static function save_form( $data ) {
         $saved_wpuf_inputs = [];
         wp_update_post( [ 'ID' => $data['form_id'], 'post_status' => 'publish', 'post_title' => $data['post_title'] ] );
-        $existing_wpuf_input_ids = get_children( [
-                                                     'post_parent' => $data['form_id'],
-                                                     'post_status' => 'publish',
-                                                     'post_type'   => 'wpuf_input',
-                                                     'numberposts' => '-1',
-                                                     'orderby'     => 'menu_order',
-                                                     'order'       => 'ASC',
-                                                     'fields'      => 'ids',
-                                                 ] );
+        $existing_wpuf_input_ids = get_children(
+            [
+                'post_parent' => $data['form_id'],
+                'post_status' => 'publish',
+                'post_type'   => 'wpuf_input',
+                'numberposts' => '-1',
+                'orderby'     => 'menu_order',
+                'order'       => 'ASC',
+                'fields'      => 'ids',
+            ]
+        );
         $new_wpuf_input_ids = [];
         if ( ! empty( $data['form_fields'] ) ) {
             foreach ( $data['form_fields'] as $order => $field ) {
@@ -522,20 +527,25 @@ class Admin_Form_Builder {
      * @return array
      */
     protected function get_form_list() {
-        $forms = get_posts( [
-            'post_type'   => $this->settings['post_type'],
-            'post_status' => 'any',
-            'numberposts' => -1,
-            'orderby'     => 'title',
-            'order'       => 'ASC',
-        ] );
+        $forms = get_posts(
+            [
+                'post_type'   => $this->settings['post_type'],
+                'post_status' => 'any',
+                'numberposts' => -1,
+                'orderby'     => 'title',
+                'order'       => 'ASC',
+            ]
+        );
 
-        return array_map( function ( $form ) {
-            return [
-                'id'    => $form->ID,
-                'title' => $form->post_title ?: __( '(no title)', 'wp-user-frontend' ),
-            ];
-        }, $forms );
+        return array_map(
+            function ( $form ) {
+                return [
+                    'id'    => $form->ID,
+                    'title' => '' !== $form->post_title ? $form->post_title : __( '(no title)', 'wp-user-frontend' ),
+                ];
+            },
+            $forms
+        );
     }
 
     /**
@@ -546,18 +556,23 @@ class Admin_Form_Builder {
      * @return array
      */
     protected function get_subscriptions() {
-        $packs = get_posts( [
-            'post_type'   => 'wpuf_subscription',
-            'post_status' => 'publish',
-            'numberposts' => -1,
-        ] );
+        $packs = get_posts(
+            [
+                'post_type'   => 'wpuf_subscription',
+                'post_status' => 'publish',
+                'numberposts' => -1,
+            ]
+        );
 
-        return array_map( function ( $pack ) {
-            return [
-                'id'    => $pack->ID,
-                'title' => $pack->post_title,
-            ];
-        }, $packs );
+        return array_map(
+            function ( $pack ) {
+                return [
+                    'id'    => $pack->ID,
+                    'title' => $pack->post_title,
+                ];
+            },
+            $packs
+        );
     }
 
     /**
@@ -637,12 +652,12 @@ class Admin_Form_Builder {
         }
         // Get free taxonomies (built-in + taxonomies for post/page)
         $free_taxonomies = wpuf_get_free_taxonomies();
-        $stack = is_array($original_fields) ? $original_fields : [];
+        $stack = is_array( $original_fields ) ? $original_fields : [];
         while ( $stack ) {
             $f = array_pop( $stack );
             if ( isset( $f['template'] ) && $f['template'] === 'column_field' && ! empty( $f['inner_fields'] ) && is_array( $f['inner_fields'] ) ) {
                 foreach ( $f['inner_fields'] as $inner ) {
-                    if ( is_array($inner) ) {
+                    if ( is_array( $inner ) ) {
                         foreach ( $inner as $child ) {
                             $stack[] = $child;
                         }
@@ -654,7 +669,7 @@ class Admin_Form_Builder {
                 }
             }
             if ( isset( $f['input_type'] ) && $f['input_type'] === 'taxonomy' ) {
-                $slug = $f['name'] ?? ($f['taxonomy'] ?? null);
+                $slug = $f['name'] ?? ( $f['taxonomy'] ?? null );
                 if ( $slug && ! in_array( $slug, $free_taxonomies, true ) ) {
                     return true;
                 }

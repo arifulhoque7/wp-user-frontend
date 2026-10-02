@@ -111,6 +111,12 @@ export class ParitySitePage {
         expect(await response.json(), 'builder save must report success').toMatchObject({ success: true });
     }
 
+    /** Raw HTML of an admin URL as served (for checks on what the server prints). */
+    async getAdminHtml(path: string): Promise<string> {
+        const response = await this.page.goto(path);
+        return response ? response.text() : '';
+    }
+
     /** Open the "add new" builder; returns the id of the created draft form. */
     async doOpenNewBuilder(postType: string): Promise<number> {
         await this.page.goto(`/wp-admin/admin.php?page=${builderPage[postType]}&action=add-new`);
