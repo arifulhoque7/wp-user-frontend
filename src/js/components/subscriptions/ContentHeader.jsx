@@ -5,8 +5,11 @@
 import { __ } from '@wordpress/i18n';
 
 const ContentHeader = ( { currentSubscriptionStatus = 'all', allCount = {}, onAddSubscription } ) => {
+	// Same rule as the Vue ContentHeader: no header button in Trash, nor on an
+	// empty "All" list (the empty state carries its own Add button).
 	const shouldShowButton = ! (
-		currentSubscriptionStatus === 'trash'
+		currentSubscriptionStatus === 'trash' ||
+		( currentSubscriptionStatus === 'all' && 0 === ( allCount.all || 0 ) )
 	);
 
 	return (
