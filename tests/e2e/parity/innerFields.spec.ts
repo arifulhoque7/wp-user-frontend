@@ -122,4 +122,39 @@ test.describe('Parity inner fields', () => {
         expect(rows.develop.length, 'fixture has inner fields').toBeGreaterThan(0);
         expect(rows.branch, 'inner rows: size, label, input and action bar').toStrictEqual(rows.develop);
     });
+
+    test('PAR0020 : an inner field moves from one column to another', { tag: ['@Parity', '@Test_PAR0020'] }, async ({ browser }) => {
+        const site = paritySite('branch');
+        const formId = new ParityPage().doSeedForm(site, 'post-form-nested.json');
+        const admin = await ParitySitePage.doOpen(browser, site);
+        const page = admin.page;
+        await admin.doOpenBuilder('wpuf_forms', formId);
+
+        const columnCounts = () => page.locator('[data-column]').evaluateAll((cells) => cells.map((cell) => cell.querySelectorAll('li').length));
+        const before = await columnCounts();
+        expect(before[0], 'fixture has a field in column 1').toBeGreaterThan(0);
+
+        const row = page.locator('[data-column="column-1"] li').first();
+        await row.scrollIntoViewIfNeeded();
+        await row.hover();
+        const handle = await row.locator('.move').boundingBox();
+        const target = await page.locator('[data-column="column-2"]').boundingBox();
+        await page.mouse.move(handle!.x + handle!.width / 2, handle!.y + handle!.height / 2);
+        await page.mouse.down();
+        await page.mouse.move(handle!.x + 20, handle!.y + 10, { steps: 4 });
+        await page.mouse.move(target!.x + target!.width / 2, target!.y + target!.height / 2, { steps: 8 });
+        await page.mouse.up();
+
+        await expect.poll(columnCounts, { message: 'field left column 1 and landed in column 2' })
+            .toEqual([before[0] - 1, before[1] + 1, ...before.slice(2)]);
+
+        // dnd-kit swallows a click for 50ms after a drag ends.
+        await page.waitForTimeout(300);
+        await admin.doSaveBuilder();
+        await admin.doClose();
+        const column = new ParityPage().readForm(site, formId).fields.map((field) => field.post_content as Record<string, unknown>)
+            .find((field) => 'column_field' === field.template) as Record<string, unknown>;
+        const stored = column.inner_fields as Record<string, unknown[]>;
+        expect([stored['column-1'].length, stored['column-2'].length], 'move stored').toEqual([before[0] - 1, before[1] + 1]);
+    });
 });

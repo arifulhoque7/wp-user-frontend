@@ -5,6 +5,7 @@ import {
     DndContext,
     closestCenter,
     PointerSensor,
+    useDroppable,
     useSensor,
     useSensors,
 } from '@dnd-kit/core';
@@ -17,6 +18,24 @@ import { createField, isFieldSingleInstance, containsField } from '../../utils/f
 import SortableField from './SortableField';
 
 const RESTRICTED_IN_COLUMN = [ 'column_field', 'custom_hidden_field', 'step_start' ];
+
+const COLUMN_DROP_PREFIX = 'column-drop:';
+
+/**
+ * One column's sortable list; the list itself is a drop target so a field can
+ * be moved into an empty column.
+ */
+function ColumnDropList( { columnKey, items, children } ) {
+    const { setNodeRef } = useDroppable( { id: COLUMN_DROP_PREFIX + columnKey } );
+
+    return (
+        <SortableContext items={ items } strategy={ verticalListSortingStrategy }>
+            <ul ref={ setNodeRef } className="wpuf-column-fields-sortable-list wpuf-min-h-16 wpuf-list-none !wpuf-m-0 !wpuf-p-0">
+                { children }
+            </ul>
+        </SortableContext>
+    );
+}
 
 /**
  * Column field canvas component.
@@ -54,20 +73,41 @@ export default function ColumnField( { field } ) {
         return keys;
     }, [ numColumns ] );
 
-    const handleDragEnd = useCallback( ( columnKey ) => ( event ) => {
+    // One drag context for the whole column field, so an inner field can be
+    // moved inside its column or into another one (develop connected the lists).
+    const handleDragEnd = useCallback( ( event ) => {
         const { active, over } = event;
 
         if ( ! over || active.id === over.id ) {
             return;
         }
 
-        const colFields = columns[ columnKey ] || [];
-        const fromIndex = colFields.findIndex( ( f ) => String( f.id ) === active.id );
-        const toIndex = colFields.findIndex( ( f ) => String( f.id ) === over.id );
+        const columnOf = ( id ) => Object.keys( columns ).find(
+            ( key ) => ( columns[ key ] || [] ).some( ( f ) => String( f.id ) === id )
+        );
+        const fromColumn = columnOf( active.id );
 
-        if ( fromIndex !== -1 && toIndex !== -1 ) {
-            moveColumnField( field.id, columnKey, fromIndex, columnKey, toIndex );
+        if ( ! fromColumn ) {
+            return;
         }
+
+        const fromIndex = columns[ fromColumn ].findIndex( ( f ) => String( f.id ) === active.id );
+        const overIsColumn = String( over.id ).startsWith( COLUMN_DROP_PREFIX );
+        const toColumn = overIsColumn ? String( over.id ).slice( COLUMN_DROP_PREFIX.length ) : columnOf( over.id );
+
+        if ( ! toColumn ) {
+            return;
+        }
+
+        const target = columns[ toColumn ] || [];
+        // Dropped on the cell itself: to the end of that column.
+        const toIndex = overIsColumn ? target.length - ( fromColumn === toColumn ? 1 : 0 ) : target.findIndex( ( f ) => String( f.id ) === over.id );
+
+        if ( fromColumn === toColumn && fromIndex === toIndex ) {
+            return;
+        }
+
+        moveColumnField( field.id, fromColumn, fromIndex, toColumn, toIndex );
     }, [ field.id, columns, moveColumnField ] );
 
     const data = window.wpuf_form_builder || {};
@@ -147,49 +187,43 @@ export default function ColumnField( { field } ) {
     }, [] );
 
     return (
-        <div
-            className={ `has-columns-${ numColumns } wpuf-field-columns wpuf-flex md:wpuf-flex-row wpuf-gap-4 wpuf-p-4 wpuf-w-full wpuf-justify-between wpuf-rounded-t-md !wpuf-border-t !wpuf-border-r !wpuf-border-l !wpuf-border-dashed !wpuf-border-transparent group-hover:!wpuf-border-green-400 group-hover:wpuf-cursor-pointer` }
-        >
-            { columnKeys.map( ( columnKey ) => {
-                const colFields = columns[ columnKey ] || [];
-                const colFieldIds = colFields.map( ( f ) => String( f.id ) );
-                const isDragOver = dragOverColumn === columnKey;
+        <DndContext sensors={ sensors } collisionDetection={ closestCenter } onDragEnd={ handleDragEnd }>
+            <div
+                className={ `has-columns-${ numColumns } wpuf-field-columns wpuf-flex md:wpuf-flex-row wpuf-gap-4 wpuf-p-4 wpuf-w-full wpuf-justify-between wpuf-rounded-t-md !wpuf-border-t !wpuf-border-r !wpuf-border-l !wpuf-border-dashed !wpuf-border-transparent group-hover:!wpuf-border-green-400 group-hover:wpuf-cursor-pointer` }
+            >
+                { columnKeys.map( ( columnKey ) => {
+                    const colFields = columns[ columnKey ] || [];
+                    const colFieldIds = colFields.map( ( f ) => String( f.id ) );
+                    const isDragOver = dragOverColumn === columnKey;
 
-                return (
-                    <div
-                        key={ columnKey }
-                        style={ { paddingRight: ( field.column_space || 0 ) + 'px' } }
-                        className="wpuf-flex-1 wpuf-min-w-0 wpuf-min-h-full wpuf-column-inner-fields"
-                    >
+                    return (
                         <div
-                            data-column={ columnKey }
-                            className={ `wpuf-border wpuf-border-dashed wpuf-border-green-400 wpuf-bg-green-50 wpuf-shadow-sm wpuf-rounded-md wpuf-p-1 wpuf-transition-colors ${ isDragOver ? 'wpuf-bg-green-100 wpuf-border-primary' : '' }` }
-                            onDrop={ ( e ) => handleNativeDrop( columnKey, e ) }
-                            onDragOver={ ( e ) => handleNativeDragOver( columnKey, e ) }
-                            onDragLeave={ handleNativeDragLeave }
+                            key={ columnKey }
+                            style={ { paddingRight: ( field.column_space || 0 ) + 'px' } }
+                            className="wpuf-flex-1 wpuf-min-w-0 wpuf-min-h-full wpuf-column-inner-fields"
                         >
-                            <DndContext
-                                sensors={ sensors }
-                                collisionDetection={ closestCenter }
-                                onDragEnd={ handleDragEnd( columnKey ) }
+                            <div
+                                data-column={ columnKey }
+                                className={ `wpuf-border wpuf-border-dashed wpuf-border-green-400 wpuf-bg-green-50 wpuf-shadow-sm wpuf-rounded-md wpuf-p-1 wpuf-transition-colors ${ isDragOver ? 'wpuf-bg-green-100 wpuf-border-primary' : '' }` }
+                                onDrop={ ( e ) => handleNativeDrop( columnKey, e ) }
+                                onDragOver={ ( e ) => handleNativeDragOver( columnKey, e ) }
+                                onDragLeave={ handleNativeDragLeave }
                             >
-                                <SortableContext items={ colFieldIds } strategy={ verticalListSortingStrategy }>
-                                    <ul className="wpuf-column-fields-sortable-list wpuf-min-h-16 wpuf-list-none !wpuf-m-0 !wpuf-p-0">
-                                        { colFields.map( ( innerField, idx ) => (
-                                            <SortableField
-                                                key={ innerField.id }
-                                                field={ innerField }
-                                                index={ idx }
-                                                container={ { type: 'column', columnFieldId: field.id, column: columnKey } }
-                                            />
-                                        ) ) }
-                                    </ul>
-                                </SortableContext>
-                            </DndContext>
+                                <ColumnDropList columnKey={ columnKey } items={ colFieldIds }>
+                                    { colFields.map( ( innerField, idx ) => (
+                                        <SortableField
+                                            key={ innerField.id }
+                                            field={ innerField }
+                                            index={ idx }
+                                            container={ { type: 'column', columnFieldId: field.id, column: columnKey } }
+                                        />
+                                    ) ) }
+                                </ColumnDropList>
+                            </div>
                         </div>
-                    </div>
-                );
-            } ) }
-        </div>
+                    );
+                } ) }
+            </div>
+        </DndContext>
     );
 }

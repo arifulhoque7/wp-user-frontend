@@ -162,7 +162,8 @@ export class ParitySitePage {
         await page.locator(Selectors.login.basicLogin.loginEmailField).fill(Users.adminUsername);
         await page.locator(Selectors.login.basicLogin.loginPasswordField).fill(Users.adminPassword);
         await Promise.all([
-            page.waitForURL(/wp-admin/),
+            // DOM ready is enough: the dashboard also loads external images and feeds.
+            page.waitForURL(/wp-admin/, { waitUntil: 'domcontentloaded' }),
             page.locator(Selectors.login.basicLogin.loginButton).click(),
         ]);
         return new ParitySitePage(site, context, page);

@@ -348,6 +348,7 @@ export default function reducer( state = DEFAULT_STATE, action ) {
                 }
 
                 const movedField = innerFields[ action.fromColumn ][ action.fromIndex ];
+                innerFields[ action.toColumn ] = innerFields[ action.toColumn ] || [];
 
                 if ( action.fromColumn !== action.toColumn ) {
                     innerFields[ action.toColumn ].splice( action.toIndex, 0, movedField );
