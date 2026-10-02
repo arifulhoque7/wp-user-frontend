@@ -59,4 +59,22 @@ test.describe('Branch admin health', () => {
 
         expect(JSON.parse(out.trim().split('\n').pop() || '[]'), 'script loaded once, alias data printed').toEqual([1, true]);
     });
+
+    test('HLT0004 : builders print the wpuf_single_objects global like develop (B27)', { tag: ['@Parity', '@Test_HLT0004'] }, async ({ browser }) => {
+        const branch = paritySite('branch');
+        const parity = new ParityPage();
+        const admin = await ParitySitePage.doOpen(browser, branch);
+        const found: Record<string, unknown> = {};
+
+        for (const [postType, fixture] of [['wpuf_forms', 'post-form-parity.json'], ['wpuf_profile', 'registration-form.json']]) {
+            await admin.doOpenBuilder(postType, parity.doSeedForm(branch, fixture));
+            found[postType] = await admin.page.evaluate(() => {
+                const list = (window as unknown as { wpuf_single_objects?: unknown }).wpuf_single_objects;
+                return Array.isArray(list) && list.includes('post_title');
+            });
+        }
+        await admin.doClose();
+
+        expect(found).toEqual({ wpuf_forms: true, wpuf_profile: true });
+    });
 });

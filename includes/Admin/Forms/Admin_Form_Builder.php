@@ -253,6 +253,9 @@ class Admin_Form_Builder {
         }
         $wpuf_form_builder['wpuf_single_objects'] = $single_objects;
         wp_localize_script( 'wpuf-form-builder-react', 'wpuf_form_builder', $wpuf_form_builder );
+        // Develop printed the single-instance field list as its own global; scripts
+        // that read window.wpuf_single_objects keep working.
+        wp_localize_script( 'wpuf-form-builder-react', 'wpuf_single_objects', array_values( $single_objects ) );
         // mixins — kept for Pro hooks compatibility
         $wpuf_mixins = [
             'root'          => apply_filters( 'wpuf_form_builder_js_root_mixins', [] ),
