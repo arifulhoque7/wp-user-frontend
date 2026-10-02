@@ -121,7 +121,7 @@ export default function ColumnField( { field } ) {
             return;
         }
 
-        const newField = createField( template, fieldSettings, formFields );
+        const newField = createField( template, fieldSettings, formFields, { innerField: true } );
 
         if ( ! newField ) {
             return;

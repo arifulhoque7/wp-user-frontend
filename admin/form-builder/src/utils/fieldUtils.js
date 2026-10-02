@@ -7,9 +7,10 @@ import { generateFieldId } from '../store/reducer';
  * @param {string} template      Field template name (e.g. 'text_field')
  * @param {Object} fieldSettings The full fieldSettings object from the store
  * @param {Array}  existingFields Current form fields (for name collision check)
+ * @param {Object} options        `{ innerField: true }` for column / repeat inner fields
  * @return {Object} New field object ready to add to the form
  */
-export function createField( template, fieldSettings, existingFields = [] ) {
+export function createField( template, fieldSettings, existingFields = [], options = {} ) {
     const definition = fieldSettings[ template ];
 
     if ( ! definition || ! definition.field_props ) {
@@ -20,7 +21,13 @@ export function createField( template, fieldSettings, existingFields = [] ) {
     field.id = generateFieldId();
     field.is_new = true;
 
-    if ( ! field.name && field.label ) {
+    if ( options.innerField ) {
+        // Column and repeat inner fields: only meta fields get a name, always with
+        // a random suffix, as the Vue column / repeat components did.
+        if ( 'yes' === field.is_meta && ! field.name && field.label ) {
+            field.name = field.label.replace( /\W/g, '_' ).toLowerCase() + '_' + generateFieldId();
+        }
+    } else if ( ! field.name && field.label ) {
         field.name = field.label.replace( /\W/g, '_' ).toLowerCase();
 
         const sameTemplateCount = existingFields.filter(

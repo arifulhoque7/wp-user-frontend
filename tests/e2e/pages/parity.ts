@@ -341,6 +341,19 @@ export class ParitySitePage {
         return added;
     }
 
+    /**
+     * Drop a palette field type onto a builder drop zone the way the HTML5 palette
+     * drag does (dataTransfer 'wpuf/field-template'). React builder only.
+     */
+    async doDropTemplate(target: string, template: string) {
+        await this.page.locator(target).first().evaluate((zone, type) => {
+            const data = new DataTransfer();
+            data.setData('wpuf/field-template', type);
+            zone.dispatchEvent(new DragEvent('dragover', { bubbles: true, cancelable: true, dataTransfer: data }));
+            zone.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: data }));
+        }, template);
+    }
+
     /** Confirm any open SweetAlert (info or refusal) so the builder accepts clicks again. */
     async doDismissAlerts() {
         const alert = this.page.locator(Selectors.parity.alertPopup);
