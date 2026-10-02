@@ -172,6 +172,13 @@ export class ParitySitePage {
         await this.page.locator(Selectors.parity.fieldOptionsPanel).getByLabel(label).check();
     }
 
+    /** Run a forms-list row action (duplicate, delete) through its admin URL, as the list does. */
+    async doFormsListAction(page: string, formId: number, action: string) {
+        await this.page.goto(`/wp-admin/admin.php?page=${page}`);
+        const nonce = await this.page.evaluate(() => (window as unknown as { wpuf_forms_list: { bulk_nonce: string } }).wpuf_forms_list.bulk_nonce);
+        await this.page.goto(`/wp-admin/admin.php?page=${page}&id=${formId}&action=${action}&_wpnonce=${nonce}`);
+    }
+
     /** Raw HTML of an admin URL as served (for checks on what the server prints). */
     async getAdminHtml(path: string): Promise<string> {
         const response = await this.page.goto(path);

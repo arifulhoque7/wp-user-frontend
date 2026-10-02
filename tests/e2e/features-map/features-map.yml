@@ -886,3 +886,5 @@ features:
     name: Login colors store nothing by default and preview the chosen layout
   - id: PAR0006
     name: Without Pro a builder save keeps hidden custom taxonomy fields
+  - id: PAR0007
+    name: Duplicate copies integrations and version; delete removes the field posts

@@ -3636,6 +3636,13 @@ function wpuf_duplicate_form( $post_id ) {
         update_post_meta( $form_id, 'wpuf_form_settings', $form_settings );
         update_post_meta( $form_id, 'notifications', $notifications );
 
+        // The copy carries the source form's integrations and version too.
+        foreach ( [ 'integrations', 'wpuf_form_version' ] as $meta_key ) {
+            if ( metadata_exists( 'post', $post_id, $meta_key ) ) {
+                update_post_meta( $form_id, $meta_key, get_post_meta( $post_id, $meta_key, true ) );
+            }
+        }
+
         return $form_id;
     }
 

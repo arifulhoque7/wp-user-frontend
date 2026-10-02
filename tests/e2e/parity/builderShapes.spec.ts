@@ -50,4 +50,29 @@ test.describe('Parity builder shapes', () => {
         expect(result.pro_active, 'Pro skipped').toBe(false);
         expect(result.kept, 'title kept, hidden taxonomy kept, removed field deleted').toEqual([true, true, false]);
     });
+
+    test('PAR0007 : duplicate copies integrations and version; delete removes the field posts (1.12)', { tag: ['@Parity', '@Test_PAR0007'] }, async ({ browser }) => {
+        const branch = paritySite('branch');
+        const formId = new ParityPage().doSeedForm(branch, 'post-form-conditions.json');
+        parityWp(branch, ['post', 'meta', 'update', String(formId), 'wpuf_form_version', '4.3.13']);
+        const latestForm = () => Number(parityWp(branch, ['post', 'list', '--post_type=wpuf_forms', '--post_status=any', '--orderby=ID', '--order=DESC', '--posts_per_page=1', '--field=ID']).trim());
+        const meta = (id: number, key: string) => parityWp(branch, ['post', 'meta', 'get', String(id), key, '--format=json']).trim();
+        const fieldCount = (id: number) => Number(parityWp(branch, ['post', 'list', '--post_type=wpuf_input', `--post_parent=${id}`, '--post_status=any', '--format=count']).trim());
+
+        const admin = await ParitySitePage.doOpen(browser, branch);
+        await admin.doFormsListAction('wpuf-post-forms', formId, 'duplicate');
+        const copyId = latestForm();
+        expect(copyId, 'a copy was made').toBeGreaterThan(formId);
+        expect(meta(copyId, 'integrations'), 'integrations copied').toBe(meta(formId, 'integrations'));
+        expect(meta(copyId, 'wpuf_form_version'), 'version copied').toBe(meta(formId, 'wpuf_form_version'));
+
+        parityWp(branch, ['post', 'update', String(copyId), '--post_status=trash']);
+        const fieldsBefore = fieldCount(copyId);
+        await admin.doFormsListAction('wpuf-post-forms', copyId, 'delete');
+        await admin.doClose();
+
+        expect(fieldsBefore, 'copy had field posts').toBeGreaterThan(0);
+        expect(parityWp(branch, ['post', 'list', '--post_type=wpuf_forms', '--post_status=any', `--post__in=${copyId}`, '--format=count']).trim(), 'form deleted').toBe('0');
+        expect(fieldCount(copyId), 'field posts deleted with the form').toBe(0);
+    });
 });
