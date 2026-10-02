@@ -62,4 +62,11 @@ test.describe('Branch security', () => {
         expect(result.update_other, 'full update of a non-pack post').toEqual([false, 'SEC4 post']);
         expect(result.term_ids, 'term ids filtered, types kept').toEqual([true, ['12', 7]]);
     });
+
+    test('SEC0005 : profile subscription update only assigns to the saved user, by users who may edit them', { tag: ['@Security', '@Test_SEC0005'] }, () => {
+        const result = JSON.parse(parityWp(paritySite('branch'), ['--exec=define("WP_ADMIN",true);', 'eval-file', path.join(parityDir, 'wp', 'check-profile-subscription.php')]));
+
+        expect(result.admin, 'admin assigns to the saved user only (tampered user_id ignored)').toEqual([result.pack, 0]);
+        expect(result.subscriber, 'subscriber cannot assign a pack to another user').toBe(0);
+    });
 });
