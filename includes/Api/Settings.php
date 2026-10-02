@@ -134,7 +134,7 @@ class Settings extends WP_REST_Controller {
                 ? array_values( $raw_fields[ $section_id ] )
                 : [];
 
-            $fields[ $section_id ] = $this->dedupe_fields( $section_fields );
+            $fields[ $section_id ] = $this->kses_field_texts( $this->dedupe_fields( $section_fields ) );
             $values[ $section_id ] = $this->mask_secrets( $values[ $section_id ], $fields[ $section_id ] );
         }
 
@@ -243,6 +243,16 @@ class Settings extends WP_REST_Controller {
                 if ( $this->is_multiselect( $field ) && empty( $sanitized[ $field_name ] ) ) {
                     unset( $sanitized[ $field_name ] );
                 }
+            }
+
+            // The legacy screen posted every field of the section with its std
+            // (the field default), so the first save of a field stored it.
+            foreach ( $allowed as $field ) {
+                if ( empty( $field['name'] ) || array_key_exists( $field['name'], $sanitized ) || ! $this->persists_default( $field ) ) {
+                    continue;
+                }
+
+                $sanitized[ $field['name'] ] = $this->sanitize_value( $field['default'], $field );
             }
 
             update_option( $section_id, $sanitized );
@@ -392,6 +402,51 @@ class Settings extends WP_REST_Controller {
 
                 return sanitize_text_field( $value );
         }
+    }
+
+    /**
+     * Whether a field's default is stored on the first save of its section, as
+     * the legacy screen's std did. Not for display-only types, secrets,
+     * multiselects (empty means absent) or fields without a default.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param array $field Field definition.
+     *
+     * @return bool
+     */
+    protected function persists_default( $field ) {
+        if ( ! isset( $field['default'] ) || '' === $field['default'] || [] === $field['default'] ) {
+            return false;
+        }
+
+        $type = isset( $field['type'] ) ? $field['type'] : 'text';
+
+        if ( in_array( $type, [ 'html', 'hidden' ], true ) || ! empty( $field['is_pro_preview'] ) ) {
+            return false;
+        }
+
+        return ! $this->is_secret_field( $field ) && ! $this->is_multiselect( $field ) && empty( $field['callback'] );
+    }
+
+    /**
+     * Filter the field texts React prints as HTML (`desc`) with `wp_kses_post`,
+     * as the legacy screen printed them.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param array $fields Section field definitions.
+     *
+     * @return array
+     */
+    protected function kses_field_texts( $fields ) {
+        foreach ( $fields as $index => $field ) {
+            if ( isset( $field['desc'] ) && is_string( $field['desc'] ) ) {
+                $fields[ $index ]['desc'] = wp_kses_post( $field['desc'] );
+            }
+        }
+
+        return $fields;
     }
 
     /**

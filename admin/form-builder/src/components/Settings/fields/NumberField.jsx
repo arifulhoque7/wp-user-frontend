@@ -31,12 +31,6 @@ export default function NumberField( { field, name, value, onChange } ) {
                 max={ field.max }
                 step={ field.step || 1 }
             />
-            { field.long_help && (
-                <div
-                    className="wpuf-text-sm wpuf-mt-4 wpuf-long-help"
-                    dangerouslySetInnerHTML={ { __html: field.long_help } }
-                />
-            ) }
         </>
     );
 }

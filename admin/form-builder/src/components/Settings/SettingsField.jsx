@@ -1,3 +1,4 @@
+import { RawHTML } from '@wordpress/element';
 import ToggleField from './fields/ToggleField';
 import TextField from './fields/TextField';
 import NumberField from './fields/NumberField';
@@ -67,13 +68,26 @@ export default function SettingsField( { field, name, value, onChange, settings 
         );
     }
 
+    // `note`: develop's yellow notice box (e.g. a newsletter module with no API key).
+    if ( field.type === 'note' ) {
+        return (
+            <div className="wpuf-my-4 wpuf-input-container">
+                <RawHTML className="wpuf-p-4 wpuf-bg-yellow-50 wpuf-text-sm wpuf-text-yellow-800 wpuf-border-l-4 wpuf-border-yellow-400 wpuf-w-full">
+                    { field.note || '' }
+                </RawHTML>
+            </div>
+        );
+    }
+
     const FieldComponent = FIELD_MAP[ field.type ];
 
     if ( ! FieldComponent ) {
         return null;
     }
 
-    // Vue wraps every field in <div class="wpuf-mt-6 wpuf-input-container">
+    // Vue wraps every field in <div class="wpuf-mt-6 wpuf-input-container"> and
+    // prints `long_help` under any field. `note` and `long_help` are filtered
+    // with wp_kses_post before they leave PHP.
     return (
         <div className="wpuf-mt-6 wpuf-input-container">
             <FieldComponent
@@ -82,6 +96,9 @@ export default function SettingsField( { field, name, value, onChange, settings 
                 value={ value }
                 onChange={ onChange }
             />
+            { field.long_help && (
+                <RawHTML className="wpuf-text-sm wpuf-mt-4 wpuf-long-help">{ field.long_help }</RawHTML>
+            ) }
         </div>
     );
 }

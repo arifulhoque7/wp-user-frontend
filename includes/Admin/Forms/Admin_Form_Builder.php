@@ -245,6 +245,12 @@ class Admin_Form_Builder {
             ]
         );
         $wpuf_form_builder = wpuf_unset_conditional( $wpuf_form_builder );
+
+        // The builder prints these setting texts as HTML, like develop's views did
+        // (`wp_kses_post`), so they are filtered the same way before they leave PHP.
+        if ( isset( $wpuf_form_builder['settings_items'] ) && is_array( $wpuf_form_builder['settings_items'] ) ) {
+            $wpuf_form_builder['settings_items'] = self::kses_setting_texts( $wpuf_form_builder['settings_items'] );
+        }
         $wpuf_form_builder['wpuf_single_objects'] = $single_objects;
         wp_localize_script( 'wpuf-form-builder-react', 'wpuf_form_builder', $wpuf_form_builder );
         // mixins — kept for Pro hooks compatibility
@@ -474,6 +480,28 @@ class Admin_Form_Builder {
         }
 
         return $saved_wpuf_inputs;
+    }
+
+    /**
+     * Run `wp_kses_post` on the setting texts the builder renders as HTML
+     * (`note`, `long_help`) anywhere in the settings items tree.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param array $items Builder settings items.
+     *
+     * @return array
+     */
+    protected static function kses_setting_texts( $items ) {
+        foreach ( $items as $key => $item ) {
+            if ( is_array( $item ) ) {
+                $items[ $key ] = self::kses_setting_texts( $item );
+            } elseif ( is_string( $item ) && in_array( $key, [ 'note', 'long_help' ], true ) ) {
+                $items[ $key ] = wp_kses_post( $item );
+            }
+        }
+
+        return $items;
     }
 
     /**

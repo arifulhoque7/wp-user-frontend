@@ -38,12 +38,6 @@ export default function TrailingTextField( { field, name, value, onChange } ) {
                     </span>
                 ) }
             </div>
-            { field.long_help && (
-                <div
-                    className="wpuf-text-sm wpuf-mt-4 wpuf-long-help"
-                    dangerouslySetInnerHTML={ { __html: field.long_help } }
-                />
-            ) }
         </>
     );
 }

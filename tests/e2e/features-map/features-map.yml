@@ -892,3 +892,5 @@ features:
     name: Forms list REST limits post types and sorts newest first; pack hook fires once
   - id: PAR0009
     name: Registration toggle off leaves the key out so the module stops
+  - id: SET0004
+    name: First save stores missing defaults; desc HTML is filtered

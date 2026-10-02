@@ -28,6 +28,7 @@ import TaxSettings from './kit/fields/TaxSettings';
 import ProBadge from './kit/ProBadge';
 import ProPreviewWrapper from './kit/ProPreviewWrapper';
 import ProNote from './kit/fields/ProNote';
+import { RawHTML } from '@wordpress/element';
 import { stripTags } from './utils';
 
 /**
@@ -36,7 +37,9 @@ import { stripTags } from './utils';
  * - Legacy `label` may carry HTML (e.g. an embedded Pro badge). We strip it to
  *   plain text and surface a separate `isPro` flag so the kit renders a clean
  *   label + our ProBadge — preserving the current Pro display.
- * - Legacy `desc` becomes the kit's `help_text` tooltip.
+ * - Legacy `desc` becomes the kit's `help_text` tooltip, unless it carries
+ *   markup (links): then it prints under the field like the legacy
+ *   `<p class="description">` (the server already ran `wp_kses_post` on it).
  */
 const normalizeField = ( field ) => {
     const rawLabel = field.label || '';
@@ -45,10 +48,13 @@ const normalizeField = ( field ) => {
     // source of truth; fall back to the legacy pro-icon label marker.
     const isPro = !! field.is_pro_preview || /pro-icon|pro-badge|pro_badge/i.test( rawLabel );
 
+    const descHasMarkup = /<[a-z][^>]*>/i.test( field.desc || '' ) && field.type !== 'html';
+
     return {
         ...field,
         label: stripTags( rawLabel ),
-        help_text: field.help_text || stripTags( field.desc || '' ),
+        help_text: field.help_text || ( descHasMarkup ? '' : stripTags( field.desc || '' ) ),
+        __descHtml: descHasMarkup ? field.desc : '',
         options: field.options || {},
         __isPro: isPro,
     };
@@ -217,6 +223,9 @@ export default function FieldRenderer( { sectionId, field, value, onChange, forc
     return (
         <div className="wpuf-mt-6 wpuf-input-container">
             { isProInactive ? <ProPreviewWrapper>{ control }</ProPreviewWrapper> : control }
+            { normalized.__descHtml && (
+                <RawHTML className="wpuf-mt-1 wpuf-text-sm wpuf-text-gray-500">{ normalized.__descHtml }</RawHTML>
+            ) }
         </div>
     );
 }

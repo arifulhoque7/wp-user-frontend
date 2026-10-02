@@ -47,9 +47,12 @@ test.describe('Branch settings save', () => {
         const changed = Object.keys(after).filter((name) => JSON.stringify(after[name]) !== JSON.stringify(before[name]));
         expect(changed, 'only the edited option changed').toEqual([sections[0]]);
         expect(after[sections[0]][field]).toBe('SET0002 value');
-        const { [field]: _edited, ...othersAfter } = after[sections[0]];
-        const { [field]: _old, ...othersBefore } = before[sections[0]] ?? {};
-        expect(othersAfter, 'other fields untouched').toEqual(othersBefore);
+        // Existing fields keep their values; a field missing before may now hold
+        // its default (legacy std on the section's first save, SET0004).
+        const othersBefore = { ...(before[sections[0]] ?? {}) };
+        delete othersBefore[field];
+        const keptAfter = Object.fromEntries(Object.keys(othersBefore).map((key) => [key, after[sections[0]][key]]));
+        expect(keptAfter, 'existing fields untouched').toEqual(othersBefore);
 
         if (before[sections[0]] === undefined) {
             parityWp(branch, ['option', 'delete', sections[0]]);
@@ -66,5 +69,17 @@ test.describe('Branch settings save', () => {
         ]);
 
         expect(JSON.parse(out.trim().split('\n').pop() || '[]'), 'empty std like develop, layout preview for React').toEqual(['', '', 'wpuf_login_form_layout', '#ffffff']);
+    });
+
+    test('SET0004 : first save stores missing defaults; desc HTML is filtered (1.15)', { tag: ['@Parity', '@Test_SET0004'] }, () => {
+        const out = parityWp(paritySite('branch'), [
+            'eval-file', path.join(parityDir, 'wp', 'check-settings-defaults.php'), '--exec=define("WP_ADMIN",true);',
+        ]);
+
+        expect(JSON.parse(out.trim().split('\n').pop() || '{}')).toEqual({
+            default_stored: 'set4-std',
+            edited: 'x',
+            desc: 'See <a href="https://example.com">docs</a>alert(1)',
+        });
     });
 });
