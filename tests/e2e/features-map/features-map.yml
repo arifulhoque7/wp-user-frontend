@@ -884,3 +884,5 @@ features:
     name: Old subscriptions script handle still prints data localized on it
   - id: SET0003
     name: Login colors store nothing by default and preview the chosen layout
+  - id: PAR0006
+    name: Without Pro a builder save keeps hidden custom taxonomy fields

@@ -435,6 +435,9 @@ class Admin_Form_Builder {
             }
         }
         $inputs_to_delete = array_diff( $existing_wpuf_input_ids, $new_wpuf_input_ids );
+        // Without Pro the builder never loads custom taxonomy fields, so their
+        // absence from the save is not a removal.
+        $inputs_to_delete = array_diff( $inputs_to_delete, self::get_hidden_pro_taxonomy_input_ids( $inputs_to_delete ) );
         if ( ! empty( $inputs_to_delete ) ) {
             foreach ( $inputs_to_delete as $delete_id ) {
                 wp_delete_post( $delete_id, true );
@@ -471,6 +474,40 @@ class Admin_Form_Builder {
         }
 
         return $saved_wpuf_inputs;
+    }
+
+    /**
+     * Field post ids that hold a custom taxonomy field hidden from the builder
+     * because Pro is inactive (see filter_pro_taxonomy_fields()).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int[] $input_ids `wpuf_input` post ids.
+     *
+     * @return int[]
+     */
+    protected static function get_hidden_pro_taxonomy_input_ids( $input_ids ) {
+        if ( empty( $input_ids ) || wpuf_is_pro_active() ) {
+            return [];
+        }
+
+        $free_taxonomies = wpuf_get_free_taxonomies();
+        $hidden          = [];
+
+        foreach ( $input_ids as $input_id ) {
+            $field = maybe_unserialize( get_post_field( 'post_content', $input_id ) );
+
+            if (
+                is_array( $field )
+                && isset( $field['input_type'], $field['name'] )
+                && 'taxonomy' === $field['input_type']
+                && ! in_array( $field['name'], $free_taxonomies, true )
+            ) {
+                $hidden[] = $input_id;
+            }
+        }
+
+        return $hidden;
     }
 
     /**

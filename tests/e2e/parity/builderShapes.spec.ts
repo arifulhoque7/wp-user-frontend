@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { ParityPage, ParitySitePage, type FormDump } from '../pages/parity';
-import { paritySite, paritySitesConfigured } from '../utils/paritySites';
+import * as path from 'path';
+import { parityDir, paritySite, paritySitesConfigured, parityWp } from '../utils/paritySites';
 
 /**
  * Builder edits store the same shapes as develop (task 1.5, B12 read_only) and
@@ -38,5 +39,15 @@ test.describe('Parity builder shapes', () => {
         expect(branchRest, 'branch field equals develop field').toStrictEqual(developRest);
         expect(branchCond, 'untouched conditions kept').toStrictEqual((parity.readFixture(fixture).fields[3].post_content as Record<string, unknown>).wpuf_cond);
         expect(stored.branch.meta.integrations, 'integrations kept').toStrictEqual(parity.readFixture(fixture).meta.integrations);
+    });
+
+    test('PAR0006 : without Pro a builder save keeps hidden custom taxonomy fields (1.11)', { tag: ['@Parity', '@Test_PAR0006'] }, () => {
+        const out = parityWp(paritySite('branch'), [
+            'eval-file', path.join(parityDir, 'wp', 'check-hidden-taxonomy.php'), '--skip-plugins=wpuf-pro',
+        ]);
+        const result = JSON.parse(out.trim().split('\n').pop() || '{}');
+
+        expect(result.pro_active, 'Pro skipped').toBe(false);
+        expect(result.kept, 'title kept, hidden taxonomy kept, removed field deleted').toEqual([true, true, false]);
     });
 });
