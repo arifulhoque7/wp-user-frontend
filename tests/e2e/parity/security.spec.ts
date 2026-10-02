@@ -69,4 +69,14 @@ test.describe('Branch security', () => {
         expect(result.admin, 'admin assigns to the saved user only (tampered user_id ignored)').toEqual([result.pack, 0]);
         expect(result.subscriber, 'subscriber cannot assign a pack to another user').toBe(0);
     });
+
+    test('SEC0006 : pro tax save and registration template creation need an admin, not just a nonce', { tag: ['@Security', '@Pro', '@Test_SEC0006'] }, () => {
+        const result = JSON.parse(parityWp(paritySite('branch'), ['--exec=define("WP_ADMIN",true);', 'eval-file', path.join(parityDir, 'wp', 'check-pro-admin-actions.php')]));
+        test.skip(!!result.skipped, 'Pro inactive');
+
+        expect(result.tax_subscriber, 'subscriber changed tax rates').toBe('US');
+        expect(result.tax_admin, 'admin tax save').toBe('GB');
+        expect(result.template_subscriber, 'subscriber created a form').toEqual(['died', 0]);
+        expect(result.template_admin, 'admin creates a form').toEqual(['redirected', 1]);
+    });
 });

@@ -868,3 +868,5 @@ features:
     name: Subscription REST only acts on packs, limits single-row edits, filters term ids
   - id: SEC0005
     name: Profile subscription update only assigns to the saved user, by users who may edit them
+  - id: SEC0006
+    name: Pro tax save and registration template creation need an admin, not just a nonce
