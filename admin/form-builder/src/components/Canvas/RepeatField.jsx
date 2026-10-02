@@ -23,7 +23,7 @@ export default function RepeatField( { field } ) {
         editingFieldId: select( STORE_NAME ).getEditingFieldId(),
     } ), [] );
 
-    const { moveField } = useDispatch( STORE_NAME );
+    const { moveRepeatField } = useDispatch( STORE_NAME );
 
     const sensors = useSensors(
         useSensor( PointerSensor, { activationConstraint: { distance: 5 } } )
@@ -44,10 +44,9 @@ export default function RepeatField( { field } ) {
         const toIndex = innerFields.findIndex( ( f ) => String( f.id ) === over.id );
 
         if ( fromIndex !== -1 && toIndex !== -1 ) {
-            // Repeat field reorder uses the same move logic
-            moveField( fromIndex, toIndex );
+            moveRepeatField( field.id, fromIndex, toIndex );
         }
-    }, [ innerFields, moveField ] );
+    }, [ field.id, innerFields, moveRepeatField ] );
 
     return (
         <div
@@ -65,6 +64,7 @@ export default function RepeatField( { field } ) {
                                 key={ innerField.id }
                                 field={ innerField }
                                 index={ idx }
+                                container={ { type: 'repeat', repeatFieldId: field.id } }
                             />
                         ) ) }
                     </ul>

@@ -179,6 +179,7 @@ export default function ColumnField( { field } ) {
                                                 key={ innerField.id }
                                                 field={ innerField }
                                                 index={ idx }
+                                                container={ { type: 'column', columnFieldId: field.id, column: columnKey } }
                                             />
                                         ) ) }
                                     </ul>

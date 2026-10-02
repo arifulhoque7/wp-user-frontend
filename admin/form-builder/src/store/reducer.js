@@ -14,6 +14,7 @@ import {
     MERGE_COLUMN_FIELDS,
     ADD_REPEAT_FIELD,
     REMOVE_REPEAT_FIELD,
+    MOVE_REPEAT_FIELD,
     CLONE_REPEAT_FIELD,
     SET_CURRENT_PANEL,
     SET_EDITING_FIELD,
@@ -436,6 +437,19 @@ export default function reducer( state = DEFAULT_STATE, action ) {
                 currentPanel: 'form-fields-v4-1',
                 isDirty: true,
             };
+        }
+
+        case MOVE_REPEAT_FIELD: {
+            const newFields = state.formFields.map( ( field ) => {
+                if ( field.id !== action.repeatFieldId || ! Array.isArray( field.inner_fields ) ) {
+                    return field;
+                }
+                const innerFields = [ ...field.inner_fields ];
+                const [ moved ] = innerFields.splice( action.fromIndex, 1 );
+                innerFields.splice( action.toIndex, 0, moved );
+                return { ...field, inner_fields: innerFields };
+            } );
+            return { ...state, formFields: newFields, isDirty: true };
         }
 
         case CLONE_REPEAT_FIELD: {

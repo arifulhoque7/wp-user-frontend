@@ -6,7 +6,16 @@ import FieldActions from './FieldActions';
 import ColumnField from './ColumnField';
 import RepeatField from './RepeatField';
 
-export default function SortableField( { field, index } ) {
+const TOP_LEVEL = { type: 'top' };
+
+/**
+ * One field on the canvas.
+ *
+ * `container` says which list the field lives in, so its actions edit that list:
+ * `{ type: 'top' }` (default), `{ type: 'column', columnFieldId, column }` or
+ * `{ type: 'repeat', repeatFieldId }`.
+ */
+export default function SortableField( { field, index, container = TOP_LEVEL } ) {
     const {
         attributes,
         listeners,
@@ -57,7 +66,7 @@ export default function SortableField( { field, index } ) {
                 <RepeatField field={ field } />
             ) }
 
-            <FieldActions field={ field } index={ index } dragListeners={ listeners } dragAttributes={ attributes } />
+            <FieldActions field={ field } index={ index } container={ container } dragListeners={ listeners } dragAttributes={ attributes } />
         </li>
     );
 }

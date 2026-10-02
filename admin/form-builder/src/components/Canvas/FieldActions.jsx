@@ -9,7 +9,7 @@ import { getFieldValidators } from '../../extensions/registry';
 
 const ACTION_CLASSES = 'wpuf-p-2 hover:wpuf-cursor-pointer hover:wpuf-text-white wpuf-flex';
 
-export default function FieldActions( { field, index, dragListeners, dragAttributes } ) {
+export default function FieldActions( { field, index, container = { type: 'top' }, dragListeners, dragAttributes } ) {
     const { editingFieldId, fieldSettings, formFields } = useSelect( ( select ) => {
         const store = select( STORE_NAME );
         return {
@@ -19,7 +19,37 @@ export default function FieldActions( { field, index, dragListeners, dragAttribu
         };
     }, [] );
 
-    const { openFieldSettings, cloneField, removeField } = useDispatch( STORE_NAME );
+    const {
+        openFieldSettings,
+        cloneField,
+        removeField,
+        cloneColumnField,
+        removeColumnField,
+        cloneRepeatField,
+        removeRepeatField,
+    } = useDispatch( STORE_NAME );
+
+    // Copy and Remove act on the list the field lives in (top level, a column
+    // cell or a repeat field), never on the top-level list by index.
+    const cloneInContainer = useCallback( ( newId ) => {
+        if ( 'column' === container.type ) {
+            cloneColumnField( container.columnFieldId, container.column, field.id, newId );
+        } else if ( 'repeat' === container.type ) {
+            cloneRepeatField( container.repeatFieldId, index, newId );
+        } else {
+            cloneField( field.id, newId );
+        }
+    }, [ container, field.id, index, cloneField, cloneColumnField, cloneRepeatField ] );
+
+    const removeFromContainer = useCallback( () => {
+        if ( 'column' === container.type ) {
+            removeColumnField( container.columnFieldId, container.column, index );
+        } else if ( 'repeat' === container.type ) {
+            removeRepeatField( container.repeatFieldId, index );
+        } else {
+            removeField( index );
+        }
+    }, [ container, index, removeField, removeColumnField, removeRepeatField ] );
 
     const isEditing = parseInt( editingFieldId ) === parseInt( field.id );
     const failedValidation = isFailedToValidate( field.template, fieldSettings, getFieldValidators() );
@@ -43,12 +73,12 @@ export default function FieldActions( { field, index, dragListeners, dragAttribu
             return;
         }
 
-        cloneField( field.id, getRandomId() );
-    }, [ field.id, field.template, formFields, singleObjects, cloneField ] );
+        cloneInContainer( getRandomId() );
+    }, [ field.template, formFields, singleObjects, cloneInContainer ] );
 
     const handleDelete = useCallback( () => {
         if ( typeof window.Swal === 'undefined' ) {
-            removeField( index );
+            removeFromContainer();
             return;
         }
 
@@ -66,10 +96,10 @@ export default function FieldActions( { field, index, dragListeners, dragAttribu
             reverseButtons: true,
         } ).then( ( result ) => {
             if ( result.isConfirmed ) {
-                removeField( index );
+                removeFromContainer();
             }
         } );
-    }, [ index, i18n, removeField ] );
+    }, [ i18n, removeFromContainer ] );
 
     return (
         <div

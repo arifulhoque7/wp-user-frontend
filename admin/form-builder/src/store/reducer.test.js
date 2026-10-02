@@ -13,6 +13,7 @@ import {
     MERGE_COLUMN_FIELDS,
     ADD_REPEAT_FIELD,
     REMOVE_REPEAT_FIELD,
+    MOVE_REPEAT_FIELD,
     CLONE_REPEAT_FIELD,
     SET_CURRENT_PANEL,
     SET_EDITING_FIELD,
@@ -497,6 +498,39 @@ describe( 'reducer', () => {
             expect( state.formFields[ 0 ].inner_fields ).toHaveLength( 1 );
             expect( state.formFields[ 0 ].inner_fields[ 0 ].id ).toBe( 2 );
             expect( state.currentPanel ).toBe( 'form-fields-v4-1' );
+        } );
+    } );
+
+    describe( 'MOVE_REPEAT_FIELD', () => {
+        it( 'reorders repeat inner_fields and leaves top-level fields alone', () => {
+            const repeatField = makeRepeatField( { id: 100 } );
+            repeatField.inner_fields = [ makeField( { id: 1 } ), makeField( { id: 2 } ), makeField( { id: 3 } ) ];
+            const top = [ makeField( { id: 7 } ), repeatField, makeField( { id: 8 } ) ];
+            const initial = { ...DEFAULT_STATE, formFields: top };
+
+            const state = reducer( initial, {
+                type: MOVE_REPEAT_FIELD,
+                repeatFieldId: 100,
+                fromIndex: 0,
+                toIndex: 2,
+            } );
+
+            expect( state.formFields.map( ( f ) => f.id ) ).toEqual( [ 7, 100, 8 ] );
+            expect( state.formFields[ 1 ].inner_fields.map( ( f ) => f.id ) ).toEqual( [ 2, 3, 1 ] );
+            expect( state.isDirty ).toBe( true );
+        } );
+
+        it( 'ignores other repeat fields', () => {
+            const a = makeRepeatField( { id: 100 } );
+            a.inner_fields = [ makeField( { id: 1 } ), makeField( { id: 2 } ) ];
+            const b = makeRepeatField( { id: 200 } );
+            b.inner_fields = [ makeField( { id: 3 } ), makeField( { id: 4 } ) ];
+            const initial = { ...DEFAULT_STATE, formFields: [ a, b ] };
+
+            const state = reducer( initial, { type: MOVE_REPEAT_FIELD, repeatFieldId: 200, fromIndex: 1, toIndex: 0 } );
+
+            expect( state.formFields[ 0 ].inner_fields.map( ( f ) => f.id ) ).toEqual( [ 1, 2 ] );
+            expect( state.formFields[ 1 ].inner_fields.map( ( f ) => f.id ) ).toEqual( [ 4, 3 ] );
         } );
     } );
 

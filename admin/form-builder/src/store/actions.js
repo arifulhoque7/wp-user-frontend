@@ -14,6 +14,7 @@ import {
     MERGE_COLUMN_FIELDS,
     ADD_REPEAT_FIELD,
     REMOVE_REPEAT_FIELD,
+    MOVE_REPEAT_FIELD,
     CLONE_REPEAT_FIELD,
     SET_CURRENT_PANEL,
     SET_EDITING_FIELD,
@@ -97,6 +98,10 @@ export function addRepeatField( repeatFieldId, index, field ) {
 
 export function removeRepeatField( repeatFieldId, index ) {
     return { type: REMOVE_REPEAT_FIELD, repeatFieldId, index };
+}
+
+export function moveRepeatField( repeatFieldId, fromIndex, toIndex ) {
+    return { type: MOVE_REPEAT_FIELD, repeatFieldId, fromIndex, toIndex };
 }
 
 export function cloneRepeatField( repeatFieldId, index, newId ) {
