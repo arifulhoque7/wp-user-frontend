@@ -2,6 +2,7 @@
 
 namespace WeDevs\Wpuf\Api;
 
+use WP_Error;
 use WP_REST_Controller;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -53,21 +54,38 @@ class FormList extends WP_REST_Controller {
      * @return WP_REST_Response Response object on success, or WP_Error object on failure.
      */
     public function get_items( $request ) {
-        $per_page    = ! empty( $request['per_page'] ) ? (int) sanitize_text_field( $request['per_page'] ) : 10;
-        $page        = ! empty( $request['page'] ) ? (int) sanitize_text_field( $request['page'] ) : 1;
-        $status      = ! empty( $request['status'] ) ? sanitize_text_field( $request['status'] ) : 'any'; // Default to 'any'
+        $per_page    = ! empty( $request['per_page'] ) ? min( 100, max( 1, absint( $request['per_page'] ) ) ) : 10;
+        $page        = ! empty( $request['page'] ) ? max( 1, absint( $request['page'] ) ) : 1;
+        $status      = ! empty( $request['status'] ) ? sanitize_key( $request['status'] ) : 'any';
         $search_term = ! empty( $request['s'] ) ? sanitize_text_field( $request['s'] ) : '';
-        $post_type   = ! empty( $request['post_type'] ) ? sanitize_text_field( $request['post_type'] ) : 'wpuf_forms';
+        $post_type   = ! empty( $request['post_type'] ) ? sanitize_key( $request['post_type'] ) : 'wpuf_forms';
         $offset      = ( $page - 1 ) * $per_page;
 
-        // Base query args
+        /**
+         * Post types the forms list endpoint may list.
+         *
+         * @since WPUF_SINCE
+         *
+         * @param string[] $post_types Form post types.
+         */
+        $allowed_post_types = (array) apply_filters( 'wpuf_forms_list_post_types', [ 'wpuf_forms', 'wpuf_profile' ] );
+
+        if ( ! in_array( $post_type, $allowed_post_types, true ) ) {
+            return new WP_Error( 'wpuf_invalid_post_type', __( 'Invalid form type.', 'wp-user-frontend' ), [ 'status' => 400 ] );
+        }
+
+        if ( ! in_array( $status, [ 'any', 'publish', 'draft', 'pending', 'private', 'future', 'trash' ], true ) ) {
+            $status = 'any';
+        }
+
+        // Base query args: newest form first.
         $query_args = [
             'post_type'      => $post_type,
             'post_status'    => $status,
             'posts_per_page' => $per_page,
             'offset'         => $offset,
-            'order'        => 'ID',
-            'orderby'          => 'DESC',
+            'orderby'        => 'ID',
+            'order'          => 'DESC',
         ];
 
         // Add search term if present
@@ -149,8 +167,8 @@ class FormList extends WP_REST_Controller {
      *
      * @return int
      */
-    private function get_form_post_count($form_id, $settings) {
-        $post_type = !empty($settings['post_type']) ? $settings['post_type'] : 'post';
+    private function get_form_post_count( $form_id, $settings ) {
+        $post_type = ! empty( $settings['post_type'] ) ? $settings['post_type'] : 'post';
 
         $args = [
             'post_type'      => $post_type,
@@ -161,12 +179,12 @@ class FormList extends WP_REST_Controller {
                 [
                     'key'     => '_wpuf_form_id',
                     'value'   => $form_id,
-                    'compare' => '='
-                ]
-            ]
+                    'compare' => '=',
+                ],
+            ],
         ];
 
-        $query = new \WP_Query($args);
+        $query = new \WP_Query( $args );
         return $query->found_posts;
     }
 

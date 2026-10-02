@@ -75,4 +75,17 @@ test.describe('Parity builder shapes', () => {
         expect(parityWp(branch, ['post', 'list', '--post_type=wpuf_forms', '--post_status=any', `--post__in=${copyId}`, '--format=count']).trim(), 'form deleted').toBe('0');
         expect(fieldCount(copyId), 'field posts deleted with the form').toBe(0);
     });
+
+    test('PAR0008 : forms list REST limits post types and sorts newest first; pack hook fires once (1.13)', { tag: ['@Parity', '@Test_PAR0008'] }, () => {
+        const out = parityWp(paritySite('branch'), ['eval-file', path.join(parityDir, 'wp', 'check-list-and-pack-hooks.php')]);
+
+        expect(JSON.parse(out.trim().split('\n').pop() || '{}')).toEqual({
+            post_rejected: 400,
+            profile_ok: 200,
+            newest_first: true,
+            per_page_capped: true,
+            hook_calls: 1,
+            hook_id_saved: true,
+        });
+    });
 });

@@ -888,3 +888,5 @@ features:
     name: Without Pro a builder save keeps hidden custom taxonomy fields
   - id: PAR0007
     name: Duplicate copies integrations and version; delete removes the field posts
+  - id: PAR0008
+    name: Forms list REST limits post types and sorts newest first; pack hook fires once
