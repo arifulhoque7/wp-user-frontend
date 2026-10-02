@@ -880,3 +880,5 @@ features:
     name: Read only stores the develop shape; integrations kept
   - id: HLT0002
     name: Registration list shows the Pro shortcode pair and the AI entry
+  - id: HLT0003
+    name: Old subscriptions script handle still prints data localized on it

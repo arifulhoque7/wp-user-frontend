@@ -153,62 +153,22 @@ class Admin_Subscription {
          * @param string $script_handle The handle of the subscription React script
          */
         do_action( 'wpuf_subscription_react_scripts_enqueued', $script_handle );
+
+        // The pre-React handle stays enqueued as an alias of the React script.
+        wp_enqueue_script( 'wpuf-admin-subscriptions' );
     }
 
     /**
      * Enqueue scripts for React subscriptions page
+     *
+     * Same assets as the subscription page; kept for callers of this method.
      *
      * @since 4.0.0
      *
      * @return void
      */
     public function enqueue_react_scripts() {
-        // Always enqueue React version for the React page
-        $asset_file = WPUF_ROOT . '/assets/js/subscriptions.min.asset.php';
-        $asset      = file_exists( $asset_file ) ? require $asset_file : [
-            'dependencies' => [ 'wp-element', 'wp-data', 'wp-api-fetch', 'wp-i18n', 'wp-hooks', 'wp-components', 'wp-primitives' ],
-            'version'      => WPUF_VERSION,
-        ];
-
-        wp_enqueue_script( 'wpuf-admin-subscriptions-react', WPUF_ASSET_URI . '/js/subscriptions.min.js', $asset['dependencies'], $asset['version'], true );
-        wp_enqueue_style( 'wpuf-subscriptions-react', WPUF_ASSET_URI . '/css/subscriptions.css', [], $asset['version'] );
-        $script_handle = 'wpuf-admin-subscriptions-react';
-
-        wp_localize_script(
-            $script_handle,
-            'wpufSubscriptions',
-            [
-                'version'         => WPUF_VERSION,
-                'assetUrl'        => WPUF_ASSET_URI,
-                'siteUrl'         => site_url(),
-                'currencySymbol'  => wpuf_get_currency( 'symbol' ),
-                'supportUrl'      => esc_url(
-                    'https://wedevs.com/contact/?utm_source=wpuf-subscription'
-                ),
-                'isProActive'     => class_exists( 'WP_User_Frontend_Pro' ),
-                'upgradeUrl'      => esc_url(
-                    'https://wedevs.com/wp-user-frontend-pro/pricing/?utm_source=wpuf-subscription'
-                ),
-                'nonce'           => wp_create_nonce( 'wp_rest' ),
-                'rest_url'        => esc_url_raw( rest_url() ),
-                'sections'        => $this->get_sections(),
-                'subSections'     => $this->get_sub_sections(),
-                'fields'          => $this->get_fields(),
-                'dependentFields' => $this->get_dependent_fields(),
-                'perPage'         => apply_filters( 'wpuf_subscription_per_page', 9 ),
-            ]
-        );
-
-        /**
-         * Fires after the subscription React scripts are enqueued.
-         * Pro and third-party plugins should use this hook to enqueue their own
-         * scripts with 'wpuf-admin-subscriptions-react' as a dependency.
-         *
-         * @since WPUF_SINCE
-         *
-         * @param string $script_handle The handle of the subscription React script
-         */
-        do_action( 'wpuf_subscription_react_scripts_enqueued', $script_handle );
+        $this->enqueue_admin_scripts();
     }
 
     /**

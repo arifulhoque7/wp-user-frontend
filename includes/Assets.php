@@ -342,8 +342,11 @@ class Assets {
                 'deps'      => [ 'jquery' ],
                 'in_footer' => true,
             ],
+            // Alias of the React subscriptions script: data localized or inline
+            // scripts added on this old handle still print on the page.
             'admin-subscriptions'      => [
-                'src'       => WPUF_ASSET_URI . '/js/subscriptions.min.js',
+                'src'       => false,
+                'deps'      => [ 'wpuf-admin-subscriptions-react' ],
                 'in_footer' => true,
             ],
             'ai-form-builder'          => [

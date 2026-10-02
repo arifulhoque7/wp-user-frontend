@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { ParityPage, ParitySitePage } from '../pages/parity';
-import { paritySite, paritySitesConfigured } from '../utils/paritySites';
+import { paritySite, paritySitesConfigured, parityWp } from '../utils/paritySites';
 
 /**
  * Admin screens on the branch load without JS errors and without assets served
@@ -48,5 +48,15 @@ test.describe('Branch admin health', () => {
         expect(all, 'registration shortcode').toContain(`[wpuf_profile type="registration" id="${formId}"]`);
         expect(all, 'edit profile shortcode').toContain(`[wpuf_profile type="profile" id="${formId}"]`);
         expect(ai, 'AI Form Builder button').toBe(1);
+    });
+
+    test('HLT0003 : old subscriptions script handle still prints data localized on it (B24)', { tag: ['@Parity', '@Test_HLT0003'] }, () => {
+        const out = parityWp(paritySite('branch'), [
+            'eval',
+            'wp_set_current_user( 1 ); do_action( "wpuf_load_subscription_page" ); wp_localize_script( "wpuf-admin-subscriptions", "WPUF_HLT0003", [ "ok" => 1 ] ); ob_start(); wp_print_scripts(); $o = ob_get_clean(); echo wp_json_encode( [ substr_count( $o, "subscriptions.min.js" ), false !== strpos( $o, "WPUF_HLT0003" ) ] );',
+            '--exec=define("WP_ADMIN",true);',
+        ]);
+
+        expect(JSON.parse(out.trim().split('\n').pop() || '[]'), 'script loaded once, alias data printed').toEqual([1, true]);
     });
 });
