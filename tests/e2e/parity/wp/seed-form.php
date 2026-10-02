@@ -83,8 +83,15 @@ foreach ( $wpuf_dump['fields'] as $wpuf_field ) {
         true
     );
 
+    $wpuf_content = $wpuf_field['post_content'];
+
+    // Restore the field's own row id (see dump-form.php).
+    if ( is_array( $wpuf_content ) && isset( $wpuf_content['id'] ) && in_array( $wpuf_content['id'], [ '@self:int', '@self:string' ], true ) ) {
+        $wpuf_content['id'] = '@self:int' === $wpuf_content['id'] ? (int) $wpuf_child : (string) $wpuf_child;
+    }
+
     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-    $wpdb->update( $wpdb->posts, [ 'post_content' => maybe_serialize( $wpuf_field['post_content'] ) ], [ 'ID' => $wpuf_child ] );
+    $wpdb->update( $wpdb->posts, [ 'post_content' => maybe_serialize( $wpuf_content ) ], [ 'ID' => $wpuf_child ] );
     clean_post_cache( $wpuf_child );
     wpuf_parity_write_meta( $wpuf_child, $wpuf_field['meta'] );
 }

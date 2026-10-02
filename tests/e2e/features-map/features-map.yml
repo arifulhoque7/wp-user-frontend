@@ -854,3 +854,5 @@ features:
   # Parity suite (develop vs branch) — parity/*.spec.ts, project `parity`
   - id: PAR0001
     name: Seeding a form fixture stores identical data on develop and branch
+  - id: PAR0002
+    name: Untouched builder save keeps the stored form byte-identical (G3)

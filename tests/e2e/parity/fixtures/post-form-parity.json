@@ -107,7 +107,7 @@
                 "default": "",
                 "size": "40",
                 "wpuf_cond": [],
-                "id": 22,
+                "id": "@self:int",
                 "show_icon": "no",
                 "field_icon": "fas fa-0",
                 "icon_position": "left_label"
@@ -133,7 +133,7 @@
                 "rich": "teeny",
                 "insert_image": "yes",
                 "wpuf_cond": [],
-                "id": 23,
+                "id": "@self:int",
                 "show_icon": "no",
                 "field_icon": "fas fa-0",
                 "icon_position": "left_label"

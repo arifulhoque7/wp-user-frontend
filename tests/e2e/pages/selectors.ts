@@ -2329,4 +2329,12 @@ export const Selectors = {
         enablePostEdit: '//select[@id="wpuf_dashboard[enable_post_edit]"]',
         enablePostDelete: '//select[@id="wpuf_dashboard[enable_post_del]"]',
     },
+
+    /*****************************************************/
+    /************** @Parity (develop vs branch) *********/
+    /*****************************************************/
+    parity: {
+        // Builder (same markup on the Vue and the React builder)
+        builderSaveButton: '//button[normalize-space(text())="Save"]',
+    },
 };

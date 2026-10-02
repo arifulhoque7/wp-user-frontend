@@ -62,10 +62,17 @@ $wpuf_children = get_posts(
 $wpuf_fields = [];
 
 foreach ( $wpuf_children as $wpuf_child ) {
+    $wpuf_content = maybe_unserialize( $wpuf_child->post_content );
+
+    // A field stores its own row id; replace it so two sites compare equal.
+    if ( is_array( $wpuf_content ) && isset( $wpuf_content['id'] ) && (int) $wpuf_content['id'] === (int) $wpuf_child->ID ) {
+        $wpuf_content['id'] = is_int( $wpuf_content['id'] ) ? '@self:int' : '@self:string';
+    }
+
     $wpuf_fields[] = [
         'menu_order'   => (int) $wpuf_child->menu_order,
         'post_status'  => $wpuf_child->post_status,
-        'post_content' => maybe_unserialize( $wpuf_child->post_content ),
+        'post_content' => $wpuf_content,
         'meta'         => wpuf_parity_meta( $wpuf_child->ID, $wpuf_skip_meta ),
     ];
 }

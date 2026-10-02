@@ -1,5 +1,8 @@
-import { expect } from '@playwright/test';
+import { expect, type Browser, type BrowserContext, type Page } from '@playwright/test';
+import * as fs from 'fs';
 import * as path from 'path';
+import { Selectors } from './selectors';
+import { Users } from '../utils/testData';
 import { parityDir, parityWp, type ParitySite } from '../utils/paritySites';
 
 /**
@@ -40,8 +43,64 @@ export class ParityPage {
         return JSON.parse(parityWp(site, ['eval-file', path.join(parityDir, 'wp', 'dump-form.php'), String(formId)])) as FormDump;
     }
 
+    /** Write a value as pretty JSON (evidence files next to the test output) and return the path. */
+    doWriteJson(file: string, value: unknown): string {
+        fs.mkdirSync(path.dirname(file), { recursive: true });
+        fs.writeFileSync(file, JSON.stringify(value, null, 2));
+        return file;
+    }
+
     /** Assert two stored forms are identical (values and PHP types). */
     validateFormsEqual(develop: FormDump, branch: FormDump) {
         expect(branch, 'branch storage must equal develop storage').toStrictEqual(develop);
+    }
+}
+
+/** Builder screen slug per stored post type. */
+const builderPage: Record<string, string> = {
+    wpuf_forms: 'wpuf-post-forms',
+    wpuf_profile: 'wpuf-profile-forms',
+};
+
+/**
+ * Browser-side page object for one parity site. Each site gets its own isolated
+ * context so the two logins never share cookies.
+ */
+export class ParitySitePage {
+    private constructor(readonly site: ParitySite, readonly context: BrowserContext, readonly page: Page) {}
+
+    /** Open an isolated, logged-in admin session on a site. */
+    static async doOpen(browser: Browser, site: ParitySite): Promise<ParitySitePage> {
+        const context = await browser.newContext({ baseURL: site.url });
+        const page = await context.newPage();
+        await page.goto('/wp-login.php');
+        await page.locator(Selectors.login.basicLogin.loginEmailField).fill(Users.adminUsername);
+        await page.locator(Selectors.login.basicLogin.loginPasswordField).fill(Users.adminPassword);
+        await Promise.all([
+            page.waitForURL(/wp-admin/),
+            page.locator(Selectors.login.basicLogin.loginButton).click(),
+        ]);
+        return new ParitySitePage(site, context, page);
+    }
+
+    /** Open the builder of a form and wait until its Save button is usable. */
+    async doOpenBuilder(postType: string, formId: number) {
+        await this.page.goto(`/wp-admin/admin.php?page=${builderPage[postType]}&action=edit&id=${formId}`);
+        await expect(this.page.locator(Selectors.parity.builderSaveButton).first()).toBeEnabled();
+    }
+
+    /** Click Save without touching anything and wait for the save request to succeed. */
+    async doSaveBuilder() {
+        const saved = this.page.waitForResponse((response) =>
+            response.url().includes('admin-ajax.php')
+            && (response.request().postData() || '').includes('wpuf_form_builder_save_form'));
+        await this.page.locator(Selectors.parity.builderSaveButton).first().click();
+        const response = await saved;
+        expect(response.ok(), 'builder save request must succeed').toBeTruthy();
+        expect(await response.json(), 'builder save must report success').toMatchObject({ success: true });
+    }
+
+    async doClose() {
+        await this.context.close();
     }
 }
