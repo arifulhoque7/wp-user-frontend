@@ -36,8 +36,8 @@ module.exports = function( grunt) {
 
             admin: {
                 files: {
-                    // Vue cleanup: form-builder LESS no longer compiled (React uses Tailwind/CSS)
-                    // '<%= dirs.css %>/wpuf-form-builder.css': ['admin/form-builder/assets/less/form-builder.less'],
+                    // Still compiled: the React builder reuses these legacy builder classes
+                    '<%= dirs.css %>/wpuf-form-builder.css': ['admin/form-builder/assets/less/form-builder.less'],
                     '<%= dirs.css %>/admin.css': ['<%= dirs.less %>/admin.less'],
                     '<%= dirs.css %>/registration-forms.css': ['<%= dirs.less %>/registration-forms.less']
                 }
@@ -384,8 +384,7 @@ module.exports = function( grunt) {
 
     grunt.registerTask('tailwind-minify', function() {
         const cssFiles = [
-            // Vue cleanup: forms-list CSS minification handled by React build pipeline
-            // { input: 'assets/css/forms-list.css', output: 'assets/css/forms-list.min.css' },
+            { input: 'assets/css/forms-list.css', output: 'assets/css/forms-list.min.css' },
             { input: 'assets/css/frontend-subscriptions.css', output: 'assets/css/frontend-subscriptions.min.css' },
             { input: 'assets/css/ai-form-builder.css', output: 'assets/css/ai-form-builder.min.css' },
             { input: 'assets/css/admin/subscriptions.css', output: 'assets/css/admin/subscriptions.min.css' }

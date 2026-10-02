@@ -16,6 +16,10 @@ module.exports = {
     },
     output: {
         ...defaultConfig.output,
+        // wp-scripts >= 28 sets output.clean, which would wipe the whole
+        // assets/ directory (tracked sources included) since that is the
+        // output root here.
+        clean: false,
         filename: 'js/[name].min.js',
         path: path.resolve( process.cwd(), 'assets' ),
     },

@@ -18,10 +18,9 @@ module.exports = {
         './templates/**/*.php',
         'wpuf-functions.php',
         './src/**/*.{js,css}',
-        './assets/js/components-react/**/*.{js,jsx}',
-        './assets/js/subscriptions-react.jsx',
-        './src/js/components-react/**/*.{js,jsx}',
-        './src/js/subscriptions-react.jsx',
+        // React admin Subscriptions app (src/**/*.{js,css} above misses .jsx)
+        './src/js/subscriptions.jsx',
+        './src/js/components/**/*.jsx',
         // Free User Directory module templates
         './modules/user-directory/**/*.php',
         './modules/user-directory/views/**/*.php',
