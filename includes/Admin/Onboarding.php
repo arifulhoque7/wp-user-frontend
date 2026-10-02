@@ -858,15 +858,15 @@ class Onboarding {
      * @since WPUF_SINCE
      *
      * @param string $key
-     * @param string $default
+     * @param string $fallback
      *
      * @return string
      */
-    protected function posted_value( $key, $default = '' ) {
+    protected function posted_value( $key, $fallback = '' ) {
         // Nonce is verified in render() before any handler runs.
         // phpcs:ignore WordPress.Security.NonceVerification.Missing
         if ( ! isset( $_POST[ $key ] ) ) {
-            return $default;
+            return $fallback;
         }
 
         // phpcs:ignore WordPress.Security.NonceVerification.Missing
@@ -1328,7 +1328,9 @@ class Onboarding {
             $gateways = [ 'bank' ];
         }
 
-        $payment['active_gateways'] = $gateways;
+        // Same shape the legacy settings screen stores ({ slug: slug }): checkout
+        // looks gateways up by key (Frontend/Payment.php, gateway-functions.php).
+        $payment['active_gateways'] = array_combine( $gateways, $gateways );
 
         update_option( 'wpuf_payment', $payment );
     }
