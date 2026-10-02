@@ -114,6 +114,7 @@ class Settings extends WP_REST_Controller {
         $values       = [];
         $fields       = [];
         $pro_sections = [];
+        $section_html = [];
 
         foreach ( $sections as $section ) {
             $section_id            = $section['id'];
@@ -135,6 +136,18 @@ class Settings extends WP_REST_Controller {
                 : [];
 
             $fields[ $section_id ] = $this->kses_field_texts( $this->dedupe_fields( $section_fields ) );
+
+            // The legacy screen fired these around each section form; their output
+            // is shown at the top and bottom of the section here.
+            $top    = $this->capture_section_hook( 'wsa_form_top_' . $section_id, $section );
+            $bottom = $this->capture_section_hook( 'wsa_form_bottom_' . $section_id, $section );
+
+            if ( '' !== $top || '' !== $bottom ) {
+                $section_html[ $section_id ] = [
+                    'top'    => $top,
+                    'bottom' => $bottom,
+                ];
+            }
             $values[ $section_id ] = $this->mask_secrets( $values[ $section_id ], $fields[ $section_id ] );
         }
 
@@ -149,6 +162,8 @@ class Settings extends WP_REST_Controller {
                 'can_manage' => current_user_can( wpuf_admin_role() ),
             ],
             'modules'      => wpuf_settings_react_modules(),
+            // Output of `wsa_form_top_{section}` / `wsa_form_bottom_{section}`.
+            'section_html' => $section_html,
             // Side-channel for settings that live in their OWN option (not a
             // section field) and need a custom React renderer — e.g. tax rates,
             // base country/state, role-based email templates. Pro injects them
@@ -402,6 +417,24 @@ class Settings extends WP_REST_Controller {
 
                 return sanitize_text_field( $value );
         }
+    }
+
+    /**
+     * Fire a legacy section hook and return its output, filtered with
+     * `wp_kses_post` (form inputs are dropped: the React save does not post them).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param string $hook    Hook name.
+     * @param array  $section Section definition, the legacy hook argument.
+     *
+     * @return string
+     */
+    protected function capture_section_hook( $hook, $section ) {
+        ob_start();
+        do_action( $hook, $section );
+
+        return trim( wp_kses_post( (string) ob_get_clean() ) );
     }
 
     /**

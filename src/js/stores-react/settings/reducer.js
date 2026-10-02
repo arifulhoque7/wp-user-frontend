@@ -34,6 +34,7 @@ export default function reducer( state = DEFAULT_STATE, action ) {
                 proSections: action.data.pro_sections || [],
                 caps: action.data.caps || {},
                 modules: action.data.modules || {},
+                sectionHtml: action.data.section_html || {},
             };
         case ACTION_TYPES.SET_IS_LOADING:
             return { ...state, isLoading: action.isLoading };

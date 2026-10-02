@@ -74,3 +74,7 @@ export function isDirty( state ) {
 export function getError( state ) {
     return state.error;
 }
+
+export function getSectionHtml( state, sectionId ) {
+    return ( state.sectionHtml || {} )[ sectionId ] || null;
+}

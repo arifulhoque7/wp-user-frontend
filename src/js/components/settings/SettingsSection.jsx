@@ -2,6 +2,7 @@
  * SettingsSection — renders one legacy section (title + its fields) for the
  * active tab. A tab may render several sections stacked.
  */
+import { RawHTML } from '@wordpress/element';
 import { useSelect, useDispatch } from '@wordpress/data';
 import { __ } from '@wordpress/i18n';
 import FieldRenderer from './FieldRenderer';
@@ -121,7 +122,7 @@ const groupFields = ( fields ) => {
 };
 
 export default function SettingsSection( { sectionId, tabTitle } ) {
-    const { section, fields, values, search, forcePro } = useSelect(
+    const { section, fields, values, sectionHtml, search, forcePro } = useSelect(
         ( select ) => {
             const store = select( STORE_NAME );
             const sections = store.getSections();
@@ -130,6 +131,7 @@ export default function SettingsSection( { sectionId, tabTitle } ) {
                 section: sections.find( ( s ) => s.id === sectionId ),
                 fields: store.getFields()[ sectionId ] || [],
                 values: store.getSectionValues( sectionId ),
+                sectionHtml: store.getSectionHtml( sectionId ),
                 search: store.getSearch(),
                 // Pro-only section + Pro inactive → every field is upsell.
                 forcePro: ! isPro && ( store.getProSections() || [] ).includes( sectionId ),
@@ -203,6 +205,11 @@ export default function SettingsSection( { sectionId, tabTitle } ) {
                 </>
             ) : null }
 
+            { /* Output of the legacy wsa_form_top_{section} hook (kses'd in PHP). */ }
+            { sectionHtml && sectionHtml.top ? (
+                <RawHTML className="wpuf-mb-4 wpuf-section-hook-top">{ sectionHtml.top }</RawHTML>
+            ) : null }
+
             { sectionId === 'wpuf_general' ? (
                 <GeneralSettings
                     fields={ visibleFields }
@@ -245,6 +252,10 @@ export default function SettingsSection( { sectionId, tabTitle } ) {
                     )
                 )
                 : visibleFields.map( renderField ) }
+
+            { sectionHtml && sectionHtml.bottom ? (
+                <RawHTML className="wpuf-mt-4 wpuf-section-hook-bottom">{ sectionHtml.bottom }</RawHTML>
+            ) : null }
         </section>
     );
 }

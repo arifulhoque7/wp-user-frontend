@@ -82,4 +82,18 @@ test.describe('Branch settings save', () => {
             desc: 'See <a href="https://example.com">docs</a>alert(1)',
         });
     });
+
+    test('SET0005 : React settings apply the legacy section hooks, tax and role filters (1.16)', { tag: ['@Parity', '@Test_SET0005'] }, () => {
+        const out = parityWp(paritySite('branch'), [
+            'eval-file', path.join(parityDir, 'wp', 'check-settings-legacy-hooks.php'), '--exec=define("WP_ADMIN",true);',
+        ]);
+
+        expect(JSON.parse(out.trim().split('\n').pop() || '{}')).toEqual({
+            top: '<p class="set5">SET5 top</p>',
+            bottom: '<p>SET5 bottom</p>',
+            fired_other: true,
+            tax_country: 'SET5',
+            roles: { set5: 'SET5 role' },
+        });
+    });
 });
