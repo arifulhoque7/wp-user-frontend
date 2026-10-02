@@ -864,3 +864,5 @@ features:
     name: Builder save rejects a foreign settings meta key, a non-form post and a missing nonce
   - id: SEC0003
     name: Settings REST never returns secrets; masked values keep the stored secret
+  - id: SEC0004
+    name: Subscription REST only acts on packs, limits single-row edits, filters term ids

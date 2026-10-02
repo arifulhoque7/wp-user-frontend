@@ -202,6 +202,16 @@ class Subscription extends WP_REST_Controller {
             );
         }
 
+        if ( ! $this->is_subscription( $subscription_id ) ) {
+            return new WP_REST_Response(
+                [
+                    'success' => false,
+                    'message' => __( 'Subscription not found', 'wp-user-frontend' ),
+                ],
+                404
+            );
+        }
+
         $result = wp_delete_post( $subscription_id, true );
 
         if ( ! $result ) {
@@ -375,6 +385,16 @@ class Subscription extends WP_REST_Controller {
             );
         }
 
+        if ( ! $this->is_subscription( $id ) ) {
+            return new WP_REST_Response(
+                [
+                    'success' => false,
+                    'message' => __( 'Subscription not found', 'wp-user-frontend' ),
+                ],
+                404
+            );
+        }
+
         if ( $edit_single ) {
             $row   = ! empty( $subscription['edit_row_name'] ) ? sanitize_text_field( $subscription['edit_row_name'] ) : '';
             $value = ! empty( $subscription['edit_row_value'] ) ? sanitize_text_field( $subscription['edit_row_value'] ) : '';
@@ -385,6 +405,31 @@ class Subscription extends WP_REST_Controller {
                         'success' => false,
                         'message' => __( 'Failed to update', 'wp-user-frontend' ),
                     ]
+                );
+            }
+
+            /**
+             * Post fields a single-row subscription edit may change, with the
+             * values each accepts. The list screens only toggle the status.
+             *
+             * @since WPUF_SINCE
+             *
+             * @param array $fields Field name => allowed values.
+             */
+            $editable = (array) apply_filters(
+                'wpuf_subscription_single_row_fields',
+                [
+                    'post_status' => [ 'publish', 'draft', 'pending', 'private', 'trash' ],
+                ]
+            );
+
+            if ( ! isset( $editable[ $row ] ) || ! in_array( $value, (array) $editable[ $row ], true ) ) {
+                return new WP_REST_Response(
+                    [
+                        'success' => false,
+                        'message' => __( 'Failed to update', 'wp-user-frontend' ),
+                    ],
+                    400
                 );
             }
 
@@ -440,6 +485,16 @@ class Subscription extends WP_REST_Controller {
 
         $id   = ! empty( $subscription['ID'] ) ? (int) $subscription['ID'] : 0;
         $name = ! empty( $subscription['post_title'] ) ? sanitize_text_field( $subscription['post_title'] ) : '';
+
+        if ( $id && ! $this->is_subscription( $id ) ) {
+            return new WP_REST_Response(
+                [
+                    'success' => false,
+                    'message' => __( 'Subscription not found', 'wp-user-frontend' ),
+                ],
+                404
+            );
+        }
 
         // error if plan name contains #. PayPal doesn't allow # in package name
         if ( strpos( $name, '#' ) !== false ) {
@@ -516,10 +571,10 @@ class Subscription extends WP_REST_Controller {
         ) : '';
 
         // Process view restriction data
-        $view_allowed_term_ids = ! empty( $subscription['meta_value']['_sub_view_allowed_term_ids'] ) 
-            ? $subscription['meta_value']['_sub_view_allowed_term_ids'] 
-            : array();
-        
+        $view_allowed_term_ids = ! empty( $subscription['meta_value']['_sub_view_allowed_term_ids'] )
+            ? $this->sanitize_term_ids( $subscription['meta_value']['_sub_view_allowed_term_ids'] )
+            : [];
+
         if ( $sort_order < 1 ) {
             $sort_order = 1;
         }
@@ -562,6 +617,18 @@ class Subscription extends WP_REST_Controller {
                     ]
                 );
             }
+
+            // Listeners (pro taxonomy restriction) read the term ids from the
+            // request, so hand them the filtered lists.
+            $request_subscription = $request->get_param( 'subscription' );
+
+            foreach ( [ '_sub_allowed_term_ids', '_sub_view_allowed_term_ids' ] as $term_key ) {
+                if ( isset( $request_subscription['meta_value'][ $term_key ] ) ) {
+                    $request_subscription['meta_value'][ $term_key ] = $this->sanitize_term_ids( $request_subscription['meta_value'][ $term_key ] );
+                }
+            }
+
+            $request->set_param( 'subscription', $request_subscription );
 
             do_action( 'wpuf_before_update_subscription_pack_meta', $id, $request );
 
@@ -663,10 +730,12 @@ class Subscription extends WP_REST_Controller {
 
         update_option( 'wpuf_subscription_settings', $settings );
 
-        return rest_ensure_response( [
-            'success' => true,
-            'settings' => $settings,
-        ] );
+        return rest_ensure_response(
+            [
+                'success'  => true,
+                'settings' => $settings,
+            ]
+        );
     }
 
     /**
@@ -681,6 +750,44 @@ class Subscription extends WP_REST_Controller {
         if ( ! empty( $current_view_restrictions ) ) {
             update_option( 'wpuf_taxonomy_view_restrictions_enabled', 'yes' );
         }
+    }
+
+    /**
+     * Whether an id belongs to a subscription pack.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int $id Post id.
+     *
+     * @return bool
+     */
+    protected function is_subscription( $id ) {
+        return 'wpuf_subscription' === get_post_type( absint( $id ) );
+    }
+
+    /**
+     * Keep only term ids from a submitted list, leaving each id's type as sent
+     * so stored values keep the shape the screen has always written.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param mixed $ids Submitted ids.
+     *
+     * @return array
+     */
+    protected function sanitize_term_ids( $ids ) {
+        if ( ! is_array( $ids ) ) {
+            return [];
+        }
+
+        return array_values(
+            array_filter(
+                $ids,
+                function ( $id ) {
+                    return ( is_int( $id ) || is_string( $id ) ) && (string) absint( $id ) === (string) $id && absint( $id ) > 0;
+                }
+            )
+        );
     }
 
     /**

@@ -51,4 +51,15 @@ test.describe('Branch security', () => {
         expect(result.test_used_stored, 'AI test used the stored key').toBe(true);
         expect(result.new, 'new values saved').toEqual(['SEC3-NEW', 'sk-SEC3-NEW']);
     });
+
+    test('SEC0004 : subscription REST only acts on packs, limits single-row edits, filters term ids', { tag: ['@Security', '@Test_SEC0004'] }, () => {
+        const result = JSON.parse(parityWp(paritySite('branch'), ['eval-file', path.join(parityDir, 'wp', 'check-subscription-rest.php')]));
+
+        expect(result.delete_other, 'delete of a non-pack post').toEqual([false, true]);
+        expect(result.edit_other, 'status edit of a non-pack post').toEqual([false, 'draft']);
+        expect(result.edit_author, 'single-row edit of post_author').toEqual([false, 1]);
+        expect(result.edit_status, 'allowed status edit').toEqual([true, 'draft']);
+        expect(result.update_other, 'full update of a non-pack post').toEqual([false, 'SEC4 post']);
+        expect(result.term_ids, 'term ids filtered, types kept').toEqual([true, ['12', 7]]);
+    });
 });
