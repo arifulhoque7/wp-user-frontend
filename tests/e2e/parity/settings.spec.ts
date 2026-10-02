@@ -96,4 +96,11 @@ test.describe('Branch settings save', () => {
             roles: { set5: 'SET5 role' },
         });
     });
+
+    test('SET0006 : Pro settings and Feature_Lock reach WPUF REST routes without a request URL (1.22, B30)', { tag: ['@Parity', '@Test_SET0006'] }, () => {
+        const run = (extra: string[]) => JSON.parse(parityWp(paritySite('branch'), ['eval-file', path.join(parityDir, 'wp', 'check-pro-rest-boot.php'), ...extra]).trim().split('\n').pop() || '{}');
+
+        expect(run([]), 'valid license').toEqual({ pro_section: true, locked: false, sections: true });
+        expect(run(['invalid']), 'inactive license: the lock hides Pro sections').toEqual({ pro_section: false, locked: true, sections: true });
+    });
 });
