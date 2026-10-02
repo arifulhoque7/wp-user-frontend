@@ -188,6 +188,4 @@ class Admin_Settings {
     public function get_settings_api() {
         return $this->settings_api;
     }
-
-
 }

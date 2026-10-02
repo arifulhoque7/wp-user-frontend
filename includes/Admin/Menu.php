@@ -212,10 +212,11 @@ class Menu {
                 $ai_provider = isset( $ai_settings['ai_provider'] ) ? $ai_settings['ai_provider'] : '';
                 $ai_model    = isset( $ai_settings['ai_model'] ) ? $ai_settings['ai_model'] : '';
                 $provider_key_field = $ai_provider . '_api_key';
-                $ai_api_key = isset( $ai_settings[$provider_key_field] ) ? $ai_settings[$provider_key_field] : '';
-                $ai_configured = !empty( $ai_provider ) && !empty( $ai_api_key ) && !empty( $ai_model );
+                $ai_api_key = isset( $ai_settings[ $provider_key_field ] ) ? $ai_settings[ $provider_key_field ] : '';
+                $ai_configured = ! empty( $ai_provider ) && ! empty( $ai_api_key ) && ! empty( $ai_model );
 
-                wp_localize_script('wpuf-forms-list-react', 'wpuf_forms_list',
+                wp_localize_script(
+                    'wpuf-forms-list-react', 'wpuf_forms_list',
                     [
                         'post_counts'            => wpuf_get_forms_counts_with_status(),
                         'rest_nonce'             => wp_create_nonce( 'wp_rest' ),
@@ -253,7 +254,7 @@ class Menu {
     * Mark headway as async. Because nothing depends on it, it can run at any time
     */
     public function add_async_attribute( $tag, $handle, $src ) {
-        if ('wpuf-headway-script' === $handle) {
+        if ( 'wpuf-headway-script' === $handle ) {
             return str_replace( ' src', ' async src', $tag );
         }
 
@@ -478,7 +479,10 @@ class Menu {
         $asset_file = WPUF_ROOT . '/assets/js/settings-react.min.asset.php';
         $asset      = file_exists( $asset_file )
             ? require $asset_file
-            : [ 'dependencies' => [ 'wp-element', 'wp-data', 'wp-api-fetch', 'wp-i18n', 'wp-hooks', 'wp-components' ], 'version' => WPUF_VERSION ];
+            : [
+                'dependencies' => [ 'wp-element', 'wp-data', 'wp-api-fetch', 'wp-i18n', 'wp-hooks', 'wp-components' ],
+                'version' => WPUF_VERSION,
+            ];
 
         wp_register_script(
             $handle,
@@ -535,9 +539,13 @@ class Menu {
                         id="wpuf-headway-icon"
                         class="wpuf-border wpuf-border-gray-100 wpuf-mr-[16px] wpuf-rounded-full wpuf-p-1 wpuf-shadow-sm hover:wpuf-bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
                     ></span>
-                    <a class="feedback-link" target="_blank" href="<?php echo esc_url( 'https://feedback.wedevs.com/b/user-frontend' ); ?>">💡 <?php esc_html_e(
-                    'Submit Ideas', 'wp-user-frontend'
-                    ); ?></a>
+                    <a class="feedback-link" target="_blank" href="<?php echo esc_url( 'https://feedback.wedevs.com/b/user-frontend' ); ?>">💡 
+                    <?php
+                    esc_html_e(
+                        'Submit Ideas', 'wp-user-frontend'
+                    );
+                    ?>
+                    </a>
                 </span>
             </h2>
             <div class="wpuf-settings-wrap">
