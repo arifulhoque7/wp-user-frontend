@@ -44,3 +44,6 @@ tests_add_filter(
 );
 
 require $wpuf_tests_dir . '/includes/bootstrap.php';
+
+require_once __DIR__ . '/src/LegacyFormWriters.php';
+require_once __DIR__ . '/src/FormSnapshot.php';

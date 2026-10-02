@@ -1,0 +1,439 @@
+<?php
+/**
+ * Form store
+ *
+ * @package WP_User_Frontend
+ * @since WPUF_SINCE
+ */
+
+namespace WeDevs\Wpuf\Platform\Stores;
+
+use WP_Error;
+
+/**
+ * The one writer of forms (`wpuf_forms`, `wpuf_profile` posts, their
+ * `wpuf_form_settings`, `notifications`, `integrations` and `wpuf_form_version`
+ * meta, and their fields through FieldStore). The legacy entry points forward
+ * here and keep their signatures, return values, hooks and stored bytes.
+ *
+ * @since WPUF_SINCE
+ */
+class FormStore {
+
+    /**
+     * Field store.
+     *
+     * @var FieldStore
+     */
+    private $fields;
+
+    /**
+     * Constructor
+     *
+     * @since WPUF_SINCE
+     *
+     * @param FieldStore $fields Field store
+     */
+    public function __construct( FieldStore $fields ) {
+        $this->fields = $fields;
+    }
+
+    /**
+     * Post types the form builder may save into (filter kept from the AJAX save).
+     *
+     * @since WPUF_SINCE
+     *
+     * @return string[]
+     */
+    public function post_types() {
+        /** This filter is documented in includes/Ajax/Admin_Form_Builder_Ajax.php */
+        return (array) apply_filters( 'wpuf_form_builder_save_post_types', [ 'wpuf_forms', 'wpuf_profile' ] );
+    }
+
+    /**
+     * Meta keys form settings may be stored under (filter kept from the AJAX save).
+     *
+     * @since WPUF_SINCE
+     *
+     * @return string[]
+     */
+    public function settings_meta_keys() {
+        /** This filter is documented in includes/Ajax/Admin_Form_Builder_Ajax.php */
+        return (array) apply_filters( 'wpuf_form_builder_settings_meta_keys', [ 'wpuf_form_settings' ] );
+    }
+
+    /**
+     * Whether a post is a form the builder may write.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int $form_id Post id
+     *
+     * @return bool
+     */
+    public function is_form( $form_id ) {
+        return in_array( get_post_type( absint( $form_id ) ), $this->post_types(), true );
+    }
+
+    /**
+     * A form with its fields, settings, notifications and integrations.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int $form_id Form id
+     *
+     * @return array|null
+     */
+    public function read( $form_id ) {
+        if ( ! $this->is_form( $form_id ) ) {
+            return null;
+        }
+
+        return [
+            'post'          => get_post( $form_id ),
+            'fields'        => $this->fields->read( $form_id ),
+            'settings'      => wpuf_get_form_settings( $form_id ),
+            'notifications' => wpuf_get_form_notifications( $form_id ),
+            'integrations'  => get_post_meta( $form_id, 'integrations', true ),
+        ];
+    }
+
+    /**
+     * Save a form as the builder does: publish with the title, fields, settings
+     * (Pro-only notification settings dropped without Pro), notifications and,
+     * when sent, integrations (null keeps the stored ones, task 1.10).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int   $form_id Form id
+     * @param array $payload {
+     *     @type string     $post_title        Form title
+     *     @type array      $form_fields       Fields in order
+     *     @type array      $form_settings     Settings
+     *     @type string     $form_settings_key Settings meta key (allowlisted)
+     *     @type array      $notifications     Notifications
+     *     @type array|null $integrations      Integrations, null to keep
+     * }
+     *
+     * @return array|WP_Error Saved fields, or an error for a non-form post or key
+     */
+    public function save( $form_id, $payload ) {
+        $form_id = absint( $form_id );
+        $payload = wp_parse_args(
+            (array) $payload,
+            [
+                'post_title'        => '',
+                'form_fields'       => [],
+                'form_settings'     => [],
+                'form_settings_key' => 'wpuf_form_settings',
+                'notifications'     => [],
+                'integrations'      => null,
+            ]
+        );
+
+        if ( ! $this->is_form( $form_id ) ) {
+            return new WP_Error( 'wpuf_form_invalid_form', __( 'Invalid form id', 'wp-user-frontend' ), [ 'status' => 400 ] );
+        }
+
+        if ( ! in_array( $payload['form_settings_key'], $this->settings_meta_keys(), true ) ) {
+            return new WP_Error( 'wpuf_form_invalid_settings', __( 'Invalid form settings', 'wp-user-frontend' ), [ 'status' => 400 ] );
+        }
+
+        /**
+         * Before a form is saved through the form store.
+         *
+         * @since WPUF_SINCE
+         *
+         * @param int   $form_id Form id
+         * @param array $payload Save payload
+         */
+        do_action( 'wpuf_before_form_store_save', $form_id, $payload );
+
+        wp_update_post(
+            [
+                'ID'          => $form_id,
+                'post_status' => 'publish',
+                'post_title'  => $payload['post_title'],
+            ]
+        );
+
+        $saved_fields = $this->fields->save( $form_id, (array) $payload['form_fields'] );
+
+        update_post_meta( $form_id, $payload['form_settings_key'], Normalizers::form_settings( $payload['form_settings'] ) );
+        $this->update_list_meta( $form_id, 'notifications', $payload['notifications'] );
+
+        if ( null !== $payload['integrations'] ) {
+            $this->update_list_meta( $form_id, 'integrations', $payload['integrations'] );
+        }
+
+        /**
+         * After the form builder saved a form (Form_Settings_Cleanup listens).
+         *
+         * @since WPUF_SINCE
+         *
+         * @param int $form_id Form id
+         */
+        do_action( 'wpuf_form_builder_save_form', $form_id );
+
+        /**
+         * After a form is saved through the form store.
+         *
+         * @since WPUF_SINCE
+         *
+         * @param int   $form_id      Form id
+         * @param array $saved_fields Saved fields
+         * @param array $payload      Save payload
+         */
+        do_action( 'wpuf_after_form_store_save', $form_id, $saved_fields, $payload );
+
+        return $saved_fields;
+    }
+
+    /**
+     * Create a form (sample forms, templates, onboarding, installer, API).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param array $args {
+     *     @type string     $post_title     Title
+     *     @type string     $post_type      'wpuf_forms' or 'wpuf_profile'
+     *     @type string     $post_status    Status (default publish)
+     *     @type int        $post_author    Author (optional)
+     *     @type string     $comment_status Comment status (optional)
+     *     @type string     $post_content   Content (optional)
+     *     @type array      $fields         Fields in order
+     *     @type bool       $unslash_fields Unslash fields before storing (default true)
+     *     @type array|null $settings       Settings (null or empty: not stored)
+     *     @type bool       $version        Store wpuf_form_version (default true)
+     *     @type bool       $settings_first Store settings before fields (templates)
+     *     @type bool       $store_empty_settings Store settings even when empty (templates)
+     * }
+     *
+     * @return int|WP_Error Form id
+     */
+    public function create( $args ) {
+        $args = wp_parse_args(
+            (array) $args,
+            [
+                'post_title'           => '',
+                'post_type'            => 'wpuf_forms',
+                'post_status'          => 'publish',
+                'fields'               => [],
+                'unslash_fields'       => true,
+                'settings'             => null,
+                'version'              => true,
+                'settings_first'       => false,
+                'store_empty_settings' => false,
+            ]
+        );
+
+        $post = [
+            'post_title'  => $args['post_title'],
+            'post_type'   => $args['post_type'],
+            'post_status' => $args['post_status'],
+        ];
+
+        foreach ( [ 'post_author', 'comment_status', 'post_content' ] as $key ) {
+            if ( isset( $args[ $key ] ) ) {
+                $post[ $key ] = $args[ $key ];
+            }
+        }
+
+        $form_id = wp_insert_post( $post, true );
+
+        if ( is_wp_error( $form_id ) || ! $form_id ) {
+            return is_wp_error( $form_id ) ? $form_id : new WP_Error( 'wpuf_form_not_created', __( 'The form could not be created.', 'wp-user-frontend' ) );
+        }
+
+        if ( $args['settings_first'] ) {
+            $this->store_create_meta( $form_id, $args );
+        }
+
+        foreach ( (array) $args['fields'] as $order => $field ) {
+            $this->fields->write( $form_id, $field, 0, $order, (bool) $args['unslash_fields'] );
+        }
+
+        if ( ! $args['settings_first'] ) {
+            $this->store_create_meta( $form_id, $args );
+        }
+
+        return $form_id;
+    }
+
+    /**
+     * Duplicate a form as a draft titled "Title (#new id)", with its fields,
+     * settings, notifications, integrations and version.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int $form_id Source form id
+     *
+     * @return int|null New form id (0 when it could not be created, null when
+     *                  the source does not exist, as wpuf_duplicate_form())
+     */
+    public function duplicate( $form_id ) {
+        $post = get_post( $form_id );
+
+        if ( ! $post ) {
+            return null;
+        }
+
+        $new_id = wp_insert_post(
+            [
+                'post_title'  => $post->post_title,
+                'post_type'   => $post->post_type,
+                'post_status' => 'draft',
+            ]
+        );
+
+        $this->fields->copy( $form_id, $new_id );
+
+        wp_update_post(
+            [
+                'ID'         => $new_id,
+                'post_title' => $post->post_title . ' (#' . $new_id . ')',
+            ]
+        );
+
+        if ( ! $new_id ) {
+            return 0;
+        }
+
+        update_post_meta( $new_id, 'wpuf_form_settings', wpuf_get_form_settings( $form_id ) );
+        update_post_meta( $new_id, 'notifications', wpuf_get_form_notifications( $form_id ) );
+
+        foreach ( [ 'integrations', 'wpuf_form_version' ] as $meta_key ) {
+            if ( metadata_exists( 'post', $form_id, $meta_key ) ) {
+                update_post_meta( $new_id, $meta_key, get_post_meta( $form_id, $meta_key, true ) );
+            }
+        }
+
+        return $new_id;
+    }
+
+    /**
+     * Move a form to the trash, clearing stale trash meta first (as the forms
+     * list did).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int $form_id Form id
+     *
+     * @return \WP_Post|false|null
+     */
+    public function trash( $form_id ) {
+        delete_post_meta( $form_id, '_wp_trash_meta_status' );
+        delete_post_meta( $form_id, '_wp_trash_meta_time' );
+        delete_post_meta( $form_id, '_wp_desired_post_slug' );
+
+        return wp_trash_post( $form_id );
+    }
+
+    /**
+     * Restore a trashed form to its status before the trash (as the forms list did).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int $form_id Form id
+     *
+     * @return int|WP_Error
+     */
+    public function restore( $form_id ) {
+        return wp_update_post(
+            [
+                'ID'          => $form_id,
+                'post_status' => get_post_meta( $form_id, '_wp_trash_meta_status', true ),
+            ]
+        );
+    }
+
+    /**
+     * Delete a form for good; its field posts go only once the form is gone, so
+     * a form that only reached the trash keeps its fields (task 1.12).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int $form_id Form id
+     *
+     * @return bool Whether the form was deleted
+     */
+    public function delete_permanently( $form_id ) {
+        $form_id = absint( $form_id );
+
+        if ( ! in_array( get_post_type( $form_id ), [ 'wpuf_forms', 'wpuf_profile' ], true ) ) {
+            return false;
+        }
+
+        wp_delete_post( $form_id );
+
+        if ( get_post( $form_id ) ) {
+            return false;
+        }
+
+        $this->fields->delete_all( $form_id );
+
+        return true;
+    }
+
+    /**
+     * Legacy delete (wpuf_delete_form(), Form_Manager::delete()): delete or
+     * trash the post and remove its field rows directly, as those functions did.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int  $form_id Form id
+     * @param bool $force   Delete instead of trash
+     *
+     * @return void
+     */
+    public function delete( $form_id, $force = true ) {
+        global $wpdb;
+
+        wp_delete_post( $form_id, $force );
+
+        // Field posts are children WordPress does not know about.
+        $wpdb->delete( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- legacy behaviour kept as is.
+            $wpdb->posts,
+            [
+                'post_parent' => $form_id,
+                'post_type'   => 'wpuf_input',
+            ]
+        );
+    }
+
+    /**
+     * Store a list meta (notifications, integrations) unless an empty list would
+     * only replace a stored empty value with `[]`.
+     *
+     * @param int    $form_id  Form id
+     * @param string $meta_key Meta key
+     * @param mixed  $value    Value
+     *
+     * @return void
+     */
+    private function update_list_meta( $form_id, $meta_key, $value ) {
+        if ( Normalizers::is_empty_list_noop( $value, get_post_meta( $form_id, $meta_key, true ) ) ) {
+            return;
+        }
+
+        update_post_meta( $form_id, $meta_key, $value );
+    }
+
+    /**
+     * Settings and version meta for create().
+     *
+     * @param int   $form_id Form id
+     * @param array $args    create() arguments
+     *
+     * @return void
+     */
+    private function store_create_meta( $form_id, $args ) {
+        if ( ! empty( $args['settings'] ) || ( $args['store_empty_settings'] && null !== $args['settings'] ) ) {
+            update_post_meta( $form_id, 'wpuf_form_settings', $args['settings'] );
+        }
+
+        if ( $args['version'] ) {
+            update_post_meta( $form_id, 'wpuf_form_version', WPUF_VERSION );
+        }
+    }
+}
