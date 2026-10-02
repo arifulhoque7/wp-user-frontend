@@ -2354,5 +2354,8 @@ export const Selectors = {
         customSelectOption: 'li[role="option"], .option-fields-section ul li',
         fieldOptionsSectionBody: '.option-field-section-fields',
         fieldOptionRows: '.wpuf-form-builder-field-options .panel-field-opt',
+        // React settings screen: text inputs carry the field name as id
+        settingsTextInputs: '#wpuf-settings-root input[type="text"][id]',
+        settingsSaveButton: '#wpuf-settings-root button:has-text("Save")',
     },
 };

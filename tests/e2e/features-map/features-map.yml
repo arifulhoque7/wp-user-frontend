@@ -872,3 +872,7 @@ features:
     name: Pro tax save and registration template creation need an admin, not just a nonce
   - id: HLT0001
     name: Builders and form lists load with no page errors or missing assets
+  - id: SET0001
+    name: Settings save keeps the legacy shapes and untouched data
+  - id: SET0002
+    name: Settings screen posts only the edited field and writes nothing else

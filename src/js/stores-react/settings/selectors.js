@@ -43,6 +43,10 @@ export function getExtra( state ) {
     return state.extra || {};
 }
 
+export function getSavedExtra( state ) {
+    return state.savedExtra;
+}
+
 export function getExtraValue( state, key ) {
     return ( state.extra || {} )[ key ];
 }

@@ -1,6 +1,7 @@
 import { __ } from '@wordpress/i18n';
 import { ACTION_TYPES } from './constants';
 import { fetchSettings, saveSettings } from '../../api/settings';
+import { changedValues, changedExtra } from './diff';
 
 export function setData( data ) {
     return { type: ACTION_TYPES.SET_DATA, data };
@@ -89,7 +90,7 @@ export function loadSettings() {
 }
 
 /**
- * Persist all current values to the REST endpoint.
+ * Persist the edited values to the REST endpoint.
  */
 export function save() {
     return async ( { dispatch, select } ) => {
@@ -100,7 +101,10 @@ export function save() {
         try {
             const values = select.getValues();
             const extra = select.getExtra();
-            const response = await saveSettings( values, extra );
+            const response = await saveSettings(
+                changedValues( values, select.getSavedValues() ),
+                changedExtra( extra, select.getSavedExtra() )
+            );
             if ( response && response.success ) {
                 if ( response.data && response.data.values ) {
                     const merged = { ...values, ...response.data.values };

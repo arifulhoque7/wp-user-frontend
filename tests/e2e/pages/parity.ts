@@ -134,6 +134,23 @@ export class ParitySitePage {
         return { errors, badAssets };
     }
 
+    /**
+     * On the React settings screen, type into the first text field, save, and
+     * return the field id plus the body the screen posted.
+     */
+    async doEditFirstSettingsText(value: string): Promise<{ field: string; body: { settings: Record<string, Record<string, unknown>>; extra: Record<string, unknown> } }> {
+        await this.page.goto('/wp-admin/admin.php?page=wpuf-settings');
+        const input = this.page.locator(Selectors.parity.settingsTextInputs).first();
+        await expect(input).toBeVisible();
+        const field = (await input.getAttribute('id')) || '';
+        await input.fill(value);
+        const saved = this.page.waitForRequest((request) => request.url().includes('wpuf/v1/settings') && request.method() === 'POST');
+        await this.page.locator(Selectors.parity.settingsSaveButton).first().click();
+        const request = await saved;
+        await request.response();
+        return { field, body: request.postDataJSON() };
+    }
+
     /** Raw HTML of an admin URL as served (for checks on what the server prints). */
     async getAdminHtml(path: string): Promise<string> {
         const response = await this.page.goto(path);

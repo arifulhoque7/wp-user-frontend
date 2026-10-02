@@ -179,7 +179,8 @@ class Settings extends WP_REST_Controller {
     /**
      * Save settings.
      *
-     * Persists each posted section to its own option, applying the exact
+     * The client posts only the fields the user changed; each is merged into
+     * its section's stored option, applying the exact
      * sanitize callback registered for each field (parity with the legacy
      * WeDevs_Settings_API::sanitize_options()). Unknown sections/fields are
      * ignored so a stale client cannot write arbitrary option keys.
@@ -236,6 +237,12 @@ class Settings extends WP_REST_Controller {
                 }
 
                 $sanitized[ $field_name ] = $this->sanitize_value( $value, $field );
+
+                // The legacy multiselect posted nothing when empty, so the key
+                // stays absent and readers fall back to the field default.
+                if ( $this->is_multiselect( $field ) && empty( $sanitized[ $field_name ] ) ) {
+                    unset( $sanitized[ $field_name ] );
+                }
             }
 
             update_option( $section_id, $sanitized );
@@ -332,9 +339,11 @@ class Settings extends WP_REST_Controller {
     /**
      * Sanitize a single value the same way the legacy settings API would.
      *
-     * Uses the field's registered sanitize_callback when callable (exact
-     * parity). Otherwise falls back to a type-appropriate default so values
-     * are never stored more loosely than the legacy screen allowed.
+     * The value is first put in the shape the legacy form posted (multicheck
+     * `{ key: key }` or `''`, multiselect a list), then the field's registered
+     * sanitize_callback runs when callable (exact parity). Otherwise a
+     * type-appropriate default applies. The REST body is JSON, which WordPress
+     * does not slash, so values are not unslashed here.
      *
      * @since WPUF_SINCE
      *
@@ -344,40 +353,85 @@ class Settings extends WP_REST_Controller {
      * @return mixed
      */
     protected function sanitize_value( $value, $field ) {
+        $type = isset( $field['type'] ) ? $field['type'] : 'text';
+
+        if ( 'multicheck' === $type ) {
+            $value = $this->to_multicheck( $value );
+        } elseif ( $this->is_multiselect( $field ) ) {
+            $value = is_array( $value ) ? array_values( $value ) : [];
+        }
+
         if ( isset( $field['sanitize_callback'] ) && is_callable( $field['sanitize_callback'] ) ) {
             return call_user_func( $field['sanitize_callback'], $value );
         }
 
-        $type = isset( $field['type'] ) ? $field['type'] : 'text';
+        if ( 'multicheck' === $type || $this->is_multiselect( $field ) ) {
+            return is_array( $value ) ? array_map( 'sanitize_text_field', $value ) : '';
+        }
 
         switch ( $type ) {
-            case 'checkbox':
-            case 'multicheck':
-                return is_array( $value ) ? array_map( 'sanitize_text_field', wp_unslash( $value ) ) : sanitize_text_field( wp_unslash( $value ) );
-
-            case 'multiselect':
-                return is_array( $value ) ? array_map( 'sanitize_text_field', wp_unslash( $value ) ) : [];
-
             case 'textarea':
-                return sanitize_textarea_field( wp_unslash( $value ) );
+                // Custom CSS keeps its `>` selectors; the other textareas are
+                // messages printed as HTML, so their allowed markup is kept.
+                return 'custom_css' === $field['name'] ? wp_strip_all_tags( $value ) : wp_kses_post( $value );
 
             case 'wysiwyg':
             case 'html':
-                return wp_kses_post( wp_unslash( $value ) );
+                return wp_kses_post( $value );
 
             case 'url':
-                return esc_url_raw( wp_unslash( $value ) );
+                return esc_url_raw( $value );
 
             case 'number':
                 return $this->sanitize_number( $value );
 
             default:
                 if ( is_array( $value ) ) {
-                    return map_deep( wp_unslash( $value ), 'sanitize_text_field' );
+                    return map_deep( $value, 'sanitize_text_field' );
                 }
 
-                return sanitize_text_field( wp_unslash( $value ) );
+                return sanitize_text_field( $value );
         }
+    }
+
+    /**
+     * Whether a field is a list multiselect (legacy `wpuf_settings_multiselect`).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param array $field Field definition.
+     *
+     * @return bool
+     */
+    protected function is_multiselect( $field ) {
+        return ( isset( $field['type'] ) && 'multiselect' === $field['type'] )
+            || ( isset( $field['callback'] ) && 'wpuf_settings_multiselect' === $field['callback'] );
+    }
+
+    /**
+     * Shape a multicheck value like the legacy form posted it: `{ key: key }`
+     * for the checked boxes, or `''` (the hidden input) when none is checked.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param mixed $value List of keys or a `{ key: key }` map.
+     *
+     * @return array|string
+     */
+    protected function to_multicheck( $value ) {
+        if ( ! is_array( $value ) ) {
+            return '';
+        }
+
+        $checked = [];
+
+        foreach ( $value as $key ) {
+            if ( is_scalar( $key ) && '' !== (string) $key ) {
+                $checked[ (string) $key ] = (string) $key;
+            }
+        }
+
+        return $checked ? $checked : '';
     }
 
     /**

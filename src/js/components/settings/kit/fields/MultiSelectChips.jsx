@@ -7,14 +7,22 @@ import HelpTextIcon from './HelpTextIcon';
  * Ported from the User Directory free module (src/js/user-directory/components/
  * common/MultiSelect.js) so settings multi-selects match that design.
  *
- * Stores an ARRAY of the selected option keys — same shape the legacy
- * `wpuf_settings_multiselect` callback stored.
+ * Emits an ARRAY of the selected option keys; the server stores it in the
+ * legacy shape (a list for `wpuf_settings_multiselect`, `{ key: key }` for
+ * multicheck).
  */
 export default function MultiSelectChips( { field, name, value, onChange } ) {
     const options = field.options || {};
-    const selected = Array.isArray( value )
-        ? value
-        : ( value ? Object.values( value ) : ( field.default || [] ) );
+    // Multicheck stores `{ key: key }`, and `''` once everything is unchecked;
+    // only a value that was never saved falls back to the default.
+    let selected = [];
+    if ( Array.isArray( value ) ) {
+        selected = value;
+    } else if ( value && typeof value === 'object' ) {
+        selected = Object.values( value );
+    } else if ( value === undefined ) {
+        selected = field.default || [];
+    }
 
     const [ isOpen, setIsOpen ] = useState( false );
     const [ searchTerm, setSearchTerm ] = useState( '' );
