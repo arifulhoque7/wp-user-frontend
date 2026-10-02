@@ -1,5 +1,6 @@
 import { expect, type Browser, type BrowserContext, type Page } from '@playwright/test';
 import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 import { Selectors } from './selectors';
 import { Users } from '../utils/testData';
@@ -29,8 +30,8 @@ export interface FormDump {
 export class ParityPage {
 
     /** Create a form on a site from a fixture in parity/fixtures and return its id. */
-    doSeedForm(site: ParitySite, fixture: string): number {
-        const out = parityWp(site, ['eval-file', path.join(parityDir, 'wp', 'seed-form.php'), path.join(parityDir, 'fixtures', fixture)]);
+    doSeedForm(site: ParitySite, fixture: string, title?: string): number {
+        const out = parityWp(site, ['eval-file', path.join(parityDir, 'wp', 'seed-form.php'), path.join(parityDir, 'fixtures', fixture), ...(title ? [title] : [])]);
         const id = Number(out.trim().split(/\s+/).pop());
         if (!id) {
             throw new Error(`Seeding ${fixture} on ${site.name} returned no id: ${out}`);
@@ -160,19 +161,62 @@ const builderPage: Record<string, string> = {
 export class ParitySitePage {
     private constructor(readonly site: ParitySite, readonly context: BrowserContext, readonly page: Page) {}
 
+    /**
+     * Admin login shared by every worker of one run (keyed by the runner's pid).
+     * WordPress keeps all of a user's session tokens in one user meta row, so
+     * logins made at the same moment overwrite each other's token: workers log
+     * in one at a time behind a lock and reuse the first login.
+     */
+    private static async getSession(browser: Browser, site: ParitySite) {
+        const dir = path.join(os.tmpdir(), 'wpuf-parity-auth');
+        const key = `${process.ppid}-${site.url.replace(/[^a-z0-9]+/gi, '_')}`;
+        const file = path.join(dir, `${key}.json`);
+        const lock = path.join(dir, `${key}.lock`);
+        fs.mkdirSync(dir, { recursive: true });
+
+        for (let waited = 0; ; waited += 200) {
+            try {
+                fs.mkdirSync(lock);
+                break;
+            } catch {
+                // A lock left by a crashed worker is taken over after 60 seconds.
+                if (waited > 60000) {
+                    fs.rmdirSync(lock);
+                }
+                await new Promise((resolve) => setTimeout(resolve, 200));
+            }
+        }
+
+        try {
+            if (fs.existsSync(file)) {
+                return JSON.parse(fs.readFileSync(file, 'utf-8'));
+            }
+            const context = await browser.newContext({ baseURL: site.url });
+            const page = await context.newPage();
+            // Land on the profile screen, not the dashboard: its widgets make remote
+            // calls (news feed, update checks) that queue when tests run in parallel.
+            await page.goto(`/wp-login.php?redirect_to=${encodeURIComponent(`${site.url}/wp-admin/profile.php`)}`);
+            await page.locator(Selectors.login.basicLogin.loginEmailField).fill(Users.adminUsername);
+            await page.locator(Selectors.login.basicLogin.loginPasswordField).fill(Users.adminPassword);
+            await Promise.all([
+                page.waitForURL(/wp-admin/, { waitUntil: 'domcontentloaded', timeout: 45000 }),
+                page.locator(Selectors.login.basicLogin.loginButton).click(),
+            ]);
+            const state = await context.storageState();
+            await context.close();
+            fs.writeFileSync(file, JSON.stringify(state));
+            return state;
+        } finally {
+            fs.rmdirSync(lock);
+        }
+    }
+
     /** Open an isolated, logged-in admin session on a site. */
     static async doOpen(browser: Browser, site: ParitySite): Promise<ParitySitePage> {
-        const context = await browser.newContext({ baseURL: site.url });
+        const storageState = await ParitySitePage.getSession(browser, site);
+        const context = await browser.newContext({ baseURL: site.url, storageState });
         const page = await context.newPage();
         page.setDefaultTimeout(15000);
-        await page.goto('/wp-login.php');
-        await page.locator(Selectors.login.basicLogin.loginEmailField).fill(Users.adminUsername);
-        await page.locator(Selectors.login.basicLogin.loginPasswordField).fill(Users.adminPassword);
-        await Promise.all([
-            // DOM ready is enough: the dashboard also loads external images and feeds.
-            page.waitForURL(/wp-admin/, { waitUntil: 'domcontentloaded' }),
-            page.locator(Selectors.login.basicLogin.loginButton).click(),
-        ]);
         return new ParitySitePage(site, context, page);
     }
 

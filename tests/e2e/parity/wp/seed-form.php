@@ -3,8 +3,10 @@
  * Creates a WPUF form from a dump-form.php JSON file, writing every stored value
  * byte for byte (serialized exactly as WordPress serializes it), and prints the
  * new form id. Replaces any earlier form with the same title and post type.
+ * An optional second argument overrides the title, so tests that run at the
+ * same time do not replace each other's forms.
  *
- * Usage: wp eval-file seed-form.php <dump.json>
+ * Usage: wp eval-file seed-form.php <dump.json> [title]
  *
  * Test helper for the parity suite (tests/e2e/parity). Never loaded by the plugin.
  *
@@ -25,6 +27,10 @@ if ( ! $wpuf_file || ! is_readable( $wpuf_file ) ) {
 
 // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 $wpuf_dump = json_decode( file_get_contents( $wpuf_file ), true );
+
+if ( ! empty( $args[1] ) ) {
+    $wpuf_dump['post_title'] = $args[1];
+}
 
 foreach ( get_posts( [ 'post_type' => $wpuf_dump['post_type'], 'title' => $wpuf_dump['post_title'], 'post_status' => 'any', 'numberposts' => -1, 'fields' => 'ids' ] ) as $wpuf_old ) {
     foreach ( get_children( [ 'post_parent' => $wpuf_old, 'post_type' => 'wpuf_input', 'fields' => 'ids' ] ) as $wpuf_old_child ) {

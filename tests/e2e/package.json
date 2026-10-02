@@ -13,6 +13,7 @@
     "reset:env": "npx wp-env clean all && npx wp-env start",
 
     "generate-summary": "node utils/generate-summary.js",
+    "test:parity": "CI=false npx playwright test --config=playwright.config.ts --project=parity --grep-invert @Test_PAR0004 --workers=1 && CI=false npx playwright test --config=playwright.config.ts --project=parity --grep @Test_PAR0004 --workers=${PARITY_FILL_WORKERS:-4}",
     "test:api": "CI=false E2E_PHASE=api npx playwright test --config=playwright.config.ts --project=api",
     "test:api:ci": "E2E_PHASE=api npx playwright test --config=playwright.config.ts --project=api",
 
