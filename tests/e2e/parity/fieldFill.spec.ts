@@ -40,7 +40,9 @@ test.describe('Parity field fill', () => {
             await test.info().attach('rows.json', { path: parity.doWriteJson(test.info().outputPath('rows.json'), rows) });
             await test.info().attach('stored.json', { path: parity.doWriteJson(test.info().outputPath('stored.json'), stored) });
 
-            parity.validateRowsEqual({ [template]: rows.develop as string[] }, { [template]: rows.branch as string[] });
+            // Skipped row types (conditional logic, task 4.4d) are left out on both sides.
+            const kept = (list: string[] = []) => list.filter((row) => !SKIP_ROWS.some((type) => row.startsWith(`${type} |`)));
+            parity.validateRowsEqual({ [template]: kept(rows.develop) }, { [template]: kept(rows.branch) });
             parity.validateFormsEqual(
                 parity.withoutAgreedDeviations(stored.develop as FormDump, stored.branch as FormDump, parity.readFixture(FIXTURE)),
                 stored.branch as FormDump,

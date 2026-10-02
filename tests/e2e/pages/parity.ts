@@ -97,7 +97,11 @@ export class ParityPage {
                 delete dev.selected;
             }
             if (JSON.stringify(br.wpuf_cond) === JSON.stringify(orig.wpuf_cond)) {
-                dev.wpuf_cond = br.wpuf_cond;
+                if ('wpuf_cond' in br) {
+                    dev.wpuf_cond = br.wpuf_cond;
+                } else {
+                    delete dev.wpuf_cond;
+                }
             }
         });
         return copy;
@@ -364,7 +368,25 @@ export class ParitySitePage {
                 continue;
             }
             const actions: string[] = [];
-            const texts = row.locator('input[type="text"]:visible, input[type="number"]:visible, input[type="url"]:visible, input[type="email"]:visible, textarea:visible');
+            // Selectize hides the real <select> behind a search box: pick its last
+            // option through the selectize API, as the native branch below does.
+            const selectized = row.locator('select.selectized');
+            for (let c = 0; c < await selectized.count(); c++) {
+                const picked = await selectized.nth(c).evaluate((el) => {
+                    const widget = (el as unknown as { selectize?: { options: Record<string, unknown>; addItem: (v: string) => void } }).selectize;
+                    const values = Array.from((el as HTMLSelectElement).options).map((o) => o.value).filter(Boolean);
+                    const keys = widget ? Object.keys(widget.options) : [];
+                    const value = values.length ? values[values.length - 1] : keys[keys.length - 1];
+                    if (widget && value) {
+                        widget.addItem(value);
+                    }
+                    return value || '';
+                });
+                if (picked) {
+                    actions.push(`select=${picked}`);
+                }
+            }
+            const texts = row.locator('input[type="text"]:visible, input[type="number"]:visible, input[type="url"]:visible, input[type="email"]:visible, textarea:visible').filter({ hasNot: this.page.locator('xpath=self::*[ancestor::div[contains(@class,"selectize-input")]]') });
             for (let t = 0; t < await texts.count(); t++) {
                 const input = texts.nth(t);
                 if (!(await input.isEditable())) {

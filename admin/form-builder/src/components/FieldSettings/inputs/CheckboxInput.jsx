@@ -70,6 +70,7 @@ export default function CheckboxInput( { optionField, value, onChange, builderCl
                             <input
                                 type="checkbox"
                                 className={ `${ builderClassNames( 'checkbox' ) } !wpuf-mr-2` }
+                                value={ optionKeys[ 0 ] }
                                 checked={ isChecked }
                                 onChange={ handleSingleOptChange }
                             />
