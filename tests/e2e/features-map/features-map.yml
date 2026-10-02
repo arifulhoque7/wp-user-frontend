@@ -900,3 +900,7 @@ features:
     name: Builders print the wpuf_single_objects global like develop
   - id: PAR0010
     name: Visibility for subscribed users stores the pack id like develop
+  - id: PAR0012
+    name: Registration email body edits through TinyMCE and saves under notification
+  - id: PAR0013
+    name: Opening field options writes nothing

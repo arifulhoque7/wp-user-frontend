@@ -76,6 +76,33 @@ export class ParityPage {
         return copy;
     }
 
+    /**
+     * A copy of develop's stored form without the two develop behaviours the
+     * branch does not copy on purpose (owner decisions, ground-truth B29):
+     * the top-level `selected` develop writes from the Visibility value on a
+     * field that never had one, and develop's rewrite of an untouched
+     * `wpuf_cond` (taken from the branch only when the branch kept the fixture's).
+     */
+    withoutAgreedDeviations(develop: FormDump, branch: FormDump, fixture: FormDump): FormDump {
+        const copy = JSON.parse(JSON.stringify(develop)) as FormDump;
+        copy.fields.forEach((field, index) => {
+            const dev = field.post_content as Record<string, unknown> | null;
+            const br = branch.fields[index]?.post_content as Record<string, unknown> | undefined;
+            const orig = fixture.fields[index]?.post_content as Record<string, unknown> | undefined;
+            if (!dev || !br || !orig) {
+                return;
+            }
+            const visibility = dev.wpuf_visibility as { selected?: unknown } | undefined;
+            if (!('selected' in orig) && !('selected' in br) && visibility && dev.selected === visibility.selected) {
+                delete dev.selected;
+            }
+            if (JSON.stringify(br.wpuf_cond) === JSON.stringify(orig.wpuf_cond)) {
+                dev.wpuf_cond = br.wpuf_cond;
+            }
+        });
+        return copy;
+    }
+
     /** Assert two stored forms are identical (values and PHP types). */
     validateFormsEqual(develop: FormDump, branch: FormDump) {
         expect(branch, 'branch storage must equal develop storage').toStrictEqual(develop);
@@ -192,6 +219,25 @@ export class ParitySitePage {
         for (const label of ['Settings', ...path]) {
             await root.getByText(label, { exact: true }).locator('visible=true').last().click();
         }
+    }
+
+    /** Whether the builder store marks the form as having unsaved changes. */
+    async getBuilderIsDirty(): Promise<boolean> {
+        return this.page.evaluate(() => {
+            const w = window as unknown as { wp: { data: { select: (s: string) => { getIsDirty: () => boolean } } }; wpuf?: { storeName?: string } };
+            return !!w.wp.data.select(w.wpuf?.storeName || 'wpuf/form-builder').getIsDirty();
+        });
+    }
+
+    /** Set the content of a builder rich-text setting (TinyMCE) by its setting name. */
+    async doSetRichTextSetting(settingName: string, html: string) {
+        const editorId = `wpuf-editor-${settingName.replace(/\W+/g, '_')}`;
+        await expect.poll(() => this.page.evaluate((id) => !!(window as unknown as { tinymce?: { get: (i: string) => { initialized?: boolean } | null } }).tinymce?.get(id)?.initialized, editorId), { timeout: 10000 }).toBe(true);
+        await this.page.evaluate(([id, content]) => {
+            const editor = (window as unknown as { tinymce: { get: (i: string) => { setContent: (c: string) => void; fire: (e: string) => void } } }).tinymce.get(id);
+            editor.setContent(content);
+            editor.fire('change');
+        }, [editorId, html]);
     }
 
     /** Click a settings toggle by its input id and save the builder. */

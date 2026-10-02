@@ -26,8 +26,23 @@ export default function OptionDataInput( { optionField, field, builderClassNames
     const isMultiple = !! optionField.is_multiple;
 
     // Local state for options list
-    const [ options, setOptions ] = useState( [] );
-    const [ selected, setSelected ] = useState( isMultiple ? [] : '' );
+    // State starts from the field, so opening the panel writes nothing.
+    const [ options, setOptions ] = useState( () =>
+        Object.entries( field.options || {} ).map( ( [ val, label ] ) => ( {
+            label,
+            value: val,
+            id: getRandomId(),
+        } ) )
+    );
+    const [ selected, setSelected ] = useState( () => {
+        const fieldSelected = field.selected;
+
+        if ( isMultiple && ! Array.isArray( fieldSelected ) ) {
+            return fieldSelected ? [ fieldSelected ] : [];
+        }
+
+        return fieldSelected || ( isMultiple ? [] : '' );
+    } );
     const [ showValue, setShowValue ] = useState( false );
     const [ syncValue, setSyncValue ] = useState( true );
 
@@ -39,35 +54,13 @@ export default function OptionDataInput( { optionField, field, builderClassNames
     const [ aiError, setAiError ] = useState( '' );
     const [ aiGeneratedOptions, setAiGeneratedOptions ] = useState( [] );
 
-    const initialized = useRef( false );
-
-    // Initialize options from field data on mount
-    useEffect( () => {
-        if ( initialized.current ) {
-            return;
-        }
-        initialized.current = true;
-
-        const fieldOptions = field.options || {};
-        const initialOptions = Object.entries( fieldOptions ).map( ( [ val, label ] ) => ( {
-            label,
-            value: val,
-            id: getRandomId(),
-        } ) );
-
-        setOptions( initialOptions );
-
-        const fieldSelected = field.selected;
-        if ( isMultiple && ! Array.isArray( fieldSelected ) ) {
-            setSelected( fieldSelected ? [ fieldSelected ] : [] );
-        } else {
-            setSelected( fieldSelected || ( isMultiple ? [] : '' ) );
-        }
-    }, [ field.options, field.selected, isMultiple ] );
+    // Only an edit (new state object) is written back to the store.
+    const initialOptions = useRef( options );
+    const initialSelected = useRef( selected );
 
     // Sync options back to field store
     useEffect( () => {
-        if ( ! initialized.current ) {
+        if ( options === initialOptions.current ) {
             return;
         }
 
@@ -80,7 +73,7 @@ export default function OptionDataInput( { optionField, field, builderClassNames
 
     // Sync selected back to field store
     useEffect( () => {
-        if ( ! initialized.current ) {
+        if ( selected === initialSelected.current ) {
             return;
         }
         updateField( field.id, 'selected', selected );

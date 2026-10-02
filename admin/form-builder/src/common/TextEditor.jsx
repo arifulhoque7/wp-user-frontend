@@ -30,9 +30,29 @@ export default function TextEditor( { id, value = '', onChange, teeny = false } 
                             ? 'bold,italic,underline,link'
                             : 'formatselect,bold,italic,bullist,numlist,link,blockquote,alignleft,aligncenter,alignright,underline,strikethrough,forecolor,removeformat,charmap,outdent,indent,undo,redo',
                         setup: ( editor ) => {
-                            editor.on( 'change keyup', () => {
+                            // TinyMCE fires change while it loads the content; only
+                            // report real edits made after init.
+                            let lastContent = null;
+
+                            editor.on( 'init', () => {
+                                lastContent = editor.getContent();
+                            } );
+
+                            editor.on( 'change keyup input', () => {
+                                if ( lastContent === null ) {
+                                    return;
+                                }
+
+                                const content = editor.getContent();
+
+                                if ( content === lastContent ) {
+                                    return;
+                                }
+
+                                lastContent = content;
+
                                 if ( typeof onChange === 'function' ) {
-                                    onChange( editor.getContent() );
+                                    onChange( content );
                                 }
                             } );
                         },

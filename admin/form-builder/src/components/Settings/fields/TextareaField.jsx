@@ -29,12 +29,6 @@ export default function TextareaField( { field, name, value, onChange } ) {
                 className={ SETTING_CLASS_NAMES.textarea }
                 placeholder={ field.placeholder || '' }
             />
-            { field.long_help && (
-                <div
-                    className="wpuf-text-sm wpuf-mt-4 wpuf-long-help"
-                    dangerouslySetInnerHTML={ { __html: field.long_help } }
-                />
-            ) }
         </>
     );
 }

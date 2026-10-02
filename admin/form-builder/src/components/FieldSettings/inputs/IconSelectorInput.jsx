@@ -61,7 +61,16 @@ export default function IconSelectorInput( { optionField, field, value, onChange
     }, [ filteredIcons.length, searchTerm, i18n ] );
 
     // Auto-default icon when show_icon toggled on
+    // Pick a default icon when Show Icon is switched on here, not when the
+    // panel opens (opening must not write to the field or mark the form dirty).
+    const firstRun = useRef( true );
+
     useEffect( () => {
+        if ( firstRun.current ) {
+            firstRun.current = false;
+            return;
+        }
+
         if ( field.show_icon === 'yes' && ( ! value || value === 'fas fa-0' ) ) {
             const defaultIcons = window.wpuf_form_builder?.defaultIcons || {};
             const fieldType = field.template || field.input_type || 'text';

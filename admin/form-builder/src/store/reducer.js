@@ -194,9 +194,10 @@ export default function reducer( state = DEFAULT_STATE, action ) {
             const newFields = [ ...state.formFields ];
             const field = {
                 ...action.field,
-                show_icon: action.field.show_icon || 'no',
-                field_icon: action.field.field_icon || '',
-                icon_position: action.field.icon_position || 'left_label',
+                // Only missing values get a default (a stored '' stays), as develop.
+                show_icon: action.field.show_icon ?? 'no',
+                field_icon: action.field.field_icon ?? '',
+                icon_position: action.field.icon_position ?? 'left_label',
             };
             newFields.splice( action.index, 0, field );
             return {
@@ -283,7 +284,7 @@ export default function reducer( state = DEFAULT_STATE, action ) {
         // Column field actions
         case ADD_COLUMN_FIELD: {
             const newFields = state.formFields.map( ( field ) => {
-                if ( field.id !== action.columnFieldId ) {
+                if ( parseInt( field.id ) !== parseInt( action.columnFieldId ) ) {
                     return field;
                 }
                 const innerFields = { ...field.inner_fields };
@@ -300,7 +301,7 @@ export default function reducer( state = DEFAULT_STATE, action ) {
 
         case REMOVE_COLUMN_FIELD: {
             const newFields = state.formFields.map( ( field ) => {
-                if ( field.id !== action.columnFieldId ) {
+                if ( parseInt( field.id ) !== parseInt( action.columnFieldId ) ) {
                     return field;
                 }
                 const innerFields = { ...field.inner_fields };
@@ -318,7 +319,7 @@ export default function reducer( state = DEFAULT_STATE, action ) {
 
         case MOVE_COLUMN_FIELD: {
             const newFields = state.formFields.map( ( field ) => {
-                if ( field.id !== action.columnFieldId ) {
+                if ( parseInt( field.id ) !== parseInt( action.columnFieldId ) ) {
                     return field;
                 }
                 const innerFields = {};
@@ -343,7 +344,7 @@ export default function reducer( state = DEFAULT_STATE, action ) {
 
         case CLONE_COLUMN_FIELD: {
             const newFields = state.formFields.map( ( field ) => {
-                if ( field.id !== action.columnFieldId ) {
+                if ( parseInt( field.id ) !== parseInt( action.columnFieldId ) ) {
                     return field;
                 }
                 const innerFields = { ...field.inner_fields };
@@ -373,7 +374,7 @@ export default function reducer( state = DEFAULT_STATE, action ) {
 
         case MERGE_COLUMN_FIELDS: {
             const newFields = state.formFields.map( ( field ) => {
-                if ( field.id !== action.columnFieldId ) {
+                if ( parseInt( field.id ) !== parseInt( action.columnFieldId ) ) {
                     return field;
                 }
 
@@ -410,7 +411,7 @@ export default function reducer( state = DEFAULT_STATE, action ) {
         // Repeat field actions
         case ADD_REPEAT_FIELD: {
             const newFields = state.formFields.map( ( field ) => {
-                if ( field.id !== action.repeatFieldId ) {
+                if ( parseInt( field.id ) !== parseInt( action.repeatFieldId ) ) {
                     return field;
                 }
                 const innerFields = Array.isArray( field.inner_fields )
@@ -424,7 +425,7 @@ export default function reducer( state = DEFAULT_STATE, action ) {
 
         case REMOVE_REPEAT_FIELD: {
             const newFields = state.formFields.map( ( field ) => {
-                if ( field.id !== action.repeatFieldId ) {
+                if ( parseInt( field.id ) !== parseInt( action.repeatFieldId ) ) {
                     return field;
                 }
                 const innerFields = [ ...field.inner_fields ];
@@ -441,7 +442,7 @@ export default function reducer( state = DEFAULT_STATE, action ) {
 
         case MOVE_REPEAT_FIELD: {
             const newFields = state.formFields.map( ( field ) => {
-                if ( field.id !== action.repeatFieldId || ! Array.isArray( field.inner_fields ) ) {
+                if ( parseInt( field.id ) !== parseInt( action.repeatFieldId ) || ! Array.isArray( field.inner_fields ) ) {
                     return field;
                 }
                 const innerFields = [ ...field.inner_fields ];
@@ -454,7 +455,7 @@ export default function reducer( state = DEFAULT_STATE, action ) {
 
         case CLONE_REPEAT_FIELD: {
             const newFields = state.formFields.map( ( field ) => {
-                if ( field.id !== action.repeatFieldId ) {
+                if ( parseInt( field.id ) !== parseInt( action.repeatFieldId ) ) {
                     return field;
                 }
                 const innerFields = [ ...field.inner_fields ];

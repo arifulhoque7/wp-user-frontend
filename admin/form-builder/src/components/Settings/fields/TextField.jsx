@@ -42,12 +42,6 @@ export default function TextField( { field, name, value, onChange } ) {
                     <p className="wpuf-m-0">{ field.notice.text }</p>
                 </div>
             ) }
-            { field.long_help && (
-                <div
-                    className="wpuf-text-sm wpuf-mt-4 wpuf-long-help"
-                    dangerouslySetInnerHTML={ { __html: field.long_help } }
-                />
-            ) }
         </>
     );
 }

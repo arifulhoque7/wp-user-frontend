@@ -4,9 +4,13 @@ import SettingsField from './SettingsField';
 /**
  * Renders pro_preview fields inside a disabled overlay with "Upgrade to PRO" button.
  *
- * Mirrors the Vue template in post-form-settings.php lines 206-222.
+ * Mirrors the Vue template in post-form-settings.php lines 206-222: develop
+ * rendered these disabled with an empty name, so they were never saved. Here
+ * the inputs sit in a disabled fieldset and changes are dropped.
  */
-export default function ProPreviewWrapper( { proPreview, onChange, settings } ) {
+const ignoreChange = () => {};
+
+export default function ProPreviewWrapper( { proPreview, settings } ) {
     if ( ! proPreview || ! proPreview.fields ) {
         return null;
     }
@@ -24,16 +28,18 @@ export default function ProPreviewWrapper( { proPreview, onChange, settings } ) 
                 { __( 'Upgrade to PRO', 'wp-user-frontend' ) }
             </a>
             <div className="wpuf-z-20 wpuf-absolute wpuf-top-0 wpuf-left-0 wpuf-w-full wpuf-h-full wpuf-shadow-sm wpuf-bg-emerald-50 group-hover/pro-item:wpuf-opacity-50 wpuf-opacity-0" />
-            { Object.entries( proPreview.fields ).map( ( [ fieldName, fieldDef ] ) => (
-                <SettingsField
-                    key={ fieldName }
-                    field={ fieldDef }
-                    name={ fieldName }
-                    value={ fieldDef.value !== undefined ? fieldDef.value : '' }
-                    onChange={ onChange }
-                    settings={ settings }
-                />
-            ) ) }
+            <fieldset disabled className="wpuf-m-0 wpuf-p-0 wpuf-border-0">
+                { Object.entries( proPreview.fields ).map( ( [ fieldName, fieldDef ] ) => (
+                    <SettingsField
+                        key={ fieldName }
+                        field={ fieldDef }
+                        name={ fieldName }
+                        value={ fieldDef.value !== undefined ? fieldDef.value : '' }
+                        onChange={ ignoreChange }
+                        settings={ settings }
+                    />
+                ) ) }
+            </fieldset>
         </div>
     );
 }

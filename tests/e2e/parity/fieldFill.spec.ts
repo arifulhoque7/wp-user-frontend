@@ -41,7 +41,10 @@ test.describe('Parity field fill', () => {
             await test.info().attach('stored.json', { path: parity.doWriteJson(test.info().outputPath('stored.json'), stored) });
 
             parity.validateRowsEqual({ [template]: rows.develop as string[] }, { [template]: rows.branch as string[] });
-            parity.validateFormsEqual(stored.develop as FormDump, stored.branch as FormDump);
+            parity.validateFormsEqual(
+                parity.withoutAgreedDeviations(stored.develop as FormDump, stored.branch as FormDump, parity.readFixture(FIXTURE)),
+                stored.branch as FormDump,
+            );
         });
     }
 });

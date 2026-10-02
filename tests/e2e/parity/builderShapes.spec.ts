@@ -131,4 +131,42 @@ test.describe('Parity builder shapes', () => {
         expect(stored.branch, 'branch stores the pack id').toEqual({ selected: 'subscribed_users', choices: [packs.branch] });
         expect(stored.develop, 'develop stores the pack id').toEqual({ selected: 'subscribed_users', choices: [packs.develop] });
     });
+
+    test('PAR0012 : registration email body edits through TinyMCE and saves under notification (1.20, B31)', { tag: ['@Parity', '@Test_PAR0012'] }, async ({ browser }) => {
+        const branch = paritySite('branch');
+        const formId = new ParityPage().doSeedForm(branch, 'registration-form.json');
+        parityWp(branch, ['eval', `$s = (array) get_post_meta( ${formId}, "wpuf_form_settings", true ); $s["user_notification"] = "on"; $s["notification_type"] = "email_verification"; update_post_meta( ${formId}, "wpuf_form_settings", $s );`]);
+        const admin = await ParitySitePage.doOpen(browser, branch);
+        await admin.doOpenBuilder('wpuf_profile', formId);
+        await admin.doOpenBuilderSettings(['Notification Settings']);
+        await expect.poll(() => admin.page.evaluate(() => !!(window as unknown as { tinymce?: { get: (i: string) => { initialized?: boolean } | null } }).tinymce?.get('wpuf-editor-wpuf_settings_notification_verification_body_')?.initialized)).toBe(true);
+        const afterOpen = await admin.page.evaluate(() => {
+            const wpData = (window as unknown as { wp: { data: { select: (s: string) => { getSettings: () => Record<string, unknown> } } }; wpuf?: { storeName?: string } });
+            return wpData.wp.data.select(wpData.wpuf?.storeName || 'wpuf/form-builder').getSettings().notification ?? null;
+        });
+        expect(afterOpen, 'opening the editor writes nothing').toBeNull();
+        await admin.doSetRichTextSetting('wpuf_settings[notification][verification_body]', '<p>PAR0012 {activation_link}</p>');
+        await admin.doSaveBuilder();
+        await admin.doClose();
+
+        const body = parityWp(branch, ['eval', `$s = get_post_meta( ${formId}, "wpuf_form_settings", true ); echo $s["notification"]["verification_body"] ?? "ABSENT";`]).trim();
+        expect(body).toBe('<p>PAR0012 {activation_link}</p>');
+    });
+
+    test('PAR0013 : opening field options (dropdown, text with icon) writes nothing (1.20, B33)', { tag: ['@Parity', '@Test_PAR0013'] }, async ({ browser }) => {
+        const branch = paritySite('branch');
+        const formId = new ParityPage().doSeedForm(branch, 'post-form-conditions.json');
+        const admin = await ParitySitePage.doOpen(browser, branch);
+        await admin.doOpenBuilder('wpuf_forms', formId);
+        const dirty: Record<string, boolean> = {};
+
+        for (const [label, position] of [['dropdown', 2], ['text', 3]] as const) {
+            expect(await admin.doOpenFieldSettings(position), `open ${label}`).toBe(true);
+            await admin.page.waitForTimeout(500);
+            dirty[label] = await admin.getBuilderIsDirty();
+        }
+        await admin.doClose();
+
+        expect(dirty).toEqual({ dropdown: false, text: false });
+    });
 });

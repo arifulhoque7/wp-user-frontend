@@ -107,6 +107,9 @@ class Admin_Form_Builder {
         do_action( 'wpuf_form_builder_enqueue_style' );
 
         wp_enqueue_media();
+        // Rich text settings (registration email bodies) use the WordPress editor,
+        // as develop's wp_editor() did.
+        wp_enqueue_editor();
 
         // Vue 2 scripts — replaced by React form builder.
         // wp_enqueue_script( 'wpuf-vue' );

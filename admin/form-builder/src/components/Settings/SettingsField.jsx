@@ -10,6 +10,7 @@ import TrailingTextField from './fields/TrailingTextField';
 import DateField from './fields/DateField';
 import ColorPickerField from './fields/ColorPickerField';
 import PicRadioField from './fields/PicRadioField';
+import RichTextField from './fields/RichTextField';
 import InlineFieldsGroup from './fields/InlineFieldsGroup';
 import SubmitConditionalLogic from '../ConditionalLogic/SubmitConditionalLogic';
 
@@ -25,6 +26,7 @@ const FIELD_MAP = {
     date: DateField,
     'color-picker': ColorPickerField,
     'pic-radio': PicRadioField,
+    'rich-text': RichTextField,
 };
 
 /**
