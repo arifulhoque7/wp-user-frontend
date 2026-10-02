@@ -11,6 +11,7 @@ namespace WeDevs\Wpuf\Platform\Providers;
 use WeDevs\Wpuf\Builder\HookBridge;
 use WeDevs\Wpuf\Platform\REST\Manager;
 use WeDevs\Wpuf\Platform\ServiceProvider;
+use WeDevs\Wpuf\Platform\VersionGuard;
 
 /**
  * Registers the free plugin's core platform services.
@@ -32,6 +33,14 @@ class CoreServiceProvider extends ServiceProvider {
             Manager::class,
             function ( $container ) {
                 return new Manager( $container );
+            }
+        );
+
+        // Older Pro without the React admin: its Vue builder scripts are skipped, one notice.
+        $this->share_tagged(
+            VersionGuard::class,
+            function () {
+                return new VersionGuard();
             }
         );
 

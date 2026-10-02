@@ -6,7 +6,7 @@ Description: Create, edit, delete, manages your post, pages or custom post types
 Author: weDevs
 Version: 4.3.13
 Author URI: https://wedevs.com/?utm_source=WPUF_Author_URI
-Requires at least: 5.0
+Requires at least: 6.6
 Requires PHP: 7.4
 License: GPL2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -32,6 +32,8 @@ if ( $wpuf_autoload_loaded ) {
 }
 
 define( 'WPUF_VERSION', '4.3.13' );
+// Platform API version (container, REST manager, React admin runtime); Pro checks it (D10).
+define( 'WPUF_PLATFORM_VERSION', '1.0' );
 define( 'WPUF_FILE', __FILE__ );
 define( 'WPUF_ROOT', __DIR__ );
 define( 'WPUF_ROOT_URI', plugins_url( '', __FILE__ ) );

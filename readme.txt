@@ -4,7 +4,7 @@
 Contributors: wedevs, tareq1988, nizamuddinbabu
 Donate link: https://tareq.co/donate/
 Tags: frontend post, user directory, membership, user profile, user registration
-Requires at least: 5.0
+Requires at least: 6.6
 Tested up to: 7.1
 Stable tag: 4.3.13
 Requires PHP: 7.4
