@@ -856,3 +856,5 @@ features:
     name: Seeding a form fixture stores identical data on develop and branch
   - id: PAR0002
     name: Untouched builder save keeps the stored form byte-identical (G3)
+  - id: PAR0004
+    name: Filling every builder field option stores the same values on branch as on develop (G2)

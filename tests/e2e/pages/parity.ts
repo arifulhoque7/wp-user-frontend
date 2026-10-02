@@ -38,6 +38,11 @@ export class ParityPage {
         return id;
     }
 
+    /** Read a fixture from parity/fixtures. */
+    readFixture(fixture: string): FormDump {
+        return JSON.parse(fs.readFileSync(path.join(parityDir, 'fixtures', fixture), 'utf-8')) as FormDump;
+    }
+
     /** Read a stored form from a site. */
     readForm(site: ParitySite, formId: number): FormDump {
         return JSON.parse(parityWp(site, ['eval-file', path.join(parityDir, 'wp', 'dump-form.php'), String(formId)])) as FormDump;
@@ -48,6 +53,11 @@ export class ParityPage {
         fs.mkdirSync(path.dirname(file), { recursive: true });
         fs.writeFileSync(file, JSON.stringify(value, null, 2));
         return file;
+    }
+
+    /** Assert both builders showed the same option rows and accepted the same edits. */
+    validateRowsEqual(develop: Record<string, string[]>, branch: Record<string, string[]>) {
+        expect.soft(branch, 'branch builder must show the same option rows as develop').toStrictEqual(develop);
     }
 
     /** Assert two stored forms are identical (values and PHP types). */
@@ -73,6 +83,7 @@ export class ParitySitePage {
     static async doOpen(browser: Browser, site: ParitySite): Promise<ParitySitePage> {
         const context = await browser.newContext({ baseURL: site.url });
         const page = await context.newPage();
+        page.setDefaultTimeout(15000);
         await page.goto('/wp-login.php');
         await page.locator(Selectors.login.basicLogin.loginEmailField).fill(Users.adminUsername);
         await page.locator(Selectors.login.basicLogin.loginPasswordField).fill(Users.adminPassword);
@@ -138,6 +149,99 @@ export class ParitySitePage {
             await this.page.locator(Selectors.parity.alertConfirm).first().click();
             await expect(alert).toHaveCount(0);
         }
+    }
+
+    /**
+     * Open the settings panel of the stage field at a position (top level order) and
+     * expand every section. Returns false when that stage item is not visible
+     * (e.g. hidden fields), so nothing can be edited through the UI.
+     */
+    async doOpenFieldSettings(position: number): Promise<boolean> {
+        await this.doDismissAlerts();
+        const field = this.page.locator(Selectors.parity.stageFields).nth(position);
+        if (!(await field.isVisible())) {
+            return false;
+        }
+        await field.scrollIntoViewIfNeeded();
+        await field.hover();
+        await field.getByText(Selectors.parity.stageFieldEdit, { exact: true }).first().click();
+        await expect(this.page.locator(Selectors.parity.fieldOptionsPanel)).toBeVisible();
+        await expect(this.page.locator(Selectors.parity.fieldOptionRows).first()).toBeVisible();
+        const heads = this.page.locator(Selectors.parity.fieldOptionsSectionHeads);
+        for (let i = 0; i < await heads.count(); i++) {
+            const body = heads.nth(i).locator('xpath=..').locator(Selectors.parity.fieldOptionsSectionBody);
+            if ((await body.count()) === 0 || !(await body.first().isVisible())) {
+                await heads.nth(i).click();
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Apply the same deterministic edit to every option row of the open panel:
+     * text-like inputs get a value derived from the row, radios pick their last
+     * option, checkboxes toggle, selects pick their last option. Rows of the
+     * given types are skipped. Returns one line per row (type, label, what was done)
+     * so both sites can be compared row by row.
+     */
+    async doFillFieldOptions(tag: string, skipRowTypes: string[] = []): Promise<string[]> {
+        const rows = this.page.locator(Selectors.parity.fieldOptionRows);
+        const done: string[] = [];
+        for (let i = 0; i < await rows.count(); i++) {
+            const row = rows.nth(i);
+            const rowType = ((await row.getAttribute('class')) || '').split(/\s+/).find((c) => c.startsWith('panel-field-opt-')) || 'unknown';
+            const label = ((await row.locator('label').allTextContents())[0] || '').replace(/\s+/g, ' ').trim().slice(0, 40);
+            if (skipRowTypes.includes(rowType)) {
+                done.push(`${rowType} | ${label} | skipped`);
+                continue;
+            }
+            const actions: string[] = [];
+            const texts = row.locator('input[type="text"]:visible, input[type="number"]:visible, input[type="url"]:visible, input[type="email"]:visible, textarea:visible');
+            for (let t = 0; t < await texts.count(); t++) {
+                const input = texts.nth(t);
+                if (!(await input.isEditable())) {
+                    actions.push('readonly');
+                    continue;
+                }
+                const isNumber = (await input.getAttribute('type')) === 'number';
+                const value = isNumber ? String(7 + t) : /meta key/i.test(label) ? `p_${tag}_${t}` : `P ${tag} ${i}.${t}`;
+                await input.fill(value);
+                await input.blur();
+                actions.push(`fill=${value}`);
+            }
+            const radios = row.locator('input[type="radio"]:visible');
+            if (await radios.count()) {
+                await radios.last().check({ force: true });
+                actions.push(`radio=${await radios.last().getAttribute('value')}`);
+            }
+            const checks = row.locator('input[type="checkbox"]:visible');
+            for (let c = 0; c < await checks.count(); c++) {
+                await checks.nth(c).click({ force: true });
+                actions.push(`toggle=${await checks.nth(c).getAttribute('value')}`);
+            }
+            const selects = row.locator('select:visible');
+            for (let c = 0; c < await selects.count(); c++) {
+                const values = await selects.nth(c).locator('option').evaluateAll((options) => options.map((o) => (o as HTMLOptionElement).value));
+                if (values.length) {
+                    await selects.nth(c).selectOption(values[values.length - 1]);
+                    actions.push(`select=${values[values.length - 1]}`);
+                }
+            }
+            const customSelects = row.locator(Selectors.parity.customSelectButton);
+            for (let c = 0; c < await customSelects.count(); c++) {
+                await customSelects.nth(c).click();
+                const options = row.locator(Selectors.parity.customSelectOption);
+                const optionCount = await options.count();
+                if (optionCount) {
+                    const text = ((await options.nth(optionCount - 1).textContent()) || '').trim();
+                    await options.nth(optionCount - 1).click();
+                    actions.push(`select=${text}`);
+                }
+            }
+            await this.doDismissAlerts();
+            done.push(`${rowType} | ${label} | ${actions.join(', ') || 'no control'}`);
+        }
+        return done;
     }
 
     async doClose() {

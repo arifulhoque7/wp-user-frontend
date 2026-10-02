@@ -2344,5 +2344,15 @@ export const Selectors = {
         // SweetAlert popup (e.g. "field can be added only once") and its buttons
         alertPopup: '.swal2-container .swal2-popup',
         alertConfirm: '.swal2-container .swal2-confirm',
+        // Field settings panel (same classes on the Vue and the React builder)
+        stageFieldEdit: 'Edit',
+        fieldOptionsPanel: '.wpuf-form-builder-field-options',
+        fieldOptionsSectionHeads: '.wpuf-form-builder-field-options .option-fields-section > h3',
+        // Custom dropdown (React) inside an option row, and its options
+        // Vue: div with a chevron icon; React: div[role=button]
+        customSelectButton: 'div[role="button"][tabindex="0"], .option-fields-section > div:has(> i.fa-angle-down)',
+        customSelectOption: 'li[role="option"], .option-fields-section ul li',
+        fieldOptionsSectionBody: '.option-field-section-fields',
+        fieldOptionRows: '.wpuf-form-builder-field-options .panel-field-opt',
     },
 };
