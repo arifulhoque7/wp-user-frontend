@@ -535,6 +535,14 @@ class RestController extends WP_REST_Controller {
             $provider = $request->get_param( 'provider' );
             $model = $request->get_param( 'model' );
 
+            // The settings screen only has the masked key; use the stored one.
+            $stored_ai = get_option( 'wpuf_ai', [] );
+            $stored    = is_array( $stored_ai ) && is_string( $provider ) && isset( $stored_ai[ $provider . '_api_key' ] ) ? $stored_ai[ $provider . '_api_key' ] : '';
+
+            if ( function_exists( 'wpuf_settings_is_masked_secret' ) && wpuf_settings_is_masked_secret( $api_key, $stored, 4 ) ) {
+                $api_key = $stored;
+            }
+
             // Pass provider and model to test_connection
             $result = $this->form_generator->test_connection( $api_key, $provider, $model );
 

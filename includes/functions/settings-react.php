@@ -194,6 +194,49 @@ if ( ! function_exists( 'wpuf_settings_react_modules' ) ) {
 
 
 /**
+ * Mask a secret for display, the way the legacy settings screen shows it:
+ * the first and last `$visible` characters, asterisks in between; secrets too
+ * short to keep anything hidden become all asterisks.
+ *
+ * @since WPUF_SINCE
+ *
+ * @param string $value   Stored secret.
+ * @param int    $visible Characters kept at each end.
+ *
+ * @return string Masked value, or '' when no secret is stored.
+ */
+function wpuf_settings_mask_secret( $value, $visible = 2 ) {
+    $value  = (string) $value;
+    $length = strlen( $value );
+
+    if ( 0 === $length ) {
+        return '';
+    }
+
+    if ( $length <= $visible * 2 ) {
+        return str_repeat( '*', $length );
+    }
+
+    return substr( $value, 0, $visible ) . str_repeat( '*', $length - ( $visible * 2 ) ) . substr( $value, -$visible );
+}
+
+/**
+ * Whether a submitted secret is just the masked copy sent to the browser,
+ * in which case the stored secret must be kept.
+ *
+ * @since WPUF_SINCE
+ *
+ * @param mixed  $incoming Submitted value.
+ * @param string $stored   Stored secret.
+ * @param int    $visible  Characters kept at each end by the mask.
+ *
+ * @return bool
+ */
+function wpuf_settings_is_masked_secret( $incoming, $stored, $visible = 2 ) {
+    return is_string( $incoming ) && '' !== (string) $stored && wpuf_settings_mask_secret( $stored, $visible ) === $incoming;
+}
+
+/**
  * AI section: inject per-provider model lists + each provider's stored key so the
  * React AI panel can re-filter the model dropdown and swap the key field when the
  * provider changes (the legacy screen did this with jQuery).
@@ -226,7 +269,8 @@ function wpuf_ai_react_inject_data( $data ) {
     $ai   = is_array( $ai ) ? $ai : [];
     $keys = [];
     foreach ( [ 'openai', 'anthropic', 'google' ] as $provider ) {
-        $keys[ $provider ] = isset( $ai[ $provider . '_api_key' ] ) ? $ai[ $provider . '_api_key' ] : '';
+        // Masked like the legacy AI key field; the real key never leaves the server.
+        $keys[ $provider ] = isset( $ai[ $provider . '_api_key' ] ) ? wpuf_settings_mask_secret( $ai[ $provider . '_api_key' ], 4 ) : '';
     }
 
     if ( ! isset( $data['extra'] ) || ! is_array( $data['extra'] ) ) {
@@ -237,6 +281,13 @@ function wpuf_ai_react_inject_data( $data ) {
         'models_by_provider' => $by_provider,
         'keys'               => $keys,
     ];
+
+    // The raw provider keys also sit in the section values; mask them there too.
+    foreach ( [ 'openai', 'anthropic', 'google' ] as $provider ) {
+        if ( isset( $data['values']['wpuf_ai'][ $provider . '_api_key' ] ) ) {
+            $data['values']['wpuf_ai'][ $provider . '_api_key' ] = $keys[ $provider ];
+        }
+    }
 
     return $data;
 }
@@ -263,9 +314,18 @@ function wpuf_ai_react_persist_keys( $saved, $incoming, $extra ) {
     $ai = is_array( $ai ) ? $ai : [];
 
     foreach ( [ 'openai', 'anthropic', 'google' ] as $provider ) {
-        if ( isset( $extra['ai']['keys'][ $provider ] ) ) {
-            $ai[ $provider . '_api_key' ] = sanitize_text_field( wp_unslash( $extra['ai']['keys'][ $provider ] ) );
+        if ( ! isset( $extra['ai']['keys'][ $provider ] ) ) {
+            continue;
         }
+
+        $stored = isset( $ai[ $provider . '_api_key' ] ) ? $ai[ $provider . '_api_key' ] : '';
+
+        // The masked copy coming back means "unchanged".
+        if ( wpuf_settings_is_masked_secret( $extra['ai']['keys'][ $provider ], $stored, 4 ) ) {
+            continue;
+        }
+
+        $ai[ $provider . '_api_key' ] = sanitize_text_field( wp_unslash( $extra['ai']['keys'][ $provider ] ) );
     }
 
     unset( $ai['api_key_current'] );
@@ -450,9 +510,23 @@ function wpuf_settings_legacy_compat_check() {
     }
 
     $supported = [
-        'text', 'hidden', 'url', 'number', 'checkbox', 'multicheck', 'gateway_selector',
-        'radio', 'radio_inline', 'select', 'textarea', 'html', 'wysiwyg', 'file', 'password',
-        'color', 'toggle',
+        'text',
+        'hidden',
+        'url',
+        'number',
+        'checkbox',
+        'multicheck',
+        'gateway_selector',
+        'radio',
+        'radio_inline',
+        'select',
+        'textarea',
+        'html',
+        'wysiwyg',
+        'file',
+        'password',
+        'color',
+        'toggle',
     ];
 
     foreach ( wpuf_settings_fields() as $section_id => $section_fields ) {

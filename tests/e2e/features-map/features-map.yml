@@ -862,3 +862,5 @@ features:
     name: Builder page never prints the reCAPTCHA / Turnstile secret keys
   - id: SEC0002
     name: Builder save rejects a foreign settings meta key, a non-form post and a missing nonce
+  - id: SEC0003
+    name: Settings REST never returns secrets; masked values keep the stored secret

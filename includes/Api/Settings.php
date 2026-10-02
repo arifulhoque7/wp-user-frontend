@@ -135,6 +135,7 @@ class Settings extends WP_REST_Controller {
                 : [];
 
             $fields[ $section_id ] = $this->dedupe_fields( $section_fields );
+            $values[ $section_id ] = $this->mask_secrets( $values[ $section_id ], $fields[ $section_id ] );
         }
 
         $data = [
@@ -226,6 +227,11 @@ class Settings extends WP_REST_Controller {
 
                 // Only persist fields that are actually registered for this section.
                 if ( null === $field ) {
+                    continue;
+                }
+
+                // A masked secret coming back unchanged keeps the stored value.
+                if ( $this->is_secret_field( $field ) && wpuf_settings_is_masked_secret( $value, isset( $existing[ $field_name ] ) ? $existing[ $field_name ] : '' ) ) {
                     continue;
                 }
 
@@ -372,6 +378,46 @@ class Settings extends WP_REST_Controller {
 
                 return sanitize_text_field( wp_unslash( $value ) );
         }
+    }
+
+    /**
+     * Whether a field holds a secret the legacy screen only shows masked
+     * (fields rendered with `wpuf_settings_password_preview`).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param array $field Field definition.
+     *
+     * @return bool
+     */
+    protected function is_secret_field( $field ) {
+        return isset( $field['callback'] ) && 'wpuf_settings_password_preview' === $field['callback'];
+    }
+
+    /**
+     * Replace secret values with their masked copy before they leave the server.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param mixed $values Stored section values.
+     * @param array $fields Section field definitions.
+     *
+     * @return mixed
+     */
+    protected function mask_secrets( $values, $fields ) {
+        if ( ! is_array( $values ) ) {
+            return $values;
+        }
+
+        foreach ( $fields as $field ) {
+            if ( empty( $field['name'] ) || ! $this->is_secret_field( $field ) || ! isset( $values[ $field['name'] ] ) ) {
+                continue;
+            }
+
+            $values[ $field['name'] ] = wpuf_settings_mask_secret( $values[ $field['name'] ] );
+        }
+
+        return $values;
     }
 
     /**

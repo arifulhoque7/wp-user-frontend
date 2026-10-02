@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { ParityPage, ParitySitePage } from '../pages/parity';
-import { paritySite, paritySitesConfigured, parityWp } from '../utils/paritySites';
+import * as path from 'path';
+import { parityDir, paritySite, paritySitesConfigured, parityWp } from '../utils/paritySites';
 
 /**
  * Security regressions on the branch site (task 1.19). These check what the
@@ -39,5 +40,15 @@ test.describe('Branch security', () => {
         expect(foreignPost.success, 'non-form post accepted').toBe(false);
         expect(noNonce.success, 'missing nonce accepted').toBe(false);
         expect(parityWp(branch, ['post', 'meta', 'list', String(otherPost), '--keys=_wp_page_template', '--format=count']).trim(), 'meta written on a non-form post').toBe('0');
+    });
+
+    test('SEC0003 : settings REST never returns secrets; masked values keep the stored secret', { tag: ['@Security', '@Test_SEC0003'] }, () => {
+        const result = JSON.parse(parityWp(paritySite('branch'), ['eval-file', path.join(parityDir, 'wp', 'check-settings-secrets.php')]));
+
+        expect(result.payload_has_secret, 'secret in GET payload').toBe(false);
+        expect(result.masked, 'masked values').toEqual(['SE**************99', 'sk-S**************3456']);
+        expect(result.kept, 'stored secrets kept when the mask comes back').toEqual(['SEC3-N8N-SECRET-99', 'sk-SEC3-REALKEY-123456']);
+        expect(result.test_used_stored, 'AI test used the stored key').toBe(true);
+        expect(result.new, 'new values saved').toEqual(['SEC3-NEW', 'sk-SEC3-NEW']);
     });
 });
