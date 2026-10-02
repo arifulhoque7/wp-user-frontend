@@ -167,6 +167,13 @@ export class ParitySitePage {
         return { field, body: request.postDataJSON() };
     }
 
+    /** In the open field settings panel, set Visibility to subscribed users and tick a pack by its title. */
+    async doSetSubscriptionVisibility(packTitle: string) {
+        const panel = this.page.locator(Selectors.parity.fieldOptionsPanel);
+        await panel.locator('input[type="radio"][value="subscribed_users"]').first().check();
+        await panel.getByLabel(packTitle, { exact: true }).check();
+    }
+
     /** In the open field settings panel, tick a checkbox by its label. */
     async doCheckFieldOption(label: string) {
         await this.page.locator(Selectors.parity.fieldOptionsPanel).getByLabel(label).check();

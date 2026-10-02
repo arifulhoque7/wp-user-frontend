@@ -898,3 +898,5 @@ features:
     name: React settings apply the legacy section hooks, tax and role filters
   - id: HLT0004
     name: Builders print the wpuf_single_objects global like develop
+  - id: PAR0010
+    name: Visibility for subscribed users stores the pack id like develop

@@ -106,4 +106,29 @@ test.describe('Parity builder shapes', () => {
         expect(whenOn, 'on').toBe('on');
         expect(whenOff, 'off = key absent, like develop').toBe('ABSENT');
     });
+
+    test('PAR0010 : visibility for subscribed users stores the pack id like develop (1.18)', { tag: ['@Parity', '@Test_PAR0010'] }, async ({ browser }) => {
+        const parity = new ParityPage();
+        const stored: Record<string, unknown> = {};
+        const packs: Record<string, string> = {};
+
+        for (const name of ['develop', 'branch'] as const) {
+            const site = paritySite(name);
+            packs[name] = parityWp(site, ['post', 'create', '--post_type=wpuf_subscription', '--post_status=publish', '--post_title=PAR0010 pack', '--porcelain']).trim();
+            // Packs saved from the UI carry _sort_order; the pack list queries by it.
+            parityWp(site, ['post', 'meta', 'update', packs[name], '_sort_order', '1']);
+            const formId = parity.doSeedForm(site, 'post-form-conditions.json');
+            const admin = await ParitySitePage.doOpen(browser, site);
+            await admin.doOpenBuilder('wpuf_forms', formId);
+            expect(await admin.doOpenFieldSettings(3), `${name}: open Nickname settings`).toBe(true);
+            await admin.doSetSubscriptionVisibility('PAR0010 pack');
+            await admin.doSaveBuilder();
+            await admin.doClose();
+            stored[name] = (parity.readForm(site, formId).fields[3].post_content as Record<string, unknown>).wpuf_visibility;
+            parityWp(site, ['post', 'delete', packs[name], '--force']);
+        }
+
+        expect(stored.branch, 'branch stores the pack id').toEqual({ selected: 'subscribed_users', choices: [packs.branch] });
+        expect(stored.develop, 'develop stores the pack id').toEqual({ selected: 'subscribed_users', choices: [packs.develop] });
+    });
 });

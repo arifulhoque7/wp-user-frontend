@@ -647,13 +647,9 @@ class Admin_Form_Builder {
      * @return array
      */
     protected function get_subscriptions() {
-        $packs = get_posts(
-            [
-                'post_type'   => 'wpuf_subscription',
-                'post_status' => 'publish',
-                'numberposts' => -1,
-            ]
-        );
+        // Same list and order (`_sort_order`) the Vue visibility setting used.
+        $packs = wpuf()->subscription->get_subscriptions();
+        $packs = is_array( $packs ) ? $packs : [];
 
         return array_map(
             function ( $pack ) {

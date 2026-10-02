@@ -51,22 +51,33 @@ export default function CheckboxInput( { optionField, value, onChange, builderCl
         onChange( current );
     }, [ value, onChange, isBooleanBox ] );
 
-    // Single option checkbox (toggle)
+    // Single option checkbox (toggle). Like the Vue template: the title (when
+    // set) above, the option's own text next to the box.
     if ( isSingleOpt ) {
         return (
             <div className="panel-field-opt panel-field-opt-checkbox wpuf-mb-6">
-                <div className="wpuf-flex">
-                    <label className="wpuf-block text-sm/6 wpuf-font-medium wpuf-text-gray-900 !wpuf-mb-0">
-                        <input
-                            type="checkbox"
-                            className={ `${ builderClassNames( 'checkbox' ) } !wpuf-mr-2` }
-                            checked={ isChecked }
-                            onChange={ handleSingleOptChange }
-                        />
-                        { optionField.title }
-                        <SettingHelpText text={ optionField.help_text } />
-                    </label>
-                </div>
+                { optionField.title && (
+                    <div className="wpuf-flex">
+                        <label className="wpuf-option-field-title wpuf-font-sm wpuf-text-gray-700 wpuf-font-medium">
+                            { optionField.title }
+                            <SettingHelpText text={ optionField.help_text } />
+                        </label>
+                    </div>
+                ) }
+                <ul>
+                    <li>
+                        <label className="wpuf-block text-sm/6 wpuf-font-medium wpuf-text-gray-900 !wpuf-mb-0">
+                            <input
+                                type="checkbox"
+                                className={ `${ builderClassNames( 'checkbox' ) } !wpuf-mr-2` }
+                                checked={ isChecked }
+                                onChange={ handleSingleOptChange }
+                            />
+                            { options[ optionKeys[ 0 ] ] }
+                            { ! optionField.title && <SettingHelpText text={ optionField.help_text } /> }
+                        </label>
+                    </li>
+                </ul>
             </div>
         );
     }

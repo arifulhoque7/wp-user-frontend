@@ -117,16 +117,16 @@ export default function VisibilityInput( { optionField, field, value, onChange, 
                     <ul>
                         { subscriptions.length > 0 ? (
                             subscriptions.map( ( pack ) => (
-                                <li key={ pack.ID } className="wpuf-mt-2 wpuf-flex wpuf-items-center">
+                                <li key={ pack.id } className="wpuf-mt-2 wpuf-flex wpuf-items-center">
                                     <label className="wpuf-flex wpuf-items-center">
                                         <input
                                             className={ `${ builderClassNames( 'checkbox' ) } !wpuf-mr-2` }
                                             type="checkbox"
-                                            value={ String( pack.ID ) }
-                                            checked={ choices.includes( String( pack.ID ) ) }
-                                            onChange={ ( e ) => handleChoiceToggle( String( pack.ID ), e.target.checked ) }
+                                            value={ String( pack.id ) }
+                                            checked={ choices.includes( String( pack.id ) ) }
+                                            onChange={ ( e ) => handleChoiceToggle( String( pack.id ), e.target.checked ) }
                                         />
-                                        { pack.post_title }
+                                        { pack.title }
                                     </label>
                                 </li>
                             ) )
