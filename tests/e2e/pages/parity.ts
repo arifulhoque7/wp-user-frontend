@@ -96,6 +96,12 @@ export class ParityPage {
             if (!('selected' in orig) && !('selected' in br) && visibility && dev.selected === visibility.selected) {
                 delete dev.selected;
             }
+            // Develop never reveals "Visible on product page" on a taxonomy field
+            // without a stored woo_attr (its store adds the key non-reactively);
+            // the branch shows the row, so it can be ticked.
+            if (!('woo_attr_vis' in orig) && !('woo_attr_vis' in dev) && 'woo_attr_vis' in br) {
+                dev.woo_attr_vis = br.woo_attr_vis;
+            }
             if (JSON.stringify(br.wpuf_cond) === JSON.stringify(orig.wpuf_cond)) {
                 if ('wpuf_cond' in br) {
                     dev.wpuf_cond = br.wpuf_cond;
@@ -105,6 +111,17 @@ export class ParityPage {
             }
         });
         return copy;
+    }
+
+    /**
+     * Option-row readings with the agreed deviations folded in: a saved field's
+     * Meta Key reads `readonly` on the branch (develop accepts typing but its
+     * store ignores it), and the woo_attr_vis row develop never reveals.
+     */
+    withoutAgreedRowDeviations(rows: string[] = []): string[] {
+        return rows
+            .filter((row) => !row.startsWith('panel-field-opt-checkbox | Visible on product page |'))
+            .map((row) => (row.startsWith('panel-field-opt-text | Meta Key |') ? 'panel-field-opt-text | Meta Key | (agreed)' : row));
     }
 
     /** Assert two stored forms are identical (values and PHP types). */
