@@ -103,3 +103,4 @@ assets/js/settings-react.min.js
 assets/js/settings-react.min.js.map
 assets/js/settings-react.min.asset.php
 assets/css/settings-react.css
+.phpunit.result.cache
