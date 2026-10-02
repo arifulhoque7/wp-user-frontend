@@ -910,3 +910,5 @@ features:
     name: Subscription notices render and clear
   - id: SET0006
     name: Pro settings and Feature_Lock reach WPUF REST routes without a request URL
+  - id: CTR0001
+    name: Admin screens keep the develop runtime contract
