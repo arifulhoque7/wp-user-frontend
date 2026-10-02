@@ -1,4 +1,6 @@
 import { useMemo } from '@wordpress/element';
+import { useSelect } from '@wordpress/data';
+import { STORE_NAME } from '../../store/constants';
 import { __ } from '@wordpress/i18n';
 import { useFieldClasses } from '../../hooks/useFieldClasses';
 import HelpText from './HelpText';
@@ -140,6 +142,13 @@ export default function TaxonomyPreview( { field } ) {
         [ field.name, field.exclude_type, field.exclude, field.orderby, field.order ]
     );
     const selectClass = `${ builderClassNames( 'select' ) } !wpuf-text-base`;
+    // Develop renders no preview for a taxonomy without builder settings (e.g.
+    // a custom taxonomy while Pro is off).
+    const isAvailable = useSelect( ( select ) => !! select( STORE_NAME ).getFieldSettings()[ field.name ], [ field.name ] );
+
+    if ( ! isAvailable ) {
+        return null;
+    }
 
     return (
         <div className="wpuf-fields">

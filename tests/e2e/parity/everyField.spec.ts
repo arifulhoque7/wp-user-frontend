@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { ParityPage, ParitySitePage } from '../pages/parity';
 import { paritySite, paritySitesConfigured } from '../utils/paritySites';
 
-type FieldReport = { added: boolean; alert: string; shape?: { label: string; controls: string[]; text: string } };
+type FieldReport = { added: boolean; alert: string; shape?: { label: string; controls: string[]; text: string; height: number; hidden: number } };
 
 /**
  * Every palette field type, added by click to a new form on both builders:

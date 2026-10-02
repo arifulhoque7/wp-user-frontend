@@ -17,6 +17,7 @@ import { STORE_NAME } from '../../store';
 import { filterCanvasRender } from '../../extensions/hooks';
 import SortableField from './SortableField';
 import EmptyState from './EmptyState';
+import HiddenFieldsList from './HiddenFieldsList';
 
 export default function BuilderCanvas() {
     const { formFields, settings } = useSelect( ( select ) => {
@@ -83,6 +84,7 @@ export default function BuilderCanvas() {
                             />
                         ) ) }
                     </ul>
+                    <HiddenFieldsList />
                 </div>
             </SortableContext>
         </DndContext>

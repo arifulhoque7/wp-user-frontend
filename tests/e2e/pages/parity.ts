@@ -358,10 +358,16 @@ export class ParitySitePage {
      * Comparable shape of the last top level stage field: label, form controls and
      * visible text, with the hover action bar left out (framework markup differs).
      */
-    async getLastStageFieldShape(): Promise<{ label: string; controls: string[]; text: string }> {
+    async getLastStageFieldShape(): Promise<{ label: string; controls: string[]; text: string; height: number; hidden: number }> {
         return this.page.locator(Selectors.parity.stageFields).evaluateAll((items) => {
             const top = items.filter((item) => !item.parentElement?.closest('li[class*="form-field-"]'));
-            const clone = top[top.length - 1].cloneNode(true) as HTMLElement;
+            const live = top[top.length - 1] as HTMLElement;
+            // Layout checks: row height (to 20px) and elements left invisible, e.g. a
+            // preview whose stylesheet is missing.
+            const height = Math.round(live.getBoundingClientRect().height / 20) * 20;
+            const hidden = Array.from(live.querySelectorAll('*')).filter((node) => !node.closest('[class*="buttons"]')
+                && 'hidden' === getComputedStyle(node).visibility).length;
+            const clone = live.cloneNode(true) as HTMLElement;
             // Action bars and dnd-kit screen reader hints are framework markup, not field preview.
             clone.querySelectorAll('[class*="buttons"], [id^="DndDescribedBy"], [id^="DndLiveRegion"]').forEach((node) => node.remove());
             const controls = Array.from(clone.querySelectorAll('input, select, textarea')).map((control) => {
@@ -373,7 +379,7 @@ export class ParitySitePage {
             });
             const label = (clone.querySelector('label')?.textContent || '').replace(/\s+/g, ' ').trim();
             // Text compared without whitespace: Vue templates add spaces between nodes, JSX does not.
-            return { label, controls, text: (clone.textContent || '').replace(/\s+/g, '') };
+            return { label, controls, text: (clone.textContent || '').replace(/\s+/g, ''), height, hidden };
         });
     }
 

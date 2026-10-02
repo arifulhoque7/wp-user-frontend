@@ -15,7 +15,16 @@ function previewKey( field ) {
     return JSON.stringify( [ field.default, field.country_list, field.address?.country_select?.value ] );
 }
 
-export default function FieldPreview( { field } ) {
+/**
+ * Inner (column / repeat) fields use develop's compact row: no icons or hidden
+ * badge, small label, named hover group.
+ */
+const INNER_ROW = {
+    column: 'wpuf-flex wpuf-flex-col md:wpuf-flex-row wpuf-gap-2 wpuf-p-4 wpuf-border-transparent group-hover/column-inner:wpuf-border-primary wpuf-rounded-t-md wpuf-border-t wpuf-border-r wpuf-border-l wpuf-border-dashed wpuf-border-emerald-400',
+    repeat: 'wpuf-flex wpuf-flex-col md:wpuf-flex-row wpuf-gap-2 wpuf-p-4 wpuf-border-transparent group-hover/repeat-inner:wpuf-border-green-400 wpuf-rounded-t-md wpuf-border-t wpuf-border-r wpuf-border-l wpuf-border-dashed wpuf-border-green-400',
+};
+
+export default function FieldPreview( { field, variant = 'top' } ) {
     const { fieldSettings, isProActive, editingFieldId } = useSelect( ( select ) => {
         const store = select( STORE_NAME );
         return {
@@ -36,6 +45,45 @@ export default function FieldPreview( { field } ) {
 
     // Try to get a registered preview component
     const PreviewComponent = getFieldPreview( field.template );
+
+    const body = (
+        <>
+            { PreviewComponent && ! isProPreview ? (
+                <PreviewComponent key={ previewKey( field ) } field={ field } />
+            ) : null }
+            { isProPreview && (
+                <div className="stage-pro-alert wpuf-text-center">
+                    <label className="wpuf-pro-text-alert">
+                        <a href={ proLink } target="_blank" rel="noopener noreferrer" className="wpuf-text-gray-700 wpuf-text-base">
+                            <strong>{ config ? config.title : field.template }</strong>
+                            { ' ' + __( 'is available in Pro Version', 'wp-user-frontend' ) }
+                        </a>
+                    </label>
+                </div>
+            ) }
+        </>
+    );
+
+    if ( INNER_ROW[ variant ] ) {
+        return (
+            <div className={ INNER_ROW[ variant ] }>
+                { ! ( isFullWidth || isProPreview ) && (
+                    <div className={ 'repeat' === variant ? 'wpuf-w-1/4 wpuf-flex wpuf-items-center' : undefined }>
+                        { ! isInvisible && (
+                            <label htmlFor={ `wpuf-${ field.name || 'cls' }` } className="wpuf-block wpuf-text-sm">
+                                { field.label }
+                                { field.required === 'yes' && <span className="required"> *</span> }
+                            </label>
+                        ) }
+                    </div>
+                ) }
+                <div className={ `wpuf-relative wpuf-min-w-0 ${ ( isFullWidth || isProPreview ) ? 'wpuf-w-full' : 'wpuf-w-full md:wpuf-w-3/4' }` }>
+                    <div className="wpuf-absolute wpuf-w-full wpuf-h-full wpuf-z-10" />
+                    <div className="wpuf-relative">{ body }</div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div
@@ -85,19 +133,7 @@ export default function FieldPreview( { field } ) {
                 className={ `wpuf-relative ${ ( isFullWidth || isProPreview ) ? 'wpuf-w-full' : 'wpuf-w-3/4' }` }
             >
                 <div className="wpuf-absolute wpuf-w-full wpuf-h-full wpuf-z-10" />
-                { PreviewComponent && ! isProPreview ? (
-                    <PreviewComponent key={ previewKey( field ) } field={ field } />
-                ) : null }
-                { isProPreview && (
-                    <div className="stage-pro-alert wpuf-text-center">
-                        <label className="wpuf-pro-text-alert">
-                            <a href={ proLink } target="_blank" rel="noopener noreferrer" className="wpuf-text-gray-700 wpuf-text-base">
-                                <strong>{ config ? config.title : field.template }</strong>
-                                { ' ' + __( 'is available in Pro Version', 'wp-user-frontend' ) }
-                            </a>
-                        </label>
-                    </div>
-                ) }
+                { body }
             </div>
         </div>
     );

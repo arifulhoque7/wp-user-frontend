@@ -40,10 +40,9 @@ const ALLOWED_IN_REPEAT = [
 ];
 
 export default function RepeatField( { field } ) {
-    const { editingFieldId, fieldSettings, formFields } = useSelect( ( select ) => {
+    const { fieldSettings, formFields } = useSelect( ( select ) => {
         const store = select( STORE_NAME );
         return {
-            editingFieldId: store.getEditingFieldId(),
             fieldSettings: store.getFieldSettings(),
             formFields: store.getFormFields(),
         };
@@ -58,7 +57,6 @@ export default function RepeatField( { field } ) {
 
     const innerFields = Array.isArray( field.inner_fields ) ? field.inner_fields : [];
     const fieldIds = innerFields.map( ( f ) => String( f.id ) );
-    const isEditing = parseInt( editingFieldId ) === parseInt( field.id );
 
     const handleDragEnd = useCallback( ( event ) => {
         const { active, over } = event;
@@ -123,9 +121,8 @@ export default function RepeatField( { field } ) {
     }, [] );
 
     return (
-        <div
-            className={ `wpuf-p-4 wpuf-border wpuf-border-dashed wpuf-rounded-lg group-hover:wpuf-border-primary ${ isEditing ? 'wpuf-bg-green-50 wpuf-border-primary' : 'wpuf-border-transparent' }` }
-        >
+        // No wrapper around the container: develop's stage prints it straight in the row.
+        <>
             <DndContext
                 sensors={ sensors }
                 collisionDetection={ closestCenter }
@@ -176,6 +173,6 @@ export default function RepeatField( { field } ) {
                     </div>
                 </SortableContext>
             </DndContext>
-        </div>
+        </>
     );
 }

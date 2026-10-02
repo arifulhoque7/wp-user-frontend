@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from '@wordpress/element';
+import { __ } from '@wordpress/i18n';
 import SettingHelpText from './SettingHelpText';
 
 /**
@@ -10,7 +11,14 @@ export default function SelectInput( { optionField, value, onChange } ) {
     const wrapperRef = useRef( null );
     const options = optionField.options || {};
 
-    const selectedLabel = options[ value ] || '';
+    // An empty value shows the option's default, else develop's placeholder. The
+    // default is only shown, not stored: opening the panel writes nothing (Q6).
+    let selectedLabel = __( 'Select an option', 'wp-user-frontend' );
+    if ( value && options[ value ] ) {
+        selectedLabel = options[ value ];
+    } else if ( ! value && optionField.default && options[ optionField.default ] ) {
+        selectedLabel = options[ optionField.default ];
+    }
 
     // Close dropdown on outside click
     useEffect( () => {
