@@ -113,21 +113,68 @@ export function isDropdownType( inputType ) {
 }
 
 /**
- * Get options for a field (from field.options object).
+ * Input type a condition stores for a dependency field: the field's own
+ * `input_type`, as the Vue builder stored it, else one derived from the template.
  *
  * @param {Object} field
+ * @return {string}
+ */
+export function conditionInputType( field ) {
+    if ( ! field ) {
+        return '';
+    }
+
+    return field.input_type || templateToInputType( field.template );
+}
+
+/**
+ * Field type a condition stores: a rich textarea stores its `rich` value, else
+ * the field's `type`, else the input type (same order as the Vue builder).
+ *
+ * @param {Object} field
+ * @return {string}
+ */
+export function conditionFieldType( field ) {
+    const inputType = conditionInputType( field );
+
+    if ( inputType === 'textarea' && field && Object.prototype.hasOwnProperty.call( field, 'rich' ) ) {
+        return field.rich;
+    }
+
+    return field && field.type !== undefined ? field.type : inputType;
+}
+
+/**
+ * Get the options a condition can match for a field: the field's own options,
+ * or the terms of a hierarchical taxonomy field.
+ *
+ * @param {Object} field
+ * @param {Object} wpPostTypes `wpuf_form_builder.wp_post_types`.
  * @return {Array<{value: string, label: string}>}
  */
-export function getFieldOptions( field ) {
-    if ( ! field || ! field.options ) {
+export function getFieldOptions( field, wpPostTypes = {} ) {
+    if ( ! field ) {
         return [];
     }
 
     const options = [];
 
-    if ( typeof field.options === 'object' && ! Array.isArray( field.options ) ) {
+    if ( field.template === 'taxonomy' ) {
+        // Two post types never share a taxonomy, so the first match is the one.
+        const owner = Object.values( wpPostTypes ).find( ( taxonomies ) =>
+            taxonomies && Object.prototype.hasOwnProperty.call( taxonomies, field.name )
+        );
+        const terms = owner && owner[ field.name ] && owner[ field.name ].hierarchical ? owner[ field.name ].terms : null;
+
+        if ( Array.isArray( terms ) ) {
+            terms.forEach( ( term ) => options.push( { value: String( term.term_id ), label: term.name } ) );
+            return options;
+        }
+    }
+
+    if ( field.options && typeof field.options === 'object' && ! Array.isArray( field.options ) ) {
         for ( const key in field.options ) {
-            if ( field.options.hasOwnProperty( key ) ) {
+            if ( Object.prototype.hasOwnProperty.call( field.options, key ) ) {
                 options.push( { value: key, label: field.options[ key ] } );
             }
         }

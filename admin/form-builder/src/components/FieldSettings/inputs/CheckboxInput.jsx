@@ -1,20 +1,17 @@
 import { useCallback } from '@wordpress/element';
-import { useDispatch } from '@wordpress/data';
-import { STORE_NAME } from '../../../store';
 import SettingHelpText from './SettingHelpText';
 
 /**
  * Checkbox input for field settings.
  * Replaces Vue field-checkbox component.
  *
- * Handles single-option checkboxes (is_single_opt) like required/read_only
- * where value toggles between the first option key and empty string.
- *
- * Also handles mutual exclusivity between required and read_only fields.
+ * Single-option checkboxes (is_single_opt) toggle between the first option key
+ * and ''. Multi-option checkboxes store a list of keys when the stored value is
+ * a list; a single box with any other stored value is on/off, stored as true/false
+ * (how the Vue v-model stored `read_only`). The store keeps `read_only` and
+ * `required` mutually exclusive.
  */
-export default function CheckboxInput( { optionField, field, value, onChange, builderClassNames } ) {
-    const { updateField } = useDispatch( STORE_NAME );
-
+export default function CheckboxInput( { optionField, value, onChange, builderClassNames } ) {
     const isSingleOpt = !! optionField.is_single_opt;
     const options = optionField.options || {};
     const optionKeys = Object.keys( options );
@@ -25,18 +22,19 @@ export default function CheckboxInput( { optionField, field, value, onChange, bu
         : false;
 
     const handleSingleOptChange = useCallback( ( e ) => {
-        const newValue = e.target.checked ? optionKeys[ 0 ] : '';
-        onChange( newValue );
+        onChange( e.target.checked ? optionKeys[ 0 ] : '' );
+    }, [ optionKeys, onChange ] );
 
-        // Mutual exclusivity: required <-> read_only
-        if ( optionField.name === 'required' && e.target.checked ) {
-            updateField( field.id, 'read_only', 'no' );
-        } else if ( optionField.name === 'read_only' && e.target.checked ) {
-            updateField( field.id, 'required', 'no' );
-        }
-    }, [ optionKeys, onChange, optionField.name, field.id, updateField ] );
+    // One box whose stored value is not a list is a boolean box (`read_only`).
+    const isBooleanBox = optionKeys.length === 1 && ! Array.isArray( value );
+    const isBoxChecked = value === true || value === 'true' || value === 'yes';
 
     const handleMultiChange = useCallback( ( key, checked ) => {
+        if ( isBooleanBox ) {
+            onChange( checked );
+            return;
+        }
+
         const current = Array.isArray( value ) ? [ ...value ] : [];
 
         if ( checked ) {
@@ -51,7 +49,7 @@ export default function CheckboxInput( { optionField, field, value, onChange, bu
         }
 
         onChange( current );
-    }, [ value, onChange ] );
+    }, [ value, onChange, isBooleanBox ] );
 
     // Single option checkbox (toggle)
     if ( isSingleOpt ) {
@@ -92,7 +90,7 @@ export default function CheckboxInput( { optionField, field, value, onChange, bu
                                 type="checkbox"
                                 className={ `${ builderClassNames( 'checkbox' ) } !wpuf-mr-2` }
                                 value={ key }
-                                checked={ Array.isArray( value ) && value.includes( key ) }
+                                checked={ isBooleanBox ? isBoxChecked : Array.isArray( value ) && value.includes( key ) }
                                 onChange={ ( e ) => handleMultiChange( key, e.target.checked ) }
                             />
                             { options[ key ] }

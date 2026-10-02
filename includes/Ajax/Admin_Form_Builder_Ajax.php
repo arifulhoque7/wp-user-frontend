@@ -65,7 +65,8 @@ class Admin_Form_Builder_Ajax {
         $form_fields   = isset( $post_data['form_fields'] ) ? $post_data['form_fields'] : '';
         $notifications = isset( $post_data['notifications'] ) ? $post_data['notifications'] : '';
         $settings      = [];
-        $integrations  = [];
+        // Null = not sent: the builder has no integrations editor, so the stored ones stay.
+        $integrations = null;
 
         if ( isset( $post_data['settings'] ) ) {
             $settings = json_decode( $post_data['settings'], true );

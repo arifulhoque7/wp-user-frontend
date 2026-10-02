@@ -31,7 +31,7 @@ test.describe('Parity no-op save', () => {
                 await test.info().attach(`${name}-noop-save.json`, { path: parity.doWriteJson(test.info().outputPath(`${name}-noop-save.json`), results[name]) });
             }
 
-            parity.validateFormsEqual(results.branch.before, results.branch.after);
+            parity.validateFormsEqual(parity.withoutNewFieldMarkers(results.branch.before), results.branch.after);
         });
 
     }

@@ -876,3 +876,5 @@ features:
     name: Settings save keeps the legacy shapes and untouched data
   - id: SET0002
     name: Settings screen posts only the edited field and writes nothing else
+  - id: PAR0005
+    name: Read only stores the develop shape; integrations kept

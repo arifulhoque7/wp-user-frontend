@@ -60,6 +60,22 @@ export class ParityPage {
         expect.soft(branch, 'branch builder must show the same option rows as develop').toStrictEqual(develop);
     }
 
+    /**
+     * A copy of a stored form without the new-field markers (`is_new: true` and
+     * its `id`) that `Admin_Form_Builder::save_form()` consumes on every build.
+     */
+    withoutNewFieldMarkers(form: FormDump): FormDump {
+        const copy = JSON.parse(JSON.stringify(form)) as FormDump;
+        for (const field of copy.fields) {
+            const content = field.post_content as Record<string, unknown> | null;
+            if (content && typeof content === 'object' && content.is_new === true) {
+                delete content.is_new;
+                delete content.id;
+            }
+        }
+        return copy;
+    }
+
     /** Assert two stored forms are identical (values and PHP types). */
     validateFormsEqual(develop: FormDump, branch: FormDump) {
         expect(branch, 'branch storage must equal develop storage').toStrictEqual(develop);
@@ -149,6 +165,11 @@ export class ParitySitePage {
         const request = await saved;
         await request.response();
         return { field, body: request.postDataJSON() };
+    }
+
+    /** In the open field settings panel, tick a checkbox by its label. */
+    async doCheckFieldOption(label: string) {
+        await this.page.locator(Selectors.parity.fieldOptionsPanel).getByLabel(label).check();
     }
 
     /** Raw HTML of an admin URL as served (for checks on what the server prints). */

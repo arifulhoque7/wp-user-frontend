@@ -3,7 +3,7 @@ import { useSelect, useDispatch } from '@wordpress/data';
 import { __ } from '@wordpress/i18n';
 import { STORE_NAME } from '../../store';
 import ConditionRow from './ConditionRow';
-import { RULE_OPTIONS, templateToInputType, isEmptyOperator } from './conditionalUtils';
+import { RULE_OPTIONS, isEmptyOperator } from './conditionalUtils';
 
 /**
  * Field-level conditional logic panel (Pro).
@@ -111,7 +111,9 @@ export default function FieldConditionalLogic() {
             name: name || '',
             operator: ( wpufCond.cond_operator || [] )[ i ] || '=',
             option: ( wpufCond.cond_option || [] )[ i ] || '',
+            option_title: ( wpufCond.option_title || [] )[ i ] || '',
             input_type: ( wpufCond.input_type || [] )[ i ] || '',
+            field_type: ( wpufCond.field_type || [] )[ i ] || '',
         } ) );
     }, [ wpufCond ] );
 
@@ -142,12 +144,14 @@ export default function FieldConditionalLogic() {
         const newCondOptions = [ ...( wpufCond.cond_option || [] ) ];
         const newInputTypes = [ ...( wpufCond.input_type || [] ) ];
         const newFieldTypes = [ ...( wpufCond.field_type || [] ) ];
+        const newOptionTitles = [ ...( wpufCond.option_title || [] ) ];
 
         newCondFields[ index ] = updated.name;
         newCondOperators[ index ] = updated.operator;
         newCondOptions[ index ] = isEmptyOperator( updated.operator ) ? '' : updated.option;
         newInputTypes[ index ] = updated.input_type;
-        newFieldTypes[ index ] = updated.input_type;
+        newFieldTypes[ index ] = updated.field_type || '';
+        newOptionTitles[ index ] = updated.option_title || '';
 
         persistCond( {
             cond_field: newCondFields,
@@ -155,6 +159,7 @@ export default function FieldConditionalLogic() {
             cond_option: newCondOptions,
             input_type: newInputTypes,
             field_type: newFieldTypes,
+            option_title: newOptionTitles,
         } );
     }
 
@@ -165,6 +170,7 @@ export default function FieldConditionalLogic() {
             cond_option: [ ...( wpufCond.cond_option || [] ), '' ],
             input_type: [ ...( wpufCond.input_type || [] ), '' ],
             field_type: [ ...( wpufCond.field_type || [] ), '' ],
+            option_title: [ ...( wpufCond.option_title || [] ), '' ],
         } );
     }
 
@@ -190,7 +196,7 @@ export default function FieldConditionalLogic() {
     }
 
     return (
-        <div className="wpuf-conditional-logic wpuf-border-t wpuf-border-gray-200 wpuf-pt-4 wpuf-mt-4">
+        <div className="wpuf-conditional-logic panel-field-opt-conditional-logic wpuf-border-t wpuf-border-gray-200 wpuf-pt-4 wpuf-mt-4">
             <h4 className="wpuf-text-sm wpuf-font-semibold wpuf-text-gray-700 wpuf-mb-3">
                 { __( 'Conditional Logic', 'wp-user-frontend' ) }
             </h4>
@@ -205,7 +211,7 @@ export default function FieldConditionalLogic() {
                         checked={ isEnabled }
                         onChange={ () => handleToggle( 'yes' ) }
                     />
-                    { __( 'Enable', 'wp-user-frontend' ) }
+                    { __( 'Yes', 'wp-user-frontend' ) }
                 </label>
                 <label className="wpuf-flex wpuf-items-center wpuf-gap-1 wpuf-text-sm wpuf-cursor-pointer">
                     <input
@@ -215,7 +221,7 @@ export default function FieldConditionalLogic() {
                         checked={ ! isEnabled }
                         onChange={ () => handleToggle( 'no' ) }
                     />
-                    { __( 'Disable', 'wp-user-frontend' ) }
+                    { __( 'No', 'wp-user-frontend' ) }
                 </label>
             </div>
 
@@ -235,7 +241,7 @@ export default function FieldConditionalLogic() {
                                 </option>
                             ) ) }
                         </select>
-                        <span>{ __( 'of these rules match', 'wp-user-frontend' ) }</span>
+                        <span>{ __( 'of these rules are met', 'wp-user-frontend' ) }</span>
                     </div>
 
                     { /* Condition rows */ }
@@ -245,6 +251,7 @@ export default function FieldConditionalLogic() {
                             condition={ condition }
                             index={ i }
                             availableFields={ availableFields }
+                            wpPostTypes={ wpPostTypes }
                             onChange={ handleConditionChange }
                             onRemove={ handleRemoveCondition }
                             canRemove={ conditions.length > 1 }

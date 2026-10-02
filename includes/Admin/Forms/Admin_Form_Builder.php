@@ -464,10 +464,33 @@ class Admin_Form_Builder {
         }
 
         update_post_meta( $data['form_id'], $data['form_settings_key'], $data['form_settings'] );
-        update_post_meta( $data['form_id'], 'notifications', $data['notifications'] );
-        update_post_meta( $data['form_id'], 'integrations', $data['integrations'] );
+        self::update_list_meta( $data['form_id'], 'notifications', $data['notifications'] );
+
+        if ( isset( $data['integrations'] ) ) {
+            self::update_list_meta( $data['form_id'], 'integrations', $data['integrations'] );
+        }
 
         return $saved_wpuf_inputs;
+    }
+
+    /**
+     * Store a list meta (notifications, integrations) unless an empty list would
+     * only replace a stored empty value ('' or no meta) with `[]`.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int    $form_id  Form id.
+     * @param string $meta_key Meta key.
+     * @param mixed  $value    Value from the builder.
+     *
+     * @return void
+     */
+    protected static function update_list_meta( $form_id, $meta_key, $value ) {
+        if ( empty( $value ) && empty( get_post_meta( $form_id, $meta_key, true ) ) ) {
+            return;
+        }
+
+        update_post_meta( $form_id, $meta_key, $value );
     }
 
     /**
