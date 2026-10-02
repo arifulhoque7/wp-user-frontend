@@ -851,3 +851,6 @@ features:
     name: Lost password for a known user reaches the mailer (env-gated skip without SMTP)
   - id: FL0006
     name: Valid credentials log the user in (logged-in view shown)
+  # Parity suite (develop vs branch) — parity/*.spec.ts, project `parity`
+  - id: PAR0001
+    name: Seeding a form fixture stores identical data on develop and branch

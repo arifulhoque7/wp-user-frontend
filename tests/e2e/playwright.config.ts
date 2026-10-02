@@ -117,6 +117,14 @@ export default defineConfig({
             testIgnore: ['**/alphaSetupTest.spec.ts', '**/api/**'],
             use: { ...devices['Desktop Chrome'] },
         },
+        // Parity suite: compares a develop site with the branch site (needs the
+        // PARITY_* env, see utils/paritySites.ts). Local gate, not part of CI shards.
+        {
+            name: 'parity',
+            testDir: './parity',
+            testMatch: '**/*.spec.ts',
+            use: { ...devices['Desktop Chrome'] },
+        },
         // REST layer (wpuf/v1) — no browser launched.
         {
             name: 'api',
