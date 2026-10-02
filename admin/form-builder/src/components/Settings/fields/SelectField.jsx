@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from '@wordpress/element';
+import { __ } from '@wordpress/i18n';
 import { SETTING_CLASS_NAMES } from '../SettingsField';
 import HelpTextIcon from './HelpTextIcon';
 
@@ -57,6 +58,11 @@ export default function SelectField( { field, name, value, onChange } ) {
                 onChange={ handleChange }
                 className={ SETTING_CLASS_NAMES.dropdown }
             >
+                { /* Nothing stored and no default: say so instead of showing the
+                     first option as if it were saved (e.g. a newsletter list). */ }
+                { ! value && ! field.default && (
+                    <option value="">{ __( '- Select -', 'wp-user-frontend' ) }</option>
+                ) }
                 { Object.entries( options ).map( ( [ optValue, optLabel ] ) => (
                     <option key={ optValue } value={ optValue }>
                         { optLabel }

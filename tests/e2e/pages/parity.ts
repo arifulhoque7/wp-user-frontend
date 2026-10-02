@@ -179,6 +179,20 @@ export class ParitySitePage {
         await this.page.goto(`/wp-admin/admin.php?page=${page}&id=${formId}&action=${action}&_wpnonce=${nonce}`);
     }
 
+    /** In the open builder, go to Settings and follow a path of menu labels (e.g. Modules, Zapier). */
+    async doOpenBuilderSettings(path: string[]) {
+        const root = this.page.locator('#wpuf-form-builder');
+        for (const label of ['Settings', ...path]) {
+            await root.getByText(label, { exact: true }).locator('visible=true').last().click();
+        }
+    }
+
+    /** Click a settings toggle by its input id and save the builder. */
+    async doToggleSettingAndSave(id: string) {
+        await this.page.locator(`label[for="${id}"]`).last().click();
+        await this.doSaveBuilder();
+    }
+
     /** Raw HTML of an admin URL as served (for checks on what the server prints). */
     async getAdminHtml(path: string): Promise<string> {
         const response = await this.page.goto(path);

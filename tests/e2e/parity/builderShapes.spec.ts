@@ -88,4 +88,22 @@ test.describe('Parity builder shapes', () => {
             hook_id_saved: true,
         });
     });
+
+    test('PAR0009 : registration toggle off leaves the key out so the module stops (1.14)', { tag: ['@Parity', '@Test_PAR0009'] }, async ({ browser }) => {
+        const branch = paritySite('branch');
+        const formId = new ParityPage().doSeedForm(branch, 'registration-form.json');
+        const zapier = () => parityWp(branch, ['eval', `$s = get_post_meta( ${formId}, "wpuf_form_settings", true ); echo array_key_exists( "enable_zapier", (array) $s ) ? $s["enable_zapier"] : "ABSENT";`]).trim();
+        const admin = await ParitySitePage.doOpen(browser, branch);
+        await admin.doOpenBuilder('wpuf_profile', formId);
+        await admin.doOpenBuilderSettings(['Modules', 'Zapier']);
+
+        await admin.doToggleSettingAndSave('enable_zapier');
+        const whenOn = zapier();
+        await admin.doToggleSettingAndSave('enable_zapier');
+        const whenOff = zapier();
+        await admin.doClose();
+
+        expect(whenOn, 'on').toBe('on');
+        expect(whenOff, 'off = key absent, like develop').toBe('ABSENT');
+    });
 });

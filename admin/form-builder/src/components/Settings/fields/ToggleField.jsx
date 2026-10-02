@@ -15,15 +15,19 @@ const BADGE_FIELDS = [ 'enable_multistep', 'notification_edit' ];
  * Uses sr-only checkbox + peer classes for the toggle visual.
  */
 export default function ToggleField( { field, name, value, onChange } ) {
-    const isOn = value === 'yes' || value === true || value === 'on';
+    // Same "on" values as PHP wpuf_is_checkbox_or_toggle_on().
+    const isOn = value === true || [ 'on', 'yes', 'true', '1' ].includes( value );
     const data = window.wpuf_form_builder || {};
+    // Develop's post form toggle posts a hidden 'off'; the registration form
+    // toggle has none, so off leaves the key out (modules check isset).
+    const offValue = data.form_type === 'wpuf_profile' ? undefined : 'off';
     const isProActive = !! data.is_pro_active;
     const showProBadge = ! isProActive && BADGE_FIELDS.includes( name );
     const proBadgeUrl = ( data.asset_url || '' ) + '/images/pro-badge.svg';
 
     const handleToggle = useCallback( () => {
-        onChange( name, isOn ? 'off' : 'on' );
-    }, [ name, isOn, onChange ] );
+        onChange( name, isOn ? offValue : 'on' );
+    }, [ name, isOn, offValue, onChange ] );
 
     return (
         <div className="wpuf-flex wpuf-items-center wpuf-justify-between wpuf-w-2/5">

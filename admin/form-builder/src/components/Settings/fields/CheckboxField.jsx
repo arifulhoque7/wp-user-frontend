@@ -7,10 +7,11 @@ import HelpTextIcon from './HelpTextIcon';
  * Vue renders: checkbox input BEFORE label, both in a flex row.
  */
 export default function CheckboxField( { field, name, value, onChange } ) {
-    const isChecked = value === 'yes' || value === true || value === 'on';
+    const isChecked = value === true || [ 'on', 'yes', 'true', '1' ].includes( value );
 
+    // Develop's settings checkbox has no hidden input: unchecked leaves the key out.
     const handleChange = useCallback( ( e ) => {
-        onChange( name, e.target.checked ? 'on' : 'off' );
+        onChange( name, e.target.checked ? 'on' : undefined );
     }, [ name, onChange ] );
 
     return (

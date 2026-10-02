@@ -890,3 +890,5 @@ features:
     name: Duplicate copies integrations and version; delete removes the field posts
   - id: PAR0008
     name: Forms list REST limits post types and sorts newest first; pack hook fires once
+  - id: PAR0009
+    name: Registration toggle off leaves the key out so the module stops

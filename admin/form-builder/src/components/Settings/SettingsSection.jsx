@@ -34,7 +34,9 @@ function resolveSettingValue( settings, fieldName, fieldDef ) {
         }
     }
 
-    if ( settings[ fieldName ] !== undefined ) {
+    // A key set to undefined was switched off in this session (it is left out
+    // of the save); only a key never set falls back to the default.
+    if ( Object.prototype.hasOwnProperty.call( settings, fieldName ) ) {
         return settings[ fieldName ];
     }
 
