@@ -111,8 +111,26 @@ const SubscriptionField = ( { field, fieldId, subscription, onFieldChange } ) =>
 		}
 	};
 
-	// Convert switcher value to boolean
-	const isSwitcherOn = value === 'on' || value === 'yes' || value === true;
+	// Switcher state, read as develop's Vue screen did ('on' / 'yes'; the
+	// post_status switcher is on for 'private'). true / '1' are accepted too so
+	// values saved by earlier React builds still show correctly.
+	const isSwitcherOn = value === 'on' || value === 'yes' || value === true || value === '1'
+		|| ( field.db_key === 'post_status' && value === 'private' );
+
+	// Store the strings develop stores: 'on' / 'off' ('private' / 'publish' for
+	// post_status). Consumers compare with 'on' (subscription checks, Stripe JS).
+	const toggleSwitcher = () => {
+		const nextOn = ! isSwitcherOn;
+		const stored = field.db_key === 'post_status'
+			? ( nextOn ? 'private' : 'publish' )
+			: ( nextOn ? 'on' : 'off' );
+
+		onFieldChange( field, stored );
+
+		if ( dispatch ) {
+			dispatch.toggleDependentFields( fieldId, nextOn );
+		}
+	};
 
 	if ( isHidden ) {
 		return null;
@@ -222,7 +240,7 @@ const SubscriptionField = ( { field, fieldId, subscription, onFieldChange } ) =>
 						type="button"
 						id={ field.name }
 						name={ field.name }
-						onClick={ () => handleChange( ! isSwitcherOn ) }
+						onClick={ toggleSwitcher }
 						disabled={ isPro }
 						className={ `${ isSwitcherOn ? 'wpuf-bg-primary' : 'wpuf-bg-gray-200' } placeholder:wpuf-text-gray-400 wpuf-bg-gray-200 wpuf-relative wpuf-inline-flex wpuf-h-6 wpuf-w-11 wpuf-flex-shrink-0 wpuf-cursor-pointer wpuf-rounded-full wpuf-border-2 wpuf-border-transparent wpuf-transition-colors wpuf-duration-200 wpuf-ease-in-out` }
 						role="switch"
@@ -286,38 +304,21 @@ const SubscriptionField = ( { field, fieldId, subscription, onFieldChange } ) =>
 							let subFieldValue = subField.default || '';
 
 							if ( subscription ) {
-								// For expiration_time, parse the combined value
-								if ( field.name === 'expiration-time' && subscription.meta_value?._post_expiration_time ) {
+								const stored = subscription.meta_value?.[ subField.db_key ];
+
+								if ( stored !== undefined && stored !== null ) {
+									subFieldValue = stored;
+								} else if ( field.name === 'expiration-time' && subscription.meta_value?._post_expiration_time ) {
+									// Older packs only have the combined "number period" value.
 									const parsed = parseExpirationTime( subscription.meta_value._post_expiration_time );
 									subFieldValue = subField.key_id === 'expiration_value' ? parsed.value : parsed.unit;
-								} else if ( subField.db_type === 'meta' ) {
-									subFieldValue = subscription.meta_value?.[ subField.db_key ] || subField.default || '';
 								}
 							}
 
-							// Handle sub-field change
+							// Each part is stored under its own key (_post_expiration_number /
+							// _post_expiration_period), which is what the REST save reads.
 							const handleSubFieldChange = ( newValue ) => {
-								// For inline fields, we need to construct the combined value
-								if ( field.name === 'expiration-time' ) {
-									// Get the other sub-field's value
-									const otherSubFieldKey = subFieldKey === 'expiration_value' ? 'expiration_unit' : 'expiration_value';
-									const otherSubField = field.fields[ otherSubFieldKey ];
-									let otherValue = otherSubField.default;
-
-									if ( subscription && subscription.meta_value?._post_expiration_time ) {
-										const parsed = parseExpirationTime( subscription.meta_value._post_expiration_time );
-										otherValue = otherSubFieldKey === 'expiration_value' ? parsed.value : parsed.unit;
-									}
-
-									// Combine values: "value unit" or "unit value" depending on which changed
-									const combinedValue = subFieldKey === 'expiration_value'
-										? `${ newValue } ${ otherValue }`
-										: `${ otherValue } ${ newValue }`;
-
-									onFieldChange( { ...field, db_key: '_post_expiration_time' }, combinedValue );
-								} else {
-									onFieldChange( subField, newValue );
-								}
+								onFieldChange( subField, newValue );
 							};
 
 							// Render input-number sub-field
