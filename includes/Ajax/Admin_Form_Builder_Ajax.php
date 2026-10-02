@@ -23,11 +23,7 @@ class Admin_Form_Builder_Ajax {
             wp_send_json_error( __( 'form data is missing', 'wp-user-frontend' ) );
         }
 
-        if ( ! wp_verify_nonce( $form_data['wpuf_form_builder_nonce'], 'wpuf_form_builder_save_form' ) ) {
-            wp_send_json_error( __( 'Unauthorized operation', 'wp-user-frontend' ) );
-        }
-
-        if ( ! current_user_can( wpuf_admin_role() ) ) {
+        if ( empty( $form_data['wpuf_form_builder_nonce'] ) || ! wp_verify_nonce( $form_data['wpuf_form_builder_nonce'], 'wpuf_form_builder_save_form' ) ) {
             wp_send_json_error( __( 'Unauthorized operation', 'wp-user-frontend' ) );
         }
 
@@ -37,6 +33,33 @@ class Admin_Form_Builder_Ajax {
 
         if ( empty( $form_data['wpuf_form_id'] ) ) {
             wp_send_json_error( __( 'Invalid form id', 'wp-user-frontend' ) );
+        }
+
+        /**
+         * Post types the form builder may save into.
+         *
+         * @since WPUF_SINCE
+         *
+         * @param string[] $post_types Builder form post types.
+         */
+        $allowed_post_types = (array) apply_filters( 'wpuf_form_builder_save_post_types', [ 'wpuf_forms', 'wpuf_profile' ] );
+
+        if ( ! in_array( get_post_type( absint( $form_data['wpuf_form_id'] ) ), $allowed_post_types, true ) ) {
+            wp_send_json_error( __( 'Invalid form id', 'wp-user-frontend' ) );
+        }
+
+        /**
+         * Meta keys the form builder may store form settings under.
+         *
+         * @since WPUF_SINCE
+         *
+         * @param string[] $keys Settings meta keys.
+         */
+        $allowed_settings_keys = (array) apply_filters( 'wpuf_form_builder_settings_meta_keys', [ 'wpuf_form_settings' ] );
+        $form_settings_key     = isset( $form_data['form_settings_key'] ) ? sanitize_key( $form_data['form_settings_key'] ) : '';
+
+        if ( ! in_array( $form_settings_key, $allowed_settings_keys, true ) ) {
+            wp_send_json_error( __( 'Invalid form settings', 'wp-user-frontend' ) );
         }
 
         $form_fields   = isset( $post_data['form_fields'] ) ? $post_data['form_fields'] : '';
@@ -67,7 +90,7 @@ class Admin_Form_Builder_Ajax {
             'post_title'        => sanitize_text_field( $form_data['post_title'] ),
             'form_fields'       => $form_fields,
             'form_settings'     => $settings,
-            'form_settings_key' => isset( $form_data['form_settings_key'] ) ? $form_data['form_settings_key'] : '',
+            'form_settings_key' => $form_settings_key,
             'notifications'     => $notifications,
             'integrations'      => $integrations,
         ];
@@ -84,10 +107,10 @@ class Admin_Form_Builder_Ajax {
 
     public function wpuf_get_post_taxonomies_old() {
         $post_data = wp_unslash( $_POST );
-        $post_type = $post_data['post_type'];
-        $nonce     = $post_data['wpuf_form_builder_setting_nonce'];
+        $post_type = isset( $post_data['post_type'] ) ? sanitize_key( $post_data['post_type'] ) : '';
+        $nonce     = isset( $post_data['wpuf_form_builder_setting_nonce'] ) ? sanitize_text_field( $post_data['wpuf_form_builder_setting_nonce'] ) : '';
 
-        if ( isset( $nonce ) && ! wp_verify_nonce( $post_data['wpuf_form_builder_setting_nonce'], 'form-builder-setting-nonce' ) ) {
+        if ( ! wp_verify_nonce( $nonce, 'form-builder-setting-nonce' ) ) {
             wp_send_json_error( __( 'Unauthorized operation', 'wp-user-frontend' ) );
         }
 
@@ -131,10 +154,10 @@ class Admin_Form_Builder_Ajax {
 
     public function get_post_taxonomies() {
         $post_data = wp_unslash( $_POST );
-        $post_type = $post_data['post_type'];
-        $nonce     = $post_data['wpuf_form_builder_setting_nonce'];
+        $post_type = isset( $post_data['post_type'] ) ? sanitize_key( $post_data['post_type'] ) : '';
+        $nonce     = isset( $post_data['wpuf_form_builder_setting_nonce'] ) ? sanitize_text_field( $post_data['wpuf_form_builder_setting_nonce'] ) : '';
 
-        if ( isset( $nonce ) && ! wp_verify_nonce( $post_data['wpuf_form_builder_setting_nonce'], 'form-builder-setting-nonce' ) ) {
+        if ( ! wp_verify_nonce( $nonce, 'form-builder-setting-nonce' ) ) {
             wp_send_json_error( __( 'Unauthorized operation', 'wp-user-frontend' ) );
         }
 
@@ -178,6 +201,7 @@ class Admin_Form_Builder_Ajax {
                 $cat .= '<div class="wpuf-mt-6 wpuf-input-container taxonomy-container" data-taxonomy="' . esc_attr( $tax->name ) . '">';
                 $cat .= '<div class="wpuf-flex wpuf-items-center">';
                 $cat .= '<label for="' . esc_attr( $select_id ) . '" class="wpuf-text-sm wpuf-text-gray-700 wpuf-my-2">';
+                /* translators: %s: taxonomy label */
                 $cat .= sprintf( __( 'Default %s', 'wp-user-frontend' ), $tax->label );
                 $cat .= '</label></div>';
 
@@ -193,7 +217,7 @@ class Admin_Form_Builder_Ajax {
 
                 if ( ! is_wp_error( $categories ) && ! empty( $categories ) ) {
                     foreach ( $categories as $category ) {
-                        $selected = in_array( $category->term_id, (array) $current_value ) ? 'selected="selected"' : '';
+                        $selected = in_array( (int) $category->term_id, array_map( 'intval', (array) $current_value ), true ) ? 'selected="selected"' : '';
                         $cat .= '<option value="' . esc_attr( $category->term_id ) . '" ' . $selected . '>' . esc_html( $category->name ) . '</option>';
                     }
                 }

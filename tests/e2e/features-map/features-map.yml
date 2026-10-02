@@ -860,3 +860,5 @@ features:
     name: Filling every builder field option stores the same values on branch as on develop (G2)
   - id: SEC0001
     name: Builder page never prints the reCAPTCHA / Turnstile secret keys
+  - id: SEC0002
+    name: Builder save rejects a foreign settings meta key, a non-form post and a missing nonce

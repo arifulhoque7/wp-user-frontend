@@ -117,6 +117,33 @@ export class ParitySitePage {
         return response ? response.text() : '';
     }
 
+    /**
+     * Post the builder save AJAX request directly from the open builder page,
+     * with the serialized builder form changed by `edit` (query-string pairs).
+     * Returns the JSON response.
+     */
+    async doRawBuilderSave(edit: Record<string, string | null>): Promise<{ success: boolean; data?: unknown }> {
+        return this.page.evaluate(async (changes) => {
+            const form = document.getElementById('wpuf-form-builder') as HTMLFormElement;
+            const params = new URLSearchParams(new FormData(form) as unknown as Record<string, string>);
+            for (const [key, value] of Object.entries(changes)) {
+                if (value === null) {
+                    params.delete(key);
+                } else {
+                    params.set(key, value);
+                }
+            }
+            const body = new URLSearchParams({
+                action: 'wpuf_form_builder_save_form',
+                form_data: params.toString(),
+                form_fields: '[]',
+                notifications: '[]',
+            });
+            const response = await fetch((window as unknown as { ajaxurl: string }).ajaxurl, { method: 'POST', credentials: 'same-origin', body });
+            return response.json();
+        }, edit);
+    }
+
     /** Open the "add new" builder; returns the id of the created draft form. */
     async doOpenNewBuilder(postType: string): Promise<number> {
         await this.page.goto(`/wp-admin/admin.php?page=${builderPage[postType]}&action=add-new`);
