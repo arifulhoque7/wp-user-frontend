@@ -1,4 +1,6 @@
 import { useCallback } from '@wordpress/element';
+import { useSelect } from '@wordpress/data';
+import { STORE_NAME } from '../store/constants';
 
 const INPUT_CLASSES = {
     upload_btn: 'file-selector wpuf-rounded-md wpuf-btn-secondary',
@@ -13,10 +15,13 @@ const INPUT_CLASSES = {
  * Replaces the Vue form-field.js mixin.
  *
  * @param {Object} field   The field object
- * @param {number} formId  The form post ID
+ * @param {number} formId  The form post ID; defaults to the form being edited,
+ *                         as the Vue mixin's `wpuf_<name>_<form id>` class did
  * @return {Object}
  */
 export function useFieldClasses( field, formId ) {
+    const postId = useSelect( ( select ) => select( STORE_NAME ).getPost()?.ID, [] );
+    formId = formId || postId;
     const requiredClass = field.required === 'yes' ? 'required' : '';
 
     const builderClassNames = useCallback(
