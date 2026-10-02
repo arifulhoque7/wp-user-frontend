@@ -76,7 +76,7 @@ class Assets {
             $version = ! empty( $style['version'] ) ? $style['version'] : WPUF_VERSION;
             $media   = ! empty( $style['media'] ) ? $style['media'] : 'all';
 
-            wp_register_style( 'wpuf-' . $handle, $style['src'], $deps, $version, $media );
+            wp_register_style( 'wpuf-' . $handle, $this->existing_src( $style['src'] ), $deps, $version, $media );
         }
     }
 
@@ -93,8 +93,39 @@ class Assets {
             $in_footer = ! empty( $script['in_footer'] ) ? $script['in_footer'] : true;
             $version   = ! empty( $script['version'] ) ? $script['version'] : WPUF_VERSION;
 
-            wp_register_script( 'wpuf-' . $handle, $script['src'], $deps, $version, $in_footer );
+            wp_register_script( 'wpuf-' . $handle, $this->existing_src( $script['src'] ), $deps, $version, $in_footer );
         }
+
+        // The Vue builder mixins are gone. Scripts that still extend them (e.g. the
+        // pro QR-code module) get empty mixins so their old registration is a no-op.
+        wp_add_inline_script(
+            'wpuf-form-builder-mixins',
+            'window.wpuf_mixins = window.wpuf_mixins || {};'
+            . '["form_field_mixin","option_field_mixin","add_form_field","global_mixin"].forEach(function(k){ window.wpuf_mixins[k] = window.wpuf_mixins[k] || {}; });',
+            'after'
+        );
+    }
+
+    /**
+     * Source URL for a handle, or false when it points to a plugin file that is
+     * not on disk (e.g. a removed legacy build). The handle is then registered
+     * without a file: dependents and localized data keep working and the
+     * browser does not load an HTML 404 page as a script or stylesheet.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param string|false $src Source URL.
+     *
+     * @return string|false
+     */
+    protected function existing_src( $src ) {
+        if ( ! is_string( $src ) || 0 !== strpos( $src, WP_PLUGIN_URL ) ) {
+            return $src;
+        }
+
+        $path = WP_PLUGIN_DIR . strtok( substr( $src, strlen( WP_PLUGIN_URL ) ), '?' );
+
+        return file_exists( $path ) ? $src : false;
     }
 
     /**
@@ -318,7 +349,6 @@ class Assets {
             'ai-form-builder'          => [
                 'src'       => WPUF_ASSET_URI . '/js/ai-form-builder.min.js',
                 'in_footer' => true,
-                'version'   => time(), // Cache busting - force browser to reload
             ],
             'timepicker'               => [
                 'src'       => WPUF_ASSET_URI . '/js/jquery-ui-timepicker-addon.js',
@@ -386,7 +416,7 @@ class Assets {
                 'version' => '1.0.1',
             ],
             'enhanced-select'          => [
-                'src'  => WPUF_ASSET_URI . '/js/admin/wpuf-enhanced-select' . $this->suffix . '.min.js',
+                'src'  => WPUF_ASSET_URI . '/js/admin/wpuf-enhanced-select' . $this->suffix . '.js',
                 'deps' => [ 'jquery', 'wpuf-selectWoo' ],
             ],
             'setup'                    => [

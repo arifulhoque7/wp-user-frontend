@@ -111,6 +111,29 @@ export class ParitySitePage {
         expect(await response.json(), 'builder save must report success').toMatchObject({ success: true });
     }
 
+    /**
+     * Load an admin URL and collect page errors plus scripts/styles that came
+     * back as something other than JS/CSS (a missing file 301s to an HTML 404).
+     */
+    async getLoadProblems(path: string): Promise<{ errors: string[]; badAssets: string[] }> {
+        const errors: string[] = [];
+        const badAssets: string[] = [];
+        const onError = (error: Error) => errors.push(String(error).slice(0, 200));
+        const onResponse = (response: import('@playwright/test').Response) => {
+            const type = response.headers()['content-type'] || '';
+            const kind = response.request().resourceType();
+            if (['script', 'stylesheet'].includes(kind) && !/javascript|css/.test(type) && response.url().startsWith(this.site.url)) {
+                badAssets.push(`${response.status()} ${response.url()}`);
+            }
+        };
+        this.page.on('pageerror', onError);
+        this.page.on('response', onResponse);
+        await this.page.goto(path, { waitUntil: 'networkidle' });
+        this.page.off('pageerror', onError);
+        this.page.off('response', onResponse);
+        return { errors, badAssets };
+    }
+
     /** Raw HTML of an admin URL as served (for checks on what the server prints). */
     async getAdminHtml(path: string): Promise<string> {
         const response = await this.page.goto(path);

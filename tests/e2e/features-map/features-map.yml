@@ -870,3 +870,5 @@ features:
     name: Profile subscription update only assigns to the saved user, by users who may edit them
   - id: SEC0006
     name: Pro tax save and registration template creation need an admin, not just a nonce
+  - id: HLT0001
+    name: Builders and form lists load with no page errors or missing assets
