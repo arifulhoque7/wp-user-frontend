@@ -30,6 +30,8 @@ test.describe('Parity inner fields', () => {
         await admin.doDropTemplate(repeatList, 'text_field');
         await admin.doDropTemplate(repeatList, 'text_field');
         await admin.doDropTemplate('[data-column="column-1"]', 'text_field');
+        // A palette drop on the stage itself inserts at the drop position (top here).
+        await admin.doDropTemplate('#form-preview-stage', 'textarea_field');
         await admin.doSaveBuilder();
         await admin.doClose();
 
@@ -39,6 +41,7 @@ test.describe('Parity inner fields', () => {
         const repeatInner = repeat.inner_fields as Record<string, unknown>[];
         const columnInner = (column.inner_fields as Record<string, Record<string, unknown>[]>)['column-1'];
 
+        expect(fields.map((field) => field.template), 'stage drop lands first; inner drops add nothing to the top level').toEqual(['textarea_field', 'post_title', 'repeat_field', 'column_field']);
         expect(repeatInner.map((field) => field.template), 'two text fields in the repeat').toEqual(['text_field', 'text_field']);
         for (const field of [...repeatInner, ...columnInner]) {
             expect(String(field.name), 'inner meta name = slug + random id').toMatch(/^text_\d+$/);

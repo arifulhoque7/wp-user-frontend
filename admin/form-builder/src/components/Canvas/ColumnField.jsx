@@ -75,6 +75,7 @@ export default function ColumnField( { field } ) {
 
     const handleNativeDrop = useCallback( ( columnKey, e ) => {
         e.preventDefault();
+        e.stopPropagation();
         setDragOverColumn( null );
 
         const template = e.dataTransfer.getData( 'wpuf/field-template' );

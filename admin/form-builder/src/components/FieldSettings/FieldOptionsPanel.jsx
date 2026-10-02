@@ -5,15 +5,16 @@ import { STORE_NAME } from '../../store';
 import { filterFieldSettings } from '../../extensions/hooks';
 import SettingInput from './SettingInput';
 
-function SettingSection( { title, settings, field, defaultOpen } ) {
+function SettingSection( { title, settings, field, defaultOpen, isBasic = false } ) {
     const [ isOpen, setIsOpen ] = useState( defaultOpen );
 
-    if ( ! settings.length ) {
+    // Develop always prints the basic section; the others only with settings.
+    if ( ! isBasic && ! settings.length ) {
         return null;
     }
 
     return (
-        <div className="option-fields-section">
+        <div className={ isBasic ? 'option-fields-section wpuf-mt-6' : 'option-fields-section' }>
             <h3
                 className={ `wpuf-flex wpuf-mt-0 wpuf-mb-6 wpuf-justify-between hover:wpuf-cursor-pointer wpuf-font-medium wpuf-text-lg ${ isOpen ? 'wpuf-text-primary' : 'wpuf-text-gray-500' }` }
                 onClick={ () => setIsOpen( ! isOpen ) }
@@ -22,19 +23,18 @@ function SettingSection( { title, settings, field, defaultOpen } ) {
                 onKeyDown={ ( e ) => e.key === 'Enter' && setIsOpen( ! isOpen ) }
             >
                 { title }
-                <i className={ `wpuf-text-2xl ${ isOpen ? 'fa fa-angle-down wpuf-text-primary' : 'fa fa-angle-right wpuf-text-gray-500' }` } />
+                <i className={ isOpen ? 'fa fa-angle-down wpuf-text-primary' : 'fa fa-angle-right wpuf-text-gray-500' } />
             </h3>
-            { isOpen && (
-                <div className="option-field-section-fields">
-                    { settings.map( ( setting ) => (
-                        <SettingInput
-                            key={ setting.name }
-                            optionField={ setting }
-                            field={ field }
-                        />
-                    ) ) }
-                </div>
-            ) }
+            { /* Hidden, not unmounted, when closed (develop's v-show): inputs keep their state. */ }
+            <div className="option-field-section-fields" style={ isOpen ? undefined : { display: 'none' } }>
+                { settings.map( ( setting ) => (
+                    <SettingInput
+                        key={ setting.name }
+                        optionField={ setting }
+                        field={ field }
+                    />
+                ) ) }
+            </div>
         </div>
     );
 }
@@ -93,6 +93,7 @@ export default function FieldOptionsPanel() {
                 settings={ basicSettings }
                 field={ editingField }
                 defaultOpen={ true }
+                isBasic
             />
 
             <SettingSection

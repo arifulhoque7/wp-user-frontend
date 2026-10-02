@@ -247,7 +247,8 @@ class Admin_Form_Builder {
                 'ai_settings_url'  => $ai_settings_url,
                 'forms'            => $this->get_form_list(),
                 'shortcodes'       => $this->settings['shortcodes'],
-                'roles'            => wp_roles()->get_names(),
+                // Roles the current user may assign, as the Vue visibility template listed.
+                'roles'            => wp_list_pluck( get_editable_roles(), 'name' ),
                 'subscriptions'    => $this->get_subscriptions(),
                 'preview_url'      => get_wpuf_preview_page(),
             ]

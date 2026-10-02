@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from '@wordpress/element';
+import { Fragment, useMemo, useCallback, useState, useRef } from '@wordpress/element';
 import { useSelect, useDispatch } from '@wordpress/data';
 import {
     DndContext,
@@ -15,6 +15,7 @@ import {
 } from '@dnd-kit/sortable';
 import { STORE_NAME } from '../../store';
 import { filterCanvasRender } from '../../extensions/hooks';
+import useAddField from '../../hooks/useAddField';
 import SortableField from './SortableField';
 import EmptyState from './EmptyState';
 import HiddenFieldsList from './HiddenFieldsList';
@@ -63,8 +64,70 @@ export default function BuilderCanvas() {
     // Apply Pro canvas render filter
     const canvasClass = filterCanvasRender( '' );
 
+    // Palette fields dragged onto the stage are added at the drop position, as
+    // develop's sortable stage did; `dropIndex` places the drop zone marker.
+    const addFieldFromTemplate = useAddField();
+    const listRef = useRef( null );
+    const [ dropIndex, setDropIndex ] = useState( null );
+
+    const indexAt = useCallback( ( clientY ) => {
+        const rows = listRef.current
+            ? Array.from( listRef.current.children ).filter( ( row ) => row.matches( 'li[data-index]' ) && row.offsetParent )
+            : [];
+
+        for ( const row of rows ) {
+            const box = row.getBoundingClientRect();
+
+            if ( clientY < box.top + ( box.height / 2 ) ) {
+                return parseInt( row.dataset.index, 10 );
+            }
+        }
+
+        return formFields.length;
+    }, [ formFields.length ] );
+
+    const handleNativeDragOver = useCallback( ( e ) => {
+        if ( ! e.dataTransfer.types.includes( 'wpuf/field-template' ) ) {
+            return;
+        }
+
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+        // Over a column or repeat field the inner drop zone takes the field.
+        setDropIndex( e.target.closest( '.wpuf-column-inner-fields, .wpuf-repeat-fields-sortable-list' ) ? null : indexAt( e.clientY ) );
+    }, [ indexAt ] );
+
+    const handleNativeDragLeave = useCallback( ( e ) => {
+        if ( ! e.currentTarget.contains( e.relatedTarget ) ) {
+            setDropIndex( null );
+        }
+    }, [] );
+
+    const handleNativeDrop = useCallback( ( e ) => {
+        const template = e.dataTransfer.getData( 'wpuf/field-template' );
+
+        setDropIndex( null );
+
+        if ( ! template ) {
+            return;
+        }
+
+        e.preventDefault();
+        addFieldFromTemplate( template, indexAt( e.clientY ) );
+    }, [ addFieldFromTemplate, indexAt ] );
+
+    const dropHandlers = {
+        onDragOver: handleNativeDragOver,
+        onDragLeave: handleNativeDragLeave,
+        onDrop: handleNativeDrop,
+    };
+
     if ( ! formFields.length ) {
-        return <EmptyState />;
+        return (
+            <div id="form-preview-stage" { ...dropHandlers }>
+                <EmptyState />
+            </div>
+        );
     }
 
     return (
@@ -74,15 +137,18 @@ export default function BuilderCanvas() {
             onDragEnd={ handleDragEnd }
         >
             <SortableContext items={ fieldIds } strategy={ verticalListSortingStrategy }>
-                <div id="form-preview-stage" className="wpuf-h-[70vh]">
-                    <ul className={ `wpuf-form sortable-list wpuf-py-8 form-label-${ labelType } ${ canvasClass }` }>
+                <div id="form-preview-stage" className="wpuf-h-[70vh]" { ...dropHandlers }>
+                    <ul ref={ listRef } className={ `wpuf-form sortable-list wpuf-py-8 form-label-${ labelType } ${ canvasClass }` }>
                         { formFields.map( ( field, index ) => (
-                            <SortableField
-                                key={ field.id }
-                                field={ field }
-                                index={ index }
-                            />
+                            <Fragment key={ field.id }>
+                                { dropIndex === index && <li className="form-preview-stage-dropzone" /> }
+                                <SortableField
+                                    field={ field }
+                                    index={ index }
+                                />
+                            </Fragment>
                         ) ) }
+                        { dropIndex === formFields.length && <li className="form-preview-stage-dropzone" /> }
                     </ul>
                     <HiddenFieldsList />
                 </div>
