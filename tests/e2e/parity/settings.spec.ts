@@ -57,4 +57,14 @@ test.describe('Branch settings save', () => {
             parityWp(branch, ['option', 'update', sections[0], JSON.stringify(before[sections[0]]), '--format=json']);
         }
     });
+
+    test('SET0003 : login colors store nothing by default and preview the chosen layout (B22)', { tag: ['@Parity', '@Test_SET0003'] }, () => {
+        const out = parityWp(paritySite('branch'), [
+            'eval',
+            'wp_set_current_user( 1 ); $d = rest_do_request( new WP_REST_Request( "GET", "/wpuf/v1/settings" ) )->get_data(); foreach ( $d["data"]["fields"]["wpuf_profile"] as $f ) { if ( isset( $f["name"] ) && "wpuf_login_label_text_color" === $f["name"] ) { echo wp_json_encode( [ $f["default"], $f["std"], $f["preview_by"], $f["preview"]["layout2"] ] ); } }',
+            '--exec=define("WP_ADMIN",true);',
+        ]);
+
+        expect(JSON.parse(out.trim().split('\n').pop() || '[]'), 'empty std like develop, layout preview for React').toEqual(['', '', 'wpuf_login_form_layout', '#ffffff']);
+    });
 });

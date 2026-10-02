@@ -1,15 +1,28 @@
 import { useCallback } from '@wordpress/element';
+import { useSelect } from '@wordpress/data';
 import HelpTextIcon from './HelpTextIcon';
+import { STORE_NAME } from '../../../../stores-react/settings/constants';
 
 /**
  * Color picker field — matches Vue wpuf_render_settings_field() for type="color-picker".
  */
-export default function ColorPickerField( { field, name, value, onChange } ) {
+export default function ColorPickerField( { field, name, sectionId, value, onChange } ) {
+    // A field may preview a default that depends on another setting (pro login
+    // colors follow the chosen layout). Display only: nothing is stored.
+    const previewKey = useSelect(
+        ( select ) => ( field.preview_by ? select( STORE_NAME ).getValue( sectionId, field.preview_by ) : null ),
+        [ field.preview_by, sectionId ]
+    );
+    const preview = field.preview && typeof field.preview === 'object'
+        ? field.preview[ previewKey || Object.keys( field.preview )[ 0 ] ] || ''
+        : '';
+
     const handleChange = useCallback( ( e ) => {
         onChange( name, e.target.value );
     }, [ name, onChange ] );
 
-    const currentValue = value || field.default || '#000000';
+    const fallback = preview || field.default;
+    const currentValue = value || fallback || '#000000';
 
     return (
         <div className="wpuf-flex wpuf-items-center wpuf-justify-between wpuf-w-2/5">
@@ -30,7 +43,7 @@ export default function ColorPickerField( { field, name, value, onChange } ) {
                             value={ currentValue }
                             onChange={ handleChange }
                             className="wpuf-w-8 wpuf-h-12 !wpuf-border-gray-50 !wpuf--m-4 hover:!wpuf-cursor-pointer"
-                            style={ { background: field.default || '' } }
+                            style={ { background: fallback || '' } }
                         />
                     </div>
                 </div>

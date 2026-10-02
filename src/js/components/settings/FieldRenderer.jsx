@@ -207,6 +207,7 @@ export default function FieldRenderer( { sectionId, field, value, onChange, forc
         <Component
             field={ fieldForComponent }
             name={ field.name }
+            sectionId={ sectionId }
             value={ value }
             onChange={ handleChange }
             { ...extraProps }
