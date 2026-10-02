@@ -9,7 +9,7 @@ import { paritySite, paritySitesConfigured } from '../utils/paritySites';
 test.describe('Parity seed', () => {
     test.skip(!paritySitesConfigured(), 'PARITY_* sites not configured');
 
-    for (const fixture of ['post-form-parity.json', 'registration-form.json']) {
+    for (const fixture of ['post-form-parity.json', 'post-form-all-fields.json', 'registration-form.json']) {
         test(`PAR0001 : seeding ${fixture} stores identical data on develop and branch`, { tag: ['@Parity', '@Test_PAR0001'] }, () => {
             const parity = new ParityPage();
             const develop = paritySite('develop');

@@ -100,6 +100,46 @@ export class ParitySitePage {
         expect(await response.json(), 'builder save must report success').toMatchObject({ success: true });
     }
 
+    /** Open the "add new" builder; returns the id of the created draft form. */
+    async doOpenNewBuilder(postType: string): Promise<number> {
+        await this.page.goto(`/wp-admin/admin.php?page=${builderPage[postType]}&action=add-new`);
+        await this.page.waitForURL(/action=edit&id=\d+/);
+        await expect(this.page.locator(Selectors.parity.builderSaveButton).first()).toBeEnabled();
+        return Number(new URL(this.page.url()).searchParams.get('id'));
+    }
+
+    /** Field types offered by the palette that add a field on click. */
+    async getPaletteFieldTypes(): Promise<string[]> {
+        return this.page.locator(Selectors.parity.paletteFieldButtons).evaluateAll(
+            (buttons) => buttons.map((button) => button.getAttribute('data-form-field') || '').filter(Boolean));
+    }
+
+    /**
+     * Click a palette button. Returns true when the stage gained a field, false when
+     * the builder refused it with an alert (dismissed here).
+     */
+    async doAddFieldFromPalette(type: string): Promise<boolean> {
+        const stage = this.page.locator(Selectors.parity.stageFields);
+        const alert = this.page.locator(Selectors.parity.alertPopup);
+        await this.doDismissAlerts();
+        const before = await stage.count();
+        await this.page.locator(Selectors.parity.paletteFieldButton(type)).first().click();
+        await expect.poll(async () => (await stage.count()) > before || (await alert.count()) > 0, { message: `add ${type}`, timeout: 10000 })
+            .toBeTruthy();
+        const added = (await stage.count()) > before;
+        await this.doDismissAlerts();
+        return added;
+    }
+
+    /** Confirm any open SweetAlert (info or refusal) so the builder accepts clicks again. */
+    async doDismissAlerts() {
+        const alert = this.page.locator(Selectors.parity.alertPopup);
+        while ((await alert.count()) > 0) {
+            await this.page.locator(Selectors.parity.alertConfirm).first().click();
+            await expect(alert).toHaveCount(0);
+        }
+    }
+
     async doClose() {
         await this.context.close();
     }

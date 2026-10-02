@@ -2336,5 +2336,13 @@ export const Selectors = {
     parity: {
         // Builder (same markup on the Vue and the React builder)
         builderSaveButton: '//button[normalize-space(text())="Save"]',
+        // Palette buttons that add a field on click (develop: .wpuf-field-button[data-form-field])
+        paletteFieldButtons: '.wpuf-field-button[data-form-field]',
+        paletteFieldButton: (type: string) => `.wpuf-field-button[data-form-field="${type}"]`,
+        // Fields on the builder stage
+        stageFields: 'li[class*="form-field-"]',
+        // SweetAlert popup (e.g. "field can be added only once") and its buttons
+        alertPopup: '.swal2-container .swal2-popup',
+        alertConfirm: '.swal2-container .swal2-confirm',
     },
 };

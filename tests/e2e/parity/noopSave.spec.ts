@@ -11,7 +11,7 @@ import { paritySite, paritySitesConfigured } from '../utils/paritySites';
 test.describe('Parity no-op save', () => {
     test.skip(!paritySitesConfigured(), 'PARITY_* sites not configured');
 
-    for (const fixture of ['post-form-parity.json', 'registration-form.json']) {
+    for (const fixture of ['post-form-parity.json', 'post-form-all-fields.json', 'registration-form.json']) {
         test(`PAR0002 : untouched builder save keeps ${fixture} byte-identical on the branch`, { tag: ['@Parity', '@Test_PAR0002'] }, async ({ browser }) => {
             const parity = new ParityPage();
             const results: Record<string, { before: FormDump; after: FormDump }> = {};
@@ -33,5 +33,6 @@ test.describe('Parity no-op save', () => {
 
             parity.validateFormsEqual(results.branch.before, results.branch.after);
         });
+
     }
 });
