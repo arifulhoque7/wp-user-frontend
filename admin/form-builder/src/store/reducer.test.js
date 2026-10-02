@@ -222,6 +222,20 @@ describe( 'reducer', () => {
             expect( state.isDirty ).toBe( true );
         } );
 
+        it( 'label edits rewrite the meta key of new meta fields only', () => {
+            const fresh = makeField( { id: 1, name: 'text', is_meta: 'yes', is_new: true } );
+            const saved = makeField( { id: 2, name: 'text_2', is_meta: 'yes' } );
+            delete saved.is_new;
+            const plain = makeField( { id: 3, name: '', is_meta: 'no', is_new: true } );
+            let state = { ...DEFAULT_STATE, formFields: [ fresh, saved, plain ] };
+
+            for ( const fieldId of [ 1, 2, 3 ] ) {
+                state = reducer( state, { type: UPDATE_FIELD, fieldId, fieldName: 'label', value: 'Phone No.' } );
+            }
+
+            expect( state.formFields.map( ( f ) => f.name ) ).toEqual( [ 'phone_no_', 'text_2', '' ] );
+        } );
+
         it( 'does not update name on existing fields (no is_new flag)', () => {
             const field = makeField( { id: 1, name: 'existing_meta' } );
             delete field.is_new;

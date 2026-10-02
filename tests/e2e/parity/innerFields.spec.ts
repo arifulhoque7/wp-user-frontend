@@ -46,4 +46,48 @@ test.describe('Parity inner fields', () => {
         expect(repeatInner[0].name, 'inner names unique').not.toBe(repeatInner[1].name);
         expect(columnInner.map((field) => field.template), 'text field in column 1').toEqual(['text_field']);
     });
+
+    test('PAR0018 : field options start fresh per field, rows reorder, label renames a new meta key', { tag: ['@Parity', '@Test_PAR0018'] }, async ({ browser }) => {
+        const site = paritySite('branch');
+        const admin = await ParitySitePage.doOpen(browser, site);
+        const formId = await admin.doOpenNewBuilder('wpuf_forms');
+        const page = admin.page;
+        const rowLabels = () => page.locator('.option-field-option td:nth-child(2) input').evaluateAll((inputs) => inputs.map((input) => (input as HTMLInputElement).value));
+
+        expect(await admin.doAddFieldFromPalette('post_title')).toBe(true);
+        expect(await admin.doAddFieldFromPalette('dropdown_field')).toBe(true);
+        expect(await admin.doAddFieldFromPalette('dropdown_field')).toBe(true);
+
+        // First dropdown: two rows, then rename the label.
+        expect(await admin.doOpenFieldSettings(1)).toBe(true);
+        await page.locator('.option-field-option .plus-buttons').last().click();
+        await page.locator('.option-field-option td:nth-child(2) input').nth(0).fill('Alpha');
+        await page.locator('.option-field-option td:nth-child(2) input').nth(1).fill('Beta');
+        await page.locator('#label').fill('Fruit Kind');
+        await expect(page.locator('#name'), 'meta key follows the label').toHaveValue('fruit_kind');
+
+        // Drag Beta above Alpha by its handle.
+        const handles = page.locator('.option-field-option .sort-handler');
+        const from = await handles.nth(1).boundingBox();
+        const to = await handles.nth(0).boundingBox();
+        await page.mouse.move(from!.x + from!.width / 2, from!.y + from!.height / 2);
+        await page.mouse.down();
+        await page.mouse.move(from!.x + from!.width / 2, from!.y - 5, { steps: 5 });
+        await page.mouse.move(to!.x + to!.width / 2, to!.y + 2, { steps: 5 });
+        await page.mouse.up();
+        await expect.poll(rowLabels, { message: 'rows reordered' }).toEqual(['Beta', 'Alpha']);
+
+        // Second dropdown shows its own single row, not the first one's.
+        expect(await admin.doOpenFieldSettings(2)).toBe(true);
+        expect(await rowLabels(), 'second dropdown keeps its own options').toEqual(['Option']);
+
+        await admin.doSaveBuilder();
+        await admin.doClose();
+
+        const fields = new ParityPage().readForm(site, formId).fields.map((field) => field.post_content as Record<string, unknown>);
+        const [first, second] = fields.filter((field) => 'dropdown_field' === field.template);
+        expect(first.name, 'renamed meta key stored').toBe('fruit_kind');
+        expect(Object.values(first.options as Record<string, string>), 'reordered options stored').toEqual(['Beta', 'Alpha']);
+        expect(Object.values(second.options as Record<string, string>), 'second dropdown untouched').toEqual(['Option']);
+    });
 });

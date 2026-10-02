@@ -84,8 +84,10 @@ export default function FieldOptionsPanel() {
         );
     }
 
+    // Keyed by field: inputs keep local state (option rows, open sections), so a
+    // different field must start fresh, as develop remounted the panel.
     return (
-        <div className="wpuf-form-builder-field-options">
+        <div key={ editingField.id } className="wpuf-form-builder-field-options">
             <SettingSection
                 title={ fieldTitle }
                 settings={ basicSettings }

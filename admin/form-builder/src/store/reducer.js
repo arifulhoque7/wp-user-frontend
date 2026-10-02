@@ -100,6 +100,26 @@ function applyMutualExclusivity( field, fieldName, value ) {
 }
 
 /**
+ * Apply one field edit. Typing a label on a new meta field also rewrites its
+ * meta key from the label, as develop's field-text-meta followed the label
+ * (saved fields keep their key).
+ *
+ * @param {Object} field
+ * @param {string} fieldName
+ * @param {*}      value
+ * @return {Object} Updated field
+ */
+function applyFieldUpdate( field, fieldName, value ) {
+    const updated = applyMutualExclusivity( field, fieldName, value );
+
+    if ( 'label' === fieldName && field.is_new && 'yes' === field.is_meta && 'string' === typeof value ) {
+        return { ...updated, name: value.replace( /\W/g, '_' ).toLowerCase() };
+    }
+
+    return updated;
+}
+
+/**
  * Update a field by ID within the formFields array.
  * Searches top-level, column inner_fields (object), and repeat inner_fields (array).
  *
@@ -117,7 +137,7 @@ function updateFieldInArray( fields, fieldId, fieldName, value ) {
             if ( fieldName === 'name' && ! field.is_new ) {
                 return field;
             }
-            return applyMutualExclusivity( field, fieldName, value );
+            return applyFieldUpdate( field, fieldName, value );
         }
 
         // Column field inner_fields (object: { 'column-1': [], 'column-2': [], 'column-3': [] })
@@ -136,7 +156,7 @@ function updateFieldInArray( fields, fieldId, fieldName, value ) {
                             return innerField;
                         }
                         changed = true;
-                        return applyMutualExclusivity( innerField, fieldName, value );
+                        return applyFieldUpdate( innerField, fieldName, value );
                     }
                     return innerField;
                 } );
@@ -156,7 +176,7 @@ function updateFieldInArray( fields, fieldId, fieldName, value ) {
                         return innerField;
                     }
                     changed = true;
-                    return applyMutualExclusivity( innerField, fieldName, value );
+                    return applyFieldUpdate( innerField, fieldName, value );
                 }
                 return innerField;
             } );

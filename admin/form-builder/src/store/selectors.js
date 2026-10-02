@@ -89,6 +89,17 @@ export function getEditingFieldConfig( state ) {
     if ( ! field || ! field.template ) {
         return null;
     }
+    // Post form taxonomy fields use their own taxonomy's settings (title, terms
+    // to exclude, ...) and post tags the post_tag entry, as develop's
+    // settings_taxonomy / settings_post_tags.
+    if ( 'taxonomy' === field.template && field.name && state.fieldSettings[ field.name ] ) {
+        return state.fieldSettings[ field.name ];
+    }
+
+    if ( 'post_tags' === field.template && state.fieldSettings.post_tag ) {
+        return state.fieldSettings.post_tag;
+    }
+
     return state.fieldSettings[ field.template ] || null;
 }
 

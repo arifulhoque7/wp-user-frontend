@@ -3,6 +3,20 @@ import { useSelect, useDispatch } from '@wordpress/data';
 import { __ } from '@wordpress/i18n';
 import { applyFilters } from '@wordpress/hooks';
 import { STORE_NAME } from '../../../store';
+import {
+    DndContext,
+    closestCenter,
+    PointerSensor,
+    useSensor,
+    useSensors,
+} from '@dnd-kit/core';
+import {
+    SortableContext,
+    arrayMove,
+    useSortable,
+    verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import SettingHelpText from './SettingHelpText';
 
 /**
@@ -10,6 +24,25 @@ import SettingHelpText from './SettingHelpText';
  */
 function getRandomId() {
     return Math.floor( Math.random() * ( 9999999 - 999 + 1 ) ) + 999;
+}
+
+/**
+ * One option row, draggable by its handle (develop sorted rows by
+ * `.sort-handler`). `children` gets the props for the handle.
+ */
+function SortableOptionRow( { id, index, children } ) {
+    const { attributes, listeners, setNodeRef, transform, transition } = useSortable( { id: String( id ) } );
+
+    return (
+        <tr
+            ref={ setNodeRef }
+            style={ { transform: CSS.Translate.toString( transform ), transition } }
+            data-index={ index }
+            className="option-field-option wpuf-flex wpuf-justify-start wpuf-items-center"
+        >
+            { children( { ...attributes, ...listeners } ) }
+        </tr>
+    );
 }
 
 /**
@@ -78,6 +111,20 @@ export default function OptionDataInput( { optionField, field, builderClassNames
         }
         updateField( field.id, 'selected', selected );
     }, [ selected, field.id, updateField ] );
+
+    const sensors = useSensors( useSensor( PointerSensor, { activationConstraint: { distance: 4 } } ) );
+
+    const handleSortEnd = useCallback( ( { active, over } ) => {
+        if ( ! over || active.id === over.id ) {
+            return;
+        }
+
+        setOptions( ( current ) => arrayMove(
+            current,
+            current.findIndex( ( option ) => String( option.id ) === active.id ),
+            current.findIndex( ( option ) => String( option.id ) === over.id )
+        ) );
+    }, [] );
 
     const addOption = useCallback( () => {
         const count = options.length;
@@ -284,84 +331,86 @@ export default function OptionDataInput( { optionField, field, builderClassNames
                     ) }
                 </div>
 
-                <table className="option-field-option-chooser">
-                    <tbody>
-                        { options.map( ( option, index ) => (
-                            <tr
-                                key={ option.id }
-                                data-index={ index }
-                                className="option-field-option wpuf-flex wpuf-justify-start wpuf-items-center"
-                            >
-                                <td className="wpuf-flex wpuf-items-center">
-                                    { isMultiple ? (
-                                        <input
-                                            type="checkbox"
-                                            value={ option.value }
-                                            checked={ Array.isArray( selected ) && selected.includes( option.value ) }
-                                            onChange={ ( e ) => handleSelectedChange( option.value, e.target.checked ) }
-                                            className={ builderClassNames( 'checkbox' ) }
-                                        />
-                                    ) : (
-                                        <input
-                                            type="radio"
-                                            value={ option.value }
-                                            checked={ selected === option.value }
-                                            onChange={ () => handleSelectedChange( option.value, true ) }
-                                            className={ `!wpuf-mt-0 ${ builderClassNames( 'radio' ) }` }
-                                        />
-                                    ) }
-                                    <i className="fa fa-bars sort-handler hover:!wpuf-cursor-move wpuf-text-gray-400 wpuf-ml-1" />
-                                </td>
-                                <td>
-                                    <input
-                                        className={ `${ builderClassNames( 'text' ) } !wpuf-w-full` }
-                                        type="text"
-                                        value={ option.label }
-                                        onChange={ ( e ) => setOptionLabel( index, e.target.value ) }
-                                    />
-                                </td>
-                                { showValue && (
-                                    <td>
-                                        <input
-                                            className={ `${ builderClassNames( 'text' ) } !wpuf-w-full` }
-                                            type="text"
-                                            value={ option.value }
-                                            onChange={ ( e ) => setOptionValue( index, e.target.value ) }
-                                        />
-                                    </td>
-                                ) }
-                                <td>
-                                    <div className="wpuf-flex wpuf-ml-2">
-                                        <div
-                                            onClick={ () => deleteOption( index ) }
-                                            className="action-buttons hover:wpuf-cursor-pointer"
-                                            role="button"
-                                            tabIndex={ 0 }
-                                            onKeyDown={ ( e ) => e.key === 'Enter' && deleteOption( index ) }
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="wpuf-size-6 wpuf-border wpuf-rounded-2xl wpuf-border-gray-400 hover:wpuf-border-primary wpuf-p-1">
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" />
-                                            </svg>
-                                        </div>
-                                        { index === options.length - 1 && (
-                                            <div
-                                                onClick={ addOption }
-                                                className="plus-buttons hover:wpuf-cursor-pointer !wpuf-border-0"
-                                                role="button"
-                                                tabIndex={ 0 }
-                                                onKeyDown={ ( e ) => e.key === 'Enter' && addOption() }
-                                            >
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="wpuf-ml-1 wpuf-size-6 wpuf-border wpuf-rounded-2xl wpuf-border-gray-400 wpuf-p-1">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                                                </svg>
-                                            </div>
-                                        ) }
-                                    </div>
-                                </td>
-                            </tr>
-                        ) ) }
-                    </tbody>
-                </table>
+                <DndContext sensors={ sensors } collisionDetection={ closestCenter } onDragEnd={ handleSortEnd }>
+                    <SortableContext items={ options.map( ( option ) => String( option.id ) ) } strategy={ verticalListSortingStrategy }>
+                        <table className="option-field-option-chooser">
+                            <tbody>
+                                { options.map( ( option, index ) => (
+                                    <SortableOptionRow key={ option.id } id={ option.id } index={ index }>
+                                        { ( handleProps ) => ( <>
+                                            <td className="wpuf-flex wpuf-items-center">
+                                                { isMultiple ? (
+                                                    <input
+                                                        type="checkbox"
+                                                        value={ option.value }
+                                                        checked={ Array.isArray( selected ) && selected.includes( option.value ) }
+                                                        onChange={ ( e ) => handleSelectedChange( option.value, e.target.checked ) }
+                                                        className={ builderClassNames( 'checkbox' ) }
+                                                    />
+                                                ) : (
+                                                    <input
+                                                        type="radio"
+                                                        value={ option.value }
+                                                        checked={ selected === option.value }
+                                                        onChange={ () => handleSelectedChange( option.value, true ) }
+                                                        className={ `!wpuf-mt-0 ${ builderClassNames( 'radio' ) }` }
+                                                    />
+                                                ) }
+                                                <i className="fa fa-bars sort-handler hover:!wpuf-cursor-move wpuf-text-gray-400 wpuf-ml-1" { ...handleProps } />
+                                            </td>
+                                            <td>
+                                                <input
+                                                    className={ `${ builderClassNames( 'text' ) } !wpuf-w-full` }
+                                                    type="text"
+                                                    value={ option.label }
+                                                    onChange={ ( e ) => setOptionLabel( index, e.target.value ) }
+                                                />
+                                            </td>
+                                            { showValue && (
+                                                <td>
+                                                    <input
+                                                        className={ `${ builderClassNames( 'text' ) } !wpuf-w-full` }
+                                                        type="text"
+                                                        value={ option.value }
+                                                        onChange={ ( e ) => setOptionValue( index, e.target.value ) }
+                                                    />
+                                                </td>
+                                            ) }
+                                            <td>
+                                                <div className="wpuf-flex wpuf-ml-2">
+                                                    <div
+                                                        onClick={ () => deleteOption( index ) }
+                                                        className="action-buttons hover:wpuf-cursor-pointer"
+                                                        role="button"
+                                                        tabIndex={ 0 }
+                                                        onKeyDown={ ( e ) => e.key === 'Enter' && deleteOption( index ) }
+                                                    >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="wpuf-size-6 wpuf-border wpuf-rounded-2xl wpuf-border-gray-400 hover:wpuf-border-primary wpuf-p-1">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" />
+                                                        </svg>
+                                                    </div>
+                                                    { index === options.length - 1 && (
+                                                        <div
+                                                            onClick={ addOption }
+                                                            className="plus-buttons hover:wpuf-cursor-pointer !wpuf-border-0"
+                                                            role="button"
+                                                            tabIndex={ 0 }
+                                                            onKeyDown={ ( e ) => e.key === 'Enter' && addOption() }
+                                                        >
+                                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="wpuf-ml-1 wpuf-size-6 wpuf-border wpuf-rounded-2xl wpuf-border-gray-400 wpuf-p-1">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                                            </svg>
+                                                        </div>
+                                                    ) }
+                                                </div>
+                                            </td>
+                                        </> ) }
+                                    </SortableOptionRow>
+                                ) ) }
+                            </tbody>
+                        </table>
+                    </SortableContext>
+                </DndContext>
             </div>
 
             { /* Clear selection link for radio/select */ }
