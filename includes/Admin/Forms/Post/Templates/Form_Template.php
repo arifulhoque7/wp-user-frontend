@@ -2,6 +2,8 @@
 
 namespace WeDevs\Wpuf\Admin\Forms\Post\Templates;
 
+use WeDevs\Wpuf\Platform\Stores\Stores;
+
 /**
  * Admin form template handler
  *
@@ -162,41 +164,26 @@ class Form_Template {
             return;
         }
 
-        $current_user = get_current_user_id();
-
-        $form_post_data = [
-            'post_title'  => $template_object->get_title(),
-            'post_type'   => 'wpuf_forms',
-            'post_status' => 'publish',
-            'post_author' => $current_user,
-        ];
-
-        $form_id = wp_insert_post( $form_post_data );
-
-        if ( is_wp_error( $form_id ) ) {
-            return;
-        }
-
-        // form has been created, lets setup
-        update_post_meta( $form_id, 'wpuf_form_settings', $template_object->get_form_settings() );
-        update_post_meta( $form_id, 'wpuf_form_version', WPUF_VERSION );
-
         $form_fields = $template_object->get_form_fields();
 
-        if ( ! $form_fields ) {
-            return;
-        }
+        // The form store writes the post, then settings and version, then the
+        // fields as the template gives them (no unslash), as before (task 2.4a).
+        $form_id = Stores::forms()->create(
+            [
+                'post_title'           => $template_object->get_title(),
+                'post_type'            => 'wpuf_forms',
+                'post_status'          => 'publish',
+                'post_author'          => get_current_user_id(),
+                'fields'               => $form_fields ? $form_fields : [],
+                'unslash_fields'       => false,
+                'settings'             => $template_object->get_form_settings(),
+                'store_empty_settings' => true,
+                'settings_first'       => true,
+            ]
+        );
 
-        foreach ( $form_fields as $menu_order => $field ) {
-            wp_insert_post(
-                [
-                    'post_type'    => 'wpuf_input',
-                    'post_status'  => 'publish',
-                    'post_content' => maybe_serialize( $field ),
-                    'post_parent'  => $form_id,
-                    'menu_order'   => $menu_order,
-                ]
-            );
+        if ( is_wp_error( $form_id ) || ! $form_fields ) {
+            return;
         }
 
         wp_safe_redirect( admin_url( 'admin.php?page=wpuf-post-forms&action=edit&id=' . $form_id ) );

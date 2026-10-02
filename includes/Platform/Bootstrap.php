@@ -10,6 +10,7 @@ namespace WeDevs\Wpuf\Platform;
 
 use WeDevs\Wpuf\Platform\Contracts\Hookable;
 use WeDevs\Wpuf\Platform\Providers\CoreServiceProvider;
+use WeDevs\Wpuf\Platform\Providers\StoreServiceProvider;
 
 /**
  * Boots the platform once: registers the free providers, calls
@@ -62,6 +63,7 @@ class Bootstrap {
     public function providers() {
         return [
             CoreServiceProvider::class,
+            StoreServiceProvider::class,
         ];
     }
 

@@ -3601,52 +3601,8 @@ if ( ! function_exists( 'array_column' ) ) {
  * @return int New duplicated form id
  */
 function wpuf_duplicate_form( $post_id ) {
-    $post = get_post( $post_id );
-
-    if ( ! $post ) {
-        return;
-    }
-
-    $contents = wpuf_get_form_fields( $post_id );
-
-    $new_form = [
-        'post_title'  => $post->post_title,
-        'post_type'   => $post->post_type,
-        'post_status' => 'draft',
-    ];
-
-    $form_id = wp_insert_post( $new_form );
-
-    foreach ( $contents as $content ) {
-        wpuf_insert_form_field( $form_id, $content );
-    }
-
-    // update the post title to remove confusion
-    wp_update_post(
-        [
-            'ID'         => $form_id,
-            'post_title' => $post->post_title . ' (#' . $form_id . ')',
-        ]
-    );
-
-    if ( $form_id ) {
-        $form_settings = wpuf_get_form_settings( $post_id );
-        $notifications = wpuf_get_form_notifications( $post_id );
-
-        update_post_meta( $form_id, 'wpuf_form_settings', $form_settings );
-        update_post_meta( $form_id, 'notifications', $notifications );
-
-        // The copy carries the source form's integrations and version too.
-        foreach ( [ 'integrations', 'wpuf_form_version' ] as $meta_key ) {
-            if ( metadata_exists( 'post', $post_id, $meta_key ) ) {
-                update_post_meta( $form_id, $meta_key, get_post_meta( $post_id, $meta_key, true ) );
-            }
-        }
-
-        return $form_id;
-    }
-
-    return 0;
+    // Forwards to the form store (task 2.4a); same draft copy, title and meta.
+    return \WeDevs\Wpuf\Platform\Stores\Stores::forms()->duplicate( $post_id );
 }
 
 /**
@@ -3662,23 +3618,8 @@ function wpuf_duplicate_form( $post_id ) {
  * @return int ID of updated or inserted post
  */
 function wpuf_insert_form_field( $form_id, $field = [], $field_id = null, $order = 0 ) {
-    $args = [
-        'post_type'    => 'wpuf_input',
-        'post_parent'  => $form_id,
-        'post_status'  => 'publish',
-        'post_content' => maybe_serialize( wp_unslash( $field ) ),
-        'menu_order'   => $order,
-    ];
-
-    if ( $field_id ) {
-        $args['ID'] = $field_id;
-    }
-
-    if ( $field_id ) {
-        return wp_update_post( $args );
-    } else {
-        return wp_insert_post( $args );
-    }
+    // Forwards to the field store (task 2.4a); the field is unslashed as before.
+    return \WeDevs\Wpuf\Platform\Stores\Stores::fields()->write( $form_id, $field, $field_id ? $field_id : 0, $order );
 }
 
 /**
@@ -3693,20 +3634,6 @@ function wpuf_insert_form_field( $form_id, $field = [], $field_id = null, $order
  * @return int
  */
 function wpuf_create_sample_form( $post_title = 'Sample Form', $post_type = 'wpuf_forms', $blank = false ) {
-    $form_id = wp_insert_post(
-        [
-            'post_title'     => $post_title,
-            'post_type'      => $post_type,
-            'post_status'    => 'publish',
-            'comment_status' => 'closed',
-            'post_content'   => '',
-        ]
-    );
-
-    if ( ! $form_id ) {
-        return false;
-    }
-
     $form_fields = [];
     $settings    = [];
 
@@ -3844,20 +3771,21 @@ function wpuf_create_sample_form( $post_title = 'Sample Form', $post_type = 'wpu
         ];
     }
 
-    if ( ! empty( $form_fields ) && ! $blank ) {
-        foreach ( $form_fields as $order => $field ) {
-            wpuf_insert_form_field( $form_id, $field, false, $order );
-        }
-    }
+    // The form store inserts the post, then the fields, settings (when not
+    // empty) and version, as this function did (task 2.4a).
+    $form_id = \WeDevs\Wpuf\Platform\Stores\Stores::forms()->create(
+        [
+            'post_title'     => $post_title,
+            'post_type'      => $post_type,
+            'post_status'    => 'publish',
+            'comment_status' => 'closed',
+            'post_content'   => '',
+            'fields'         => $blank ? [] : $form_fields,
+            'settings'       => $settings,
+        ]
+    );
 
-    if ( ! empty( $settings ) ) {
-        update_post_meta( $form_id, 'wpuf_form_settings', $settings );
-    }
-
-    //set form Version
-    update_post_meta( $form_id, 'wpuf_form_version', WPUF_VERSION );
-
-    return $form_id;
+    return is_wp_error( $form_id ) ? false : $form_id;
 }
 
 /**
@@ -3900,18 +3828,8 @@ function wpuf_get_client_ip() {
  * @return void
  */
 function wpuf_delete_form( $form_id, $force = true ) {
-    global $wpdb;
-
-    wp_delete_post( $form_id, $force );
-
-    // delete form inputs as WP doesn't know the relationship
-    $wpdb->delete(
-        $wpdb->posts,
-        [
-            'post_parent' => $form_id,
-            'post_type'   => 'wpuf_input',
-        ]
-    );
+    // Forwards to the form store (task 2.4a), legacy semantics kept.
+    \WeDevs\Wpuf\Platform\Stores\Stores::forms()->delete( $form_id, $force );
 }
 
 /**

@@ -4,6 +4,7 @@ namespace WeDevs\Wpuf\Admin\Forms;
 
 use WeDevs\Wpuf\Free\Pro_Prompt;
 use WeDevs\Wpuf\Builder\HookBridge;
+use WeDevs\Wpuf\Platform\Stores\Stores;
 
 /**
  * Form Builder framework
@@ -434,76 +435,22 @@ class Admin_Form_Builder {
      * @return array
      */
     public static function save_form( $data ) {
-        $saved_wpuf_inputs = [];
-        wp_update_post( [ 'ID' => $data['form_id'], 'post_status' => 'publish', 'post_title' => $data['post_title'] ] );
-        $existing_wpuf_input_ids = get_children(
+        // Forwards to the form store (task 2.4a). The store refuses a post that is
+        // not a form or a settings key outside the allowlist; nothing is written
+        // then and no fields come back.
+        $saved = Stores::forms()->save(
+            isset( $data['form_id'] ) ? $data['form_id'] : 0,
             [
-                'post_parent' => $data['form_id'],
-                'post_status' => 'publish',
-                'post_type'   => 'wpuf_input',
-                'numberposts' => '-1',
-                'orderby'     => 'menu_order',
-                'order'       => 'ASC',
-                'fields'      => 'ids',
+                'post_title'        => isset( $data['post_title'] ) ? $data['post_title'] : '',
+                'form_fields'       => isset( $data['form_fields'] ) ? $data['form_fields'] : [],
+                'form_settings'     => isset( $data['form_settings'] ) ? $data['form_settings'] : [],
+                'form_settings_key' => isset( $data['form_settings_key'] ) ? $data['form_settings_key'] : 'wpuf_form_settings',
+                'notifications'     => isset( $data['notifications'] ) ? $data['notifications'] : [],
+                'integrations'      => isset( $data['integrations'] ) ? $data['integrations'] : null,
             ]
         );
-        $new_wpuf_input_ids = [];
-        if ( ! empty( $data['form_fields'] ) ) {
-            foreach ( $data['form_fields'] as $order => $field ) {
-                if ( ! empty( $field['is_new'] ) ) {
-                    unset( $field['is_new'] );
-                    unset( $field['id'] );
-                    $field_id = 0;
-                } else {
-                    $field_id = $field['id'];
-                }
-                $field_id = wpuf_insert_form_field( $data['form_id'], $field, $field_id, $order );
-                $new_wpuf_input_ids[] = $field_id;
-                $field['id'] = $field_id;
-                $field['is_new'] = false;  // Mark as saved field
-                $saved_wpuf_inputs[] = $field;
-            }
-        }
-        $inputs_to_delete = array_diff( $existing_wpuf_input_ids, $new_wpuf_input_ids );
-        // Without Pro the builder never loads custom taxonomy fields, so their
-        // absence from the save is not a removal.
-        $inputs_to_delete = array_diff( $inputs_to_delete, self::get_hidden_pro_taxonomy_input_ids( $inputs_to_delete ) );
-        if ( ! empty( $inputs_to_delete ) ) {
-            foreach ( $inputs_to_delete as $delete_id ) {
-                wp_delete_post( $delete_id, true );
-            }
-        }
 
-        // Filter out pro notification settings if pro version is not active
-        if ( ! wpuf_is_pro_active() && isset( $data['form_settings']['notification'] ) ) {
-            // Remove update post notification settings for free version
-            if ( isset( $data['form_settings']['notification']['edit'] ) ) {
-                unset( $data['form_settings']['notification']['edit'] );
-            }
-            if ( isset( $data['form_settings']['notification']['edit_to'] ) ) {
-                unset( $data['form_settings']['notification']['edit_to'] );
-            }
-            if ( isset( $data['form_settings']['notification']['edit_subject'] ) ) {
-                unset( $data['form_settings']['notification']['edit_subject'] );
-            }
-            if ( isset( $data['form_settings']['notification']['edit_body'] ) ) {
-                unset( $data['form_settings']['notification']['edit_body'] );
-            }
-        }
-
-        // Also filter out standalone notification_edit field if it exists
-        if ( ! wpuf_is_pro_active() && isset( $data['form_settings']['notification_edit'] ) ) {
-            unset( $data['form_settings']['notification_edit'] );
-        }
-
-        update_post_meta( $data['form_id'], $data['form_settings_key'], $data['form_settings'] );
-        self::update_list_meta( $data['form_id'], 'notifications', $data['notifications'] );
-
-        if ( isset( $data['integrations'] ) ) {
-            self::update_list_meta( $data['form_id'], 'integrations', $data['integrations'] );
-        }
-
-        return $saved_wpuf_inputs;
+        return is_wp_error( $saved ) ? [] : $saved;
     }
 
     /**
@@ -526,60 +473,6 @@ class Admin_Form_Builder {
         }
 
         return $items;
-    }
-
-    /**
-     * Field post ids that hold a custom taxonomy field hidden from the builder
-     * because Pro is inactive (see filter_pro_taxonomy_fields()).
-     *
-     * @since WPUF_SINCE
-     *
-     * @param int[] $input_ids `wpuf_input` post ids.
-     *
-     * @return int[]
-     */
-    protected static function get_hidden_pro_taxonomy_input_ids( $input_ids ) {
-        if ( empty( $input_ids ) || wpuf_is_pro_active() ) {
-            return [];
-        }
-
-        $free_taxonomies = wpuf_get_free_taxonomies();
-        $hidden          = [];
-
-        foreach ( $input_ids as $input_id ) {
-            $field = maybe_unserialize( get_post_field( 'post_content', $input_id ) );
-
-            if (
-                is_array( $field )
-                && isset( $field['input_type'], $field['name'] )
-                && 'taxonomy' === $field['input_type']
-                && ! in_array( $field['name'], $free_taxonomies, true )
-            ) {
-                $hidden[] = $input_id;
-            }
-        }
-
-        return $hidden;
-    }
-
-    /**
-     * Store a list meta (notifications, integrations) unless an empty list would
-     * only replace a stored empty value ('' or no meta) with `[]`.
-     *
-     * @since WPUF_SINCE
-     *
-     * @param int    $form_id  Form id.
-     * @param string $meta_key Meta key.
-     * @param mixed  $value    Value from the builder.
-     *
-     * @return void
-     */
-    protected static function update_list_meta( $form_id, $meta_key, $value ) {
-        if ( empty( $value ) && empty( get_post_meta( $form_id, $meta_key, true ) ) ) {
-            return;
-        }
-
-        update_post_meta( $form_id, $meta_key, $value );
     }
 
     /**

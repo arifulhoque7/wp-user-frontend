@@ -222,8 +222,10 @@ export class ParitySitePage {
 
     /** Open the builder of a form and wait until its Save button is usable. */
     async doOpenBuilder(postType: string, formId: number) {
-        await this.page.goto(`/wp-admin/admin.php?page=${builderPage[postType]}&action=edit&id=${formId}`);
-        await expect(this.page.locator(Selectors.parity.builderSaveButton).first()).toBeEnabled();
+        // DOM ready, then the enabled Save button is the readiness signal; the full
+        // load event can take long when several builders open at once.
+        await this.page.goto(`/wp-admin/admin.php?page=${builderPage[postType]}&action=edit&id=${formId}`, { waitUntil: 'domcontentloaded', timeout: 45000 });
+        await expect(this.page.locator(Selectors.parity.builderSaveButton).first()).toBeEnabled({ timeout: 45000 });
     }
 
     /** Click Save without touching anything and wait for the save request to succeed. */

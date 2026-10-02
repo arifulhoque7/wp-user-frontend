@@ -3,6 +3,7 @@
 namespace WeDevs\Wpuf\Admin\Forms;
 
 use WeDevs\Wpuf\Admin\Forms;
+use WeDevs\Wpuf\Platform\Stores\Stores;
 use WeDevs\Wpuf\Pro\Admin\List_Table_Profile_Forms;
 
 class Admin_Form_Handler {
@@ -89,21 +90,13 @@ class Admin_Form_Handler {
             case 'trash':
                 if ( ! empty( $_GET['id'] ) ) {
                     $id = intval( wp_unslash( $_GET['id'] ) );
-                    delete_post_meta( $id, '_wp_trash_meta_status' );
-                    delete_post_meta( $id, '_wp_trash_meta_time' );
-                    delete_post_meta( $id, '_wp_desired_post_slug' );
-
-                    wp_trash_post( $id );
+                    Stores::forms()->trash( $id );
 
                     $add_query_args['trashed'] = 1;
                 } elseif ( ! empty( $_GET['post'] ) ) {
                     $posts = isset( $_GET['post'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_GET['post'] ) ) : [];
                     foreach ( $posts as $post_id ) {
-                        delete_post_meta( $post_id, '_wp_trash_meta_status' );
-                        delete_post_meta( $post_id, '_wp_trash_meta_time' );
-                        delete_post_meta( $post_id, '_wp_desired_post_slug' );
-
-                        wp_trash_post( $post_id );
+                        Stores::forms()->trash( $post_id );
                     }
 
                     $add_query_args['trashed'] = count( $_GET['post'] );
@@ -114,28 +107,14 @@ class Admin_Form_Handler {
             case 'restore':
                 if ( ! empty( $_GET['id'] ) ) {
                     $id = intval( wp_unslash( $_GET['id'] ) );
-                    $trash_meta_status = get_post_meta( $id, '_wp_trash_meta_status', true );
-
-                    $args = [
-                        'ID'            => $id,
-                        'post_status'   => $trash_meta_status,
-                    ];
-
-                    wp_update_post( $args );
+                    Stores::forms()->restore( $id );
 
                     $add_query_args['untrashed'] = 1;
                 } elseif ( ! empty( $_GET['post'] ) ) {
                     $posts = array_map( 'sanitize_text_field', wp_unslash( $_GET['post'] ) );
 
                     foreach ( $posts as $post_id ) {
-                        $trash_meta_status = get_post_meta( $post_id, '_wp_trash_meta_status', true );
-
-                        $args = [
-                            'ID'            => $post_id,
-                            'post_status'   => $trash_meta_status,
-                        ];
-
-                        wp_update_post( $args );
+                        Stores::forms()->restore( $post_id );
 
                         $add_query_args['untrashed'] = count( $posts );
                     }
@@ -223,22 +202,14 @@ class Admin_Form_Handler {
                 case 'trash':
                     if ( ! empty( $_GET['id'] ) ) {
                         $id = intval( wp_unslash( $_GET['id'] ) );
-                        delete_post_meta( $id, '_wp_trash_meta_status' );
-                        delete_post_meta( $id, '_wp_trash_meta_time' );
-                        delete_post_meta( $id, '_wp_desired_post_slug' );
-
-                        wp_trash_post( $id );
+                        Stores::forms()->trash( $id );
 
                         $add_query_args['trashed'] = 1;
                     } elseif ( ! empty( $_GET['post'] ) ) {
                         $posts = array_map( 'sanitize_text_field', wp_unslash( $_GET['post'] ) );
 
                         foreach ( $posts as $post_id ) {
-                            delete_post_meta( $post_id, '_wp_trash_meta_status' );
-                            delete_post_meta( $post_id, '_wp_trash_meta_time' );
-                            delete_post_meta( $post_id, '_wp_desired_post_slug' );
-
-                            wp_trash_post( $post_id );
+                            Stores::forms()->trash( $post_id );
                         }
 
                         $add_query_args['trashed'] = count( $_GET['post'] );
@@ -249,28 +220,14 @@ class Admin_Form_Handler {
                 case 'restore':
                     if ( ! empty( $_GET['id'] ) ) {
                         $id = intval( wp_unslash( $_GET['id'] ) );
-                        $trash_meta_status = get_post_meta( $id, '_wp_trash_meta_status', true );
-
-                        $args = [
-                            'ID'            => $id,
-                            'post_status'   => $trash_meta_status,
-                        ];
-
-                        wp_update_post( $args );
+                        Stores::forms()->restore( $id );
 
                         $add_query_args['untrashed'] = 1;
                     } elseif ( ! empty( $_GET['post'] ) ) {
                         $posts = array_map( 'sanitize_text_field', wp_unslash( $_GET['post'] ) );
 
                         foreach ( $posts as $post_id ) {
-                            $trash_meta_status = get_post_meta( $post_id, '_wp_trash_meta_status', true );
-
-                            $args = [
-                                'ID'            => $post_id,
-                                'post_status'   => $trash_meta_status,
-                            ];
-
-                            wp_update_post( $args );
+                            Stores::forms()->restore( $post_id );
 
                             $add_query_args['untrashed'] = count( $_GET['post'] );
                         }
@@ -451,32 +408,6 @@ class Admin_Form_Handler {
      * @return bool
      */
     protected function delete_form( $form_id ) {
-        $form_id = absint( $form_id );
-
-        if ( ! in_array( get_post_type( $form_id ), [ 'wpuf_forms', 'wpuf_profile' ], true ) ) {
-            return false;
-        }
-
-        wp_delete_post( $form_id );
-
-        if ( get_post( $form_id ) ) {
-            return false;
-        }
-
-        $field_ids = get_children(
-            [
-                'post_parent' => $form_id,
-                'post_type'   => 'wpuf_input',
-                'post_status' => 'any',
-                'numberposts' => -1,
-                'fields'      => 'ids',
-            ]
-        );
-
-        foreach ( $field_ids as $field_id ) {
-            wp_delete_post( $field_id, true );
-        }
-
-        return true;
+        return Stores::forms()->delete_permanently( $form_id );
     }
 }
