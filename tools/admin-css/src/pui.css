@@ -1,0 +1,74 @@
+/**
+ * plugin-ui part of a React screen's stylesheet (Tailwind CSS 4).
+ *
+ * A screen entry with `pui: true` in build.mjs appends this to its one
+ * stylesheet (no second Tailwind sheet, same handle). It styles what
+ * @wedevs/plugin-ui renders, the FlyHR way:
+ * - utilities for every class plugin-ui (and later src/admin/shared) uses,
+ *   `!important` and scoped by build.mjs to `.pui-root` and its descendants,
+ *   so WordPress admin form rules (forms.css) cannot override them; WPUF's
+ *   own markup outside `.pui-root` keeps its utilities untouched;
+ * - Tailwind 4 preflight inside `.pui-root` only (ThemeProvider root and the
+ *   body-level portals of dropdowns, popovers and dialogs);
+ * - plugin-ui's own theme (tokens, `@theme inline` radius/shadow/color
+ *   mapping), scoped base, animations (tw-animate-css) from its
+ *   src/styles.css, vendored as src/pui-upstream.css by gen-pui.cjs; the
+ *   ThemeProvider sets WPUF's token values (design-tokens.md).
+ *
+ * The global @wordpress/components, dataviews and theme stylesheets that
+ * plugin-ui's styles import are not part of this file (wp-components style
+ * handle; DataViews wrapper, task 3.3d).
+ */
+@layer theme, pui-base, utilities;
+
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities) important source(none);
+
+/* plugin-ui's own theme and scoped base (generated, see gen-pui.cjs). */
+@import "./pui-upstream.css";
+
+@source "../../../node_modules/@wedevs/plugin-ui/dist";
+
+/* plugin-ui marks dark mode with a `.dark` class (ThemeProvider), not the OS;
+   otherwise an OS in dark mode repaints its fields (FlyHR fix). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+.pui-root {
+    @import "tailwindcss/preflight.css" layer(pui-base);
+
+    /* What preflight sets on html/body, which a scoped preflight cannot reach
+       (font family, color and smoothing come from plugin-ui's scoped base). */
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+    tab-size: 4;
+    font-feature-settings: normal;
+    font-variation-settings: normal;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* WordPress admin forms.css styles inputs by tag/attribute; neutralize the
+   parts utilities do not always set, inside plugin-ui only. */
+.pui-root input[type="text"],
+.pui-root input[type="search"],
+.pui-root input[type="email"],
+.pui-root input[type="url"],
+.pui-root input[type="tel"],
+.pui-root input[type="number"],
+.pui-root input[type="password"],
+.pui-root input[type="date"],
+.pui-root input[type="datetime-local"],
+.pui-root input[type="month"],
+.pui-root input[type="time"],
+.pui-root input[type="week"],
+.pui-root select,
+.pui-root textarea {
+    box-shadow: none;
+    min-height: 0;
+    max-width: none;
+    background-image: none;
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+    line-height: inherit;
+    color: inherit;
+}

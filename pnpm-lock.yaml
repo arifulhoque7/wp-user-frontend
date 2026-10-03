@@ -401,6 +401,9 @@ importers:
       tailwindcss-scoped-preflight:
         specifier: ^4.0.6
         version: 4.0.6(postcss@8.5.28)(tailwindcss@4.3.3)
+      tw-animate-css:
+        specifier: ^1.4.0
+        version: 1.4.0
 
 packages:
 
