@@ -41,6 +41,17 @@ class Stores {
     }
 
     /**
+     * Subscription pack store
+     *
+     * @since WPUF_SINCE
+     *
+     * @return SubscriptionStore
+     */
+    public static function subscriptions() {
+        return self::get( SubscriptionStore::class );
+    }
+
+    /**
      * Resolve a store, registering the stores first when the boot has not run yet.
      *
      * @param string $id Service id

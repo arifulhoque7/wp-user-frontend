@@ -1,0 +1,277 @@
+<?php
+/**
+ * Subscription writers forward to the subscription store and store the same
+ * bytes, fire the same hooks and send the same responses (task 2.4b); compared
+ * with the pre-store copies in tests/php/src/LegacySubscriptionWriters.php.
+ *
+ * @package WP_User_Frontend
+ */
+
+use WeDevs\Wpuf\Admin\Subscription as Admin_Subscription;
+use WeDevs\Wpuf\Api\Subscription as Subscription_Api;
+use WeDevs\Wpuf\Platform\Stores\Stores;
+use WeDevs\Wpuf\Platform\Stores\SubscriptionStore;
+
+/**
+ * Subscription store tests.
+ */
+class SubscriptionStoreTest extends WP_UnitTestCase {
+
+    /**
+     * Pack hooks fired, with the pack id replaced by a marker.
+     *
+     * @var array
+     */
+    private $fired = [];
+
+    const PACK_HOOKS = [
+        'wpuf_before_update_subscription_pack',
+        'wpuf_before_update_subscription_pack_meta',
+        'wpuf_after_update_subscription_pack_meta',
+        'wpuf_update_subscription_pack',
+        'wpuf_before_update_subscription_single_row',
+        'wpuf_after_update_subscription_single_row',
+    ];
+
+    public function set_up() {
+        parent::set_up();
+        wp_set_current_user( self::factory()->user->create( [ 'role' => 'administrator' ] ) );
+
+        foreach ( self::PACK_HOOKS as $hook ) {
+            add_action(
+                $hook,
+                function ( $id, $second = null ) use ( $hook ) {
+                    $this->fired[] = [ $hook, $second instanceof WP_REST_Request ? 'request' : $second ];
+                },
+                10,
+                2
+            );
+        }
+    }
+
+    public function tear_down() {
+        $_POST = [];
+        parent::tear_down();
+    }
+
+    /**
+     * Post fields and raw meta of a pack (dates and the id left out).
+     */
+    private function snapshot( $id ) {
+        global $wpdb;
+
+        $post = get_post( $id );
+        $meta = $wpdb->get_results( $wpdb->prepare( "SELECT meta_key, meta_value FROM {$wpdb->postmeta} WHERE post_id = %d AND meta_key NOT LIKE %s ORDER BY meta_id", $id, '\_edit%' ), ARRAY_A ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+
+        return [
+            'post' => $post ? [ $post->post_type, $post->post_status, $post->post_title, $post->post_content ] : null,
+            'meta' => $meta,
+        ];
+    }
+
+    private function request( $subscription ) {
+        $request = new WP_REST_Request( 'POST', '/wpuf/v1/wpuf_subscription' );
+        $request->set_param( 'subscription', $subscription );
+
+        return $request;
+    }
+
+    /**
+     * A payload with floats, lists, term ids (good and bad), HTML and slashes.
+     */
+    private function payload( $id = 0 ) {
+        return [
+            'ID'           => $id,
+            'post_title'   => 'Gold "pack" ü',
+            'post_status'  => 'publish',
+            'post_content' => "Line one\nLine <b>two</b>",
+            'meta_value'   => [
+                '_billing_amount'            => '9.99',
+                '_expiration_number'         => '30',
+                '_expiration_period'         => 'day',
+                '_recurring_pay'             => 'yes',
+                '_billing_cycle_number'      => '1',
+                '_cycle_period'              => '',
+                '_trial_status'              => 'no',
+                '_post_type_name'            => [ 'post' => '5', 'page' => '-1' ],
+                'additional_cpt_options'     => [ 'product' => '2' ],
+                '_enable_post_expiration'    => 'on',
+                '_post_expiration_number'    => '7',
+                '_post_expiration_period'    => 'day',
+                '_post_expiration_message'   => '<p>Expired <script>x</script></p>',
+                '_total_feature_item'        => '3',
+                '_sort_order'                => '0',
+                '_sub_allowed_term_ids'      => [],
+                '_sub_view_allowed_term_ids' => [ '4', 7, 'x', '-2' ],
+                'postnum_rollback_on_delete' => 'on',
+            ],
+        ];
+    }
+
+    /**
+     * Run the same call on the legacy controller and the current one.
+     *
+     * @return array [ legacy response, current response, legacy fired hooks, current fired hooks ]
+     */
+    private function both( $method, $legacy_request, $current_request ) {
+        $this->fired = [];
+        $legacy      = ( new WPUF_Legacy_Subscription_Api() )->$method( $legacy_request );
+        $legacy_hook = $this->fired;
+
+        $this->fired = [];
+        $current     = ( new Subscription_Api() )->$method( $current_request );
+
+        return [ $legacy, $current, $legacy_hook, $this->fired ];
+    }
+
+    private function same_response( $legacy, $current ) {
+        $this->assertSame( $legacy->get_data(), $current->get_data() );
+        $this->assertSame( $legacy->get_status(), $current->get_status() );
+    }
+
+    private function last_pack() {
+        $ids = get_posts( [ 'post_type' => 'wpuf_subscription', 'post_status' => 'any', 'numberposts' => 1, 'orderby' => 'ID', 'order' => 'DESC', 'fields' => 'ids' ] );
+
+        return (int) $ids[0];
+    }
+
+    public function test_store_is_shared_from_the_container() {
+        $this->assertInstanceOf( SubscriptionStore::class, Stores::subscriptions() );
+        $this->assertSame( Stores::subscriptions(), wpuf()->platform()->get( SubscriptionStore::class ) );
+    }
+
+    public function test_rest_create_stores_the_same_bytes_hooks_and_response() {
+        $this->fired = [];
+        $legacy      = ( new WPUF_Legacy_Subscription_Api() )->create_or_update_item( $this->request( $this->payload() ) );
+        $legacy_id   = $this->last_pack();
+        $legacy_hook = $this->fired;
+        delete_option( 'wpuf_taxonomy_view_restrictions_enabled' );
+
+        $this->fired = [];
+        $current     = ( new Subscription_Api() )->create_or_update_item( $this->request( $this->payload() ) );
+        $current_id  = $this->last_pack();
+
+        $this->assertNotSame( $legacy_id, $current_id );
+        $this->same_response( $legacy, $current );
+        $this->assertEquals( $this->snapshot( $legacy_id ), $this->snapshot( $current_id ) );
+        $this->assertSame( $legacy_hook, $this->fired, 'same pack hooks, same order, same args' );
+        $this->assertSame( 'yes', get_option( 'wpuf_taxonomy_view_restrictions_enabled' ) );
+    }
+
+    public function test_rest_update_stores_the_same_bytes() {
+        $legacy_id  = self::factory()->post->create( [ 'post_type' => 'wpuf_subscription', 'post_title' => 'Old' ] );
+        $current_id = self::factory()->post->create( [ 'post_type' => 'wpuf_subscription', 'post_title' => 'Old' ] );
+        update_post_meta( $legacy_id, '_sub_allowed_term_ids', [ '3' ] );
+        update_post_meta( $current_id, '_sub_allowed_term_ids', [ '3' ] );
+
+        list( $legacy, $current, $legacy_hook, $current_hook ) = $this->both( 'edit_item', $this->request( $this->payload( $legacy_id ) ), $this->request( $this->payload( $current_id ) ) );
+
+        $this->same_response( $legacy, $current );
+        $this->assertEquals( $this->snapshot( $legacy_id ), $this->snapshot( $current_id ) );
+        $this->assertSame( $legacy_hook, $current_hook );
+    }
+
+    public function test_rest_minimal_payload_and_refusals_match() {
+        $minimal = [ 'post_title' => 'Bare' ];
+
+        $this->fired = [];
+        ( new WPUF_Legacy_Subscription_Api() )->create_or_update_item( $this->request( $minimal ) );
+        $legacy_id = $this->last_pack();
+        ( new Subscription_Api() )->create_or_update_item( $this->request( $minimal ) );
+        $this->assertEquals( $this->snapshot( $legacy_id ), $this->snapshot( $this->last_pack() ), 'defaults when nothing is sent' );
+
+        $page = self::factory()->post->create( [ 'post_type' => 'page' ] );
+        foreach ( [ [ 'ID' => $page, 'post_title' => 'X' ], [ 'post_title' => 'Has # sign' ], [] ] as $payload ) {
+            list( $legacy, $current ) = $this->both( 'create_or_update_item', $this->request( $payload ), $this->request( $payload ) );
+            $this->same_response( $legacy, $current );
+        }
+    }
+
+    public function test_single_row_edit_matches() {
+        $legacy_id  = self::factory()->post->create( [ 'post_type' => 'wpuf_subscription', 'post_status' => 'publish', 'post_title' => 'Pack' ] );
+        $current_id = self::factory()->post->create( [ 'post_type' => 'wpuf_subscription', 'post_status' => 'publish', 'post_title' => 'Pack' ] );
+        $row        = function ( $id, $name, $value ) {
+            return $this->request( [ 'ID' => $id, 'edit_single_row' => true, 'edit_row_name' => $name, 'edit_row_value' => $value ] );
+        };
+
+        foreach ( [ [ 'post_status', 'draft' ], [ 'post_title', 'Hacked' ], [ 'post_status', 'bogus' ], [ 'post_status', '' ] ] as $edit ) {
+            list( $legacy, $current, $legacy_hook, $current_hook ) = $this->both( 'edit_item', $row( $legacy_id, $edit[0], $edit[1] ), $row( $current_id, $edit[0], $edit[1] ) );
+
+            $this->same_response( $legacy, $current );
+            $this->assertSame( $legacy_hook, $current_hook );
+            $this->assertEquals( get_post( $legacy_id )->post_status, get_post( $current_id )->post_status );
+            $this->assertSame( 'Pack', get_post( $current_id )->post_title, 'fields outside the allowlist are not changed' );
+        }
+    }
+
+    public function test_delete_matches_and_refuses_other_post_types() {
+        $legacy_id  = self::factory()->post->create( [ 'post_type' => 'wpuf_subscription' ] );
+        $current_id = self::factory()->post->create( [ 'post_type' => 'wpuf_subscription' ] );
+        $delete     = function ( $id ) {
+            $request = new WP_REST_Request( 'DELETE', '/wpuf/v1/wpuf_subscription/' . $id );
+            $request->set_param( 'subscription_id', $id );
+
+            return $request;
+        };
+
+        list( $legacy, $current ) = $this->both( 'delete_item', $delete( $legacy_id ), $delete( $current_id ) );
+        $this->same_response( $legacy, $current );
+        $this->assertNull( get_post( $current_id ) );
+
+        $page = self::factory()->post->create( [ 'post_type' => 'page' ] );
+        list( $legacy, $current ) = $this->both( 'delete_item', $delete( $page ), $delete( $page ) );
+        $this->same_response( $legacy, $current );
+        $this->assertNotNull( get_post( $page ) );
+        $this->assertFalse( Stores::subscriptions()->delete( $page ) );
+    }
+
+    public function test_classic_editor_save_matches() {
+        $legacy_id  = self::factory()->post->create( [ 'post_type' => 'wpuf_subscription', 'post_title' => 'Classic', 'post_content' => 'C' ] );
+        $current_id = self::factory()->post->create( [ 'post_type' => 'wpuf_subscription', 'post_title' => 'Classic', 'post_content' => 'C' ] );
+        $admin      = ( new ReflectionClass( Admin_Subscription::class ) )->newInstanceWithoutConstructor();
+        $posts      = [
+            'full'    => [
+                'billing_amount'           => '12.50',
+                'expiration_number'        => '2',
+                'expiration_period'        => 'month',
+                'recurring_pay'            => 'yes',
+                'billing_cycle_number'     => '1',
+                'cycle_period'             => 'month',
+                'trial_status'             => 'no',
+                'post_type_name'           => [ 'post' => '10' ],
+                'additional_cpt_options'   => [ 'product' => '1' ],
+                'post_expiration_settings' => [ 'expiration_time_value' => '7', 'expiration_time_type' => 'day', 'enable_post_expiration' => 'on', 'post_expiration_message' => 'Bye <b>x</b>', 'enable_mail_after_expired' => 'on' ],
+                'sort_order'               => '3',
+                'total_feature_item'       => '2',
+            ],
+            'minimal' => [ 'expiration_period' => 'day', 'post_type_name' => [], 'additional_cpt_options' => [] ],
+        ];
+
+        foreach ( $posts as $name => $fields ) {
+            $_POST = wp_slash( array_merge( $fields, [ 'meta_box_nonce' => wp_create_nonce( 'subs_meta_box_nonce' ) ] ) );
+
+            $this->fired = [];
+            WPUF_Legacy_Subscription_Admin::save_form_meta( $legacy_id, get_post( $legacy_id ) );
+            $legacy_hook = $this->fired;
+            $this->fired = [];
+            $admin->save_form_meta( $current_id, get_post( $current_id ) );
+
+            $this->assertEquals( $this->snapshot( $legacy_id ), $this->snapshot( $current_id ), $name );
+            $this->assertSame( $legacy_hook, $this->fired, $name . ': wpuf_update_subscription_pack with the same data' );
+        }
+    }
+
+    public function test_classic_editor_save_ignores_bad_nonce_and_other_post_types() {
+        $admin = ( new ReflectionClass( Admin_Subscription::class ) )->newInstanceWithoutConstructor();
+        $pack  = self::factory()->post->create( [ 'post_type' => 'wpuf_subscription' ] );
+        $page  = self::factory()->post->create( [ 'post_type' => 'page' ] );
+
+        $_POST = [ 'meta_box_nonce' => 'bad', 'billing_amount' => '5' ];
+        $admin->save_form_meta( $pack, get_post( $pack ) );
+        $this->assertSame( '', get_post_meta( $pack, '_billing_amount', true ) );
+
+        $_POST = [ 'meta_box_nonce' => wp_create_nonce( 'subs_meta_box_nonce' ), 'billing_amount' => '5', 'expiration_period' => 'day' ];
+        $admin->save_form_meta( $page, get_post( $page ) );
+        $this->assertSame( '', get_post_meta( $page, '_billing_amount', true ), 'not a pack: nothing written' );
+    }
+}

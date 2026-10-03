@@ -3,6 +3,7 @@
 namespace WeDevs\Wpuf\Admin;
 
 use WeDevs\Wpuf\Admin\Forms\Form;
+use WeDevs\Wpuf\Platform\Stores\Stores;
 use WeDevs\Wpuf\User_Subscription;
 use WP_Post;
 
@@ -419,78 +420,14 @@ class Subscription {
             return;
         }
 
-        $post_data = wp_unslash( $_POST );
-
-		//        if ( ! isset( $post_data['billing_amount'] ) ) {
-		//            return;
-		//        }
-
-        $expiration_time      = '';
-        $enable_post_expir    = '';
-        $expire_post_status   = '';
-        $post_expire_msg      = '';
-        // Prices keep their decimals, like the REST save.
-        $billing_amount       = isset( $post_data['billing_amount'] ) ? floatval( $post_data['billing_amount'] ) : 0;
-        $mail_after_expire    = isset( $post_data['post_expiration_settings'] ) && isset( $post_data['post_expiration_settings']['enable_mail_after_expired'] ) ? $post_data['post_expiration_settings']['enable_mail_after_expired'] : '';
-        $expiration_number    = ! empty( $post_data['expiration_number'] ) ? absint( $post_data['expiration_number'] ) : '';
-        $billing_cycle_number = ! empty( $post_data['billing_cycle_number'] ) ? sanitize_text_field( wp_unslash( $post_data['billing_cycle_number'] ) ) : 0;
-        $cycle_period         = ! empty( $post_data['cycle_period'] ) ? sanitize_text_field( wp_unslash( $post_data['cycle_period'] ) ) : '';
-        $billing_limit        = ! empty( $post_data['billing_limit'] ) ? sanitize_text_field( wp_unslash( $post_data['billing_limit'] ) ) : '';
-        $trial_duration       = ! empty( $post_data['trial_duration'] ) ? sanitize_text_field( wp_unslash( $post_data['trial_duration'] ) ) : '';
-        $trial_duration_type  = ! empty( $post_data['trial_duration_type'] ) ? sanitize_text_field( wp_unslash( $post_data['trial_duration_type'] ) ) : '';
-
-        if ( isset( $post_data['post_expiration_settings'] ) ) {
-            if ( isset( $post_data['post_expiration_settings']['expiration_time_value'] ) && isset( $post_data['post_expiration_settings']['expiration_time_type'] ) ) {
-                // Stored as a strtotime()-readable duration, e.g. "7 day". The separator must be a
-                // single space; anything else makes strtotime() fail and the post expire immediately.
-                $expiration_time = sanitize_text_field( wp_unslash( $post_data['post_expiration_settings']['expiration_time_value'] ) ) . ' ' . sanitize_text_field( wp_unslash( $post_data['post_expiration_settings']['expiration_time_type'] ) );
-            }
-
-            if ( isset( $post_data['post_expiration_settings']['enable_post_expiration'] ) && isset( $post_data['post_expiration_settings']['enable_post_expiration'] ) ) {
-                $enable_post_expir = sanitize_text_field( wp_unslash( $post_data['post_expiration_settings']['enable_post_expiration'] ) );
-            }
-
-            if ( isset( $post_data['post_expiration_settings']['expired_post_status'] ) && isset( $post_data['post_expiration_settings']['expired_post_status'] ) ) {
-                $expire_post_status = sanitize_text_field( wp_unslash( $post_data['post_expiration_settings']['expired_post_status'] ) );
-            }
-
-            if ( isset( $post_data['post_expiration_settings']['post_expiration_message'] ) && isset( $post_data['post_expiration_settings']['post_expiration_message'] ) ) {
-                $post_expire_msg = sanitize_text_field( wp_unslash( $post_data['post_expiration_settings']['post_expiration_message'] ) );
-            }
+        // Only packs: the nonce is printed by the pack editor alone.
+        if ( ! Stores::subscriptions()->is_subscription( $subscription_id ) ) {
+            return;
         }
 
-        update_post_meta( $subscription_id, '_billing_amount', $billing_amount );
-        update_post_meta( $subscription_id, '_expiration_number', $expiration_number );
-        update_post_meta( $subscription_id, '_expiration_period', sanitize_text_field( wp_unslash( $post_data['expiration_period'] ) ) );
-        update_post_meta( $subscription_id, '_recurring_pay', isset( $post_data['recurring_pay'] ) ? sanitize_text_field( wp_unslash( $post_data['recurring_pay'] ) ) : 'no' );
-        update_post_meta( $subscription_id, '_billing_cycle_number', $billing_cycle_number );
-        update_post_meta( $subscription_id, '_cycle_period', $cycle_period );
-        update_post_meta( $subscription_id, '_billing_limit', $billing_limit );
-        update_post_meta( $subscription_id, '_trial_status', isset( $post_data['trial_status'] ) ? sanitize_text_field( wp_unslash( $post_data['trial_status'] ) ) : 'no' );
-        update_post_meta( $subscription_id, '_trial_duration', $trial_duration );
-        update_post_meta( $subscription_id, '_trial_duration_type', $trial_duration_type );
-        update_post_meta( $subscription_id, '_post_type_name', array_map( 'sanitize_text_field', $post_data['post_type_name'] ) );
-        update_post_meta( $subscription_id, 'additional_cpt_options', array_map( 'sanitize_text_field', $post_data['additional_cpt_options'] ) );
-        update_post_meta( $subscription_id, '_enable_post_expiration', $enable_post_expir );
-        update_post_meta( $subscription_id, '_post_expiration_time', $expiration_time );
-        // Same number/period keys the REST save writes.
-        $expiration_parts = explode( ' ', $expiration_time );
-        update_post_meta( $subscription_id, '_post_expiration_number', isset( $expiration_parts[1] ) ? (int) $expiration_parts[0] : '' );
-        update_post_meta( $subscription_id, '_post_expiration_period', isset( $expiration_parts[1] ) ? $expiration_parts[1] : '' );
-
-        // Handle sort order field
-        $sort_order = isset( $post_data['sort_order'] ) ? absint( $post_data['sort_order'] ) : 1;
-        if ( $sort_order < 1 ) {
-            $sort_order = 1;
-        }
-        update_post_meta( $subscription_id, '_sort_order', $sort_order );
-        update_post_meta( $subscription_id, '_expired_post_status', $expire_post_status );
-        update_post_meta( $subscription_id, '_enable_mail_after_expired', $mail_after_expire );
-        update_post_meta( $subscription_id, '_post_expiration_message', $post_expire_msg );
-        update_post_meta( $subscription_id, '_total_feature_item', ( isset( $post_data['total_feature_item'] ) ? sanitize_text_field( wp_unslash( $post_data['total_feature_item'] ) ) : '' ) );
-        update_post_meta( $subscription_id, '_remove_feature_item', ( isset( $post_data['remove_feature_item'] ) ? sanitize_text_field( wp_unslash( $post_data['remove_feature_item'] ) ) : '' ) );
-
-        do_action( 'wpuf_update_subscription_pack', $subscription_id, $post_data );
+        // The subscription store writes the pack meta and fires
+        // wpuf_update_subscription_pack, as this method did (task 2.4b).
+        Stores::subscriptions()->save_from_classic( $subscription_id, wp_unslash( $_POST ) );
     }
 
     /**
