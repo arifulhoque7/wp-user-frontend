@@ -12,8 +12,9 @@
   "private": true,
   "scripts": {
     "release": "grunt release",
-    "build": "pnpm run build:css && pnpm run build:admin && pnpm run build:frontend-subscriptions && pnpm run build:ai-form-builder && pnpm run build:account && pnpm run build:admin-css && pnpm run build:user-directory && pnpm run build:blocks && pnpm run build:legacy && pnpm run build:css && pnpm run build:verify",
+    "build": "pnpm run build:css && pnpm run build:admin && pnpm run build:frontend-subscriptions && pnpm run build:ai-form-builder && pnpm run build:account && pnpm run build:admin-css && pnpm run build:user-directory && pnpm run build:blocks && pnpm run build:legacy && pnpm run build:css && pnpm run build:sanitize && pnpm run build:verify",
     "build:verify": "node bin/verify-build.mjs",
+    "build:sanitize": "node bin/sanitize-dist.mjs",
     "build:blocks": "wp-scripts build --config webpack.config.js",
     "watch:blocks": "wp-scripts start --config webpack.config.js",
     "build:legacy": "grunt less && grunt uglify",

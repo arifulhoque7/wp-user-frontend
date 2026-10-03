@@ -456,6 +456,18 @@ User Frontend uses the following third-party services to enhance frontend conten
 User Frontend uses the [Appsero](https://appsero.com) SDK to collect **optional telemetry data only with your consent**. No data is collected by default. Telemetry starts only after you opt in through the admin notice, helping us improve the plugin and troubleshoot issues faster.
 
 
+== Source Code ==
+
+The admin JavaScript and CSS shipped in this plugin are compiled from human-readable source code, published in the public repository: [github.com/weDevsOfficial/wp-user-frontend](https://github.com/weDevsOfficial/wp-user-frontend).
+
+To build the assets yourself from a checkout of the release tag:
+
+1. Install Node.js 22.22 or newer and enable pnpm (`corepack enable`).
+2. Run `pnpm install --frozen-lockfile`.
+3. Run `pnpm build`.
+
+The admin screens use the [plugin-ui](https://github.com/getdokan/plugin-ui) component library (GPL-2.0-or-later), pinned to a fixed commit in `package.json`. Every bundled file is local; the build fails if any compiled file would load a file from another site.
+
 == Installation ==
 
 

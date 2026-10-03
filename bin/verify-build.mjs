@@ -10,36 +10,9 @@
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { built, release } from './build-outputs.mjs';
 
 const root = join( dirname( fileURLToPath( import.meta.url ) ), '..' );
-
-// Output of `pnpm build`. React bundles also need their `.asset.php`
-// (dependencies + content hash, read by includes/Assets.php).
-const react = [ 'form-builder', 'forms-list-react', 'settings-react', 'subscriptions' ];
-const built = [
-    ...react.flatMap( ( name ) => [ `assets/js/${ name }.min.js`, `assets/js/${ name }.min.asset.php` ] ),
-    'assets/js/account.min.js',
-    'assets/js/ai-form-builder.min.js',
-    'assets/js/frontend-form.min.js',
-    'assets/js/frontend-subscriptions.min.js',
-    'assets/js/upload.min.js',
-    'assets/js/wpuf-user-directory-free.js',
-    'assets/js/wpuf-user-directory-free.asset.php',
-    'assets/css/admin.css',
-    'assets/css/admin/form-builder.css',
-    'assets/css/admin/forms-react.css',
-    'assets/css/ai-form-builder.min.css',
-    'assets/css/elementor-frontend-forms.css',
-    'assets/css/forms-list.min.css',
-    'assets/css/frontend-forms.css',
-    'assets/css/frontend-subscriptions.min.css',
-    'assets/css/registration-forms.css',
-    'assets/css/settings-react.css',
-    'assets/css/subscriptions.css',
-    'assets/css/subscriptions-rtl.css',
-    'assets/css/wpuf-form-builder.css',
-];
-const release = [ 'languages/wp-user-frontend.pot' ];
 
 const files = process.argv.includes( '--release' ) ? [ ...built, ...release ] : built;
 const errors = [];

@@ -9,6 +9,8 @@ export.sh
 /.DS_Store
 /bin/*
 !/bin/verify-build.mjs
+!/bin/build-outputs.mjs
+!/bin/sanitize-dist.mjs
 nbproject
 node_modules
 includes/pro
