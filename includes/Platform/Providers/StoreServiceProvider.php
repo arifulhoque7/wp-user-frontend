@@ -11,10 +11,11 @@ namespace WeDevs\Wpuf\Platform\Providers;
 use WeDevs\Wpuf\Platform\ServiceProvider;
 use WeDevs\Wpuf\Platform\Stores\FieldStore;
 use WeDevs\Wpuf\Platform\Stores\FormStore;
+use WeDevs\Wpuf\Platform\Stores\SettingsStore;
 use WeDevs\Wpuf\Platform\Stores\SubscriptionStore;
 
 /**
- * Registers the stores every form and subscription writer goes through.
+ * Registers the stores every form, subscription and settings writer goes through.
  *
  * @since WPUF_SINCE
  */
@@ -50,6 +51,13 @@ class StoreServiceProvider extends ServiceProvider {
             SubscriptionStore::class,
             function () {
                 return new SubscriptionStore();
+            }
+        );
+
+        $this->share_tagged(
+            SettingsStore::class,
+            function () {
+                return new SettingsStore();
             }
         );
     }

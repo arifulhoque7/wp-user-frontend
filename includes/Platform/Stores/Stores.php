@@ -52,6 +52,17 @@ class Stores {
     }
 
     /**
+     * Settings store
+     *
+     * @since WPUF_SINCE
+     *
+     * @return SettingsStore
+     */
+    public static function settings() {
+        return self::get( SettingsStore::class );
+    }
+
+    /**
      * Resolve a store, registering the stores first when the boot has not run yet.
      *
      * @param string $id Service id
