@@ -6,7 +6,13 @@ const { scopedPreflightStyles, isolateInsideOfContainer } = require('tailwindcss
 module.exports = {
     prefix: 'wpuf-',
     content: [
+        // Sources only: generated bundles live next to the hand-written JS in
+        // assets/js, and scanning them made the CSS depend on build order and
+        // on stale files left on disk.
         './assets/**/*.{js,jsx,ts,tsx,vue,html}',
+        '!./assets/js/**/*.min.js',
+        '!./assets/js/wpuf-user-directory-free.js',
+        '!./assets/vendor/**',
         './includes/Admin/**/*.php',
         './includes/Free/Free_Loader.php',
         './includes/Admin/template-parts/*.php',
@@ -17,10 +23,7 @@ module.exports = {
         './admin/forms-list/src/**/*.{js,jsx}',
         './templates/**/*.php',
         'wpuf-functions.php',
-        './src/**/*.{js,css}',
-        // React admin Subscriptions app (src/**/*.{js,css} above misses .jsx)
-        './src/js/subscriptions.jsx',
-        './src/js/components/**/*.jsx',
+        './src/**/*.{js,jsx,css}',
         // Free User Directory module templates
         './modules/user-directory/**/*.php',
         './modules/user-directory/views/**/*.php',
