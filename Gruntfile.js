@@ -235,6 +235,8 @@ module.exports = function( grunt) {
                     '!**/*~',
                     '!**/log.txt',
                     '!**/package-lock.json',
+                    '!**/pnpm-lock.yaml',
+                    '!pnpm-workspace.yaml',
                     '!**/appsero.json',
                     '!**/composer.lock',
                     '!**/phpcs-report.txt',
@@ -302,16 +304,16 @@ module.exports = function( grunt) {
         // is to run NPM commands through Grunt
         shell: {
             npm_build: {
-                command: 'npm run build',
+                command: 'pnpm run build',
             },
             npm_build_ai_form_builder: {
-                command: 'npm run build:ai-form-builder',
+                command: 'pnpm run build:ai-form-builder',
             },
             npm_build_form_builder_react: {
-                command: 'npm run build:form-builder',
+                command: 'pnpm run build:form-builder',
             },
             npm_build_user_directory: {
-                command: 'npm run build:user-directory',
+                command: 'pnpm run build:user-directory',
             },
             tailwind: {
                 command: function ( input, output ) {

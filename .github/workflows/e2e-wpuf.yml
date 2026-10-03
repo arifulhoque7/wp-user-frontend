@@ -77,11 +77,23 @@ jobs:
         uses: actions/checkout@v4
 
       # Use desired version of NodeJS
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      # pnpm builds git-hosted packages inside its store; a store under a
+      # node_modules path makes wp-scripts' `exclude: /node_modules/` skip their
+      # sources (FlyHR e2e.yml). Keep the store elsewhere.
+      - name: Move the pnpm store off a node_modules path
+        run: pnpm config set store-dir "$HOME/.pnpm-store"
+
       - name: Use desired version of NodeJS
         uses: actions/setup-node@v4
         with:
-            node-version: 22
-            cache: npm
+            node-version-file: .nvmrc
+            cache: pnpm
+            cache-dependency-path: |
+              pnpm-lock.yaml
+              tests/e2e/pnpm-lock.yaml
 
       # Clone wpuf-pro
       - name: Clone wpuf-pro
@@ -107,9 +119,9 @@ jobs:
           # then run the vite build. Without forms-list.min.js the reg-forms Vue app
           # never mounts and the page stays stuck on "Loading…" (RFS0001/RF0002).
           ln -sfn "$GITHUB_WORKSPACE" "$GITHUB_WORKSPACE/plugins/wp-user-frontend"
-          ( cd "$GITHUB_WORKSPACE" && npm i --legacy-peer-deps )
+          ( cd "$GITHUB_WORKSPACE" && pnpm install --frozen-lockfile )
           npm run build
-          grunt --force
+          npx grunt --force
           # Drop the self-referencing symlink now that vite is done. Leaving it
           # makes the workspace contain itself; lite's later `grunt` makepot
           # recursively scans PHP files, follows the cycle, and exhausts the
@@ -128,16 +140,16 @@ jobs:
       - name: Build wpuf-lite
         run: |
           composer i --no-dev -o
-          npm i
-          npm run build
-          grunt release --force
-          grunt --force
+          pnpm install --frozen-lockfile
+          pnpm build
+          pnpm exec grunt release --force
+          pnpm exec grunt --force
 
       # Install test dependencies with performance optimizations
       - name: Install test dependencies
         working-directory: tests/e2e
         run: |
-            npm ci --prefer-offline --no-audit --no-fund
+            pnpm install --frozen-lockfile
 
       - name: Install Plugins
         working-directory: plugins/
@@ -245,10 +257,10 @@ jobs:
           # Site reset/config first, then ONLY this group's spec files — that is
           # the whole point of the matrix. `test:all:ci` here made every job run
           # the full suite (3x the work, past the 120-min budget with workers:1).
-          npm run test:setup:ci
+          pnpm run test:setup:ci
           npx playwright test --config=playwright.config.ts --project=e2e ${{ matrix.files }}
           # REST layer is browserless and quick; run it once, in the post group.
-          if [ "${{ matrix.group }}" = "post" ]; then npm run test:api:ci; fi
+          if [ "${{ matrix.group }}" = "post" ]; then pnpm run test:api:ci; fi
         # continue-on-error: true
 
       # Upload this shard's blob report so the merge job can combine all shards
@@ -269,15 +281,25 @@ jobs:
       - name: Checkout testing repo
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      # pnpm builds git-hosted packages inside its store; a store under a
+      # node_modules path makes wp-scripts' `exclude: /node_modules/` skip their
+      # sources (FlyHR e2e.yml). Keep the store elsewhere.
+      - name: Move the pnpm store off a node_modules path
+        run: pnpm config set store-dir "$HOME/.pnpm-store"
+
       - name: Use desired version of NodeJS
         uses: actions/setup-node@v4
         with:
-          node-version: 22
-          cache: npm
+          node-version-file: .nvmrc
+          cache: pnpm
+          cache-dependency-path: tests/e2e/pnpm-lock.yaml
 
       - name: Install test dependencies
         working-directory: tests/e2e
-        run: npm ci --prefer-offline --no-audit --no-fund
+        run: pnpm install --frozen-lockfile
 
       # Download every shard's blob report into one folder
       - name: Download blob reports
@@ -289,7 +311,7 @@ jobs:
 
       - name: Merge into HTML report
         working-directory: tests/e2e
-        run: npm run merge-reports
+        run: pnpm run merge-reports
 
       # Post a pass/fail table to the run's Summary tab (restores the visible
       # sharded summary that used to be generated per-parallel-config).

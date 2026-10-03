@@ -53,6 +53,8 @@ modules/user-directory/node_modules
 /postcss.user-directory.config.js
 /package.json
 /package-lock.json
+/pnpm-lock.yaml
+/pnpm-workspace.yaml
 /composer.json
 /composer.lock
 /appsero.json

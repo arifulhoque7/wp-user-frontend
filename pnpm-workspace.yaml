@@ -1,0 +1,10 @@
+allowBuilds:
+  '@parcel/watcher': true
+  core-js: true
+  core-js-pure: true
+  esbuild: true
+  gifsicle: true
+  jpegtran-bin: true
+  optipng-bin: true
+  unrs-resolver: true
+  vue-demi: true

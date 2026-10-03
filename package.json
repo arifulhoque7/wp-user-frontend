@@ -1,9 +1,10 @@
 {
   "name": "wp-user-frontend",
   "version": "4.3.13",
+  "packageManager": "pnpm@12.8.1",
   "engines": {
-    "node": ">=22",
-    "npm": ">=10"
+    "node": ">=22.22.2",
+    "pnpm": ">=10"
   },
   "description": "A Frontend Plugin for WordPress",
   "author": "Tareq Hasan",
@@ -11,7 +12,8 @@
   "private": true,
   "scripts": {
     "release": "grunt release",
-    "build": "npm run build:css && npm run build:form-builder && npm run build:forms-list-react && npm run build:subscriptions && npm run build:frontend-subscriptions && npm run build:ai-form-builder && npm run build:account && npm run build:settings-react && npm run build:user-directory && npm run build:blocks && npm run build:legacy && npm run build:css",
+    "build": "pnpm run build:css && pnpm run build:form-builder && pnpm run build:forms-list-react && pnpm run build:subscriptions && pnpm run build:frontend-subscriptions && pnpm run build:ai-form-builder && pnpm run build:account && pnpm run build:settings-react && pnpm run build:user-directory && pnpm run build:blocks && pnpm run build:legacy && pnpm run build:css && pnpm run build:verify",
+    "build:verify": "node bin/verify-build.mjs",
     "build:blocks": "wp-scripts build --config webpack.config.js",
     "watch:blocks": "wp-scripts start --config webpack.config.js",
     "build:legacy": "grunt less && grunt uglify",
@@ -21,9 +23,9 @@
     "dev:forms-list-react": "webpack --config admin/forms-list/webpack.config.js --watch --mode=development",
     "build:subscriptions": "wp-scripts build --config webpack.subscriptions.config.js",
     "watch:subscriptions": "wp-scripts start --config webpack.subscriptions.config.js",
-    "build:settings-react": "wp-scripts build --config webpack.settings.config.js && npm run build:settings-css",
+    "build:settings-react": "wp-scripts build --config webpack.settings.config.js && pnpm run build:settings-css",
     "dev:settings-react": "wp-scripts start --config webpack.settings.config.js",
-    "build:settings-css": "npx tailwindcss -i src/css/settings.css -o assets/css/settings-react.css --config tailwind.settings.config.js --minify",
+    "build:settings-css": "tailwindcss -i src/css/settings.css -o assets/css/settings-react.css --config tailwind.settings.config.js --minify",
     "build:frontend-subscriptions": "ENTRY=frontend-subscriptions vite build",
     "build:ai-form-builder": "ENTRY=ai-form-builder vite build",
     "build:user-directory": "cd modules/user-directory && npm ci && npm run build",
