@@ -281,10 +281,13 @@ class Subscription extends WP_REST_Controller {
             );
         }
 
+        // One pack by ID: no _sort_order join, so a pack without that meta still loads.
         $args = [
             'post_status'    => 'any',
             'posts_per_page' => 1,
             'p'              => $subscription_id,
+            'meta_key'       => '', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- empty: removes the join.
+            'orderby'        => 'ID',
         ];
 
         $subscriptions = wpuf()->subscription->get_subscriptions( $args );

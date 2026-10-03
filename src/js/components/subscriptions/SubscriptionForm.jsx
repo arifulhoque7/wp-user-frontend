@@ -149,7 +149,7 @@ const SubscriptionForm = ({ mode = 'add-new', subscriptionId = null }) => {
 	if (!subscription) {
 		return (
 			<div className="wpuf-p-8 wpuf-text-center">
-				<p>{__('Loading subscription...', 'wp-user-frontend')}</p>
+				<p>{error || __('Loading subscription...', 'wp-user-frontend')}</p>
 			</div>
 		);
 	}

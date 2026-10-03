@@ -64,9 +64,9 @@ class FieldStore {
 
     /**
      * Save a form's fields as the builder sends them: new fields (`is_new`) are
-     * inserted, the others updated in place, and stored fields left out of the
-     * save are deleted, except custom taxonomy fields the builder hides while
-     * Pro is inactive.
+     * inserted, stored ones updated in place (not rewritten when unchanged), and
+     * stored fields left out of the save are deleted, except custom taxonomy
+     * fields the builder hides while Pro is inactive.
      *
      * @since WPUF_SINCE
      *
@@ -90,15 +90,27 @@ class FieldStore {
             ]
         );
 
+        $existing_ids = array_map( 'intval', $existing );
+
         foreach ( (array) $fields as $order => $field ) {
-            if ( ! empty( $field['is_new'] ) ) {
+            $stored_id = isset( $field['id'] ) ? absint( $field['id'] ) : 0;
+
+            // A field whose id is a stored field of this form is existing, also
+            // when old data carries `is_new` (sample forms stored it): it keeps
+            // its post instead of being inserted again.
+            if ( $stored_id && in_array( $stored_id, $existing_ids, true ) ) {
+                if ( ! empty( $field['is_new'] ) ) {
+                    unset( $field['is_new'], $field['id'] );
+                }
+
+                $field_id = $this->update_existing( $stored_id, $field, $order );
+            } elseif ( ! empty( $field['is_new'] ) ) {
                 unset( $field['is_new'], $field['id'] );
-                $field_id = 0;
+                $field_id = $this->write( $form_id, $field, 0, $order );
             } else {
-                $field_id = isset( $field['id'] ) ? $field['id'] : 0;
+                $field_id = $this->write( $form_id, $field, $stored_id, $order );
             }
 
-            $field_id   = $this->write( $form_id, $field, $field_id, $order );
             $kept_ids[] = $field_id;
 
             $field['id']     = $field_id;
@@ -114,6 +126,61 @@ class FieldStore {
         }
 
         return $saved;
+    }
+
+    /**
+     * Update a stored field, leaving its stored content alone when the builder
+     * sent it back unchanged (an untouched save keeps stored values): only a new
+     * position is written then.
+     *
+     * @param int   $field_id Field post id
+     * @param array $field    Submitted field
+     * @param int   $order    Position
+     *
+     * @return int|\WP_Error Field post id
+     */
+    private function update_existing( $field_id, $field, $order ) {
+        $stored = maybe_unserialize( get_post_field( 'post_content', $field_id ) );
+
+        // A stored `is_new` (sample forms) is a builder marker: rewrite in place without it.
+        if ( is_array( $stored ) && ! empty( $stored['is_new'] ) ) {
+            unset( $field['is_new'], $field['id'] );
+        } elseif ( is_array( $stored ) && $this->same_field( wp_unslash( $field ), $stored ) ) {
+            if ( (int) get_post_field( 'menu_order', $field_id ) !== (int) $order ) {
+                wp_update_post(
+                    [
+                        'ID'         => $field_id,
+                        'menu_order' => $order,
+                    ]
+                );
+            }
+
+            return $field_id;
+        }
+
+        return $this->write( get_post_field( 'post_parent', $field_id ), $field, $field_id, $order );
+    }
+
+    /**
+     * Whether a submitted field holds the stored values: the builder's own
+     * tracking keys (`id`, `is_new`) and keys it added with an empty value are
+     * not stored data.
+     *
+     * @param array $submitted Submitted field (unslashed)
+     * @param array $stored    Stored field
+     *
+     * @return bool
+     */
+    private function same_field( $submitted, $stored ) {
+        unset( $submitted['id'], $submitted['is_new'], $stored['id'], $stored['is_new'] );
+
+        foreach ( $submitted as $key => $value ) {
+            if ( ! array_key_exists( $key, $stored ) && ( '' === $value || [] === $value || null === $value ) ) {
+                unset( $submitted[ $key ] );
+            }
+        }
+
+        return $submitted === $stored;
     }
 
     /**

@@ -16,13 +16,14 @@ function isOn( val ) {
 
 /**
  * Check if a field template exists in the form fields list,
- * including inside column_field and repeat_field inner_fields.
+ * including inside the inner fields of container fields.
  *
  * @param {Array}  formFields List of form field objects.
  * @param {Array}  templates  Template names to look for.
+ * @param {RegExp} containers Container templates whose inner fields count.
  * @return {boolean}
  */
-function hasFieldTemplate( formFields, templates ) {
+function hasFieldTemplate( formFields, templates, containers = /^(column|repeat)_field$/ ) {
     for ( const field of formFields ) {
         if ( ! field || ! field.template ) {
             continue;
@@ -33,7 +34,7 @@ function hasFieldTemplate( formFields, templates ) {
         }
 
         // Check inside column/repeat fields
-        if ( /^(column|repeat)_field$/.test( field.template ) && field.inner_fields ) {
+        if ( containers.test( field.template ) && field.inner_fields ) {
             for ( const colKey of Object.keys( field.inner_fields ) ) {
                 const innerFields = field.inner_fields[ colKey ];
 
@@ -69,7 +70,8 @@ function validateRequiredFields( formFields, formType ) {
     }
 
     if ( formType === 'wpuf_profile' ) {
-        if ( ! hasFieldTemplate( formFields, [ 'user_email' ] ) ) {
+        // Develop's registration check looked inside column fields only.
+        if ( ! hasFieldTemplate( formFields, [ 'user_email' ], /^column_field$/ ) ) {
             return __( 'Form must contain a User Email field.', 'wp-user-frontend' );
         }
     }
