@@ -15,23 +15,23 @@ const ProTooltip = ( { isPro = true } ) => {
 	return (
 		<div
 			role="tooltip"
-			className="wpuf-hidden wpuf-group-hover:wpuf-block wpuf-absolute wpuf-z-50 wpuf-w-64 wpuf-rounded-md wpuf-bg-gray-900 wpuf-px-3 wpuf-py-2 wpuf-text-xs wpuf-text-white wpuf-shadow-lg wpuf-left-0 wpuf-top-full wpuf-mt-1"
+			className="hidden wpuf-group-hover:wpuf-block absolute z-50 w-64 rounded-md bg-gray-900 px-3 py-2 text-xs text-white shadow-lg left-0 top-full mt-1"
 		>
-			<div className="wpuf-relative">
-				<p className="wpuf-m-0 wpuf-mb-2">
+			<div className="relative">
+				<p className="m-0 mb-2">
 					{ __( 'This feature is available in Pro version', 'wp-user-frontend' ) }
 				</p>
 				<a
 					href={ wpufSubscriptions.upgradeUrl || '#' }
 					target="_blank"
 					rel="noopener noreferrer"
-					className="wpuf-text-emerald-400 wpuf-hover:wpuf-text-emerald-300 wpuf-font-medium wpuf-underline"
+					className="text-emerald-400 wpuf-hover:wpuf-text-emerald-300 font-medium underline"
 				>
 					{ __( 'Upgrade to Pro', 'wp-user-frontend' ) }
 					&rarr;
 				</a>
 				{/* Arrow */}
-				<div className="wpuf-absolute -wpuf-top-1 wpuf-left-4 wpuf-w-2 wpuf-h-2 wpuf-rotate-45 wpuf-bg-gray-900" />
+				<div className="absolute -top-1 left-4 w-2 h-2 rotate-45 bg-gray-900" />
 			</div>
 		</div>
 	);

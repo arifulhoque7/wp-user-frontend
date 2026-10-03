@@ -24,8 +24,8 @@ const ListHeader = ( { message } ) => {
 
 	return (
 		<>
-			<h3 className="wpuf-text-lg wpuf-font-bold wpuf-m-0">{ getStatusTitle( message?.status || 'all' ) }</h3>
-			<p className="wpuf-text-sm wpuf-text-gray-500 wpuf-mb-0">{ message?.text || __( 'Explore and manage all subscriptions in one place', 'wp-user-frontend' ) }</p>
+			<h3 className="text-lg font-bold m-0">{ getStatusTitle( message?.status || 'all' ) }</h3>
+			<p className="text-sm text-gray-500 mb-0">{ message?.text || __( 'Explore and manage all subscriptions in one place', 'wp-user-frontend' ) }</p>
 		</>
 	);
 };

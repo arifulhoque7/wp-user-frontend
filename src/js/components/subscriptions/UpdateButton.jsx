@@ -11,18 +11,18 @@ const UpdateButton = ( {
 	onSaveDraft,
 } ) => {
 	return (
-		<div className="wpuf-relative">
+		<div className="relative">
 			<button
 				type="button"
 				disabled={ isUpdating }
-				className={ `wpuf-peer wpuf-inline-flex wpuf-justify-between wpuf-items-center wpuf-cursor-pointer wpuf-bg-primary hover:wpuf-bg-primaryHover wpuf-text-white wpuf-font-medium wpuf-text-base wpuf-py-2 wpuf-px-5 wpuf-rounded-md min-w-[122px] ${
-					isUpdating ? 'wpuf-cursor-not-allowed wpuf-bg-gray-50' : ''
+				className={ `peer inline-flex justify-between items-center cursor-pointer bg-primary hover:bg-primaryHover text-white font-medium text-base py-2 px-5 rounded-md min-w-[122px] ${
+					isUpdating ? 'cursor-not-allowed bg-gray-50' : ''
 				}` }
 				onClick={ onPublish }
 			>
 				{ buttonText }
 				<svg
-					className="wpuf-rotate-180 wpuf-w-3 wpuf-h-3 shrink-0 wpuf-ml-4"
+					className="rotate-180 w-3 h-3 ml-4"
 					data-accordion-icon=""
 					aria-hidden="true"
 					xmlns="http://www.w3.org/2000/svg"
@@ -38,12 +38,12 @@ const UpdateButton = ( {
 					/>
 				</svg>
 			</button>
-			<div className="wpuf-hidden hover:wpuf-block peer-hover:wpuf-block wpuf-cursor-pointer wpuf-w-44 wpuf-z-40 wpuf-bg-white wpuf-border border-[#DBDBDB] wpuf-absolute wpuf-z-10 wpuf-shadow wpuf-right-0 wpuf-rounded-md after:content-[''] before:content-[''] after:wpuf-absolute before:wpuf-absolute after:w-[13px] before:w-[70%] before:-right-[1px] after:h-[13px] before:wpuf-h-3 before:wpuf-mt-3 after:top-[-7px] before:wpuf--top-6 after:right-[1.4rem] after:z-[-1] after:wpuf-bg-white after:wpuf-border after:border-[#DBDBDB] after:!rotate-45 after:wpuf-border-r-0 after:wpuf-border-b-0">
+			<div className="hidden hover:block peer-hover:block cursor-pointer w-44 z-40 bg-white border border-[#DBDBDB] absolute z-10 shadow-sm right-0 rounded-md after:content-[''] before:content-[''] after:absolute before:absolute after:w-[13px] before:w-[70%] before:-right-[1px] after:h-[13px] before:h-3 before:mt-3 after:top-[-7px] before:-top-6 after:right-[1.4rem] after:z-[-1] after:bg-white after:border after:border-[#DBDBDB] after:!rotate-45 after:border-r-0 after:border-b-0">
 				<button
 					type="button"
 					onClick={ onPublish }
-					className={ `wpuf-flex wpuf-w-full wpuf-py-3 wpuf-items-center wpuf-px-4 wpuf-text-sm wpuf-font-medium wpuf-text-gray-700 hover:wpuf-bg-primaryHover hover:wpuf-text-white wpuf-rounded-t-md ${
-						isUpdating ? 'wpuf-cursor-not-allowed wpuf-bg-gray-50' : ''
+					className={ `flex w-full py-3 items-center px-4 text-sm font-medium text-gray-700 hover:bg-primaryHover hover:text-white rounded-t-md ${
+						isUpdating ? 'cursor-not-allowed bg-gray-50' : ''
 					}` }
 					disabled={ isUpdating }
 				>
@@ -52,8 +52,8 @@ const UpdateButton = ( {
 				<button
 					type="button"
 					onClick={ onSaveDraft }
-					className={ `wpuf-flex wpuf-w-full wpuf-py-3 wpuf-items-center wpuf-px-4 wpuf-text-sm wpuf-font-medium wpuf-text-gray-700 hover:wpuf-bg-primaryHover hover:wpuf-text-white wpuf-rounded-b-md ${
-						isUpdating ? 'wpuf-cursor-not-allowed wpuf-bg-gray-50' : ''
+					className={ `flex w-full py-3 items-center px-4 text-sm font-medium text-gray-700 hover:bg-primaryHover hover:text-white rounded-b-md ${
+						isUpdating ? 'cursor-not-allowed bg-gray-50' : ''
 					}` }
 					disabled={ isUpdating }
 				>

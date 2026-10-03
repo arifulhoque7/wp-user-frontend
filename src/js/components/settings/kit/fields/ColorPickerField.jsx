@@ -35,7 +35,7 @@ export default function ColorPickerField( { field, name, sectionId, value, onCha
                 { field.help_text && <HelpTextIcon text={ field.help_text } /> }
             </div>
             <div className="relative ml-2 flex gap-2.5">
-                <div className="flex justify-center items-center [&>:not([hidden])~:not([hidden])]:ml-1 px-2 py-1.5 rounded-md bg-white border cursor-pointer relative">
+                <div className="flex justify-center items-center [&>:not([hidden])~:not([hidden])]:ml-1 [&>:not([hidden])~:not([hidden])]:mr-0 px-2 py-1.5 rounded-md bg-white border cursor-pointer relative">
                     <div className="w-6 h-6 overflow-hidden border border-gray-200 rounded-full flex justify-center items-center">
                         <input
                             type="color"

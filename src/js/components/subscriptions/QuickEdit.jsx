@@ -127,63 +127,63 @@ const QuickEdit = () => {
 	return (
 		<>
 			{/* Backdrop */}
-			<div className="wpuf-fixed wpuf-inset-0 wpuf-z-10 wpuf-bg-black wpuf-bg-opacity-50" />
+			<div className="fixed inset-0 z-10 bg-black/50" />
 
 			{/* Modal */}
-			<div className="wpuf-fixed wpuf-inset-0 wpuf-z-50 wpuf-flex wpuf-items-center wpuf-justify-center wpuf-p-4">
-				<div className="wpuf-mx-auto wpuf-w-full wpuf-max-w-lg wpuf-rounded-lg wpuf-bg-white wpuf-shadow-xl wpuf-p-6">
+			<div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+				<div className="mx-auto w-full max-w-lg rounded-lg bg-white shadow-xl p-6">
 					{/* Plan Name Field */}
-					<div className="wpuf-px-2">
-						<label htmlFor="plan-name" className="wpuf-block wpuf-text-sm wpuf-font-medium wpuf-leading-6 wpuf-text-gray-900">
+					<div className="px-2">
+						<label htmlFor="plan-name" className="block text-sm font-medium leading-6 text-gray-900">
 							{ __( 'Plan name', 'wp-user-frontend' ) }
 						</label>
-						<div className="wpuf-relative wpuf-mt-2 wpuf-rounded-md wpuf-shadow-sm">
+						<div className="relative mt-2 rounded-md shadow-xs">
 							<input
 								type="text"
 								id="plan-name"
 								value={ title }
 								onChange={ ( e ) => setTitle( e.target.value ) }
-								className={ `wpuf-w-full wpuf-rounded-md wpuf-bg-white wpuf-py-1.5 wpuf-pl-3 wpuf-pr-10 wpuf-shadow-sm focus:wpuf-outline-none focus:wpuf-ring-1 sm:wpuf-text-sm ${
+								className={ `w-full rounded-md bg-white py-1.5 pl-3 pr-10 shadow-xs focus:outline-hidden focus:ring-1 sm:text-sm ${
 									errors?.planName
-										? '!wpuf-border-red-500 wpuf-ring-red-300 placeholder:wpuf-text-red-300 !wpuf-text-red-900 focus:wpuf-ring-red-500 wpuf-border-2'
-										: 'wpuf-ring-gray-300 focus:wpuf-ring-blue-500 wpuf-border-gray-300'
+										? 'border-red-500! ring-red-300 placeholder:text-red-300 text-red-900! focus:ring-red-500 border-2'
+										: 'ring-gray-300 focus:ring-blue-500 border-gray-300'
 								}` }
 								aria-invalid={ errors?.planName ? 'true' : 'false' }
 							/>
 							{ errors?.planName && (
-								<div className="wpuf-pointer-events-none wpuf-absolute wpuf-inset-y-0 wpuf-right-0 wpuf-flex wpuf-items-center wpuf-pr-3">
-									<ExclamationCircleIcon className="wpuf-h-5 wpuf-w-5 wpuf-text-red-500" aria-hidden="true" />
+								<div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+									<ExclamationCircleIcon className="h-5 w-5 text-red-500" aria-hidden="true" />
 								</div>
 							) }
 						</div>
 						{ errors?.planName && (
-							<p className="wpuf-mt-2 wpuf-text-sm wpuf-text-red-600" id="plan-name-error">
+							<p className="mt-2 text-sm text-red-600" id="plan-name-error">
 								{ errors?.planName?.message }
 							</p>
 						) }
 					</div>
 
 					{/* Date Field */}
-					<div className="wpuf-px-2 wpuf-mt-4">
-						<label htmlFor="post-date" className="wpuf-block wpuf-text-sm wpuf-font-medium wpuf-leading-6 wpuf-text-gray-900">
+					<div className="px-2 mt-4">
+						<label htmlFor="post-date" className="block text-sm font-medium leading-6 text-gray-900">
 							{ __( 'Date', 'wp-user-frontend' ) }
 						</label>
-						<div className="wpuf-relative wpuf-mt-2 wpuf-rounded-md wpuf-shadow-sm">
+						<div className="relative mt-2 rounded-md shadow-xs">
 							<input
 								type="datetime-local"
 								id="post-date"
 								value={ formatDateTimeForInput( date ) }
 								onChange={ ( e ) => setDate( e.target.value ) }
-								className={ `wpuf-w-full wpuf-rounded-md wpuf-bg-white wpuf-py-1.5 wpuf-pl-3 wpuf-pr-3 wpuf-shadow-sm focus:wpuf-outline-none focus:wpuf-ring-1 sm:wpuf-text-sm ${
+								className={ `w-full rounded-md bg-white py-1.5 pl-3 pr-3 shadow-xs focus:outline-hidden focus:ring-1 sm:text-sm ${
 									errors?.date
-										? '!wpuf-border-red-500 wpuf-ring-red-300 placeholder:wpuf-text-red-300 !wpuf-text-red-900 focus:wpuf-ring-red-500 wpuf-border-2'
-										: 'wpuf-ring-gray-300 focus:wpuf-ring-blue-500 wpuf-border-gray-300'
+										? 'border-red-500! ring-red-300 placeholder:text-red-300 text-red-900! focus:ring-red-500 border-2'
+										: 'ring-gray-300 focus:ring-blue-500 border-gray-300'
 								}` }
 								aria-invalid={ errors?.date ? 'true' : 'false' }
 							/>
 						</div>
 						{ errors?.date && (
-							<p className="wpuf-mt-2 wpuf-text-sm wpuf-text-red-600" id="date-error">
+							<p className="mt-2 text-sm text-red-600" id="date-error">
 								{ __( 'Not a valid date', 'wp-user-frontend' ) }
 							</p>
 						) }
@@ -191,13 +191,13 @@ const QuickEdit = () => {
 
 					{/* Update Error */}
 					{ updateError && updateError.status && (
-						<div className="wpuf-px-2 wpuf-mt-4">
-							<p className="wpuf-mt-2 wpuf-text-xs wpuf-text-red-600">{ updateError.message }</p>
+						<div className="px-2 mt-4">
+							<p className="mt-2 text-xs text-red-600">{ updateError.message }</p>
 						</div>
 					) }
 
 					{/* Actions */}
-					<div className="wpuf-mt-6 wpuf-flex wpuf-flex-row-reverse wpuf-gap-3">
+					<div className="mt-6 flex flex-row-reverse gap-3">
 						<UpdateButton
 							isUpdating={ isUpdating }
 							onPublish={ handlePublish }
@@ -207,8 +207,8 @@ const QuickEdit = () => {
 							type="button"
 							onClick={ handleCancel }
 							disabled={ isUpdating }
-							className={ `wpuf-rounded-lg wpuf-bg-white wpuf-px-3 wpuf-py-2 wpuf-text-sm wpuf-font-semibold wpuf-text-gray-900 wpuf-shadow-sm wpuf-ring-1 wpuf-ring-inset wpuf-ring-gray-300 hover:wpuf-bg-gray-50${
-								isUpdating ? ' wpuf-cursor-not-allowed wpuf-bg-gray-50' : ''
+							className={ `rounded-lg bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 hover:bg-gray-50${
+								isUpdating ? ' cursor-not-allowed bg-gray-50' : ''
 							}` }
 						>
 							{ __( 'Cancel', 'wp-user-frontend' ) }

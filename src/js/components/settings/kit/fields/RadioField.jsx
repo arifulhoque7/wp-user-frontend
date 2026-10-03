@@ -22,7 +22,7 @@ export default function RadioField( { field, name, value, onChange, inline = fal
                 ) }
                 { field.help_text && <HelpTextIcon text={ field.help_text } /> }
             </div>
-            <div className={ inline ? 'flex gap-6' : '[&>:not([hidden])~:not([hidden])]:mt-2' }>
+            <div className={ inline ? 'flex gap-6' : '[&>:not([hidden])~:not([hidden])]:mt-2 [&>:not([hidden])~:not([hidden])]:mb-0' }>
                 { Object.entries( options ).map( ( [ optValue, optLabel ] ) => (
                     <label key={ optValue } className="flex items-center gap-2 cursor-pointer">
                         <input

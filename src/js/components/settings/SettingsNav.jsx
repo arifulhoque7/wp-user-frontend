@@ -50,7 +50,7 @@ export default function SettingsNav( { ia, activeTab, onSelect, search, onSearch
                     </span>
                 ) }
             </div>
-            <nav className="[&>:not([hidden])~:not([hidden])]:mt-1">
+            <nav className="[&>:not([hidden])~:not([hidden])]:mt-1 [&>:not([hidden])~:not([hidden])]:mb-0">
                 { ia.map( ( tab ) => (
                     <button
                         type="button"

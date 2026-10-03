@@ -20,30 +20,30 @@ const SubscriptionSubsection = ( { subSection, fields, subscription, onFieldChan
 	const wpufSubscriptions = window.wpufSubscriptions || {};
 
 	return (
-		<div className="wpuf-border wpuf-border-gray-200 wpuf-rounded-xl wpuf-mt-4 wpuf-mb-4">
+		<div className="border border-gray-200 rounded-xl mt-4 mb-4">
 			{/* Header */}
-			<h2 className="wpuf-m-0">
+			<h2 className="m-0">
 				<button
 					type="button"
 					onClick={ () => setIsClosed( ! isClosed ) }
-					className={ `wpuf-flex wpuf-items-center wpuf-justify-between wpuf-w-full wpuf-p-4 wpuf-font-medium rtl:wpuf-text-right wpuf-text-gray-500 wpuf-bg-gray-100 wpuf-gap-3 ${ isClosed ? 'wpuf-rounded-xl' : 'wpuf-rounded-t-xl' }` }
+					className={ `flex items-center justify-between w-full p-4 font-medium rtl:text-right text-gray-500 bg-gray-100 gap-3 ${ isClosed ? 'rounded-xl' : 'rounded-t-xl' }` }
 				>
-					<span className="wpuf-flex">
+					<span className="flex">
 						{ subSection.label }
 						{ subSection.sub_label && (
-							<span className="wpuf-relative wpuf-m-0 wpuf-p-0 wpuf-ml-2 wpuf-mt-[1px] wpuf-italic wpuf-text-[11px] wpuf-text-gray-400">
+							<span className="relative m-0 p-0 ml-2 mt-[1px] italic text-[11px] text-gray-400">
 								{ subSection.sub_label }
 							</span>
 						) }
 						{ subSection.is_pro && (
-							<span className="pro-icon-title wpuf-relative wpuf-group wpuf-ml-2">
+							<span className="pro-icon-title relative group ml-2">
 								<ProBadge />
 								<ProTooltip />
 							</span>
 						) }
 					</span>
 					<svg
-						className={ `wpuf-w-3 wpuf-h-3 shrink-0 ${ isClosed ? 'wpuf-rotate-90' : 'wpuf-rotate-180' }` }
+						className={ `w-3 h-3 shrink-0 ${ isClosed ? 'rotate-90' : 'rotate-180' }` }
 														data-accordion-icon
 														aria-hidden="true"
 														xmlns="http://www.w3.org/2000/svg"
@@ -81,11 +81,11 @@ const SubscriptionSubsection = ( { subSection, fields, subscription, onFieldChan
 
 					{/* Notice */}
 					{ subSection.notice && (
-						<div className="wpuf-rounded-b-xl wpuf-bg-yellow-50 wpuf-p-4">
-							<div className="wpuf-flex wpuf-items-center">
-								<div className="wpuf-flex-shrink-0">
+						<div className="rounded-b-xl bg-yellow-50 p-4">
+							<div className="flex items-center">
+								<div className="shrink-0">
 									<svg
-										className="wpuf-h-5 wpuf-w-5 wpuf-text-yellow-400"
+										className="h-5 w-5 text-yellow-400"
 										viewBox="0 0 20 20"
 										fill="currentColor"
 														aria-hidden="true"
@@ -97,8 +97,8 @@ const SubscriptionSubsection = ( { subSection, fields, subscription, onFieldChan
 										/>
 									</svg>
 								</div>
-								<div className="wpuf-ml-3">
-									<div className="wpuf-mt-2 wpuf-text-sm wpuf-text-yellow-700">
+								<div className="ml-3">
+									<div className="mt-2 text-sm text-yellow-700">
 										<p dangerouslySetInnerHTML={ { __html: subSection.notice.message } } />
 									</div>
 								</div>

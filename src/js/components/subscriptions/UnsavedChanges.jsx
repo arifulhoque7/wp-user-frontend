@@ -12,8 +12,8 @@ const UnsavedChanges = ({ onDiscard, onContinue }) => {
 			onRequestClose={onContinue}
 			className="wpuf-unsaved-changes-modal"
 		>
-			<div className="wpuf-p-4">
-				<p className="wpuf-text-sm wpuf-text-gray-500 wpuf-mb-6">
+			<div className="p-4">
+				<p className="text-sm text-gray-500 mb-6">
 					{__(
 						'You have unsaved changes in your current subscription.',
 						'wp-user-frontend'
@@ -25,12 +25,12 @@ const UnsavedChanges = ({ onDiscard, onContinue }) => {
 					)}
 				</p>
 
-				<div className="wpuf-flex wpuf-justify-end wpuf-space-x-3">
+				<div className="flex justify-end [&>:not([hidden])~:not([hidden])]:ml-3 [&>:not([hidden])~:not([hidden])]:mr-0">
 					<ButtonGroup>
 						<Button
 							variant="secondary"
 							onClick={onContinue}
-							className="wpuf-mr-2"
+							className="mr-2"
 						>
 							{__('Continue Editing', 'wp-user-frontend')}
 						</Button>

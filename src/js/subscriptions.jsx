@@ -27,7 +27,6 @@ import './stores-react/quickEdit';
 import './stores-react/router';
 
 // Import styles
-import '../css/subscriptions.css';
 
 // Signal to Pro and third-party plugins that stores are registered and ready
 doAction( 'wpuf.subscription.init' );
@@ -107,9 +106,9 @@ const SubscriptionsApp = () => {
                 allCount={allCount}
                 onAddSubscription={action !== 'edit' && action !== 'new' ? handleAddSubscription : null}
             />
-            <div className={`wpuf-flex wpuf-pt-[40px] wpuf-px-[20px] ${isUnsavedPopupOpen ? 'wpuf-blur' : ''}`}>
+            <div className={`flex pt-[40px] px-[20px] ${isUnsavedPopupOpen ? 'blur-sm' : ''}`}>
                 {/* Left Sidebar */}
-                <div className="wpuf-basis-1/5 wpuf-border-r-2 wpuf-border-gray-200">
+                <div className="basis-1/5 border-r-2 border-gray-200">
                     <SidebarMenu
                         currentSubscriptionStatus={status}
                         allCount={allCount}
@@ -119,7 +118,7 @@ const SubscriptionsApp = () => {
                 </div>
 
                 {/* Main Content */}
-                <div className="wpuf-basis-4/5">
+                <div className="basis-4/5">
                     {action === 'edit' || action === 'new' ? (
                         <SubscriptionForm
                             mode={action === 'new' ? 'add-new' : 'edit'}

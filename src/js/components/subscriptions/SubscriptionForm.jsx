@@ -148,16 +148,16 @@ const SubscriptionForm = ({ mode = 'add-new', subscriptionId = null }) => {
 
 	if (!subscription) {
 		return (
-			<div className="wpuf-p-8 wpuf-text-center">
+			<div className="p-8 text-center">
 				<p>{error || __('Loading subscription...', 'wp-user-frontend')}</p>
 			</div>
 		);
 	}
 
 	return (
-		<div className="wpuf-px-12">
+		<div className="px-12">
 			{/* Header */}
-			<h3 className="wpuf-text-lg wpuf-font-bold wpuf-mb-0">
+			<h3 className="text-lg font-bold mb-0">
 				{mode === 'edit'
 					? __('Edit Subscription', 'wp-user-frontend')
 					: __('New Subscription', 'wp-user-frontend')}
@@ -165,7 +165,7 @@ const SubscriptionForm = ({ mode = 'add-new', subscriptionId = null }) => {
 
 			{/* Error message */}
 			{error && (
-				<div className="wpuf-p-4 wpuf-mb-4 wpuf-bg-red-100 wpuf-border wpuf-border-red-400 wpuf-text-red-700 wpuf-rounded">
+				<div className="p-4 mb-4 bg-red-100 border border-red-400 text-red-700 rounded-sm">
 					{error}
 				</div>
 			)}
@@ -184,7 +184,7 @@ const SubscriptionForm = ({ mode = 'add-new', subscriptionId = null }) => {
 			/>
 
 			{/* Action buttons */}
-			<div className="wpuf-flex wpuf-flex-row-reverse wpuf-mt-8 wpuf-text-end">
+			<div className="flex flex-row-reverse mt-8 text-end">
 				<UpdateButton
 					buttonText={mode === 'edit' ? __('Update', 'wp-user-frontend') : __('Save', 'wp-user-frontend')}
 					isUpdating={isUpdating || isSaving}
@@ -194,7 +194,7 @@ const SubscriptionForm = ({ mode = 'add-new', subscriptionId = null }) => {
 				<button
 					type="button"
 					onClick={handleCancel}
-					className="wpuf-mr-[10px] wpuf-rounded-md wpuf-bg-white wpuf-px-3 wpuf-py-2 wpuf-text-sm wpuf-font-semibold wpuf-text-gray-900 wpuf-shadow-sm wpuf-ring-1 wpuf-ring-inset wpuf-ring-gray-300 hover:wpuf-bg-gray-50"
+					className="mr-[10px] rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
 				>
 					{__('Cancel', 'wp-user-frontend')}
 				</button>

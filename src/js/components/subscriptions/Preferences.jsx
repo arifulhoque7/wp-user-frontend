@@ -70,31 +70,31 @@ const Preferences = () => {
 	}, []);
 
 	return (
-		<div className="wpuf-p-10 wpuf-max-w-4xl">
-			<div className="wpuf-mb-6">
-				<h2 className="wpuf-text-2xl wpuf-font-semibold wpuf-text-gray-900 wpuf-mb-2">
+		<div className="p-10 max-w-4xl">
+			<div className="mb-6">
+				<h2 className="text-2xl font-semibold text-gray-900 mb-2">
 					{__('Subscription Preferences', 'wp-user-frontend')}
 				</h2>
-				<p className="wpuf-text-sm wpuf-text-gray-600">
+				<p className="text-sm text-gray-600">
 					{__('Configure subscription appearance preferences', 'wp-user-frontend')}
 				</p>
 			</div>
 
 			<div>
-				<div className="wpuf-space-y-6">
+				<div className="[&>:not([hidden])~:not([hidden])]:mt-6 [&>:not([hidden])~:not([hidden])]:mb-0">
 					{/* Button Appearance Section */}
 					<div>
-						<h3 className="wpuf-text-lg wpuf-font-medium wpuf-text-gray-900 wpuf-mb-4">
+						<h3 className="text-lg font-medium text-gray-900 mb-4">
 							{__('Color Settings', 'wp-user-frontend')}
 						</h3>
 
 						<div>
-							<div className="wpuf-flex wpuf-items-center wpuf-mb-1">
-								<label className="wpuf-text-sm wpuf-font-medium wpuf-text-gray-700">
+							<div className="flex items-center mb-1">
+								<label className="text-sm font-medium text-gray-700">
 									{__('Button Color', 'wp-user-frontend')}
 								</label>
 								<span
-									className="wpuf-tooltip before:wpuf-bg-gray-700 before:wpuf-text-zinc-50 after:wpuf-border-t-gray-700 after:wpuf-border-x-transparent wpuf-cursor-pointer wpuf-ml-2 wpuf-z-10"
+									className="wpuf-tooltip before:bg-gray-700 before:text-zinc-50 after:border-t-gray-700 after:border-x-transparent cursor-pointer ml-2 z-10"
 									data-tip={__('Custom color for subscription buttons. Leave empty to use the default primary color from theme.', 'wp-user-frontend')}
 								>
 									<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none">
@@ -108,34 +108,34 @@ const Preferences = () => {
 									</svg>
 								</span>
 							</div>
-							<div className="wpuf-flex wpuf-items-center wpuf-gap-4">
-								<div className="wpuf-flex wpuf-flex-col wpuf-gap-2">
-									<div className="wpuf-flex wpuf-items-center wpuf-gap-2">
+							<div className="flex items-center gap-4">
+								<div className="flex flex-col gap-2">
+									<div className="flex items-center gap-2">
 										<input
 											value={buttonColor}
 											onChange={handleColorInputChange}
 											type="color"
-											className="wpuf-w-12 wpuf-h-10 wpuf-rounded-md !wpuf-bg-transparent !wpuf-border-0 wpuf-cursor-pointer"
+											className="w-12 h-10 rounded-md bg-transparent! border-0! cursor-pointer"
 										/>
 										<input
 											value={buttonColor}
 											onChange={handleTextInputChange}
 											type="text"
 											placeholder={__('Default', 'wp-user-frontend')}
-											className="wpuf-rounded-md wpuf-border-gray-300 wpuf-shadow-sm focus:wpuf-border-primary focus:wpuf-ring-primary wpuf-text-sm wpuf-w-32"
+											className="rounded-md border-gray-300 shadow-xs focus:border-primary focus:ring-primary text-sm w-32"
 										/>
 										{buttonColor && (
 											<button
 												type="button"
 												onClick={handleClearColor}
-												className="wpuf-text-xs wpuf-text-gray-500 hover:wpuf-text-gray-700 wpuf-underline"
+												className="text-xs text-gray-500 hover:text-gray-700 underline"
 											>
 												{__('Clear', 'wp-user-frontend')}
 											</button>
 										)}
 									</div>
 								</div>
-								<div className="wpuf-ml-4 wpuf-w-32">
+								<div className="ml-4 w-32">
 									<button
 										type="button"
 										style={buttonColor ? { backgroundColor: buttonColor } : { backgroundColor: "#079669" }}
@@ -149,25 +149,25 @@ const Preferences = () => {
 												e.target.style.filter = 'brightness(1)';
 											}
 										}}
-										className="wpuf-subscription-buy-btn wpuf-block wpuf-w-full wpuf-rounded-md wpuf-px-3 wpuf-py-2 wpuf-text-center wpuf-text-sm wpuf-font-semibold wpuf-text-white wpuf-shadow-sm wpuf-ring-0 wpuf-transition-all wpuf-duration-200 wpuf-leading-6"
+										className="wpuf-subscription-buy-btn block w-full rounded-md px-3 py-2 text-center text-sm font-semibold text-white shadow-xs ring-0 transition-all duration-200 leading-6"
 									>
 										{__('Buy Now', 'wp-user-frontend')}
 									</button>
 								</div>
 							</div>
-							<p className="wpuf-text-xs wpuf-text-gray-500 wpuf-mt-2">
+							<p className="text-xs text-gray-500 mt-2">
 								{__('Leave empty to use the default primary color from your Tailwind configuration.', 'wp-user-frontend')}
 							</p>
 						</div>
 					</div>
 
 					{/* Save Button */}
-					<div className="wpuf-pt-6 wpuf-flex wpuf-justify-end">
+					<div className="pt-6 flex justify-end">
 						<button
 							onClick={handleSave}
 							disabled={isSaving}
 							type="button"
-							className="wpuf-rounded-md wpuf-bg-primary wpuf-px-4 wpuf-py-2 wpuf-text-sm wpuf-font-semibold wpuf-text-white wpuf-shadow-sm hover:wpuf-bg-primaryHover focus-visible:wpuf-outline focus-visible:wpuf-outline-2 focus-visible:wpuf-outline-offset-2 focus-visible:wpuf-outline-primary disabled:wpuf-opacity-50"
+							className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white shadow-xs hover:bg-primaryHover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50"
 						>
 							{isSaving ? __('Saving...', 'wp-user-frontend') : __('Save Preferences', 'wp-user-frontend')}
 						</button>

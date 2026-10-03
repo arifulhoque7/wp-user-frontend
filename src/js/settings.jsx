@@ -224,7 +224,7 @@ const SettingsApp = () => {
                 <div className="px-[32px] pt-[32px] pb-[100px]">
                     <div className="flex animate-pulse gap-8 rounded-lg border border-gray-200 bg-white p-8 shadow-xs">
                         {/* Left nav skeleton */}
-                        <div className="w-[280px] shrink-0 [&>:not([hidden])~:not([hidden])]:mt-3">
+                        <div className="w-[280px] shrink-0 [&>:not([hidden])~:not([hidden])]:mt-3 [&>:not([hidden])~:not([hidden])]:mb-0">
                             <div className="h-[42px] rounded-md bg-gray-100" />
                             { Array.from( { length: 8 } ).map( ( _, i ) => (
                                 <div key={ i } className="h-10 rounded-md bg-gray-100" />
@@ -234,7 +234,7 @@ const SettingsApp = () => {
                         <div className="min-w-0 flex-1 border-l border-gray-200 pl-8">
                             <div className="h-7 w-44 rounded-sm bg-gray-200" />
                             <div className="my-8 border-b border-gray-200" />
-                            <div className="[&>:not([hidden])~:not([hidden])]:mt-6">
+                            <div className="[&>:not([hidden])~:not([hidden])]:mt-6 [&>:not([hidden])~:not([hidden])]:mb-0">
                                 { Array.from( { length: 5 } ).map( ( _, i ) => (
                                     <div key={ i }>
                                         <div className="mb-2 h-4 w-32 rounded-sm bg-gray-100" />

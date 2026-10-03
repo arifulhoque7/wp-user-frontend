@@ -107,7 +107,8 @@ class AdminScreensTest extends WP_UnitTestCase {
         $this->assertSame( '', $settings->body_class(), 'classic settings screen keeps the plain body' );
         unset( $_GET['wpuf_settings_ui'] );
 
-        $this->assertSame( '', ( new Subscriptions() )->body_class(), 'screens without the Tailwind 4 sheet add nothing' );
+        $this->assertSame( 'wpuf-admin-react', ( new Subscriptions() )->body_class() );
+        $this->assertSame( '', ( new PostFormsList() )->body_class(), 'screens without the Tailwind 4 sheet add nothing' );
     }
 
     public function test_registry_load_adds_the_body_class_filter() {

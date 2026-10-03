@@ -28,6 +28,17 @@ class Subscriptions extends Screen {
     }
 
     /**
+     * The React subscriptions screen scopes its Tailwind utilities to this class.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return string
+     */
+    public function body_class() {
+        return 'wpuf-admin-react';
+    }
+
+    /**
      * Load step: the `wpuf_load_subscription_page` hook (assets, notices, footer).
      *
      * @since WPUF_SINCE

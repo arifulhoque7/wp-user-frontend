@@ -13,7 +13,7 @@ const ProBadge = ( { isPro = false } ) => {
 	}
 
 	return (
-		<span className="wpuf-ml-2 wpuf-inline-flex wpuf-items-center wpuf-rounded-md wpuf-bg-emerald-100 wpuf-px-2 wpuf-py-0.5 wpuf-text-xs wpuf-font-medium wpuf-text-emerald-800 wpuf-ring-1 wpuf-ring-inset wpuf-ring-emerald-600/20">
+		<span className="ml-2 inline-flex items-center rounded-md bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800 ring-1 ring-inset ring-emerald-600/20">
 			{ __( 'Pro', 'wp-user-frontend' ) }
 		</span>
 	);

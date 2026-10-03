@@ -43,17 +43,17 @@ const SubscriptionBox = ({ subscription, onEdit }) => {
 		const postStatus = subscription.post_status;
 		switch (postStatus) {
 			case 'publish':
-				return 'wpuf-text-green-700 wpuf-bg-green-50';
+				return 'text-green-700 bg-green-50';
 			case 'private':
-				return 'wpuf-text-orange-700 wpuf-bg-orange-50';
+				return 'text-orange-700 bg-orange-50';
 			case 'draft':
-				return 'wpuf-text-yellow-700 wpuf-bg-yellow-50';
+				return 'text-yellow-700 bg-yellow-50';
 			case 'pending':
-				return 'wpuf-text-slate-700 wpuf-bg-slate-50';
+				return 'text-slate-700 bg-slate-50';
 			case 'trash':
-				return 'wpuf-text-red-700 wpuf-bg-red-50';
+				return 'text-red-700 bg-red-50';
 			default:
-				return 'wpuf-text-green-700 wpuf-bg-green-50';
+				return 'text-green-700 bg-green-50';
 		}
 	}, [subscription.post_status]);
 
@@ -201,13 +201,13 @@ const SubscriptionBox = ({ subscription, onEdit }) => {
 
 	return (
 		<>
-			<div className="wpuf-text-base wpuf-justify-between wpuf-bg-white wpuf-border wpuf-border-gray-200 wpuf-rounded-xl wpuf-shadow wpuf-relative">
+			<div className="text-base justify-between bg-white border border-gray-200 rounded-xl shadow-sm relative">
 				<div
 					onClick={subscription.post_status !== 'trash' ? handleEdit : undefined}
-					className={`wpuf-flex wpuf-justify-between wpuf-border-b border-gray-900/5 wpuf-bg-gray-50 wpuf-p-6 wpuf-rounded-t-xl ${subscription.post_status !== 'trash' ? 'wpuf-cursor-pointer' : ''}`}
+					className={`flex justify-between border-b border-gray-900/5 bg-gray-50 p-6 rounded-t-xl ${subscription.post_status !== 'trash' ? 'cursor-pointer' : ''}`}
 				>
 					<div>
-						<div className="wpuf-flex wpuf-py-1 wpuf-text-gray-900 wpuf-m-0 wpuf-font-medium" title={`id: ${subscription.ID}`}>
+						<div className="flex py-1 text-gray-900 m-0 font-medium" title={`id: ${subscription.ID}`}>
 							{subscription.post_title}&nbsp;
 							{isPasswordProtected && (
 								<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -215,12 +215,12 @@ const SubscriptionBox = ({ subscription, onEdit }) => {
 								</svg>
 							)}
 						</div>
-						<p className="wpuf-text-gray-500 wpuf-text-base wpuf-m-0" dangerouslySetInnerHTML={{ __html: billingAmount }}></p>
+						<p className="text-gray-500 text-base m-0" dangerouslySetInnerHTML={{ __html: billingAmount }}></p>
 					</div>
 				</div>
 
 				{/* Quick Menu Button */}
-				<div className="wpuf-absolute wpuf-top-4 wpuf-right-4">
+				<div className="absolute top-4 right-4">
 					<DropdownMenu
 						icon={moreVertical}
 						label={__('Actions', 'wp-user-frontend')}
@@ -231,8 +231,8 @@ const SubscriptionBox = ({ subscription, onEdit }) => {
 				</div>
 
 				{/* Status Pill and Recurring Icon */}
-				<div className="wpuf-flex wpuf-px-6 wpuf-py-6 wpuf-justify-between wpuf-items-center">
-					<div className={`wpuf-text-sm wpuf-w-fit wpuf-px-2.5 wpuf-py-1 wpuf-shadow-sm wpuf-rounded-md wpuf-border ${pillColor}`}>
+				<div className="flex px-6 py-6 justify-between items-center">
+					<div className={`text-sm w-fit px-2.5 py-1 shadow-xs rounded-md border ${pillColor}`}>
 						{postStatus}
 					</div>
 					{isRecurringSub && (
@@ -243,9 +243,9 @@ const SubscriptionBox = ({ subscription, onEdit }) => {
 				</div>
 
 				{/* Subscribers Count */}
-				<div className="wpuf-flex wpuf-px-6 wpuf-pb-6 wpuf-justify-between wpuf-items-center">
-					<p className="wpuf-text-gray-500 wpuf-text-sm wpuf-m-0">{__('Total Subscribers', 'wp-user-frontend')}</p>
-					<a href={subscribersLink} className="wpuf-text-gray-500">{subscribers}</a>
+				<div className="flex px-6 pb-6 justify-between items-center">
+					<p className="text-gray-500 text-sm m-0">{__('Total Subscribers', 'wp-user-frontend')}</p>
+					<a href={subscribersLink} className="text-gray-500">{subscribers}</a>
 				</div>
 
 				{/* Extension slot: Pro and third-party plugins can add content to card footer */}
@@ -261,18 +261,18 @@ const SubscriptionBox = ({ subscription, onEdit }) => {
 					onRequestClose={() => setShowTrashModal(false)}
 					className="wpuf-delete-modal"
 				>
-					<div className="wpuf-p-4">
-						<p className="wpuf-text-sm wpuf-text-gray-500 wpuf-mb-6">
+					<div className="p-4">
+						<p className="text-sm text-gray-500 mb-6">
 							{subscription.post_status === 'trash'
 								? __('Are you sure you want to permanently delete this subscription? This action cannot be undone.', 'wp-user-frontend')
 								: __('Are you sure you want to move this subscription to trash?', 'wp-user-frontend')}
 						</p>
-						<div className="wpuf-flex wpuf-justify-end wpuf-space-x-3">
+						<div className="flex justify-end [&>:not([hidden])~:not([hidden])]:ml-3 [&>:not([hidden])~:not([hidden])]:mr-0">
 							<ButtonGroup>
 								<Button
 									variant="secondary"
 									onClick={() => setShowTrashModal(false)}
-									className="wpuf-mr-2"
+									className="mr-2"
 								>
 									{__('Cancel', 'wp-user-frontend')}
 								</Button>

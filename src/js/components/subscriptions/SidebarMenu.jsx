@@ -19,9 +19,9 @@ const SidebarMenu = ( {
 	];
 
 	return (
-		<div className={ isUnsavedPopupOpen ? 'wpuf-blur' : '' }>
-			<div className="wpuf-flex wpuf-flex-col">
-				<ul className="wpuf-space-y-2 wpuf-text-lg">
+		<div className={ isUnsavedPopupOpen ? 'blur-sm' : '' }>
+			<div className="flex flex-col">
+				<ul className="[&>:not([hidden])~:not([hidden])]:mt-2 [&>:not([hidden])~:not([hidden])]:mb-0 text-lg">
 					{ statusItems.map( ( item ) => {
 						const count = allCount[ item.key ] || 0;
 						const isActive = currentSubscriptionStatus === item.key;
@@ -31,16 +31,16 @@ const SidebarMenu = ( {
 								key={ item.key }
 								onClick={ () => onStatusClick && onStatusClick( item.key ) }
 								className={
-									'wpuf-justify-between wpuf-text-gray-700 hover:wpuf-text-primary hover:wpuf-bg-gray-50 group wpuf-flex wpuf-gap-x-3 wpuf-rounded-md wpuf-py-2 wpuf-px-[20px] wpuf-text-sm wpuf-leading-6 hover:wpuf-cursor-pointer' +
-									( isActive ? ' wpuf-bg-gray-50 wpuf-text-primary' : '' )
+									'justify-between text-gray-700 hover:text-primary hover:bg-gray-50 group flex gap-x-3 rounded-md py-2 px-[20px] text-sm leading-6 hover:cursor-pointer' +
+									( isActive ? ' bg-gray-50 text-primary' : '' )
 								}
 							>
 								{ item.label }
 								{ count > 0 && (
 									<span
 										className={
-											'wpuf-text-sm wpuf-w-fit wpuf-px-2.5 wpuf-py-1 wpuf-rounded-full wpuf-w-max wpuf-h-max wpuf-border' +
-											( isActive ? ' wpuf-border-primary' : '' )
+											'text-sm w-fit px-2.5 py-1 rounded-full w-max h-max border' +
+											( isActive ? ' border-primary' : '' )
 										}
 									>
 										{ count }

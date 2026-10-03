@@ -110,7 +110,7 @@ const SubscriptionList = () => {
 	const isEmpty = !subscriptionList || subscriptionList.length === 0;
 
 	return (
-		<div className="wpuf-pl-[48px]">
+		<div className="pl-[48px]">
 			{isEmpty ? (
 				<>
 					<ListHeader message={{ status: currentSubscriptionStatus || 'all', text: headerMessage[currentSubscriptionStatus || 'all'] }} />
@@ -129,7 +129,7 @@ const SubscriptionList = () => {
 						fillProps={ { subscriptions: subscriptionList, currentStatus: currentSubscriptionStatus } }
 					/>
 
-					<div className="wpuf-grid wpuf-grid-cols-3 wpuf-gap-4 wpuf-mt-[40px]">
+					<div className="grid grid-cols-3 gap-4 mt-[40px]">
 						{subscriptionList.map((subscription) => (
 							<SubscriptionBox
 								key={subscription.ID}
@@ -139,7 +139,7 @@ const SubscriptionList = () => {
 						))}
 					</div>
 					{showPagination && (
-						<div className="wpuf-mt-8">
+						<div className="mt-8">
 							<Pagination
 								currentPage={currentPage}
 								count={count}

@@ -12,8 +12,29 @@
 @import "./v3-theme.css";
 
 @source "../../../src/js/settings.jsx";
+@source "../../../src/js/api";
+@source "../../../src/js/stores-react/settings";
 @source "../../../src/js/components/settings";
 @source "../../../includes/Admin/Screens/Settings.php";
+
+/* Words in these sources that read as Tailwind classes but never had CSS in
+   the Tailwind 3 build (unprefixed there, or not classes at all, e.g.
+   type="hidden"). Kept out so the screen looks exactly as before. */
+@source not inline("!leading-6");
+@source not inline("container");
+@source not inline("filter");
+@source not inline("focus-visible:outline");
+@source not inline("focus-visible:outline-2");
+@source not inline("focus-visible:outline-offset-2");
+@source not inline("hidden");
+@source not inline("inline");
+@source not inline("inline-block");
+@source not inline("resize");
+@source not inline("ring");
+@source not inline("rounded");
+@source not inline("static");
+@source not inline("table");
+@source not inline("visible");
 
 @theme {
     --color-primary: #059669;

@@ -1,4 +1,4 @@
-<div id="wpuf-subscription-page" class="wpuf-pr-[20px]">
+<div id="wpuf-subscription-page" class="pr-[20px]">
     <noscript>
         <strong>
             <?php esc_html_e( "We're sorry but this page doesn't work properly without JavaScript. Please enable it to continue.", 'wp-user-frontend' ); ?>

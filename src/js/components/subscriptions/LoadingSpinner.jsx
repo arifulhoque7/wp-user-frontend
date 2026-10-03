@@ -10,8 +10,8 @@
  */
 const LoadingSpinner = () => {
 	return (
-		<div className="wpuf-flex wpuf-h-svh wpuf-items-center wpuf-justify-center">
-			<div className="wpuf-animate-spin wpuf-h-12 wpuf-w-12 wpuf-border-4 wpuf-border-green-500 wpuf-border-t-transparent wpuf-rounded-full"></div>
+		<div className="flex h-svh items-center justify-center">
+			<div className="animate-spin h-12 w-12 border-4 border-green-500 border-t-transparent rounded-full"></div>
 		</div>
 	);
 };

@@ -131,7 +131,7 @@ export function getReadableBillingAmount(state, subscription, returnAsHtml = fal
         const expireAfter = (parseInt(item.meta_value._billing_cycle_number) === 0 || parseInt(item.meta_value._billing_cycle_number) === 1) ? '' : ' ' + item.meta_value._billing_cycle_number + ' ';
 
         if (returnAsHtml) {
-            return currencySymbol + item.meta_value.billing_amount + ' <span class="wpuf-text-sm wpuf-text-gray-500">per ' + expireAfter + ' ' + cyclePeriod + '(s)</span>';
+            return currencySymbol + item.meta_value.billing_amount + ' <span class="text-sm text-gray-500">per ' + expireAfter + ' ' + cyclePeriod + '(s)</span>';
         } else {
             return currencySymbol + item.meta_value.billing_amount + ' every ' + expireAfter + ' ' + cyclePeriod + '(s)';
         }

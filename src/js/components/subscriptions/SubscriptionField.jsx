@@ -149,19 +149,19 @@ const SubscriptionField = ( { field, fieldId, subscription, onFieldChange } ) =>
 	}
 
 	return (
-		<div className="wpuf-grid wpuf-grid-cols-3 wpuf-gap-4 wpuf-p-4">
+		<div className="grid grid-cols-3 gap-4 p-4">
 			{/* Label */}
 			{ field.label && (
-				<div className="wpuf-flex wpuf-items-center wpuf-text-sm wpuf-leading-6 wpuf-text-gray-600">
+				<div className="flex items-center text-sm leading-6 text-gray-600">
 					<label htmlFor={ field.name } dangerouslySetInnerHTML={ { __html: field.label } } />
 					{ field.tooltip && (
-						<span className="wpuf-tooltip before:wpuf-bg-gray-700 before:wpuf-text-zinc-50 after:wpuf-border-t-gray-700 after:wpuf-border-x-transparent wpuf-cursor-pointer wpuf-ml-2 wpuf-z-10" data-tip={ field.tooltip }>
+						<span className="wpuf-tooltip before:bg-gray-700 before:text-zinc-50 after:border-t-gray-700 after:border-x-transparent cursor-pointer ml-2 z-10" data-tip={ field.tooltip }>
 							<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none">
 								<path d="M9.833 12.333H9V9h-.833M9 5.667h.008M16.5 9a7.5 7.5 0 1 1-15 0 7.5 7.5 0 1 1 15 0z" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
 							</svg>
 						</span>
 					) }
-					<span className="pro-icon-title wpuf-relative wpuf-pt-1 wpuf-group">
+					<span className="pro-icon-title relative pt-1 group">
 						<ProBadge isPro={ field.is_pro } />
 						<ProTooltip isPro={ field.is_pro } />
 					</span>
@@ -169,15 +169,15 @@ const SubscriptionField = ( { field, fieldId, subscription, onFieldChange } ) =>
 			) }
 
 			{/* Field Input */}
-			<div className="wpuf-col-span-2 wpuf-relative wpuf-group">
+			<div className="col-span-2 relative group">
 				{/* Pro overlay */}
 				{ isPro && (
-					<div className="wpuf-hidden wpuf-rounded-md wpuf-border wpuf-border-dashed wpuf-border-emerald-200 group-hover:wpuf-flex wpuf-cursor-pointer wpuf-absolute wpuf-items-center wpuf-justify-center wpuf-bg-emerald-50/50 wpuf-backdrop-blur-sm wpuf-z-10 wpuf-p-4 wpuf-w-[104%] wpuf-h-[180%] wpuf-top-[-40%] wpuf-left-[-2%]">
+					<div className="hidden rounded-md border border-dashed border-emerald-200 group-hover:flex cursor-pointer absolute items-center justify-center bg-emerald-50/50 backdrop-blur-xs z-10 p-4 w-[104%] h-[180%] top-[-40%] left-[-2%]">
 						<a
 							href={ wpufSubscriptions.upgradeUrl || '#' }
 							target="_blank"
 							rel="noopener noreferrer"
-							className="wpuf-button button-upgrade-to-pro wpuf-inline-flex wpuf-items-center wpuf-px-4 wpuf-py-2 wpuf-bg-emerald-600 focus:wpuf-bg-emerald-700 hover:wpuf-bg-emerald-700 wpuf-text-white wpuf-rounded-md wpuf-gap-2 wpuf-font-medium wpuf-text-sm"
+							className="wpuf-button button-upgrade-to-pro inline-flex items-center px-4 py-2 bg-emerald-600 focus:bg-emerald-700 hover:bg-emerald-700 text-white rounded-md gap-2 font-medium text-sm"
 						>
 							{ __( 'Upgrade to Pro', 'wp-user-frontend' ) }
 						</a>
@@ -194,7 +194,7 @@ const SubscriptionField = ( { field, fieldId, subscription, onFieldChange } ) =>
 						placeholder={ field.placeholder || '' }
 						onChange={ ( e ) => handleChange( e.target.value ) }
 						disabled={ isPro }
-						className="placeholder:wpuf-text-gray-400 wpuf-w-full wpuf-rounded-md wpuf-bg-white wpuf-py-1 wpuf-pl-3 wpuf-pr-10 wpuf-text-left wpuf-shadow-sm focus:!wpuf-border-primaryHover focus:wpuf-outline-none focus:wpuf-ring-1 focus:wpuf-ring-primaryHover sm:wpuf-text-sm !wpuf-shadow-none !wpuf-border-gray-300"
+						className="placeholder:text-gray-400 w-full rounded-md bg-white py-1 pl-3 pr-10 text-left shadow-xs focus:border-primaryHover! focus:outline-hidden focus:ring-1 focus:ring-primaryHover sm:text-sm shadow-none! border-gray-300!"
 					/>
 				) }
 
@@ -216,7 +216,7 @@ const SubscriptionField = ( { field, fieldId, subscription, onFieldChange } ) =>
 							}
 						} }
 						disabled={ isPro }
-						className="placeholder:wpuf-text-gray-400 wpuf-w-full wpuf-rounded-md wpuf-bg-white wpuf-py-1 wpuf-pl-3 wpuf-pr-10 wpuf-text-left wpuf-shadow-sm focus:!wpuf-border-primaryHover focus:wpuf-outline-none focus:wpuf-ring-1 focus:wpuf-ring-primaryHover sm:wpuf-text-sm !wpuf-shadow-none !wpuf-border-gray-300"
+						className="placeholder:text-gray-400 w-full rounded-md bg-white py-1 pl-3 pr-10 text-left shadow-xs focus:border-primaryHover! focus:outline-hidden focus:ring-1 focus:ring-primaryHover sm:text-sm shadow-none! border-gray-300!"
 					/>
 				) }
 
@@ -230,7 +230,7 @@ const SubscriptionField = ( { field, fieldId, subscription, onFieldChange } ) =>
 						rows="3"
 						onChange={ ( e ) => handleChange( e.target.value ) }
 						disabled={ isPro }
-						className="placeholder:wpuf-text-gray-400 wpuf-w-full wpuf-rounded-md wpuf-bg-white wpuf-py-1 wpuf-pl-3 wpuf-pr-10 wpuf-text-left wpuf-shadow-sm focus:!wpuf-border-primaryHover focus:wpuf-outline-none focus:wpuf-ring-1 focus:wpuf-ring-primaryHover sm:wpuf-text-sm !wpuf-shadow-none !wpuf-border-gray-300"
+						className="placeholder:text-gray-400 w-full rounded-md bg-white py-1 pl-3 pr-10 text-left shadow-xs focus:border-primaryHover! focus:outline-hidden focus:ring-1 focus:ring-primaryHover sm:text-sm shadow-none! border-gray-300!"
 					/>
 				) }
 
@@ -242,13 +242,13 @@ const SubscriptionField = ( { field, fieldId, subscription, onFieldChange } ) =>
 						name={ field.name }
 						onClick={ toggleSwitcher }
 						disabled={ isPro }
-						className={ `${ isSwitcherOn ? 'wpuf-bg-primary' : 'wpuf-bg-gray-200' } placeholder:wpuf-text-gray-400 wpuf-bg-gray-200 wpuf-relative wpuf-inline-flex wpuf-h-6 wpuf-w-11 wpuf-flex-shrink-0 wpuf-cursor-pointer wpuf-rounded-full wpuf-border-2 wpuf-border-transparent wpuf-transition-colors wpuf-duration-200 wpuf-ease-in-out` }
+						className={ `${ isSwitcherOn ? 'bg-primary' : 'bg-gray-200' } placeholder:text-gray-400 bg-gray-200 relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out` }
 						role="switch"
 						aria-checked={ isSwitcherOn }
 					>
 						<span
 							aria-hidden="true"
-							className={ `${ isSwitcherOn ? 'wpuf-translate-x-5' : 'wpuf-translate-x-0' } wpuf-pointer-events-none wpuf-inline-block wpuf-h-5 wpuf-w-5 wpuf-transform wpuf-rounded-full wpuf-bg-white wpuf-shadow wpuf-ring-0 wpuf-transition wpuf-duration-200 wpuf-ease-in-out` }
+							className={ `${ isSwitcherOn ? 'translate-x-5' : 'translate-x-0' } pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out` }
 						/>
 					</button>
 				) }
@@ -261,7 +261,7 @@ const SubscriptionField = ( { field, fieldId, subscription, onFieldChange } ) =>
 						value={ value }
 						onChange={ ( e ) => handleChange( e.target.value ) }
 						disabled={ isPro }
-						className="wpuf-w-full !wpuf-max-w-full wpuf-rounded-md wpuf-bg-white wpuf-py-1 wpuf-pl-3 wpuf-pr-10 wpuf-text-left wpuf-shadow-sm focus:!wpuf-border-primaryHover focus:wpuf-outline-none focus:wpuf-ring-1 focus:wpuf-ring-primaryHover sm:wpuf-text-sm !wpuf-border-gray-300"
+						className="w-full max-w-full! rounded-md bg-white py-1 pl-3 pr-10 text-left shadow-xs focus:border-primaryHover! focus:outline-hidden focus:ring-1 focus:ring-primaryHover sm:text-sm border-gray-300!"
 					>
 						{ Object.entries( field.options ).map( ( [ key, label ] ) => (
 							<option key={ key } value={ key }>
@@ -298,7 +298,7 @@ const SubscriptionField = ( { field, fieldId, subscription, onFieldChange } ) =>
 
 				{/* Inline - compound field with multiple inputs */}
 				{ field.type === 'inline' && field.fields && (
-					<div className="wpuf-flex wpuf-gap-2 wpuf-items-center">
+					<div className="flex gap-2 items-center">
 						{ Object.entries( field.fields ).map( ( [ subFieldKey, subField ] ) => {
 							// Get sub-field value
 							let subFieldValue = subField.default || '';
@@ -341,7 +341,7 @@ const SubscriptionField = ( { field, fieldId, subscription, onFieldChange } ) =>
 											}
 										} }
 										disabled={ isPro }
-										className="placeholder:wpuf-text-gray-400 wpuf-w-full wpuf-rounded-md wpuf-bg-white wpuf-py-1 wpuf-pl-3 wpuf-pr-10 wpuf-text-left wpuf-shadow-sm focus:!wpuf-border-primaryHover focus:wpuf-outline-none focus:wpuf-ring-1 focus:wpuf-ring-primaryHover sm:wpuf-text-sm !wpuf-shadow-none !wpuf-border-gray-300"
+										className="placeholder:text-gray-400 w-full rounded-md bg-white py-1 pl-3 pr-10 text-left shadow-xs focus:border-primaryHover! focus:outline-hidden focus:ring-1 focus:ring-primaryHover sm:text-sm shadow-none! border-gray-300!"
 									/>
 								);
 							}
@@ -356,7 +356,7 @@ const SubscriptionField = ( { field, fieldId, subscription, onFieldChange } ) =>
 										value={ subFieldValue }
 										onChange={ ( e ) => handleSubFieldChange( e.target.value ) }
 										disabled={ isPro }
-										className="wpuf-w-full !wpuf-max-w-full wpuf-rounded-md wpuf-bg-white wpuf-py-1 wpuf-pl-3 wpuf-pr-10 wpuf-text-left wpuf-shadow-sm focus:!wpuf-border-primaryHover focus:wpuf-outline-none focus:wpuf-ring-1 focus:wpuf-ring-primaryHover sm:wpuf-text-sm !wpuf-border-gray-300"
+										className="w-full max-w-full! rounded-md bg-white py-1 pl-3 pr-10 text-left shadow-xs focus:border-primaryHover! focus:outline-hidden focus:ring-1 focus:ring-primaryHover sm:text-sm border-gray-300!"
 									>
 										{ Object.entries( subField.options ).map( ( [ key, label ] ) => (
 											<option key={ key } value={ key }>
@@ -385,7 +385,7 @@ const SubscriptionField = ( { field, fieldId, subscription, onFieldChange } ) =>
 							handleChange( newVal );
 						} }
 						disabled={ isPro }
-						className="placeholder:wpuf-text-gray-400 wpuf-w-full wpuf-rounded-md wpuf-bg-white wpuf-py-1 wpuf-pl-3 wpuf-pr-10 wpuf-text-left wpuf-shadow-sm focus:!wpuf-border-primaryHover focus:wpuf-outline-none focus:wpuf-ring-1 focus:wpuf-ring-primaryHover sm:wpuf-text-sm !wpuf-shadow-none !wpuf-border-gray-300"
+						className="placeholder:text-gray-400 w-full rounded-md bg-white py-1 pl-3 pr-10 text-left shadow-xs focus:border-primaryHover! focus:outline-hidden focus:ring-1 focus:ring-primaryHover sm:text-sm shadow-none! border-gray-300!"
 					/>
 				) }
 

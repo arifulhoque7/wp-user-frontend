@@ -77,16 +77,16 @@ const SubscriptionDetails = ( { subscription, onFieldChange, currentTab: externa
 	return (
 		<>
 			{/* Tab Navigation */}
-			<div className="wpuf-mt-4 wpuf-text-sm wpuf-font-medium wpuf-text-center wpuf-text-gray-500 wpuf-border-b wpuf-border-gray-200">
-				<ul className="wpuf-flex wpuf-flex-wrap wpuf--mb-px">
+			<div className="mt-4 text-sm font-medium text-center text-gray-500 border-b border-gray-200">
+				<ul className="flex flex-wrap -mb-px">
 					{ sections.map( ( section ) => (
-						<li key={ section.id } className="wpuf-mb-0 wpuf-me-2">
+						<li key={ section.id } className="mb-0 me-2">
 							<button
 								type="button"
 								onClick={ () => setCurrentTab( section.id ) }
-								className={ `active:wpuf-shadow-none focus:wpuf-shadow-none wpuf-inline-block wpuf-p-4 wpuf-rounded-t-lg hover:wpuf-text-primary hover:wpuf-border-b-2 hover:wpuf-border-primary wpuf-transition-all ${
+								className={ `active:shadow-none focus:shadow-none inline-block p-4 rounded-t-lg hover:text-primary hover:border-b-2 hover:border-primary transition-all ${
 									currentTab === section.id
-										? 'wpuf-border-b-2 wpuf-border-primary wpuf-text-primary'
+										? 'border-b-2 border-primary text-primary'
 										: ''
 								}` }
 							>

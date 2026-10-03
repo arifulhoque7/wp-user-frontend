@@ -142,17 +142,17 @@ const MultiSelect = ( { options, value, onChange, placeholder, sortable = false,
 	};
 
 	return (
-		<div className="wpuf-relative" ref={ dropdownRef }>
+		<div className="relative" ref={ dropdownRef }>
 			<button
 				type="button"
-				className="wpuf-flex wpuf-w-full wpuf-text-gray-700 wpuf-font-normal wpuf-leading-none wpuf-text-left wpuf-items-center wpuf-justify-between wpuf-rounded-md wpuf-border wpuf-border-gray-300 wpuf-bg-white wpuf-py-2 wpuf-px-3 wpuf-shadow-sm focus:wpuf-outline-none focus:wpuf-ring-1 focus:wpuf-ring-primary sm:wpuf-text-sm"
+				className="flex w-full text-gray-700 font-normal leading-none text-left items-center justify-between rounded-md border border-gray-300 bg-white py-2 px-3 shadow-xs focus:outline-hidden focus:ring-1 focus:ring-primary sm:text-sm"
 				aria-haspopup="listbox"
 				aria-expanded={ isOpen }
 				disabled={ disabled }
 				onClick={ () => setIsOpen( ( open ) => ! open ) }
 			>
 				<span
-					className={ value.length === 0 ? 'wpuf-text-gray-400' : 'wpuf-text-gray-700' }
+					className={ value.length === 0 ? 'text-gray-400' : 'text-gray-700' }
 					style={ {
 						display: 'block',
 						overflow: 'hidden',
@@ -163,15 +163,15 @@ const MultiSelect = ( { options, value, onChange, placeholder, sortable = false,
 				>
 					{ getDisplayText() }
 				</span>
-				<svg className="wpuf-w-4 wpuf-h-4 wpuf-ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
 				</svg>
 			</button>
 			{ isOpen && (
-				<ul className="wpuf-absolute wpuf-z-10 wpuf-mt-1 wpuf-w-full wpuf-bg-white wpuf-border wpuf-border-gray-200 wpuf-rounded-md wpuf-shadow-lg wpuf-max-h-60 wpuf-overflow-auto wpuf-p-0 wpuf-m-0 wpuf-list-none" role="listbox">
+				<ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto p-0 m-0 list-none" role="listbox">
 					{/* Search input */}
 					{ searchable && (
-						<li className="wpuf-sticky wpuf-top-0 wpuf-bg-white wpuf-border-b wpuf-border-gray-200 wpuf-p-2 !wpuf-mb-0">
+						<li className="sticky top-0 bg-white border-b border-gray-200 p-2 mb-0!">
 							<input
 								ref={ searchInputRef }
 								type="text"
@@ -179,19 +179,19 @@ const MultiSelect = ( { options, value, onChange, placeholder, sortable = false,
 								onChange={ handleSearchChange }
 								onKeyDown={ handleSearchKeyDown }
 								placeholder={ __( 'Search options...', 'wp-user-frontend' ) }
-								className="wpuf-w-full wpuf-px-3 wpuf-py-2 wpuf-text-sm wpuf-border wpuf-border-gray-300 wpuf-rounded focus:wpuf-outline-none focus:wpuf-ring-1 focus:wpuf-ring-primary"
+								className="w-full px-3 py-2 text-sm border border-gray-300 rounded-sm focus:outline-hidden focus:ring-1 focus:ring-primary"
 							/>
 						</li>
 					) }
 					{ availableOptions.length === 0 && (
-						<li className="wpuf-p-3 wpuf-text-gray-400 wpuf-text-sm !wpuf-mb-0">
+						<li className="p-3 text-gray-400 text-sm mb-0!">
 							{ searchTerm.trim() ? __( 'No matching options', 'wp-user-frontend' ) : __( 'No more options', 'wp-user-frontend' ) }
 						</li>
 					) }
 					{ availableOptions.map( ( key ) => (
 						<li
 							key={ key }
-							className="wpuf-cursor-pointer wpuf-p-3 !wpuf-mb-0 hover:wpuf-bg-gray-100 wpuf-text-sm wpuf-text-left"
+							className="cursor-pointer p-3 mb-0! hover:bg-gray-100 text-sm text-left"
 							role="option"
 							aria-selected={ false }
 							tabIndex={ 0 }
@@ -209,14 +209,14 @@ const MultiSelect = ( { options, value, onChange, placeholder, sortable = false,
 			) }
 			{/* Pills for selected items */}
 			{ value.length > 0 && (
-				<div className="wpuf-flex wpuf-flex-wrap wpuf-gap-2 wpuf-mt-3">
+				<div className="flex flex-wrap gap-2 mt-3">
 					{ value.map( ( key, idx ) => (
 						<div
 							key={ key }
 							className={
-								'wpuf-group/item wpuf-flex wpuf-items-center wpuf-bg-gray-50 wpuf-border wpuf-border-gray-200 wpuf-rounded wpuf-px-3 wpuf-py-1 wpuf-text-sm wpuf-shadow-sm ' +
-								( sortable ? 'wpuf-cursor-move ' : '' ) +
-								'wpuf-transition-colors wpuf-duration-150 hover:wpuf-border-primary hover:wpuf-bg-emerald-50'
+								'group/item flex items-center bg-gray-50 border border-gray-200 rounded-sm px-3 py-1 text-sm shadow-xs ' +
+								( sortable ? 'cursor-move ' : '' ) +
+								'transition-colors duration-150 hover:border-primary hover:bg-emerald-50'
 							}
 							draggable={ sortable }
 							onDragStart={ sortable ? () => handleDragStart( idx ) : undefined }
@@ -228,13 +228,13 @@ const MultiSelect = ( { options, value, onChange, placeholder, sortable = false,
 							tabIndex={ 0 }
 							aria-label={ sortable ? __( 'Drag to reorder', 'wp-user-frontend' ) : undefined }
 						>
-							<span className="wpuf-text-gray-800">
+							<span className="text-gray-800">
 								{ getOptionDisplayText( key ) }
 							</span>
 							{ ! disabled && (
 								<button
 									type="button"
-									className="wpuf-ml-1 wpuf-text-gray-400 hover:wpuf-text-red-500 wpuf-text-xs wpuf-opacity-0 group-hover/item:wpuf-opacity-100 wpuf-transition-opacity wpuf-duration-150 wpuf-w-4 wpuf-h-4 wpuf-flex wpuf-items-center wpuf-justify-center"
+									className="ml-1 text-gray-400 hover:text-red-500 text-xs opacity-0 group-hover/item:wpuf-opacity-100 transition-opacity duration-150 w-4 h-4 flex items-center justify-center"
 									aria-label={ __( 'Remove', 'wp-user-frontend' ) }
 									onClick={ () => handleRemove( key ) }
 								>

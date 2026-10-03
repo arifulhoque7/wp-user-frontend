@@ -56,28 +56,28 @@ const Pagination = ( { currentPage, count, maxVisibleButtons = 3, perPage, onCha
 	};
 
 	return (
-		<div className="wpuf-flex wpuf-items-center wpuf-justify-between wpuf-border-t wpuf-border-gray-200 wpuf-bg-white wpuf-py-3 wpuf-px-6 wpuf-mt-16">
-			<div className="wpuf-flex wpuf-flex-1 wpuf-items-center wpuf-justify-between">
+		<div className="flex items-center justify-between border-t border-gray-200 bg-white py-3 px-6 mt-16">
+			<div className="flex flex-1 items-center justify-between">
 				<div>
-					<p className="wpuf-text-sm wpuf-text-gray-700">
+					<p className="text-sm text-gray-700">
 						Showing
-						<span className="wpuf-font-medium"> { startNumber } </span>
+						<span className="font-medium"> { startNumber } </span>
 						to
-						<span className="wpuf-font-medium"> { endNumber } </span>
+						<span className="font-medium"> { endNumber } </span>
 						of
-						<span className="wpuf-font-medium"> { count } </span>
+						<span className="font-medium"> { count } </span>
 						results
 					</p>
 				</div>
 				{ count > perPage && (
-					<nav className="isolate wpuf-inline-flex wpuf--space-x-px wpuf-rounded-md wpuf-shadow-sm" aria-label="Pagination">
+					<nav className="isolate inline-flex [&>:not([hidden])~:not([hidden])]:-ml-px [&>:not([hidden])~:not([hidden])]:mr-0 rounded-md shadow-xs" aria-label="Pagination">
 						<button
 							onClick={ goToFirstPage }
 							disabled={ isInFirstPage }
-							className={ `wpuf-relative wpuf-inline-flex wpuf-items-center wpuf-rounded-l-md wpuf-px-2 wpuf-py-2 wpuf-text-gray-400 wpuf-ring-1 wpuf-ring-inset wpuf-ring-gray-300 hover:wpuf-bg-gray-50 focus:wpuf-z-20 focus:outline-offset-0 ${ isInFirstPage ? 'wpuf-bg-gray-50 wpuf-cursor-not-allowed' : '' }` }
+							className={ `relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 ${ isInFirstPage ? 'bg-gray-50 cursor-not-allowed' : '' }` }
 						>
-							<span className="wpuf-sr-only">Previous</span>
-							<svg className="wpuf-h-5 wpuf-w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+							<span className="sr-only">Previous</span>
+							<svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
 								<path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
 							</svg>
 						</button>
@@ -85,7 +85,7 @@ const Pagination = ( { currentPage, count, maxVisibleButtons = 3, perPage, onCha
 							<button
 								key={ page.name }
 								onClick={ () => goToPage( page.name ) }
-								className={ `wpuf-relative wpuf-items-center wpuf-px-4 wpuf-py-2 wpuf-text-sm wpuf-font-semibold wpuf-text-gray-900 wpuf-ring-1 wpuf-ring-inset wpuf-ring-gray-300 hover:wpuf-bg-gray-50 focus:wpuf-z-20 focus:outline-offset-0 wpuf-inline-flex ${ currentPg === page.name ? 'wpuf-bg-primary wpuf-text-white hover:wpuf-bg-primaryHover' : '' }` }
+								className={ `relative items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 inline-flex ${ currentPg === page.name ? 'bg-primary text-white hover:bg-primaryHover' : '' }` }
 							>
 								{ page.name }
 							</button>
@@ -93,10 +93,10 @@ const Pagination = ( { currentPage, count, maxVisibleButtons = 3, perPage, onCha
 						<button
 							onClick={ goToLastPage }
 							disabled={ isInLastPage }
-							className={ `wpuf-relative wpuf-inline-flex wpuf-items-center wpuf-rounded-r-md wpuf-px-2 wpuf-py-2 wpuf-text-gray-400 wpuf-ring-1 wpuf-ring-inset wpuf-ring-gray-300 hover:wpuf-bg-gray-50 focus:wpuf-z-20 focus:outline-offset-0 ${ isInLastPage ? 'wpuf-bg-gray-50 wpuf-cursor-not-allowed' : '' }` }
+							className={ `relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 ${ isInLastPage ? 'bg-gray-50 cursor-not-allowed' : '' }` }
 						>
-							<span className="wpuf-sr-only">Next</span>
-							<svg className="wpuf-h-5 wpuf-w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+							<span className="sr-only">Next</span>
+							<svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
 								<path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
 							</svg>
 						</button>
