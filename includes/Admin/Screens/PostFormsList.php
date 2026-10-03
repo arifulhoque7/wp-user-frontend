@@ -8,6 +8,8 @@
 
 namespace WeDevs\Wpuf\Admin\Screens;
 
+use WeDevs\Wpuf\Admin\BootPayload;
+
 /**
  * User Frontend > Post Forms: the React forms list, or the form builder for
  * `action=edit|add-new`.
@@ -85,6 +87,7 @@ class PostFormsList extends Screen {
                 wp_enqueue_style( 'wpuf-forms-list' );
                 wp_enqueue_script( 'wpuf-forms-list-react' );
                 wp_set_script_translations( 'wpuf-forms-list-react', 'wp-user-frontend' );
+                wpuf()->platform()->get( BootPayload::class )->attach( 'post_forms', 'wpuf-forms-list-react' );
 
                 // Check AI configuration status
                 $ai_settings = get_option( 'wpuf_ai', [] );

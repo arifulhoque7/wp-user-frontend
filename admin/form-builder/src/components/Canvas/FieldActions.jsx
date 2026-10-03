@@ -132,7 +132,7 @@ export default function FieldActions( { field, index, container = { type: 'top' 
                 { ! failedValidation ? (
                     <>
                         { showMove && (
-                            <span className="!wpuf-mt-2.5" { ...dragListeners } { ...dragAttributes }>
+                            <span className="!wpuf-mt-2.5 wpuf-flex" { ...dragListeners } { ...dragAttributes }>
                                 <i className="fa fa-arrows move wpuf-pr-2 wpuf-rounded-l-md hover:!wpuf-cursor-move wpuf-border-r wpuf-border-green-200 wpuf-text-[17px]" />
                             </span>
                         ) }

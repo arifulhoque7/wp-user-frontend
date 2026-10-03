@@ -38,7 +38,7 @@ const Pagination = ( { currentPage, totalPages, onPageChange } ) => {
     return (
         <div className="wpuf-flex wpuf-items-center wpuf-justify-center wpuf-mt-20">
             <nav className="wpuf-flex wpuf-items-center wpuf-w-full">
-                <div>
+                <div className="wpuf-flex">
                     <button
                         onClick={ () => changePage( currentPage - 1 ) }
                         disabled={ currentPage === 1 }
@@ -72,7 +72,7 @@ const Pagination = ( { currentPage, totalPages, onPageChange } ) => {
                     ) ) }
                 </div>
 
-                <div>
+                <div className="wpuf-flex">
                     <button
                         onClick={ () => changePage( currentPage + 1 ) }
                         disabled={ currentPage === totalPages }

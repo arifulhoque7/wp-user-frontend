@@ -5583,13 +5583,20 @@ function wpuf_load_headway_badge( $selector = '#wpuf-headway-icon' ) {
             selector: selector,
             account: 'JPqPQy',
             callbacks: {
+                // The badge element exists only while there are unseen posts.
                 onWidgetReady: function ( widget ) {
-                    if ( widget.getUnseenCount() === 0 ) {
-                        document.querySelector(badgeCount).style = 'opacity: 0';
+                    const badge = document.querySelector(badgeCount);
+
+                    if ( badge && widget.getUnseenCount() === 0 ) {
+                        badge.style = 'opacity: 0';
                     }
                 },
                 onHideWidget: function(){
-                    document.querySelector(badgeCount).style = 'opacity: 0';
+                    const badge = document.querySelector(badgeCount);
+
+                    if ( badge ) {
+                        badge.style = 'opacity: 0';
+                    }
                 }
             }
         };

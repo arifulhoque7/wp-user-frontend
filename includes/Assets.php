@@ -140,6 +140,13 @@ class Assets {
             'frontend-forms'      => [
                 'src' => WPUF_ASSET_URI . '/css/frontend-forms.css',
             ],
+            'settings-react'      => [
+                'src' => WPUF_ASSET_URI . '/css/settings-react.css',
+            ],
+            'subscriptions-react' => [
+                'src'     => WPUF_ASSET_URI . '/css/subscriptions.css',
+                'version' => $this->react_asset( 'subscriptions', [] )['version'],
+            ],
             'elementor-frontend-forms'      => [
                 'src' => WPUF_ASSET_URI . '/css/elementor-frontend-forms.css',
             ],
@@ -234,6 +241,28 @@ class Assets {
     }
 
     /**
+     * Dependencies and version of a React bundle from its generated
+     * `assets/js/{name}.min.asset.php`, or the fallbacks when it is missing.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param string $name         Bundle name
+     * @param array  $dependencies Fallback dependencies
+     *
+     * @return array { dependencies, version }
+     */
+    protected function react_asset( $name, $dependencies ) {
+        $file = WPUF_ROOT . '/assets/js/' . $name . '.min.asset.php';
+
+        return file_exists( $file )
+            ? require $file
+            : [
+                'dependencies' => $dependencies,
+                'version'      => WPUF_VERSION,
+            ];
+    }
+
+    /**
      * Returns the list of JS
      *
      * @since 4.0.0
@@ -246,6 +275,11 @@ class Assets {
 
         $forms_list_asset_file = WPUF_ROOT . '/assets/js/forms-list-react.min.asset.php';
         $forms_list_asset      = file_exists( $forms_list_asset_file ) ? require $forms_list_asset_file : [ 'dependencies' => [], 'version' => WPUF_VERSION ];
+        // The other React admin apps are registered here too (task 2.5b), so every
+        // screen enqueues by handle and Pro can depend on them.
+        $settings_asset      = $this->react_asset( 'settings-react', [ 'wp-element', 'wp-data', 'wp-api-fetch', 'wp-i18n', 'wp-hooks', 'wp-components' ] );
+        $subscriptions_asset = $this->react_asset( 'subscriptions', [ 'wp-element', 'wp-data', 'wp-api-fetch', 'wp-i18n', 'wp-hooks', 'wp-components', 'wp-primitives' ] );
+        $form_builder_asset  = $this->react_asset( 'form-builder', [] );
         $form_builder_js_deps = apply_filters(
             'wpuf_form_builder_js_deps',
             [
@@ -461,6 +495,24 @@ class Assets {
                 'src'       => WPUF_ASSET_URI . '/js/forms-list-react.min.js',
                 'deps'      => $forms_list_asset['dependencies'],
                 'version'   => $forms_list_asset['version'],
+                'in_footer' => true,
+            ],
+            'settings-react'     => [
+                'src'       => WPUF_ASSET_URI . '/js/settings-react.min.js',
+                'deps'      => $settings_asset['dependencies'],
+                'version'   => $settings_asset['version'],
+                'in_footer' => true,
+            ],
+            'admin-subscriptions-react' => [
+                'src'       => WPUF_ASSET_URI . '/js/subscriptions.min.js',
+                'deps'      => $subscriptions_asset['dependencies'],
+                'version'   => $subscriptions_asset['version'],
+                'in_footer' => true,
+            ],
+            'form-builder-react' => [
+                'src'       => WPUF_ASSET_URI . '/js/form-builder.min.js',
+                'deps'      => $form_builder_asset['dependencies'],
+                'version'   => $form_builder_asset['version'],
                 'in_footer' => true,
             ],
             'frontend-subscriptions' => [

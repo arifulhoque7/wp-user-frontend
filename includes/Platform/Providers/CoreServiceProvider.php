@@ -8,6 +8,7 @@
 
 namespace WeDevs\Wpuf\Platform\Providers;
 
+use WeDevs\Wpuf\Admin\BootPayload;
 use WeDevs\Wpuf\Admin\Screens\Registry;
 use WeDevs\Wpuf\Builder\HookBridge;
 use WeDevs\Wpuf\Platform\REST\Manager;
@@ -50,6 +51,14 @@ class CoreServiceProvider extends ServiceProvider {
             Registry::class,
             function () {
                 return new Registry();
+            }
+        );
+
+        // window.wpufAdmin for the React admin screens.
+        $this->share_tagged(
+            BootPayload::class,
+            function () {
+                return new BootPayload();
             }
         );
 

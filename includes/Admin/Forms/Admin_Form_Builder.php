@@ -2,6 +2,7 @@
 
 namespace WeDevs\Wpuf\Admin\Forms;
 
+use WeDevs\Wpuf\Admin\BootPayload;
 use WeDevs\Wpuf\Free\Pro_Prompt;
 use WeDevs\Wpuf\Builder\HookBridge;
 use WeDevs\Wpuf\Platform\Stores\Stores;
@@ -173,18 +174,10 @@ class Admin_Form_Builder {
 
         do_action( 'wpuf_form_builder_enqueue_after_main_instance' );
 
-        // React form builder bundle
-        $react_asset_file = WPUF_ROOT . '/assets/js/form-builder.min.asset.php';
-        $react_asset      = file_exists( $react_asset_file ) ? require $react_asset_file : [ 'dependencies' => [], 'version' => WPUF_VERSION ];
-
-        wp_enqueue_script(
-            'wpuf-form-builder-react',
-            WPUF_ASSET_URI . '/js/form-builder.min.js',
-            $react_asset['dependencies'],
-            $react_asset['version'],
-            true
-        );
+        // React form builder bundle, registered in the shared Assets registry (task 2.5b).
+        wp_enqueue_script( 'wpuf-form-builder-react' );
         wp_set_script_translations( 'wpuf-form-builder-react', 'wp-user-frontend' );
+        wpuf()->platform()->get( BootPayload::class )->attach( 'form_builder', 'wpuf-form-builder-react' );
 
         /*
          * Data required for building the form

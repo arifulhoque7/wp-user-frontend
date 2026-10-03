@@ -1,0 +1,91 @@
+<?php
+/**
+ * Admin boot payload
+ *
+ * @package WP_User_Frontend
+ * @since WPUF_SINCE
+ */
+
+namespace WeDevs\Wpuf\Admin;
+
+/**
+ * The shared `window.wpufAdmin` object each React admin screen boots from:
+ * the common runtime values the apps (and Pro / add-ons) need, filtered per
+ * screen. The legacy globals (`wpuf_forms_list`, `wpuf_form_builder`,
+ * `wpufSubscriptions`, `wpuf_settings`, …) stay printed with their keys.
+ *
+ * @since WPUF_SINCE
+ */
+class BootPayload {
+
+    /**
+     * Screens already printed (one object per page).
+     *
+     * @var array
+     */
+    private $printed = [];
+
+    /**
+     * The payload for a screen.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param string $screen Screen key (`post_forms`, `form_builder`, `subscriptions`, `settings`)
+     *
+     * @return array
+     */
+    public function data( $screen ) {
+        $data = [
+            'screen'     => $screen,
+            'restUrl'    => esc_url_raw( rest_url() ),
+            'restNonce'  => wp_create_nonce( 'wp_rest' ),
+            'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
+            'adminUrl'   => admin_url(),
+            'assetUrl'   => WPUF_ASSET_URI,
+            'version'    => WPUF_VERSION,
+            'proVersion' => defined( 'WPUF_PRO_VERSION' ) ? WPUF_PRO_VERSION : '',
+            'isPro'      => class_exists( 'WP_User_Frontend_Pro' ),
+            'canManage'  => current_user_can( wpuf_admin_role() ),
+        ];
+
+        /**
+         * The boot payload of every WPUF React admin screen.
+         *
+         * @since WPUF_SINCE
+         *
+         * @param array  $data   Payload.
+         * @param string $screen Screen key.
+         */
+        $data = (array) apply_filters( 'wpuf_admin_boot', $data, $screen );
+
+        /**
+         * The boot payload of one WPUF React admin screen
+         * (`wpuf_admin_boot_post_forms`, `_form_builder`, `_subscriptions`, `_settings`).
+         *
+         * @since WPUF_SINCE
+         *
+         * @param array $data Payload.
+         */
+        return (array) apply_filters( 'wpuf_admin_boot_' . $screen, $data );
+    }
+
+    /**
+     * Print the payload before a screen's app script (once per screen).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param string $screen Screen key
+     * @param string $handle App script handle
+     *
+     * @return void
+     */
+    public function attach( $screen, $handle ) {
+        if ( isset( $this->printed[ $screen ] ) ) {
+            return;
+        }
+
+        $this->printed[ $screen ] = true;
+
+        wp_add_inline_script( $handle, 'window.wpufAdmin = ' . wp_json_encode( $this->data( $screen ) ) . ';', 'before' );
+    }
+}

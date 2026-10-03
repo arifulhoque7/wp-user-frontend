@@ -8,6 +8,8 @@
 
 namespace WeDevs\Wpuf\Admin\Screens;
 
+use WeDevs\Wpuf\Admin\BootPayload;
+
 /**
  * User Frontend > Settings: the React settings app, or the legacy
  * WeDevs_Settings_API screen when wpuf_settings_use_legacy().
@@ -69,32 +71,14 @@ class Settings extends Screen {
         add_filter( 'admin_footer_text', '__return_empty_string', 99 );
         add_filter( 'update_footer', '__return_empty_string', 99 );
 
-        wp_enqueue_style(
-            'wpuf-settings-react',
-            WPUF_ASSET_URI . '/css/settings-react.css',
-            [],
-            WPUF_VERSION
-        );
+        // Registered in the shared Assets registry (task 2.5b).
+        wp_enqueue_style( 'wpuf-settings-react' );
 
-        $handle     = 'wpuf-settings-react';
-        $asset_file = WPUF_ROOT . '/assets/js/settings-react.min.asset.php';
-        $asset      = file_exists( $asset_file )
-            ? require $asset_file
-            : [
-                'dependencies' => [ 'wp-element', 'wp-data', 'wp-api-fetch', 'wp-i18n', 'wp-hooks', 'wp-components' ],
-                'version' => WPUF_VERSION,
-            ];
-
-        wp_register_script(
-            $handle,
-            WPUF_ASSET_URI . '/js/settings-react.min.js',
-            $asset['dependencies'],
-            $asset['version'],
-            true
-        );
+        $handle = 'wpuf-settings-react';
 
         wp_enqueue_script( $handle );
         wp_set_script_translations( $handle, 'wp-user-frontend' );
+        wpuf()->platform()->get( BootPayload::class )->attach( 'settings', $handle );
 
         wp_localize_script(
             $handle,

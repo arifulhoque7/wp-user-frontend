@@ -102,7 +102,15 @@ class Admin {
         $selected_page = [ 'wpuf-post-forms', 'wpuf-profile-forms', 'wpuf_subscription', 'wpuf_subscriptions', 'wpuf_transaction', 'wpuf_tools' ];
 
         if ( in_array( $page, $selected_page, true ) ) {
-            wpuf_load_headway_badge();
+            // Printed in the footer (task 2.5b): called here on `init`, its script
+            // landed before <!DOCTYPE> and put these screens in quirks mode.
+            // admin_footer passes '' as its first argument, so keep the default selector.
+            add_action(
+                'admin_footer',
+                function () {
+                    wpuf_load_headway_badge();
+                }
+            );
         }
 
         wp_localize_script(

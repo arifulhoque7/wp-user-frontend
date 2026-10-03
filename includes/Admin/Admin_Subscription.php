@@ -108,15 +108,11 @@ class Admin_Subscription {
      * @return void
      */
     public function enqueue_admin_scripts() {
-        $asset_file = WPUF_ROOT . '/assets/js/subscriptions.min.asset.php';
-        $asset      = file_exists( $asset_file ) ? require $asset_file : [
-            'dependencies' => [ 'wp-element', 'wp-data', 'wp-api-fetch', 'wp-i18n', 'wp-hooks', 'wp-components', 'wp-primitives' ],
-            'version'      => WPUF_VERSION,
-        ];
-
-        wp_enqueue_script( 'wpuf-admin-subscriptions-react', WPUF_ASSET_URI . '/js/subscriptions.min.js', $asset['dependencies'], $asset['version'], true );
-        wp_enqueue_style( 'wpuf-subscriptions-react', WPUF_ASSET_URI . '/css/subscriptions.css', [], $asset['version'] );
+        // Registered in the shared Assets registry (task 2.5b).
+        wp_enqueue_script( 'wpuf-admin-subscriptions-react' );
+        wp_enqueue_style( 'wpuf-subscriptions-react' );
         $script_handle = 'wpuf-admin-subscriptions-react';
+        wpuf()->platform()->get( BootPayload::class )->attach( 'subscriptions', $script_handle );
 
         wp_localize_script(
             $script_handle,
