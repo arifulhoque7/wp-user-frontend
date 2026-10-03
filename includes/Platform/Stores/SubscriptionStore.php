@@ -305,8 +305,10 @@ class SubscriptionStore {
                 '_post_expiration_number'    => $post_expiration_number,
                 '_post_expiration_period'    => $post_expiration_period,
                 // Readers (User_Subscription, the pack details) use the strtotime()
-                // duration the classic editor stored, e.g. "7 day".
-                '_post_expiration_time'      => ( $post_expiration_number && $post_expiration_period ) ? $post_expiration_number . ' ' . $post_expiration_period : '',
+                // duration the classic editor stored, e.g. "7 day". The screen's
+                // "no expiry" values (-1, unit "forever") store '' like the classic
+                // editor does, not "-1 day" (expired at once if expiration is enabled).
+                '_post_expiration_time'      => ( $post_expiration_number > 0 && $post_expiration_period && 'forever' !== $post_expiration_period ) ? $post_expiration_number . ' ' . $post_expiration_period : '',
                 '_expired_post_status'       => $text( '_expired_post_status', 'draft' ),
                 '_enable_mail_after_expired' => $text( '_enable_mail_after_expired', 'no' ),
                 '_post_expiration_message'   => ! empty( $meta_value['_post_expiration_message'] ) ? wp_kses_post( $meta_value['_post_expiration_message'] ) : '',

@@ -187,6 +187,23 @@ class SubscriptionStoreTest extends WP_UnitTestCase {
         }
     }
 
+    public function test_no_expiry_values_store_an_empty_duration() {
+        foreach ( [ [ '-1', 'day' ], [ '7', 'forever' ], [ '0', 'week' ] ] as $case ) {
+            $payload                                           = $this->payload();
+            $payload['post_title']                             = 'No expiry ' . implode( ' ', $case );
+            $payload['meta_value']['_post_expiration_number'] = $case[0];
+            $payload['meta_value']['_post_expiration_period'] = $case[1];
+
+            ( new Subscription_Api() )->create_or_update_item( $this->request( $payload ) );
+
+            $this->assertSame( '', get_post_meta( $this->last_pack(), '_post_expiration_time', true ), implode( ' ', $case ) );
+        }
+
+        $payload = $this->payload();
+        ( new Subscription_Api() )->create_or_update_item( $this->request( $payload ) );
+        $this->assertSame( '7 day', get_post_meta( $this->last_pack(), '_post_expiration_time', true ) );
+    }
+
     public function test_single_row_edit_matches() {
         $legacy_id  = self::factory()->post->create( [ 'post_type' => 'wpuf_subscription', 'post_status' => 'publish', 'post_title' => 'Pack' ] );
         $current_id = self::factory()->post->create( [ 'post_type' => 'wpuf_subscription', 'post_status' => 'publish', 'post_title' => 'Pack' ] );
