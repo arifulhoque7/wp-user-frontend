@@ -30,7 +30,7 @@ const ICON_DEFAULT = 'M6.429 9.75L2.25 12l4.179 2.25m0-4.5l5.571 3 5.571-3m-11.1
 
 const NavIcon = ( { tabId } ) => (
     <svg
-        className="wpuf-mr-3 wpuf-h-5 wpuf-w-5 wpuf-shrink-0"
+        className="mr-3 h-5 w-5 shrink-0"
         fill="none"
         viewBox="0 0 24 24"
         strokeWidth={ 1.5 }

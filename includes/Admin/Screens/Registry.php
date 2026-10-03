@@ -109,6 +109,17 @@ class Registry {
 
         $screen->load();
 
+        $body_class = $screen->body_class();
+
+        if ( $body_class ) {
+            add_filter(
+                'admin_body_class',
+                function ( $classes ) use ( $body_class ) {
+                    return trim( $classes . ' ' . sanitize_html_class( $body_class ) );
+                }
+            );
+        }
+
         if ( $screen->captures_notices() ) {
             add_action( 'admin_notices', [ $this, 'start_capture' ], PHP_INT_MIN );
             add_action( 'all_admin_notices', [ $this, 'end_capture' ], PHP_INT_MAX );

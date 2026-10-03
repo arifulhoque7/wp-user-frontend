@@ -37,15 +37,15 @@ export default function ProfileFormRoles() {
     const setRole = ( role, formId ) => setExtraValue( KEY, { ...data, map: { ...map, [ role ]: formId } } );
 
     return (
-        <div className="wpuf-mt-2">
-            <p className="wpuf-mb-4 wpuf-text-sm wpuf-text-gray-500">
+        <div className="mt-2">
+            <p className="mb-4 text-sm text-gray-500">
                 { __( 'Select profile/registration forms for user roles. These forms populate extra edit-profile fields in the backend.', 'wp-user-frontend' ) }
             </p>
 
             { Object.entries( roles ).map( ( [ role, name ] ) => (
-                <div key={ role } className="wpuf-mb-3 wpuf-flex wpuf-items-center wpuf-gap-4">
-                    <span className="wpuf-w-44 wpuf-shrink-0 wpuf-text-sm wpuf-font-medium wpuf-text-gray-700">{ name }</span>
-                    <div className="wpuf-min-w-0 wpuf-flex-1">
+                <div key={ role } className="mb-3 flex items-center gap-4">
+                    <span className="w-44 shrink-0 text-sm font-medium text-gray-700">{ name }</span>
+                    <div className="min-w-0 flex-1">
                         <SelectDropdown
                             field={ { options } }
                             name={ `role_${ role }` }
@@ -57,7 +57,7 @@ export default function ProfileFormRoles() {
             ) ) }
 
             { ! isPro && (
-                <p className="wpuf-mt-3 wpuf-rounded-md wpuf-border wpuf-border-dashed wpuf-border-gray-300 wpuf-bg-gray-50 wpuf-px-3 wpuf-py-2 wpuf-text-xs wpuf-text-gray-500">
+                <p className="mt-3 rounded-md border border-dashed border-gray-300 bg-gray-50 px-3 py-2 text-xs text-gray-500">
                     { __( 'Mapping forms to roles is a WP User Frontend Pro feature.', 'wp-user-frontend' ) }
                 </p>
             ) }

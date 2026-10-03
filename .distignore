@@ -15,6 +15,7 @@
 /src
 /bin
 /tests
+/tools
 /build
 /node_modules
 

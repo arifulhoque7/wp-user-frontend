@@ -32,8 +32,8 @@ function BaseCountry() {
     const stateOptions = { '': __( '— Select —', 'wp-user-frontend' ), ...( states[ base.country ] || {} ) };
 
     return (
-        <div className="wpuf-mt-2 wpuf-flex wpuf-flex-wrap wpuf-gap-4">
-            <div className="wpuf-min-w-0 wpuf-flex-1">
+        <div className="mt-2 flex flex-wrap gap-4">
+            <div className="min-w-0 flex-1">
                 <SelectDropdown
                     field={ { label: __( 'Base Country', 'wp-user-frontend' ), options: { '': __( '— Select —', 'wp-user-frontend' ), ...countries } } }
                     name="tax_base_country"
@@ -41,7 +41,7 @@ function BaseCountry() {
                     onChange={ ( n, val ) => set( { base: { country: val, state: '' } } ) }
                 />
             </div>
-            <div className="wpuf-min-w-0 wpuf-flex-1">
+            <div className="min-w-0 flex-1">
                 <SelectDropdown
                     field={ { label: __( 'Base State', 'wp-user-frontend' ), options: stateOptions } }
                     name="tax_base_state"
@@ -65,12 +65,12 @@ function Rates() {
     const remove = ( i ) => setRates( rates.filter( ( _, idx ) => idx !== i ) );
 
     return (
-        <div className="wpuf-mt-2">
+        <div className="mt-2">
             { rates.map( ( row, i ) => {
                 const stateOptions = { country_wide: __( 'Country Wide', 'wp-user-frontend' ), ...( states[ row.country ] || {} ) };
                 return (
-                    <div key={ i } className="wpuf-mb-3 wpuf-flex wpuf-items-center wpuf-gap-3">
-                        <div className="wpuf-min-w-0 wpuf-flex-1">
+                    <div key={ i } className="mb-3 flex items-center gap-3">
+                        <div className="min-w-0 flex-1">
                             <SelectDropdown
                                 field={ { options: { '': __( '— Country —', 'wp-user-frontend' ), ...countries } } }
                                 name={ `tax_rate_country_${ i }` }
@@ -78,7 +78,7 @@ function Rates() {
                                 onChange={ ( n, val ) => update( i, { country: val, state: '' } ) }
                             />
                         </div>
-                        <div className="wpuf-min-w-0 wpuf-flex-1">
+                        <div className="min-w-0 flex-1">
                             <SelectDropdown
                                 field={ { options: stateOptions } }
                                 name={ `tax_rate_state_${ i }` }
@@ -86,7 +86,7 @@ function Rates() {
                                 onChange={ ( n, val ) => update( i, { state: val } ) }
                             />
                         </div>
-                        <div className="wpuf-relative wpuf-w-24 wpuf-shrink-0">
+                        <div className="relative w-24 shrink-0">
                             <input
                                 type="number"
                                 step="0.0001"
@@ -94,14 +94,14 @@ function Rates() {
                                 max="100"
                                 value={ row.rate || 0 }
                                 onChange={ ( e ) => update( i, { rate: e.target.value } ) }
-                                className="wpuf-no-spinner wpuf-w-full wpuf-rounded-md wpuf-border wpuf-border-gray-300 wpuf-py-2.5 wpuf-pl-3 wpuf-pr-7 wpuf-text-gray-700 wpuf-shadow-sm focus:wpuf-border-gray-300"
+                                className="wpuf-no-spinner w-full rounded-md border border-gray-300 py-2.5 pl-3 pr-7 text-gray-700 shadow-xs focus:border-gray-300"
                             />
-                            <span className="wpuf-pointer-events-none wpuf-absolute wpuf-inset-y-0 wpuf-right-3 wpuf-flex wpuf-items-center wpuf-text-sm wpuf-text-gray-400">%</span>
+                            <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-gray-400">%</span>
                         </div>
                         <button
                             type="button"
                             onClick={ () => remove( i ) }
-                            className="wpuf-shrink-0 wpuf-text-sm wpuf-font-medium wpuf-text-red-600 hover:wpuf-text-red-700"
+                            className="shrink-0 text-sm font-medium text-red-600 hover:text-red-700"
                         >
                             { __( 'Remove', 'wp-user-frontend' ) }
                         </button>
@@ -111,7 +111,7 @@ function Rates() {
             <button
                 type="button"
                 onClick={ add }
-                className="wpuf-rounded-md wpuf-border !wpuf-border-gray-300 wpuf-bg-white wpuf-px-4 wpuf-py-2 wpuf-text-sm wpuf-font-medium wpuf-text-gray-700 hover:wpuf-bg-gray-50"
+                className="rounded-md border border-gray-300! bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
             >
                 + { __( 'Add Rate', 'wp-user-frontend' ) }
             </button>

@@ -75,33 +75,33 @@ export default function SelectDropdown( { field, name, value, onChange } ) {
 
     return (
         <>
-            <div className="wpuf-flex wpuf-items-center">
+            <div className="flex items-center">
                 { field.label && (
-                    <label className="wpuf-text-sm wpuf-text-gray-700 wpuf-my-2">{ field.label }</label>
+                    <label className="text-sm text-gray-700 my-2">{ field.label }</label>
                 ) }
                 { field.help_text && <HelpTextIcon text={ field.help_text } /> }
             </div>
 
-            <div className="wpuf-relative wpuf-mt-1" ref={ dropdownRef }>
+            <div className="relative mt-1" ref={ dropdownRef }>
                 <button
                     type="button"
                     aria-haspopup="listbox"
                     aria-expanded={ isOpen }
                     onClick={ () => setIsOpen( ( o ) => ! o ) }
-                    className="wpuf-flex wpuf-h-[42px] wpuf-w-full wpuf-items-center wpuf-justify-between wpuf-rounded-md wpuf-border !wpuf-border-gray-300 wpuf-bg-white wpuf-px-3.5 wpuf-py-2 wpuf-text-left"
+                    className="flex h-[42px] w-full items-center justify-between rounded-md border border-gray-300! bg-white px-3.5 py-2 text-left"
                 >
-                    <span className={ `wpuf-truncate wpuf-text-base ${ hasValue ? 'wpuf-text-gray-700' : 'wpuf-text-gray-400' }` }>
+                    <span className={ `truncate text-base ${ hasValue ? 'text-gray-700' : 'text-gray-400' }` }>
                         { hasValue ? displayText( current ) : ( field.placeholder || __( 'Select…', 'wp-user-frontend' ) ) }
                     </span>
-                    <svg className={ `wpuf-ml-2 wpuf-h-4 wpuf-w-4 wpuf-text-gray-500 wpuf-transition-transform ${ isOpen ? 'wpuf-rotate-180' : '' }` } fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className={ `ml-2 h-4 w-4 text-gray-500 transition-transform ${ isOpen ? 'rotate-180' : '' }` } fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                     </svg>
                 </button>
 
                 { isOpen && (
-                    <ul className="wpuf-absolute wpuf-z-50 wpuf-mt-1 wpuf-max-h-60 wpuf-w-full wpuf-overflow-auto wpuf-rounded-md wpuf-border wpuf-border-gray-200 wpuf-bg-white wpuf-shadow-lg" role="listbox">
+                    <ul className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border border-gray-200 bg-white shadow-lg" role="listbox">
                         { showSearch && (
-                            <li className="wpuf-sticky wpuf-top-0 wpuf-border-b wpuf-border-gray-200 wpuf-bg-white wpuf-p-2">
+                            <li className="sticky top-0 border-b border-gray-200 bg-white p-2">
                                 <input
                                     ref={ searchInputRef }
                                     type="text"
@@ -117,12 +117,12 @@ export default function SelectDropdown( { field, name, value, onChange } ) {
                                         }
                                     } }
                                     placeholder={ __( 'Search options…', 'wp-user-frontend' ) }
-                                    className="wpuf-ms-search wpuf-w-full wpuf-px-3 wpuf-py-2 wpuf-text-sm wpuf-border wpuf-border-gray-300 wpuf-rounded-[4px] focus:wpuf-outline-none focus:wpuf-border-transparent"
+                                    className="wpuf-ms-search w-full px-3 py-2 text-sm border border-gray-300 rounded-[4px] focus:outline-hidden focus:border-transparent"
                                 />
                             </li>
                         ) }
                         { available.length === 0 && (
-                            <li className="!wpuf-mb-0 wpuf-p-3 wpuf-text-sm wpuf-text-gray-400">
+                            <li className="mb-0! p-3 text-sm text-gray-400">
                                 { __( 'No matching options', 'wp-user-frontend' ) }
                             </li>
                         ) }
@@ -138,7 +138,7 @@ export default function SelectDropdown( { field, name, value, onChange } ) {
                                         select( key );
                                     }
                                 } }
-                                className={ `!wpuf-mb-0 wpuf-cursor-pointer wpuf-p-3 wpuf-text-base hover:wpuf-bg-gray-100 ${ key === current ? 'wpuf-bg-emerald-50 wpuf-text-emerald-700' : '' }` }
+                                className={ `mb-0! cursor-pointer p-3 text-base hover:bg-gray-100 ${ key === current ? 'bg-emerald-50 text-emerald-700' : '' }` }
                             >
                                 { displayText( key ) }
                             </li>

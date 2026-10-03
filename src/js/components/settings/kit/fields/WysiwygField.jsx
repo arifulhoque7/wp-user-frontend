@@ -14,13 +14,13 @@ import TextEditor from '../TextEditor';
 export default function WysiwygField( { field, name, value, onChange } ) {
     return (
         <>
-            <div className="wpuf-flex wpuf-items-center">
+            <div className="flex items-center">
                 { field.label && (
-                    <label className="wpuf-text-sm wpuf-text-gray-700 wpuf-my-2">{ field.label }</label>
+                    <label className="text-sm text-gray-700 my-2">{ field.label }</label>
                 ) }
                 { ! field.desc && field.help_text && <HelpTextIcon text={ field.help_text } /> }
             </div>
-            <div className="wpuf-mt-1 wpuf-wysiwyg-wrap">
+            <div className="mt-1 wpuf-wysiwyg-wrap">
                 <TextEditor
                     id={ name }
                     value={ value || field.default || '' }
@@ -29,7 +29,7 @@ export default function WysiwygField( { field, name, value, onChange } ) {
             </div>
             { field.desc && (
                 <div
-                    className="wpuf-mt-2 wpuf-text-sm wpuf-text-gray-500 wpuf-long-help"
+                    className="mt-2 text-sm text-gray-500 wpuf-long-help"
                     // eslint-disable-next-line react/no-danger
                     dangerouslySetInnerHTML={ { __html: field.desc } }
                 />

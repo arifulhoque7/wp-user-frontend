@@ -23,11 +23,11 @@ const ProviderIcon = ( { provider } ) =>
         <img
             src={ `${ ASSET }/images/${ provider.icon }` }
             alt={ provider.label }
-            className="wpuf-max-h-9 wpuf-max-w-[120px] wpuf-object-contain"
+            className="max-h-9 max-w-[120px] object-contain"
         />
     ) : provider.iconSvg ? (
         <span
-            className="wpuf-flex wpuf-h-9 wpuf-items-center"
+            className="flex h-9 items-center"
             // eslint-disable-next-line react/no-danger
             dangerouslySetInnerHTML={ { __html: provider.iconSvg } }
         />
@@ -102,7 +102,7 @@ export default function ProviderTabs( { providers: allProviders, fields, renderF
         <div>
             { standalone.map( renderField ) }
 
-            <div className="wpuf-mb-6 wpuf-mt-4 wpuf-flex wpuf-flex-wrap wpuf-gap-3">
+            <div className="mb-6 mt-4 flex flex-wrap gap-3">
                 { providers.map( ( p ) => {
                     // Pro-only sections: every provider card is an upsell (matches the
                     // Pro-preview gateway cards — dashed, dimmed, Pro badge, non-selectable).
@@ -114,10 +114,10 @@ export default function ProviderTabs( { providers: allProviders, fields, renderF
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 title={ p.label }
-                                className="wpuf-relative wpuf-flex wpuf-h-[104px] wpuf-w-[160px] wpuf-flex-col wpuf-items-center wpuf-justify-center wpuf-gap-2 wpuf-rounded-lg wpuf-border wpuf-border-dashed wpuf-border-gray-300 wpuf-bg-gray-50 wpuf-px-5 wpuf-py-4 wpuf-text-xs wpuf-font-medium wpuf-text-gray-500 wpuf-opacity-80 hover:wpuf-border-sky-400 hover:wpuf-opacity-100"
+                                className="relative flex h-[104px] w-[160px] flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-gray-300 bg-gray-50 px-5 py-4 text-xs font-medium text-gray-500 opacity-80 hover:border-sky-400 hover:opacity-100"
                             >
-                                <span className="wpuf-absolute wpuf-right-2 wpuf-top-2"><ProBadge /></span>
-                                <span className="wpuf-opacity-60"><ProviderIcon provider={ p } /></span>
+                                <span className="absolute right-2 top-2"><ProBadge /></span>
+                                <span className="opacity-60"><ProviderIcon provider={ p } /></span>
                                 <span>{ p.label }</span>
                             </a>
                         );
@@ -130,26 +130,26 @@ export default function ProviderTabs( { providers: allProviders, fields, renderF
                             type="button"
                             key={ p.key }
                             onClick={ () => setActive( p.key ) }
-                            className={ `wpuf-relative wpuf-flex wpuf-h-[104px] wpuf-w-[160px] wpuf-flex-col wpuf-items-center wpuf-justify-center wpuf-gap-2 wpuf-rounded-lg wpuf-border wpuf-px-5 wpuf-py-4 wpuf-text-xs wpuf-font-medium wpuf-transition ${
+                            className={ `relative flex h-[104px] w-[160px] flex-col items-center justify-center gap-2 rounded-lg border px-5 py-4 text-xs font-medium transition ${
                                 isViewed
-                                    ? 'wpuf-border-primary wpuf-ring-1 wpuf-ring-primary wpuf-text-gray-900'
-                                    : 'wpuf-border-gray-200 wpuf-text-gray-600 hover:wpuf-border-gray-300'
+                                    ? 'border-primary ring-1 ring-primary text-gray-900'
+                                    : 'border-gray-200 text-gray-600 hover:border-gray-300'
                             }` }
                         >
                             <span
                                 title={ configured ? __( 'Configured', 'wp-user-frontend' ) : __( 'Add credentials to enable', 'wp-user-frontend' ) }
-                                className={ `wpuf-absolute wpuf-right-2 wpuf-top-2 wpuf-flex wpuf-h-4 wpuf-w-4 wpuf-items-center wpuf-justify-center wpuf-rounded wpuf-border ${
-                                    configured ? 'wpuf-border-primary wpuf-bg-primary wpuf-text-white' : 'wpuf-border-gray-300 wpuf-bg-white'
+                                className={ `absolute right-2 top-2 flex h-4 w-4 items-center justify-center rounded-sm border ${
+                                    configured ? 'border-primary bg-primary text-white' : 'border-gray-300 bg-white'
                                 }` }
                             >
                                 { configured && (
-                                    <svg className="wpuf-h-3 wpuf-w-3" viewBox="0 0 20 20" fill="currentColor">
+                                    <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
                                         <path fillRule="evenodd" d="M16.7 5.3a1 1 0 010 1.4l-8 8a1 1 0 01-1.4 0l-4-4a1 1 0 011.4-1.4l3.3 3.3 7.3-7.3a1 1 0 011.4 0z" clipRule="evenodd" />
                                     </svg>
                                 ) }
                             </span>
                             <ProviderIcon provider={ p } />
-                            <span className="wpuf-text-gray-600">{ p.label }</span>
+                            <span className="text-gray-600">{ p.label }</span>
                         </button>
                     );
                 } ) }

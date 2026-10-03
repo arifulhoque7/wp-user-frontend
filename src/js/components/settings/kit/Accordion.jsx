@@ -11,29 +11,29 @@ export default function Accordion( { title, desc, icon = null, isPro = false, de
     const [ open, setOpen ] = useState( defaultOpen );
 
     return (
-        <div className="wpuf-border-b wpuf-border-gray-200">
+        <div className="border-b border-gray-200">
             <button
                 type="button"
                 onClick={ () => setOpen( ( v ) => ! v ) }
-                className="wpuf-flex wpuf-w-full wpuf-items-center wpuf-gap-3 wpuf-py-4 wpuf-text-left"
+                className="flex w-full items-center gap-3 py-4 text-left"
             >
-                { icon && <span className="wpuf-flex wpuf-shrink-0 wpuf-items-center">{ icon }</span> }
-                <span className="wpuf-min-w-0 wpuf-flex-1">
-                    <span className="wpuf-flex wpuf-items-center wpuf-gap-2 wpuf-text-base wpuf-font-semibold wpuf-text-gray-900">
+                { icon && <span className="flex shrink-0 items-center">{ icon }</span> }
+                <span className="min-w-0 flex-1">
+                    <span className="flex items-center gap-2 text-base font-semibold text-gray-900">
                         { title }
                         { isPro && <ProBadge /> }
                     </span>
-                    { desc && <span className="wpuf-mt-0.5 wpuf-block wpuf-text-sm wpuf-text-gray-500">{ desc }</span> }
+                    { desc && <span className="mt-0.5 block text-sm text-gray-500">{ desc }</span> }
                 </span>
                 <svg
-                    className={ `wpuf-h-5 wpuf-w-5 wpuf-shrink-0 wpuf-text-gray-400 wpuf-transition-transform ${ open ? 'wpuf-rotate-180' : '' }` }
+                    className={ `h-5 w-5 shrink-0 text-gray-400 transition-transform ${ open ? 'rotate-180' : '' }` }
                     viewBox="0 0 20 20"
                     fill="currentColor"
                 >
                     <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
                 </svg>
             </button>
-            { open && <div className="wpuf-pb-4">{ children }</div> }
+            { open && <div className="pb-4">{ children }</div> }
         </div>
     );
 }

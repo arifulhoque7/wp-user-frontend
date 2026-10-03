@@ -195,19 +195,19 @@ export default function SettingsSection( { sectionId, tabTitle } ) {
     const showTitle = title && title.toLowerCase() !== ( tabTitle || '' ).toLowerCase();
 
     return (
-        <section className="wpuf-mb-10">
+        <section className="mb-10">
             { showTitle ? (
                 <>
-                    <h3 className="wpuf-mb-1 wpuf-text-lg wpuf-font-semibold wpuf-text-gray-900">
+                    <h3 className="mb-1 text-lg font-semibold text-gray-900">
                         { title }
                     </h3>
-                    <div className="wpuf-mb-4 wpuf-border-b wpuf-border-gray-200 wpuf-pb-2" />
+                    <div className="mb-4 border-b border-gray-200 pb-2" />
                 </>
             ) : null }
 
             { /* Output of the legacy wsa_form_top_{section} hook (kses'd in PHP). */ }
             { sectionHtml && sectionHtml.top ? (
-                <RawHTML className="wpuf-mb-4 wpuf-section-hook-top">{ sectionHtml.top }</RawHTML>
+                <RawHTML className="mb-4 wpuf-section-hook-top">{ sectionHtml.top }</RawHTML>
             ) : null }
 
             { sectionId === 'wpuf_general' ? (
@@ -242,7 +242,7 @@ export default function SettingsSection( { sectionId, tabTitle } ) {
                             { group.fields.length
                                 ? group.fields.map( renderField )
                                 : ( group.isPro || forcePro ) ? (
-                                    <p className="wpuf-rounded-md wpuf-border wpuf-border-dashed wpuf-border-gray-300 wpuf-bg-gray-50 wpuf-px-3 wpuf-py-2 wpuf-text-xs wpuf-text-gray-500">
+                                    <p className="rounded-md border border-dashed border-gray-300 bg-gray-50 px-3 py-2 text-xs text-gray-500">
                                         { __( 'This is a WP User Frontend Pro feature.', 'wp-user-frontend' ) }
                                     </p>
                                 ) : null }
@@ -254,7 +254,7 @@ export default function SettingsSection( { sectionId, tabTitle } ) {
                 : visibleFields.map( renderField ) }
 
             { sectionHtml && sectionHtml.bottom ? (
-                <RawHTML className="wpuf-mt-4 wpuf-section-hook-bottom">{ sectionHtml.bottom }</RawHTML>
+                <RawHTML className="mt-4 wpuf-section-hook-bottom">{ sectionHtml.bottom }</RawHTML>
             ) : null }
         </section>
     );

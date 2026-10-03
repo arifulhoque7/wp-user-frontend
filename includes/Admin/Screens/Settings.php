@@ -44,6 +44,18 @@ class Settings extends Screen {
     }
 
     /**
+     * The React settings screen scopes its Tailwind utilities to this class;
+     * the classic screen does not load that stylesheet.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return string
+     */
+    public function body_class() {
+        return $this->is_legacy() ? '' : 'wpuf-admin-react';
+    }
+
+    /**
      * Load step: enqueue the React app (or the legacy screen's scripts).
      *
      * @since WPUF_SINCE
@@ -124,7 +136,7 @@ class Settings extends Screen {
                 <span class="flex-end">
                     <span
                         id="wpuf-headway-icon"
-                        class="wpuf-border wpuf-border-gray-100 wpuf-mr-[16px] wpuf-rounded-full wpuf-p-1 wpuf-shadow-sm hover:wpuf-bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                        class="border border-gray-100 mr-[16px] rounded-full p-1 shadow-xs hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
                     ></span>
                     <a class="feedback-link" target="_blank" href="<?php echo esc_url( 'https://feedback.wedevs.com/b/user-frontend' ); ?>">💡 
                     <?php
@@ -149,7 +161,7 @@ class Settings extends Screen {
         }
         $this->print_notices();
         ?>
-        <div id="wpuf-settings-root" class="!wpuf-ml-[-20px] wpuf-min-h-screen wpuf-w-[calc(100%+20px)]">
+        <div id="wpuf-settings-root" class="ml-[-20px]! min-h-screen wpuf-w-[calc(100%+20px)]">
             <noscript>
                 <strong>
                     <?php esc_html_e( 'This page requires JavaScript. Please enable it to manage settings.', 'wp-user-frontend' ); ?>

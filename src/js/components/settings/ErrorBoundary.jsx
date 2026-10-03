@@ -23,7 +23,7 @@ export default class ErrorBoundary extends Component {
     render() {
         if ( this.state.error ) {
             return (
-                <div className="wpuf-mb-6 wpuf-rounded-md wpuf-bg-red-50 wpuf-px-4 wpuf-py-3 wpuf-text-sm wpuf-text-red-700">
+                <div className="mb-6 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
                     { __( 'A field failed to render:', 'wp-user-frontend' ) }{ ' ' }
                     { String( this.state.error && this.state.error.message ) }
                 </div>

@@ -1,6 +1,24 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/**
+ * WPUF React Settings screen: Tailwind CSS 4 entry (replaces the Tailwind 3
+ * src/css/settings.css + tailwind.settings.config.js build).
+ *
+ * Plain Tailwind classes (no prefix, like FlyHR). Only the settings sources
+ * are scanned. build.mjs scopes the utilities to body.wpuf-admin-react and
+ * adds the Tailwind 3 base of this screen (src/base-v3/settings.css: scoped
+ * preflight + @tailwindcss/forms `base` rules).
+ */
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities) source(none);
+@import "./v3-theme.css";
+
+@source "../../../src/js/settings.jsx";
+@source "../../../src/js/components/settings";
+@source "../../../includes/Admin/Screens/Settings.php";
+
+@theme {
+    --color-primary: #059669;
+    --color-primaryHover: #10b981;
+}
 
 /* Hide the WordPress admin footer on the settings page (this stylesheet is only
    enqueued here). The footer text is emptied server-side; this removes the

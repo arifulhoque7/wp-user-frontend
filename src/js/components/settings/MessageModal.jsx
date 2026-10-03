@@ -7,9 +7,9 @@ import { __ } from '@wordpress/i18n';
 import ModalShell from './ModalShell';
 
 const TONES = {
-    error: { ring: 'wpuf-bg-red-50', stroke: '#DC2626' },
-    warning: { ring: 'wpuf-bg-amber-50', stroke: '#D97706' },
-    success: { ring: 'wpuf-bg-emerald-50', stroke: '#059669' },
+    error: { ring: 'bg-red-50', stroke: '#DC2626' },
+    warning: { ring: 'bg-amber-50', stroke: '#D97706' },
+    success: { ring: 'bg-emerald-50', stroke: '#059669' },
 };
 
 const ICON_PATHS = {
@@ -26,16 +26,16 @@ export default function MessageModal( { title, message, onClose, tone = 'error',
 
     return (
         <ModalShell onClose={ onClose } labelledBy="wpuf-message-modal-title">
-            <span className={ `wpuf-flex wpuf-h-[88px] wpuf-w-[88px] wpuf-items-center wpuf-justify-center wpuf-rounded-full ${ toneStyle.ring }` }>
+            <span className={ `flex h-[88px] w-[88px] items-center justify-center rounded-full ${ toneStyle.ring }` }>
                 <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke={ toneStyle.stroke } strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d={ ICON_PATHS[ tone ] || ICON_PATHS.error } />
                 </svg>
             </span>
 
-            <h1 id="wpuf-message-modal-title" className="wpuf-m-0 wpuf-mt-7 wpuf-text-2xl wpuf-font-extrabold wpuf-text-gray-800">
+            <h1 id="wpuf-message-modal-title" className="m-0 mt-7 text-2xl font-extrabold text-gray-800">
                 { title }
             </h1>
-            <p className="wpuf-m-0 wpuf-mt-3 wpuf-max-w-md wpuf-text-base wpuf-font-medium wpuf-leading-7 wpuf-text-gray-500">
+            <p className="m-0 mt-3 max-w-md text-base font-medium leading-7 text-gray-500">
                 { message }
             </p>
 
@@ -43,7 +43,7 @@ export default function MessageModal( { title, message, onClose, tone = 'error',
                 type="button"
                 data-primary
                 onClick={ onClose }
-                className="wpuf-mt-9 wpuf-h-[50px] wpuf-rounded-md wpuf-bg-primary wpuf-px-8 wpuf-text-base wpuf-font-medium !wpuf-text-white wpuf-shadow-sm hover:wpuf-bg-primaryHover"
+                className="mt-9 h-[50px] rounded-md bg-primary px-8 text-base font-medium text-white! shadow-xs hover:bg-primaryHover"
             >
                 { actionLabel || __( 'OK', 'wp-user-frontend' ) }
             </button>

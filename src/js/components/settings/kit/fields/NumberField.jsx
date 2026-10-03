@@ -13,9 +13,9 @@ export default function NumberField( { field, name, value, onChange } ) {
 
     return (
         <>
-            <div className="wpuf-flex wpuf-items-center">
+            <div className="flex items-center">
                 { field.label && (
-                    <label htmlFor={ name } className="wpuf-text-sm wpuf-text-gray-700 wpuf-my-2">
+                    <label htmlFor={ name } className="text-sm text-gray-700 my-2">
                         { field.label }
                     </label>
                 ) }
@@ -33,7 +33,7 @@ export default function NumberField( { field, name, value, onChange } ) {
             />
             { field.long_help && (
                 <div
-                    className="wpuf-text-sm wpuf-mt-4 wpuf-long-help"
+                    className="text-sm mt-4 wpuf-long-help"
                     dangerouslySetInnerHTML={ { __html: field.long_help } }
                 />
             ) }

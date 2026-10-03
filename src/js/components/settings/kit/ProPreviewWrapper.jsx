@@ -10,17 +10,17 @@ export default function ProPreviewWrapper( { children } ) {
     const proLink = wpuf.upgrade_url || 'https://wedevs.com/wp-user-frontend-pro/pricing/';
 
     return (
-        <div className="wpuf-relative wpuf-rounded wpuf-border wpuf-border-dashed wpuf-border-transparent hover:wpuf-border-sky-500 wpuf-group/pro-item wpuf-transition-all wpuf-opacity-60 hover:wpuf-opacity-100">
+        <div className="relative rounded-sm border border-dashed border-transparent hover:border-sky-500 group/pro-item transition-all opacity-60 hover:opacity-100">
             <a
-                className="wpuf-absolute wpuf-top-1/2 wpuf-left-1/2 wpuf--translate-y-1/2 wpuf--translate-x-1/2 wpuf-z-30 wpuf-rounded-md wpuf-bg-primary wpuf-px-4 wpuf-py-2 wpuf-text-sm wpuf-font-semibold !wpuf-text-white wpuf-opacity-0 group-hover/pro-item:wpuf-opacity-100 wpuf-transition-all hover:wpuf-bg-primaryHover"
+                className="absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 z-30 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white! opacity-0 group-hover/pro-item:wpuf-opacity-100 transition-all hover:bg-primaryHover"
                 target="_blank"
                 rel="noopener noreferrer"
                 href={ proLink }
             >
                 { __( 'Upgrade to PRO', 'wp-user-frontend' ) }
             </a>
-            <div className="wpuf-absolute wpuf-inset-0 wpuf-z-20 wpuf-rounded wpuf-bg-emerald-50 wpuf-opacity-0 group-hover/pro-item:wpuf-opacity-60 wpuf-transition-all" />
-            <div className="wpuf-pointer-events-none">{ children }</div>
+            <div className="absolute inset-0 z-20 rounded-sm bg-emerald-50 opacity-0 group-hover/pro-item:wpuf-opacity-60 transition-all" />
+            <div className="pointer-events-none">{ children }</div>
         </div>
     );
 }

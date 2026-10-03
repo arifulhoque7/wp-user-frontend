@@ -217,28 +217,28 @@ const SettingsApp = () => {
     } );
 
     return (
-        <div className="wpuf-settings-react wpuf-min-h-screen">
+        <div className="wpuf-settings-react min-h-screen">
             <Header utm="wpuf-settings" />
 
             { isLoading ? (
-                <div className="wpuf-px-[32px] wpuf-pt-[32px] wpuf-pb-[100px]">
-                    <div className="wpuf-flex wpuf-animate-pulse wpuf-gap-8 wpuf-rounded-lg wpuf-border wpuf-border-gray-200 wpuf-bg-white wpuf-p-8 wpuf-shadow-sm">
+                <div className="px-[32px] pt-[32px] pb-[100px]">
+                    <div className="flex animate-pulse gap-8 rounded-lg border border-gray-200 bg-white p-8 shadow-xs">
                         {/* Left nav skeleton */}
-                        <div className="wpuf-w-[280px] wpuf-shrink-0 wpuf-space-y-3">
-                            <div className="wpuf-h-[42px] wpuf-rounded-md wpuf-bg-gray-100" />
+                        <div className="w-[280px] shrink-0 [&>:not([hidden])~:not([hidden])]:mt-3">
+                            <div className="h-[42px] rounded-md bg-gray-100" />
                             { Array.from( { length: 8 } ).map( ( _, i ) => (
-                                <div key={ i } className="wpuf-h-10 wpuf-rounded-md wpuf-bg-gray-100" />
+                                <div key={ i } className="h-10 rounded-md bg-gray-100" />
                             ) ) }
                         </div>
                         {/* Content skeleton */}
-                        <div className="wpuf-min-w-0 wpuf-flex-1 wpuf-border-l wpuf-border-gray-200 wpuf-pl-8">
-                            <div className="wpuf-h-7 wpuf-w-44 wpuf-rounded wpuf-bg-gray-200" />
-                            <div className="wpuf-my-8 wpuf-border-b wpuf-border-gray-200" />
-                            <div className="wpuf-space-y-6">
+                        <div className="min-w-0 flex-1 border-l border-gray-200 pl-8">
+                            <div className="h-7 w-44 rounded-sm bg-gray-200" />
+                            <div className="my-8 border-b border-gray-200" />
+                            <div className="[&>:not([hidden])~:not([hidden])]:mt-6">
                                 { Array.from( { length: 5 } ).map( ( _, i ) => (
                                     <div key={ i }>
-                                        <div className="wpuf-mb-2 wpuf-h-4 wpuf-w-32 wpuf-rounded wpuf-bg-gray-100" />
-                                        <div className="wpuf-h-[42px] wpuf-w-full wpuf-rounded-md wpuf-bg-gray-100" />
+                                        <div className="mb-2 h-4 w-32 rounded-sm bg-gray-100" />
+                                        <div className="h-[42px] w-full rounded-md bg-gray-100" />
                                     </div>
                                 ) ) }
                             </div>
@@ -246,7 +246,7 @@ const SettingsApp = () => {
                     </div>
                 </div>
             ) : (
-            <div className="wpuf-px-[32px] wpuf-pt-[32px] wpuf-pb-[100px]">
+            <div className="px-[32px] pt-[32px] pb-[100px]">
             { error ? (
                 <MessageModal
                     title={ __( 'Couldn’t save settings', 'wp-user-frontend' ) }
@@ -256,7 +256,7 @@ const SettingsApp = () => {
                 />
             ) : null }
 
-            <div className="wpuf-flex wpuf-gap-8 wpuf-rounded-lg wpuf-border wpuf-border-gray-200 wpuf-bg-white wpuf-p-8 wpuf-shadow-sm">
+            <div className="flex gap-8 rounded-lg border border-gray-200 bg-white p-8 shadow-xs">
                 <SettingsNav
                     ia={ ia }
                     activeTab={ activeTab }
@@ -265,25 +265,25 @@ const SettingsApp = () => {
                     onSearch={ setSearch }
                 />
 
-                <div className="wpuf-min-w-0 wpuf-flex-1 wpuf-max-w-full wpuf-border-l wpuf-border-gray-200 wpuf-pl-8">
-                    <h2 className="wpuf-mt-0 wpuf-mb-0 wpuf-text-2xl wpuf-font-bold wpuf-leading-7 wpuf-text-gray-900">
+                <div className="min-w-0 flex-1 max-w-full border-l border-gray-200 pl-8">
+                    <h2 className="mt-0 mb-0 text-2xl font-bold leading-7 text-gray-900">
                         { searching
                             ? __( 'Search results', 'wp-user-frontend' )
                             : ( currentTab ? currentTab.title : '' ) }
                     </h2>
 
                     {/* Figma: full-width divider under the tab title, 32px above + below. */}
-                    <div className="wpuf-my-8 wpuf-border-b wpuf-border-gray-200" />
+                    <div className="my-8 border-b border-gray-200" />
 
                     { ! searching && currentTab && currentTab.notice ? (
-                        <div className="wpuf-mb-8 wpuf-flex wpuf-items-start wpuf-gap-2 wpuf-rounded-md wpuf-border-l-4 wpuf-border-amber-400 wpuf-bg-amber-50 wpuf-px-4 wpuf-py-3 wpuf-text-sm wpuf-text-amber-700">
-                            <svg className="wpuf-mt-0.5 wpuf-h-4 wpuf-w-4 wpuf-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M8.257 3.1c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
+                        <div className="mb-8 flex items-start gap-2 rounded-md border-l-4 border-amber-400 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                            <svg className="mt-0.5 h-4 w-4 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M8.257 3.1c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
                             { currentTab.notice }
                         </div>
                     ) : null }
 
                     { ! searching && currentTab && currentTab.subtabs && currentTab.sections.length > 1 ? (
-                        <div className="wpuf-mb-8 wpuf-inline-flex wpuf-rounded-lg wpuf-bg-gray-100 wpuf-p-2">
+                        <div className="mb-8 inline-flex rounded-lg bg-gray-100 p-2">
                             { currentTab.sections.map( ( sid ) => {
                                 const active = ( activeSub || currentTab.sections[ 0 ] ) === sid;
                                 return (
@@ -291,8 +291,8 @@ const SettingsApp = () => {
                                         type="button"
                                         key={ sid }
                                         onClick={ () => setActiveSub( sid ) }
-                                        className={ `wpuf-rounded-md wpuf-px-4 wpuf-py-2 wpuf-text-base wpuf-font-medium wpuf-transition ${
-                                            active ? 'wpuf-bg-white wpuf-text-gray-900 wpuf-shadow-sm' : 'wpuf-text-gray-500 hover:wpuf-text-gray-700'
+                                        className={ `rounded-md px-4 py-2 text-base font-medium transition ${
+                                            active ? 'bg-white text-gray-900 shadow-xs' : 'text-gray-500 hover:text-gray-700'
                                         }` }
                                     >
                                         { sectionTitle( sid ) }
@@ -303,14 +303,14 @@ const SettingsApp = () => {
                     ) : null }
 
                     { searching && ! searchHasResults ? (
-                        <div className="wpuf-flex wpuf-flex-col wpuf-items-center wpuf-justify-center wpuf-py-16 wpuf-text-center">
-                            <svg className="wpuf-mb-4 wpuf-h-12 wpuf-w-12 wpuf-text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                        <div className="flex flex-col items-center justify-center py-16 text-center">
+                            <svg className="mb-4 h-12 w-12 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                             </svg>
-                            <p className="wpuf-m-0 wpuf-text-base wpuf-font-medium wpuf-text-gray-700">
+                            <p className="m-0 text-base font-medium text-gray-700">
                                 { __( 'No settings found', 'wp-user-frontend' ) }
                             </p>
-                            <p className="wpuf-mt-1 wpuf-mb-0 wpuf-text-sm wpuf-text-gray-400">
+                            <p className="mt-1 mb-0 text-sm text-gray-400">
                                 { __( 'Try a different keyword.', 'wp-user-frontend' ) }
                             </p>
                         </div>
@@ -331,25 +331,25 @@ const SettingsApp = () => {
 
             { ! isLoading && (
                 <div
-                    className="wpuf-settings-footer wpuf-z-40 wpuf-flex wpuf-items-center wpuf-justify-between wpuf-border-t wpuf-border-gray-200 wpuf-bg-white wpuf-px-[32px] wpuf-py-4 wpuf-shadow-[0_-1px_3px_rgba(0,0,0,0.06)]"
+                    className="wpuf-settings-footer z-40 flex items-center justify-between border-t border-gray-200 bg-white px-[32px] py-4 shadow-[0_-1px_3px_rgba(0,0,0,0.06)]"
                     style={ { left: `${ footerLeft }px` } }
                 >
                     <button
                         type="button"
                         disabled={ ! isDirty || isSaving }
                         onClick={ () => discard() }
-                        className="wpuf-rounded-md wpuf-border !wpuf-border-gray-300 wpuf-bg-white wpuf-px-6 wpuf-py-2.5 wpuf-text-sm wpuf-font-medium wpuf-text-gray-700 hover:wpuf-bg-gray-50 disabled:wpuf-opacity-50"
+                        className="rounded-md border border-gray-300! bg-white px-6 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
                     >
                         { __( 'Cancel', 'wp-user-frontend' ) }
                     </button>
-                    <div className="wpuf-flex wpuf-items-center wpuf-gap-3">
+                    <div className="flex items-center gap-3">
                         { justSaved ? (
-                            <span className="wpuf-flex wpuf-items-center wpuf-gap-1 wpuf-text-xs wpuf-font-medium wpuf-text-emerald-600">
-                                <svg className="wpuf-h-4 wpuf-w-4" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                            <span className="flex items-center gap-1 text-xs font-medium text-emerald-600">
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
                                 { __( 'Saved', 'wp-user-frontend' ) }
                             </span>
                         ) : isDirty ? (
-                            <span className="wpuf-text-xs wpuf-text-gray-400">
+                            <span className="text-xs text-gray-400">
                                 { __( 'Unsaved changes', 'wp-user-frontend' ) }
                             </span>
                         ) : null }
@@ -357,7 +357,7 @@ const SettingsApp = () => {
                             type="button"
                             disabled={ isSaving || ! isDirty }
                             onClick={ handleSave }
-                            className="wpuf-rounded-md wpuf-bg-primary wpuf-px-8 wpuf-py-2.5 wpuf-text-sm wpuf-font-medium !wpuf-text-white hover:wpuf-bg-primaryHover disabled:wpuf-opacity-50"
+                            className="rounded-md bg-primary px-8 py-2.5 text-sm font-medium text-white! hover:bg-primaryHover disabled:opacity-50"
                         >
                             { isSaving ? __( 'Saving…', 'wp-user-frontend' ) : __( 'Save', 'wp-user-frontend' ) }
                         </button>

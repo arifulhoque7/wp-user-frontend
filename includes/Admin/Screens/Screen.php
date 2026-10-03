@@ -68,6 +68,19 @@ abstract class Screen {
     }
 
     /**
+     * Class added to the admin `<body>` while this screen is viewed. React
+     * screens return `wpuf-admin-react`: their Tailwind stylesheet scopes its
+     * utilities to it, so they style the screen (and its portals) only.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return string
+     */
+    public function body_class() {
+        return '';
+    }
+
+    /**
      * Whether this is the screen being viewed (by `$plugin_page`, which does
      * not change with the admin language, unlike the hook suffix).
      *

@@ -38,17 +38,17 @@ export default function RoleEmailTemplates( { field } ) {
     const remove = ( i ) => commit( rows.filter( ( _, idx ) => idx !== i ) );
 
     return (
-        <div className="wpuf-mt-4">
+        <div className="mt-4">
             { rows.map( ( row, i ) => (
-                <div key={ i } className="wpuf-mb-3 wpuf-rounded-lg wpuf-border wpuf-border-gray-200 wpuf-p-4">
-                    <div className="wpuf-mb-2 wpuf-flex wpuf-items-center wpuf-justify-between">
-                        <span className="wpuf-text-sm wpuf-font-semibold wpuf-text-gray-900">
+                <div key={ i } className="mb-3 rounded-lg border border-gray-200 p-4">
+                    <div className="mb-2 flex items-center justify-between">
+                        <span className="text-sm font-semibold text-gray-900">
                             { __( 'Role-specific Template', 'wp-user-frontend' ) } #{ i + 1 }
                         </span>
                         <button
                             type="button"
                             onClick={ () => remove( i ) }
-                            className="wpuf-text-sm wpuf-font-medium wpuf-text-red-600 hover:wpuf-text-red-700"
+                            className="text-sm font-medium text-red-600 hover:text-red-700"
                         >
                             { __( 'Remove', 'wp-user-frontend' ) }
                         </button>
@@ -76,7 +76,7 @@ export default function RoleEmailTemplates( { field } ) {
             <button
                 type="button"
                 onClick={ add }
-                className="wpuf-rounded-md wpuf-border !wpuf-border-gray-300 wpuf-bg-white wpuf-px-4 wpuf-py-2 wpuf-text-sm wpuf-font-medium wpuf-text-gray-700 hover:wpuf-bg-gray-50"
+                className="rounded-md border border-gray-300! bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
             >
                 + { __( 'Add New', 'wp-user-frontend' ) }
             </button>

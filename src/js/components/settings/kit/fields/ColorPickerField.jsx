@@ -25,24 +25,24 @@ export default function ColorPickerField( { field, name, sectionId, value, onCha
     const currentValue = value || fallback || '#000000';
 
     return (
-        <div className="wpuf-flex wpuf-items-center wpuf-justify-between wpuf-w-2/5">
-            <div className="wpuf-flex wpuf-items-center">
+        <div className="flex items-center justify-between w-2/5">
+            <div className="flex items-center">
                 { field.label && (
-                    <label htmlFor={ name } className="wpuf-text-sm wpuf-text-gray-700 wpuf-my-2">
+                    <label htmlFor={ name } className="text-sm text-gray-700 my-2">
                         { field.label }
                     </label>
                 ) }
                 { field.help_text && <HelpTextIcon text={ field.help_text } /> }
             </div>
-            <div className="wpuf-relative wpuf-ml-2 wpuf-flex wpuf-gap-2.5">
-                <div className="wpuf-flex wpuf-justify-center wpuf-items-center wpuf-space-x-1 wpuf-px-2 wpuf-py-1.5 wpuf-rounded-md wpuf-bg-white wpuf-border wpuf-cursor-pointer wpuf-relative">
-                    <div className="wpuf-w-6 wpuf-h-6 wpuf-overflow-hidden wpuf-border wpuf-border-gray-200 wpuf-rounded-full wpuf-flex wpuf-justify-center wpuf-items-center">
+            <div className="relative ml-2 flex gap-2.5">
+                <div className="flex justify-center items-center [&>:not([hidden])~:not([hidden])]:ml-1 px-2 py-1.5 rounded-md bg-white border cursor-pointer relative">
+                    <div className="w-6 h-6 overflow-hidden border border-gray-200 rounded-full flex justify-center items-center">
                         <input
                             type="color"
                             id={ name }
                             value={ currentValue }
                             onChange={ handleChange }
-                            className="wpuf-w-8 wpuf-h-12 !wpuf-border-gray-50 !wpuf--m-4 hover:!wpuf-cursor-pointer"
+                            className="w-8 h-12 border-gray-50! -m-4! hover:cursor-pointer!"
                             style={ { background: fallback || '' } }
                         />
                     </div>

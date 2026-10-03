@@ -13,16 +13,16 @@ export default function CheckboxField( { field, name, value, onChange } ) {
     }, [ name, onChange ] );
 
     return (
-        <div className="wpuf-flex wpuf-items-center">
+        <div className="flex items-center">
             <input
                 type="checkbox"
                 id={ name }
                 checked={ isChecked }
                 onChange={ handleChange }
-                className="!wpuf-mr-2 wpuf-h-4 wpuf-w-4 wpuf-rounded !wpuf-border-gray-300 checked:!wpuf-border-primary checked:!wpuf-bg-primary focus:!wpuf-ring-transparent"
+                className="mr-2! h-4 w-4 rounded-sm border-gray-300! checked:border-primary! checked:bg-primary! focus:ring-transparent!"
             />
             { field.label && (
-                <label htmlFor={ name } className="wpuf-text-sm wpuf-text-gray-700 wpuf-my-2">
+                <label htmlFor={ name } className="text-sm text-gray-700 my-2">
                     { field.label }
                 </label>
             ) }

@@ -121,12 +121,12 @@ export default function AISettings( { fields, renderField } ) {
             { passthrough.map( ( f ) => <HtmlField key={ f.name } field={ { ...f, html: f.desc || f.default } } /> ) }
 
             { providerField && (
-                <div className="wpuf-mt-6">
+                <div className="mt-6">
                     <RadioCardsField field={ providerField } name="ai_provider" value={ provider } single onChange={ ( n, v ) => setProvider( v ) } />
                 </div>
             ) }
 
-            <div className="wpuf-mt-6">
+            <div className="mt-6">
                 <TextField
                     field={ { label: __( 'API Key', 'wp-user-frontend' ), help_text: stripTags( ( byName( 'api_key_current' ) || {} ).desc ) } }
                     name="api_key_current"
@@ -136,14 +136,14 @@ export default function AISettings( { fields, renderField } ) {
             </div>
 
             { modelField && (
-                <div className="wpuf-mt-6">
-                    <div className="wpuf-flex wpuf-items-center wpuf-justify-between">
-                        <label className="wpuf-text-sm wpuf-text-gray-700 wpuf-my-2">{ __( 'AI Model', 'wp-user-frontend' ) }</label>
+                <div className="mt-6">
+                    <div className="flex items-center justify-between">
+                        <label className="text-sm text-gray-700 my-2">{ __( 'AI Model', 'wp-user-frontend' ) }</label>
                         <button
                             type="button"
                             onClick={ fetchModels }
                             disabled={ fetching }
-                            className="wpuf-text-xs wpuf-font-medium wpuf-text-primary hover:wpuf-underline disabled:wpuf-opacity-50"
+                            className="text-xs font-medium text-primary hover:underline disabled:opacity-50"
                         >
                             { fetching ? __( 'Fetching…', 'wp-user-frontend' ) : __( '↻ Fetch latest models', 'wp-user-frontend' ) }
                         </button>
@@ -155,29 +155,29 @@ export default function AISettings( { fields, renderField } ) {
                         onChange={ ( n, v ) => setValue( 'wpuf_ai', 'ai_model', v ) }
                     />
                     { fetchMsg && (
-                        <p className="wpuf-mt-2 wpuf-mb-0 wpuf-text-sm wpuf-text-amber-600">{ fetchMsg }</p>
+                        <p className="mt-2 mb-0 text-sm text-amber-600">{ fetchMsg }</p>
                     ) }
                 </div>
             ) }
 
-            <div className="wpuf-mt-6 wpuf-flex wpuf-items-center wpuf-gap-3">
+            <div className="mt-6 flex items-center gap-3">
                 <button
                     type="button"
                     onClick={ testConnection }
                     disabled={ testing || ! ( keys[ provider ] || '' ).trim() }
-                    className="wpuf-rounded-md wpuf-border !wpuf-border-gray-300 wpuf-bg-white wpuf-px-4 wpuf-py-2 wpuf-text-sm wpuf-font-medium wpuf-text-gray-700 hover:wpuf-bg-gray-50 disabled:wpuf-opacity-50"
+                    className="rounded-md border border-gray-300! bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
                 >
                     { testing ? __( 'Testing…', 'wp-user-frontend' ) : __( 'Test Connection', 'wp-user-frontend' ) }
                 </button>
                 { testResult && (
-                    <span className={ `wpuf-text-sm wpuf-font-medium ${ testResult.ok ? 'wpuf-text-emerald-600' : 'wpuf-text-red-600' }` }>
+                    <span className={ `text-sm font-medium ${ testResult.ok ? 'text-emerald-600' : 'text-red-600' }` }>
                         { testResult.ok ? '✓ ' : '✕ ' }{ testResult.message }
                     </span>
                 ) }
             </div>
 
             { tempField && (
-                <div className="wpuf-mt-6">
+                <div className="mt-6">
                     <NumberField
                         field={ {
                             label: stripTags( tempField.label ) || __( 'Temperature', 'wp-user-frontend' ),

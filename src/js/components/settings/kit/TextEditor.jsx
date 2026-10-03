@@ -50,7 +50,7 @@ export default function TextEditor( { id, value = '', onChange, teeny = false } 
     return (
         <textarea
             id={ editorId }
-            className={ `wpuf-text-editor ${ SETTING_CLASS_NAMES.textarea } wpuf-min-h-[140px]` }
+            className={ `wpuf-text-editor ${ SETTING_CLASS_NAMES.textarea } min-h-[140px]` }
             defaultValue={ value }
             onChange={ ( e ) => typeof onChange === 'function' && onChange( e.target.value ) }
         />

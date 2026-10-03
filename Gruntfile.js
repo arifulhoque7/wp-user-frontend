@@ -228,6 +228,7 @@ module.exports = function( grunt) {
                     '!assets/less/**',
                     '!assets/tailwind/**',
                     '!tests/**',
+                    '!tools/**',
                     '!**/Gruntfile.js',
                     '!**/package.json',
                     '!**/readme.md',

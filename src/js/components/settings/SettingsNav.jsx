@@ -6,14 +6,14 @@ import NavIcon from './nav-icons';
 
 export default function SettingsNav( { ia, activeTab, onSelect, search, onSearch } ) {
     return (
-        <div className="wpuf-w-[280px] wpuf-shrink-0">
-            <div className="wpuf-relative wpuf-mb-4">
+        <div className="w-[280px] shrink-0">
+            <div className="relative mb-4">
                 <input
                     type="text"
                     value={ search }
                     placeholder={ __( 'Search settings…', 'wp-user-frontend' ) }
                     onChange={ ( e ) => onSearch( e.target.value ) }
-                    className="wpuf-block wpuf-min-w-full wpuf-m-0 wpuf-leading-none wpuf-text-gray-700 placeholder:wpuf-text-gray-400 wpuf-max-w-full focus:wpuf-ring-transparent"
+                    className="block min-w-full m-0 leading-none text-gray-700 placeholder:text-gray-400 max-w-full focus:ring-transparent"
                     style={ {
                         width: '100%',
                         height: '42px',
@@ -36,30 +36,30 @@ export default function SettingsNav( { ia, activeTab, onSelect, search, onSearch
                         type="button"
                         onClick={ () => onSearch( '' ) }
                         aria-label={ __( 'Clear search', 'wp-user-frontend' ) }
-                        className="wpuf-absolute wpuf-right-2 wpuf-top-1/2 wpuf--translate-y-1/2 wpuf-flex wpuf-h-6 wpuf-w-6 wpuf-items-center wpuf-justify-center wpuf-rounded-full wpuf-text-gray-400 hover:wpuf-bg-gray-100 hover:wpuf-text-gray-600"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600"
                     >
-                        <svg className="wpuf-h-4 wpuf-w-4" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
                 ) : (
-                    <span className="wpuf-pointer-events-none wpuf-absolute wpuf-right-3 wpuf-top-1/2 wpuf--translate-y-1/2 wpuf-text-gray-400">
-                        <svg className="wpuf-h-5 wpuf-w-5" fill="none" viewBox="0 0 24 24" strokeWidth="1.8" stroke="currentColor">
+                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth="1.8" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                         </svg>
                     </span>
                 ) }
             </div>
-            <nav className="wpuf-space-y-1">
+            <nav className="[&>:not([hidden])~:not([hidden])]:mt-1">
                 { ia.map( ( tab ) => (
                     <button
                         type="button"
                         key={ tab.id }
                         onClick={ () => onSelect( tab.id ) }
-                        className={ `wpuf-flex wpuf-w-full wpuf-items-center wpuf-rounded-md wpuf-px-3 wpuf-py-2.5 wpuf-text-left wpuf-text-sm wpuf-font-medium ${
+                        className={ `flex w-full items-center rounded-md px-3 py-2.5 text-left text-sm font-medium ${
                             activeTab === tab.id
-                                ? 'wpuf-bg-primary wpuf-text-white'
-                                : 'wpuf-text-gray-700 hover:wpuf-bg-gray-100'
+                                ? 'bg-primary text-white'
+                                : 'text-gray-700 hover:bg-gray-100'
                         }` }
                     >
                         <NavIcon tabId={ tab.id } />

@@ -26,17 +26,17 @@ const GEO = [ 'ipstack_key' ];
 const LOCATION = [ 'gmap_api_key' ];
 
 const Group = ( { title, desc, first, children } ) => (
-    <div className={ first ? '' : 'wpuf-mt-8 wpuf-border-t wpuf-border-gray-200 wpuf-pt-8' }>
-        <h4 className="wpuf-mb-1 wpuf-mt-0 wpuf-text-base wpuf-font-semibold wpuf-text-gray-900">
+    <div className={ first ? '' : 'mt-8 border-t border-gray-200 pt-8' }>
+        <h4 className="mb-1 mt-0 text-base font-semibold text-gray-900">
             { title }
         </h4>
-        { desc ? <p className="wpuf-mb-4 wpuf-mt-0 wpuf-max-w-2xl wpuf-text-sm wpuf-text-gray-500">{ desc }</p> : null }
+        { desc ? <p className="mb-4 mt-0 max-w-2xl text-sm text-gray-500">{ desc }</p> : null }
         { children }
     </div>
 );
 
 const Check = () => (
-    <svg className="wpuf-h-3 wpuf-w-3" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+    <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
         <path fillRule="evenodd" d="M16.7 5.3a1 1 0 010 1.4l-8 8a1 1 0 01-1.4 0l-4-4a1 1 0 011.4-1.4l3.3 3.3 7.3-7.3a1 1 0 011.4 0z" clipRule="evenodd" />
     </svg>
 );
@@ -52,16 +52,16 @@ const OptionCard = ( { logo, label, viewed, checked, onView, onToggle, checkTitl
         type="button"
         onClick={ onView }
         title={ label }
-        className={ `wpuf-relative wpuf-flex wpuf-h-[80px] wpuf-w-[160px] wpuf-items-center wpuf-justify-center wpuf-rounded-lg wpuf-border-2 wpuf-bg-white wpuf-transition ${
+        className={ `relative flex h-[80px] w-[160px] items-center justify-center rounded-lg border-2 bg-white transition ${
             pro
-                ? 'wpuf-border-dashed wpuf-border-gray-300 wpuf-bg-gray-50 wpuf-opacity-90 hover:wpuf-opacity-100'
+                ? 'border-dashed border-gray-300 bg-gray-50 opacity-90 hover:opacity-100'
                 : viewed
-                    ? 'wpuf-border-primary'
-                    : 'wpuf-border-gray-200 hover:wpuf-border-gray-300'
+                    ? 'border-primary'
+                    : 'border-gray-200 hover:border-gray-300'
         }` }
     >
         { pro ? (
-            <span className="wpuf-absolute wpuf-right-1.5 wpuf-top-1.5"><ProBadge /></span>
+            <span className="absolute right-1.5 top-1.5"><ProBadge /></span>
         ) : (
             <span
                 role="checkbox"
@@ -73,23 +73,23 @@ const OptionCard = ( { logo, label, viewed, checked, onView, onToggle, checkTitl
                         onToggle();
                     }
                 } }
-                className={ `wpuf-absolute wpuf-right-1.5 wpuf-top-1.5 wpuf-flex wpuf-h-4 wpuf-w-4 wpuf-items-center wpuf-justify-center wpuf-rounded wpuf-border ${
-                    onToggle ? 'wpuf-cursor-pointer' : 'wpuf-cursor-default'
-                } ${ checked ? 'wpuf-border-primary wpuf-bg-primary wpuf-text-white' : 'wpuf-border-gray-300 wpuf-bg-white' }` }
+                className={ `absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-sm border ${
+                    onToggle ? 'cursor-pointer' : 'cursor-default'
+                } ${ checked ? 'border-primary bg-primary text-white' : 'border-gray-300 bg-white' }` }
             >
                 { checked && <Check /> }
             </span>
         ) }
         { logo ? (
-            <img src={ logo } alt={ label } className="wpuf-max-h-8 wpuf-max-w-[96px] wpuf-object-contain" />
+            <img src={ logo } alt={ label } className="max-h-8 max-w-[96px] object-contain" />
         ) : (
-            <span className="wpuf-text-sm wpuf-font-medium wpuf-text-gray-700">{ label }</span>
+            <span className="text-sm font-medium text-gray-700">{ label }</span>
         ) }
     </button>
 );
 
 const OptionLabel = ( { children } ) => (
-    <span className="wpuf-mb-2 wpuf-block wpuf-text-sm wpuf-text-gray-700">{ children }</span>
+    <span className="mb-2 block text-sm text-gray-700">{ children }</span>
 );
 
 export default function GeneralSettings( { fields, renderField, values = {}, onField } ) {
@@ -143,7 +143,7 @@ export default function GeneralSettings( { fields, renderField, values = {}, onF
                     first={ ! basicFields.length }
                 >
                     <OptionLabel>{ __( 'Security Option', 'wp-user-frontend' ) }</OptionLabel>
-                    <div className="wpuf-mb-4 wpuf-flex wpuf-gap-3">
+                    <div className="mb-4 flex gap-3">
                         <OptionCard
                             logo={ assetUrl ? `${ assetUrl }/images/recaptcha.png` : '' }
                             label="reCAPTCHA"
@@ -175,7 +175,7 @@ export default function GeneralSettings( { fields, renderField, values = {}, onF
                     desc={ __( 'Resolve visitor location data using an ipstack API key.', 'wp-user-frontend' ) }
                 >
                     <OptionLabel>{ __( 'Geolocation Option', 'wp-user-frontend' ) }</OptionLabel>
-                    <div className="wpuf-mb-4 wpuf-flex wpuf-gap-3">
+                    <div className="mb-4 flex gap-3">
                         <OptionCard
                             logo={ assetUrl ? `${ assetUrl }/images/ipstack.png` : '' }
                             label="ipstack"
@@ -194,7 +194,7 @@ export default function GeneralSettings( { fields, renderField, values = {}, onF
                     desc={ __( 'Render maps and address fields using a Google Maps API key.', 'wp-user-frontend' ) }
                 >
                     <OptionLabel>{ __( 'Location Option', 'wp-user-frontend' ) }</OptionLabel>
-                    <div className="wpuf-mb-4 wpuf-flex wpuf-gap-3">
+                    <div className="mb-4 flex gap-3">
                         <OptionCard
                             logo={ assetUrl ? `${ assetUrl }/images/google-maps.png` : '' }
                             label="Google Maps"

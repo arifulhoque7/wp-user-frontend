@@ -12,7 +12,7 @@
   "private": true,
   "scripts": {
     "release": "grunt release",
-    "build": "pnpm run build:css && pnpm run build:admin && pnpm run build:frontend-subscriptions && pnpm run build:ai-form-builder && pnpm run build:account && pnpm run build:settings-css && pnpm run build:user-directory && pnpm run build:blocks && pnpm run build:legacy && pnpm run build:css && pnpm run build:verify",
+    "build": "pnpm run build:css && pnpm run build:admin && pnpm run build:frontend-subscriptions && pnpm run build:ai-form-builder && pnpm run build:account && pnpm run build:admin-css && pnpm run build:user-directory && pnpm run build:blocks && pnpm run build:legacy && pnpm run build:css && pnpm run build:verify",
     "build:verify": "node bin/verify-build.mjs",
     "build:blocks": "wp-scripts build --config webpack.config.js",
     "watch:blocks": "wp-scripts start --config webpack.config.js",
@@ -27,7 +27,8 @@
     "watch:subscriptions": "WPUF_ENTRY=subscriptions wp-scripts start --config webpack.admin.config.js",
     "build:settings-react": "WPUF_ENTRY=settings-react wp-scripts build --config webpack.admin.config.js && pnpm run build:settings-css",
     "dev:settings-react": "WPUF_ENTRY=settings-react wp-scripts start --config webpack.admin.config.js",
-    "build:settings-css": "tailwindcss -i src/css/settings.css -o assets/css/settings-react.css --config tailwind.settings.config.js --minify",
+    "build:admin-css": "node tools/admin-css/build.mjs",
+    "build:settings-css": "node tools/admin-css/build.mjs settings",
     "build:frontend-subscriptions": "ENTRY=frontend-subscriptions vite build",
     "build:ai-form-builder": "ENTRY=ai-form-builder vite build",
     "build:user-directory": "cd modules/user-directory && npm ci && npm run build",

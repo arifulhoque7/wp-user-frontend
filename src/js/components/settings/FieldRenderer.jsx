@@ -201,7 +201,7 @@ export default function FieldRenderer( { sectionId, field, value, onChange, forc
         ? {
             ...normalized,
             label: (
-                <span className="wpuf-inline-flex wpuf-items-center wpuf-gap-2">
+                <span className="inline-flex items-center gap-2">
                     { normalized.label }
                     <ProBadge />
                 </span>
@@ -221,10 +221,10 @@ export default function FieldRenderer( { sectionId, field, value, onChange, forc
     );
 
     return (
-        <div className="wpuf-mt-6 wpuf-input-container">
+        <div className="mt-6 wpuf-input-container">
             { isProInactive ? <ProPreviewWrapper>{ control }</ProPreviewWrapper> : control }
             { normalized.__descHtml && (
-                <RawHTML className="wpuf-mt-1 wpuf-text-sm wpuf-text-gray-500">{ normalized.__descHtml }</RawHTML>
+                <RawHTML className="mt-1 text-sm text-gray-500">{ normalized.__descHtml }</RawHTML>
             ) }
         </div>
     );

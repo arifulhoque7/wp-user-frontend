@@ -13,29 +13,29 @@ const UnsavedChanges = ( { onDiscard, onContinue } ) => {
                     src={ `${ ( window.wpuf_settings || {} ).asset_url || '' }/images/modal/unsaved-changes.svg` }
                     alt=""
                     aria-hidden="true"
-                    className="wpuf-h-[100px] wpuf-w-[100px]"
+                    className="h-[100px] w-[100px]"
                 />
 
-                <h1 id="wpuf-unsaved-modal-title" className="wpuf-m-0 wpuf-mt-7 wpuf-text-2xl wpuf-font-extrabold wpuf-text-gray-700">
+                <h1 id="wpuf-unsaved-modal-title" className="m-0 mt-7 text-2xl font-extrabold text-gray-700">
                     { __( 'Unsaved Changes', 'wp-user-frontend' ) }
                 </h1>
-                <p className="wpuf-m-0 wpuf-mt-3 wpuf-text-base wpuf-font-medium wpuf-leading-7 wpuf-text-gray-500">
+                <p className="m-0 mt-3 text-base font-medium leading-7 text-gray-500">
                     { __( 'You have unsaved changes in these settings.', 'wp-user-frontend' ) }
                     <br />
                     { __( 'Leaving this tab will discard your changes.', 'wp-user-frontend' ) }
                 </p>
 
-                <div className="wpuf-mt-9 wpuf-flex wpuf-justify-center wpuf-gap-5">
+                <div className="mt-9 flex justify-center gap-5">
                     <button
                         data-primary
                         onClick={ onContinue }
-                        className="wpuf-h-[50px] wpuf-rounded-md wpuf-border !wpuf-border-gray-300 wpuf-bg-white wpuf-px-6 wpuf-text-base wpuf-font-medium wpuf-text-gray-700 hover:wpuf-bg-gray-50"
+                        className="h-[50px] rounded-md border border-gray-300! bg-white px-6 text-base font-medium text-gray-700 hover:bg-gray-50"
                     >
                         { __( 'Continue Editing', 'wp-user-frontend' ) }
                     </button>
                     <button
                         onClick={ onDiscard }
-                        className="wpuf-h-[50px] wpuf-rounded-md wpuf-bg-[#EF4444] wpuf-px-6 wpuf-text-base wpuf-font-medium !wpuf-text-white wpuf-shadow-sm hover:wpuf-bg-red-600"
+                        className="h-[50px] rounded-md bg-[#EF4444] px-6 text-base font-medium text-white! shadow-xs hover:bg-red-600"
                     >
                         { __( 'Discard Changes', 'wp-user-frontend' ) }
                     </button>

@@ -16,24 +16,24 @@ export default function RadioField( { field, name, value, onChange, inline = fal
 
     return (
         <>
-            <div className="wpuf-flex wpuf-items-center">
+            <div className="flex items-center">
                 { field.label && (
-                    <label className="wpuf-text-sm wpuf-text-gray-700 wpuf-my-2">{ field.label }</label>
+                    <label className="text-sm text-gray-700 my-2">{ field.label }</label>
                 ) }
                 { field.help_text && <HelpTextIcon text={ field.help_text } /> }
             </div>
-            <div className={ inline ? 'wpuf-flex wpuf-gap-6' : 'wpuf-space-y-2' }>
+            <div className={ inline ? 'flex gap-6' : '[&>:not([hidden])~:not([hidden])]:mt-2' }>
                 { Object.entries( options ).map( ( [ optValue, optLabel ] ) => (
-                    <label key={ optValue } className="wpuf-flex wpuf-items-center wpuf-gap-2 wpuf-cursor-pointer">
+                    <label key={ optValue } className="flex items-center gap-2 cursor-pointer">
                         <input
                             type="radio"
                             name={ name }
                             value={ optValue }
                             checked={ current === optValue }
                             onChange={ () => handleChange( optValue ) }
-                            className="!wpuf-mt-0 wpuf-h-4 wpuf-w-4 !wpuf-border-gray-300 checked:!wpuf-border-primary checked:!wpuf-bg-primary focus:!wpuf-ring-transparent"
+                            className="mt-0! h-4 w-4 border-gray-300! checked:border-primary! checked:bg-primary! focus:ring-transparent!"
                         />
-                        <span className="wpuf-text-sm wpuf-text-gray-700">
+                        <span className="text-sm text-gray-700">
                             { typeof optLabel === 'object' && optLabel !== null
                                 ? ( optLabel.label || optLabel.name || optValue )
                                 : optLabel }

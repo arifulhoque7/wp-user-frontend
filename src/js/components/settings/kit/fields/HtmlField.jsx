@@ -15,9 +15,9 @@ export default function HtmlField( { field } ) {
     return (
         <div>
             { field.label && (
-                <p className="wpuf-text-sm wpuf-font-medium wpuf-text-gray-700 wpuf-m-0 wpuf-mb-1">{ field.label }</p>
+                <p className="text-sm font-medium text-gray-700 m-0 mb-1">{ field.label }</p>
             ) }
-            { html && <RawHTML className="wpuf-text-sm wpuf-text-gray-600">{ html }</RawHTML> }
+            { html && <RawHTML className="text-sm text-gray-600">{ html }</RawHTML> }
         </div>
     );
 }

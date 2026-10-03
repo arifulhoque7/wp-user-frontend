@@ -32,33 +32,33 @@ export default function FileField( { field, name, value, onChange } ) {
 
     return (
         <>
-            <div className="wpuf-flex wpuf-items-center">
+            <div className="flex items-center">
                 { field.label && (
-                    <label htmlFor={ name } className="wpuf-text-sm wpuf-text-gray-700 wpuf-my-2">
+                    <label htmlFor={ name } className="text-sm text-gray-700 my-2">
                         { field.label }
                     </label>
                 ) }
                 { field.help_text && <HelpTextIcon text={ field.help_text } /> }
             </div>
-            <div className="wpuf-flex wpuf-items-center wpuf-gap-2">
+            <div className="flex items-center gap-2">
                 <input
                     type="text"
                     id={ name }
                     value={ current }
                     onChange={ handleInput }
-                    className="wpuf-min-w-0 wpuf-flex-1 !wpuf-py-2.5 !wpuf-px-3.5 wpuf-text-gray-700 !wpuf-shadow-sm placeholder:wpuf-text-gray-400 wpuf-border !wpuf-border-gray-300 !wpuf-rounded-md"
+                    className="min-w-0 flex-1 py-2.5! px-3.5! text-gray-700 shadow-xs! placeholder:text-gray-400 border border-gray-300! rounded-md!"
                     placeholder={ field.placeholder || __( 'No file selected', 'wp-user-frontend' ) }
                 />
                 <button
                     type="button"
                     onClick={ openLibrary }
-                    className="wpuf-shrink-0 wpuf-rounded-md wpuf-border !wpuf-border-gray-300 wpuf-bg-white wpuf-px-4 wpuf-py-2.5 wpuf-text-sm wpuf-font-medium wpuf-text-gray-700 hover:wpuf-bg-gray-50"
+                    className="shrink-0 rounded-md border border-gray-300! bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
                 >
                     { __( 'Select', 'wp-user-frontend' ) }
                 </button>
             </div>
             { current && /\.(png|jpe?g|gif|svg|webp)$/i.test( current ) && (
-                <img src={ current } alt="" className="wpuf-mt-2 wpuf-max-h-16 wpuf-rounded wpuf-border wpuf-border-gray-200" />
+                <img src={ current } alt="" className="mt-2 max-h-16 rounded-sm border border-gray-200" />
             ) }
         </>
     );

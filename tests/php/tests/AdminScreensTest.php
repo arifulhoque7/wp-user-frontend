@@ -98,4 +98,35 @@ class AdminScreensTest extends WP_UnitTestCase {
         unset( $_GET['action'] );
         $this->assertTrue( ( new PostFormsList() )->captures_notices() );
     }
+
+    public function test_react_screens_add_the_scope_body_class() {
+        $settings = new WeDevs\Wpuf\Admin\Screens\Settings();
+        $this->assertSame( 'wpuf-admin-react', $settings->body_class() );
+
+        $_GET['wpuf_settings_ui'] = 'legacy';
+        $this->assertSame( '', $settings->body_class(), 'classic settings screen keeps the plain body' );
+        unset( $_GET['wpuf_settings_ui'] );
+
+        $this->assertSame( '', ( new Subscriptions() )->body_class(), 'screens without the Tailwind 4 sheet add nothing' );
+    }
+
+    public function test_registry_load_adds_the_body_class_filter() {
+        $registry = new Registry();
+        $registry->add( new class() extends WeDevs\Wpuf\Admin\Screens\Screen {
+            public function slug() {
+                return 'wpuf-test-react';
+            }
+
+            public function render() {}
+
+            public function body_class() {
+                return 'wpuf-admin-react';
+            }
+        } );
+
+        remove_all_filters( 'admin_body_class' ); // core callbacks need a current screen; restored after the test.
+        $registry->load( 'wpuf-test-react' );
+
+        $this->assertSame( 'folded wpuf-admin-react', apply_filters( 'admin_body_class', 'folded' ) );
+    }
 }

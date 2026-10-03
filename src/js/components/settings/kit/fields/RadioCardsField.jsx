@@ -75,13 +75,13 @@ export default function RadioCardsField( { field, name, value, onChange, single 
 
     return (
         <>
-            <div className="wpuf-flex wpuf-items-center">
+            <div className="flex items-center">
                 { field.label && (
-                    <label className="wpuf-text-sm wpuf-text-gray-700 wpuf-my-2">{ field.label }</label>
+                    <label className="text-sm text-gray-700 my-2">{ field.label }</label>
                 ) }
                 { field.help_text && <HelpTextIcon text={ field.help_text } /> }
             </div>
-            <div className="wpuf-mt-1 wpuf-flex wpuf-flex-wrap wpuf-gap-3">
+            <div className="mt-1 flex flex-wrap gap-3">
                 { Object.entries( options ).map( ( [ key, opt ] ) => {
                     const isOn = selected.includes( key );
                     const icon = iconOf( opt, key );
@@ -96,15 +96,15 @@ export default function RadioCardsField( { field, name, value, onChange, single 
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 title={ labelOf( opt, key ) }
-                                className="wpuf-relative wpuf-flex wpuf-min-w-[150px] wpuf-flex-col wpuf-items-center wpuf-justify-center wpuf-gap-2 wpuf-rounded-lg wpuf-border wpuf-border-dashed wpuf-border-gray-300 wpuf-bg-gray-50 wpuf-px-5 wpuf-py-4 wpuf-text-sm wpuf-font-medium wpuf-text-gray-500 wpuf-opacity-80 hover:wpuf-border-sky-400 hover:wpuf-opacity-100"
+                                className="relative flex min-w-[150px] flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-gray-300 bg-gray-50 px-5 py-4 text-sm font-medium text-gray-500 opacity-80 hover:border-sky-400 hover:opacity-100"
                             >
-                                <span className="wpuf-absolute wpuf-right-2 wpuf-top-2"><ProBadge /></span>
+                                <span className="absolute right-2 top-2"><ProBadge /></span>
                                 { icon ? (
                                     icon.startsWith( 'http' ) ? (
-                                        <img src={ icon } alt="" className="wpuf-h-7 wpuf-object-contain wpuf-opacity-60" />
+                                        <img src={ icon } alt="" className="h-7 object-contain opacity-60" />
                                     ) : (
                                         // eslint-disable-next-line react/no-danger
-                                        <span className="wpuf-opacity-60" dangerouslySetInnerHTML={ { __html: icon } } />
+                                        <span className="opacity-60" dangerouslySetInnerHTML={ { __html: icon } } />
                                     )
                                 ) : null }
                                 <span>{ labelOf( opt, key ) }</span>
@@ -117,29 +117,29 @@ export default function RadioCardsField( { field, name, value, onChange, single 
                             type="button"
                             key={ key }
                             onClick={ () => toggle( key ) }
-                            className={ `wpuf-relative wpuf-flex wpuf-min-w-[150px] wpuf-flex-col wpuf-items-center wpuf-justify-center wpuf-gap-2 wpuf-rounded-lg wpuf-border wpuf-px-5 wpuf-py-4 wpuf-text-sm wpuf-font-medium wpuf-transition ${
+                            className={ `relative flex min-w-[150px] flex-col items-center justify-center gap-2 rounded-lg border px-5 py-4 text-sm font-medium transition ${
                                 isOn
-                                    ? 'wpuf-border-primary wpuf-ring-1 wpuf-ring-primary wpuf-text-gray-900'
-                                    : 'wpuf-border-gray-200 wpuf-text-gray-600 hover:wpuf-border-gray-300'
+                                    ? 'border-primary ring-1 ring-primary text-gray-900'
+                                    : 'border-gray-200 text-gray-600 hover:border-gray-300'
                             }` }
                         >
                             <span
-                                className={ `wpuf-absolute wpuf-right-2 wpuf-top-2 wpuf-flex wpuf-h-4 wpuf-w-4 wpuf-items-center wpuf-justify-center wpuf-rounded wpuf-border ${
-                                    isOn ? 'wpuf-border-primary wpuf-bg-primary wpuf-text-white' : 'wpuf-border-gray-300 wpuf-bg-white'
+                                className={ `absolute right-2 top-2 flex h-4 w-4 items-center justify-center rounded-sm border ${
+                                    isOn ? 'border-primary bg-primary text-white' : 'border-gray-300 bg-white'
                                 }` }
                             >
                                 { isOn && (
-                                    <svg className="wpuf-h-3 wpuf-w-3" viewBox="0 0 20 20" fill="currentColor">
+                                    <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
                                         <path fillRule="evenodd" d="M16.7 5.3a1 1 0 010 1.4l-8 8a1 1 0 01-1.4 0l-4-4a1 1 0 011.4-1.4l3.3 3.3 7.3-7.3a1 1 0 011.4 0z" clipRule="evenodd" />
                                     </svg>
                                 ) }
                             </span>
                             { icon ? (
                                 icon.startsWith( 'http' ) ? (
-                                    <img src={ icon } alt="" className="wpuf-h-8 wpuf-object-contain" />
+                                    <img src={ icon } alt="" className="h-8 object-contain" />
                                 ) : (
                                     <span
-                                        className="wpuf-text-2xl"
+                                        className="text-2xl"
                                         // eslint-disable-next-line react/no-danger
                                         dangerouslySetInnerHTML={ { __html: icon } }
                                     />
