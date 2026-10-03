@@ -4447,15 +4447,9 @@ function wpuf_descriptive_text( $args ) {
  * @return mixed
  */
 function wpuf_update_option( $option, $section, $value ) {
-    $options = get_option( $section );
-
-    if ( ! is_array( $options ) ) {
-        $options = [];
-    }
-
-    $options[ $option ] = $value;
-
-    update_option( $section, $options );
+    // Forwards to the settings store (task 2.4d); same write, then
+    // wpuf_settings_saved.
+    \WeDevs\Wpuf\Platform\Stores\Stores::settings()->set_value( $section, $option, $value );
 }
 
 /**

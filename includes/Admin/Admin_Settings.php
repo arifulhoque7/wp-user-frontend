@@ -2,6 +2,7 @@
 
 namespace WeDevs\Wpuf\Admin;
 
+use WeDevs\Wpuf\Platform\Stores\Stores;
 use WeDevs_Settings_API;
 
 /**
@@ -35,11 +36,16 @@ class Admin_Settings {
     }
 
     public function admin_init() {
+        $sections = $this->get_settings_sections();
+
         //set the settings
-        $this->settings_api->set_sections( $this->get_settings_sections() );
+        $this->settings_api->set_sections( $sections );
         $this->settings_api->set_fields( $this->get_settings_fields() );
         //initialize settings
         $this->settings_api->admin_init();
+
+        // The legacy screen saves through the settings store (task 2.4d).
+        Stores::settings()->hook_legacy_screen( $this->settings_api, $sections );
     }
 
     /**

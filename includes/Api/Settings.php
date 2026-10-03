@@ -46,8 +46,8 @@ class Settings extends WP_REST_Controller {
      * @since WPUF_SINCE
      */
     public function __construct() {
-        // The settings store loads the schema functions (task 2.4c).
-        Stores::settings();
+        // Load the schema functions now, as before (task 2.4c moved them to the store).
+        Stores::settings()->load_schema();
     }
 
     /**

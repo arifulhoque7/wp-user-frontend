@@ -923,7 +923,7 @@ class Onboarding {
 
         $payment['enable_payment'] = $enabled ? 'on' : 'off';
 
-        update_option( 'wpuf_payment', $payment );
+        Stores::settings()->write_section( 'wpuf_payment', $payment );
     }
 
     /**
@@ -952,7 +952,7 @@ class Onboarding {
             $settings['default_post_form'] = $form_id;
         }
 
-        update_option( 'wpuf_frontend_posting', $settings );
+        Stores::settings()->write_section( 'wpuf_frontend_posting', $settings );
 
         // Editing and deleting live under the dashboard section, which is what
         // the frontend actually reads.
@@ -962,7 +962,7 @@ class Onboarding {
         $dashboard['enable_post_edit'] = $this->posted( 'enable_post_edit' ) ? 'yes' : 'no';
         $dashboard['enable_post_del']  = $this->posted( 'enable_post_del' ) ? 'yes' : 'no';
 
-        update_option( 'wpuf_dashboard', $dashboard );
+        Stores::settings()->write_section( 'wpuf_dashboard', $dashboard );
     }
 
     /**
@@ -1060,7 +1060,7 @@ class Onboarding {
             $profile['wpuf_login_form_layout'] = $layout;
         }
 
-        update_option( 'wpuf_profile', $profile );
+        Stores::settings()->write_section( 'wpuf_profile', $profile );
 
         $this->save_account_page();
     }
@@ -1262,7 +1262,7 @@ class Onboarding {
 
         $account['account_page'] = $page_id;
 
-        update_option( 'wpuf_my_account', $account );
+        Stores::settings()->write_section( 'wpuf_my_account', $account );
     }
 
     /**
@@ -1312,7 +1312,7 @@ class Onboarding {
         $payment['enable_payment'] = $enabled ? 'on' : 'off';
 
         if ( ! $enabled ) {
-            update_option( 'wpuf_payment', $payment );
+            Stores::settings()->write_section( 'wpuf_payment', $payment );
 
             return;
         }
@@ -1334,7 +1334,7 @@ class Onboarding {
         // looks gateways up by key (Frontend/Payment.php, gateway-functions.php).
         $payment['active_gateways'] = array_combine( $gateways, $gateways );
 
-        update_option( 'wpuf_payment', $payment );
+        Stores::settings()->write_section( 'wpuf_payment', $payment );
     }
 
     /**
@@ -1360,7 +1360,7 @@ class Onboarding {
         // reads this to decide whether to keep nagging about installing the pages.
         $general['install_wpuf_pages'] = $this->posted( 'install_wpuf_pages' ) ? 'on' : 'off';
 
-        update_option( 'wpuf_general', $general );
+        Stores::settings()->write_section( 'wpuf_general', $general );
 
         if ( $this->posted( 'install_wpuf_pages' ) ) {
             $installer = new Admin_Installer();
@@ -1708,7 +1708,7 @@ class Onboarding {
 
         $general['share_wpuf_essentials'] = $share;
 
-        update_option( 'wpuf_general', $general );
+        Stores::settings()->write_section( 'wpuf_general', $general );
 
         if ( wpuf()->tracker && isset( wpuf()->tracker->insights ) ) {
             if ( wpuf_is_checkbox_or_toggle_on( $share ) ) {

@@ -103,4 +103,47 @@ test.describe('Branch settings save', () => {
         expect(run([]), 'valid license').toEqual({ pro_section: true, locked: false, sections: true });
         expect(run(['invalid']), 'inactive license: the lock hides Pro sections').toEqual({ pro_section: false, locked: true, sections: true });
     });
+    test('SET0007 : legacy settings screen saves through the store like develop (2.4d, G2b)', { tag: ['@Parity', '@Test_SET0007'] }, async ({ browser }) => {
+        const section = 'wpuf_general';
+        const read = (name: 'develop' | 'branch') => parityWp(paritySite(name), ['option', 'get', section, '--format=json']).trim();
+        const write = (name: 'develop' | 'branch', json: string) => parityWp(paritySite(name), ['option', 'update', section, json, '--format=json']);
+        const original = { develop: read('develop'), branch: read('branch') };
+        // Same starting data on both sites: develop's section.
+        const seed = original.develop;
+        const legacyUrl = { develop: '/wp-admin/admin.php?page=wpuf-settings', branch: '/wp-admin/admin.php?page=wpuf-settings&wpuf_settings_ui=legacy' };
+
+        const saveOnBoth = async (edit: string | null) => {
+            const stored: Record<string, unknown> = {};
+            for (const name of ['develop', 'branch'] as const) {
+                write(name, seed);
+                const admin = await ParitySitePage.doOpen(browser, paritySite(name));
+                await admin.page.goto(legacyUrl[name], { waitUntil: 'domcontentloaded' });
+                const form = admin.page.locator(`form:has(input[name="option_page"][value="${section}"])`);
+                await admin.page.locator(`a[href="#${section}"]`).first().click();
+                await expect(form).toBeVisible();
+                if (edit !== null) {
+                    await form.locator(`input[type="text"][name^="${section}["]`).first().fill(edit);
+                }
+                await Promise.all([
+                    admin.page.waitForURL(/settings-updated=true/, { waitUntil: 'domcontentloaded' }),
+                    form.locator('input[type="submit"], button[type="submit"]').first().click(),
+                ]);
+                await admin.doClose();
+                stored[name] = JSON.parse(read(name));
+            }
+            return stored;
+        };
+
+        try {
+            const untouched = await saveOnBoth(null);
+            expect(untouched.branch, 'untouched legacy save stores what develop stores').toEqual(untouched.develop);
+
+            const edited = await saveOnBoth('SET0007 <b>edited</b> \\ value');
+            expect(edited.branch, 'edited legacy save stores what develop stores').toEqual(edited.develop);
+            expect(JSON.stringify(edited.branch), 'the edit was saved').toContain('SET0007');
+        } finally {
+            write('develop', original.develop);
+            write('branch', original.branch);
+        }
+    });
 });

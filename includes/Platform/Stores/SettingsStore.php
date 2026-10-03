@@ -19,20 +19,11 @@ namespace WeDevs\Wpuf\Platform\Stores;
 class SettingsStore {
 
     /**
-     * Load the settings schema functions (also outside wp-admin, e.g. REST).
+     * Whether the schema functions are loaded.
      *
-     * @since WPUF_SINCE
+     * @var bool
      */
-    public function __construct() {
-        wpuf_require_once( WPUF_INCLUDES . '/functions/settings-options.php' );
-        wpuf_require_once( WPUF_INCLUDES . '/functions/settings-react.php' );
-
-        // The settings schema (and Pro role filters) call get_editable_roles(),
-        // which lives in wp-admin and is not loaded during REST requests.
-        if ( ! function_exists( 'get_editable_roles' ) ) {
-            require_once ABSPATH . 'wp-admin/includes/user.php';
-        }
-    }
+    private $schema_loaded = false;
 
     /**
      * Registered sections.
@@ -42,6 +33,8 @@ class SettingsStore {
      * @return array
      */
     public function sections() {
+        $this->load_schema();
+
         return wpuf_settings_sections();
     }
 
@@ -53,6 +46,8 @@ class SettingsStore {
      * @return array
      */
     public function fields() {
+        $this->load_schema();
+
         return wpuf_settings_fields();
     }
 
@@ -185,6 +180,133 @@ class SettingsStore {
         update_option( $section_id, $sanitized );
 
         return get_option( $section_id, [] );
+    }
+
+    /**
+     * Write a whole section option as given (onboarding, installer, upgrades)
+     * and fire `wpuf_settings_saved`. The caller builds the values; nothing is
+     * sanitized or merged here, so the stored bytes are what it wrote before.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param string $section_id Section option name
+     * @param mixed  $values     Section values
+     *
+     * @return mixed The stored option after the write
+     */
+    public function write_section( $section_id, $values ) {
+        update_option( $section_id, $values );
+
+        $saved = get_option( $section_id, [] );
+
+        /** This action is documented in includes/Platform/Stores/SettingsStore.php */
+        do_action( 'wpuf_settings_saved', [ $section_id => $saved ], [ $section_id => $values ], [] );
+
+        return $saved;
+    }
+
+    /**
+     * Set one key of a section option (wpuf_update_option()).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param string $section_id Section option name
+     * @param string $key        Field name
+     * @param mixed  $value      Value
+     *
+     * @return mixed The stored option after the write
+     */
+    public function set_value( $section_id, $key, $value ) {
+        $options = get_option( $section_id );
+
+        if ( ! is_array( $options ) ) {
+            $options = [];
+        }
+
+        $options[ $key ] = $value;
+
+        return $this->write_section( $section_id, $options );
+    }
+
+    /**
+     * Route the legacy settings screen (options.php) through the store: its
+     * sections are sanitized by sanitize_legacy_section() instead of
+     * WeDevs_Settings_API::sanitize_options() (same rules), and a save of a
+     * section from that screen fires `wpuf_settings_saved`.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param object $settings_api The WeDevs_Settings_API instance that registered the sections
+     * @param array  $sections     Registered sections
+     *
+     * @return void
+     */
+    public function hook_legacy_screen( $settings_api, $sections ) {
+        foreach ( $sections as $section ) {
+            if ( empty( $section['id'] ) ) {
+                continue;
+            }
+
+            remove_filter( 'sanitize_option_' . $section['id'], [ $settings_api, 'sanitize_options' ] );
+            add_filter( 'sanitize_option_' . $section['id'], [ $this, 'sanitize_legacy_section' ] );
+            add_action( 'update_option_' . $section['id'], [ $this, 'legacy_section_saved' ], 10, 3 );
+        }
+    }
+
+    /**
+     * Sanitize a section posted by the legacy screen, as
+     * WeDevs_Settings_API::sanitize_options() did: each posted key whose
+     * field (first registration of that name in any section) has a callable
+     * sanitize_callback runs through it; other keys are kept as posted.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param mixed $options Posted section values
+     *
+     * @return mixed
+     */
+    public function sanitize_legacy_section( $options ) {
+        if ( ! $options || ! is_array( $options ) ) {
+            return $options;
+        }
+
+        $schema = $this->fields();
+
+        foreach ( $options as $option_slug => $option_value ) {
+            $callback = $this->legacy_sanitize_callback( $schema, $option_slug );
+
+            if ( $callback ) {
+                $options[ $option_slug ] = call_user_func( $callback, $option_value );
+            }
+        }
+
+        return $options;
+    }
+
+    /**
+     * Fire `wpuf_settings_saved` after the legacy screen saved a section
+     * (only for the section posted to options.php, not for other writes).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param mixed  $old_value Previous value
+     * @param mixed  $value     Saved value
+     * @param string $option    Option name
+     *
+     * @return void
+     */
+    public function legacy_section_saved( $old_value, $value, $option ) {
+        global $pagenow;
+
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- options.php verified the option page nonce before saving.
+        $option_page = isset( $_POST['option_page'] ) ? sanitize_key( wp_unslash( $_POST['option_page'] ) ) : '';
+
+        if ( 'options.php' !== $pagenow || $option_page !== $option ) {
+            return;
+        }
+
+        /** This action is documented in includes/Platform/Stores/SettingsStore.php */
+        do_action( 'wpuf_settings_saved', [ $option => $value ], [ $option => $value ], [] );
     }
 
     /**
@@ -371,6 +493,58 @@ class SettingsStore {
         }
 
         return $values;
+    }
+
+    /**
+     * Load the settings schema functions (also outside wp-admin, e.g. REST).
+     * Runs once; the schema readers call it themselves.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return void
+     */
+    public function load_schema() {
+        if ( $this->schema_loaded ) {
+            return;
+        }
+
+        $this->schema_loaded = true;
+
+        wpuf_require_once( WPUF_INCLUDES . '/functions/settings-options.php' );
+        wpuf_require_once( WPUF_INCLUDES . '/functions/settings-react.php' );
+
+        // The settings schema (and Pro role filters) call get_editable_roles(),
+        // which lives in wp-admin and is not loaded during REST requests.
+        if ( ! function_exists( 'get_editable_roles' ) ) {
+            require_once ABSPATH . 'wp-admin/includes/user.php';
+        }
+    }
+
+    /**
+     * The sanitize callback WeDevs_Settings_API::get_sanitize_callback() found
+     * for a slug: the first field with that name in any section, if callable.
+     *
+     * @param array  $schema Raw schema (fields())
+     * @param string $slug   Posted key
+     *
+     * @return callable|false
+     */
+    private function legacy_sanitize_callback( $schema, $slug ) {
+        if ( empty( $slug ) ) {
+            return false;
+        }
+
+        foreach ( $schema as $fields ) {
+            foreach ( (array) $fields as $field ) {
+                if ( ! isset( $field['name'] ) || (string) $field['name'] !== (string) $slug ) {
+                    continue;
+                }
+
+                return isset( $field['sanitize_callback'] ) && is_callable( $field['sanitize_callback'] ) ? $field['sanitize_callback'] : false;
+            }
+        }
+
+        return false;
     }
 
     /**

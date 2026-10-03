@@ -2,6 +2,7 @@
 
 namespace WeDevs\Wpuf\Admin;
 
+use WeDevs\Wpuf\Platform\Stores\Stores;
 /**
  * Page installer
  *
@@ -205,7 +206,7 @@ class Admin_Installer {
             $frontend_posting['edit_page_id']      = $edit_page;
             $frontend_posting['default_post_form'] = $post_form;
 
-            update_option( 'wpuf_frontend_posting', $frontend_posting );
+            Stores::settings()->write_section( 'wpuf_frontend_posting', $frontend_posting );
         }
 
         // profile pages
@@ -230,7 +231,7 @@ class Admin_Installer {
             $profile_options['register_link_override'] = 'on';
         }
 
-        update_option( 'wpuf_profile', $profile_options );
+        Stores::settings()->write_section( 'wpuf_profile', $profile_options );
 
         if ( 'on' === wpuf_get_option( 'enable_payment', 'wpuf_payment', 'on' ) ) {
             // payment pages
@@ -239,7 +240,7 @@ class Admin_Installer {
             $payment_options['payment_success']   = $thank_page;
             $payment_options['bank_success']      = $bank_page;
 
-            update_option( 'wpuf_payment', $payment_options );
+            Stores::settings()->write_section( 'wpuf_payment', $payment_options );
         }
 
         update_option( '_wpuf_page_created', '1' );
@@ -537,7 +538,7 @@ HTML;
         if ( $edit_page ) {
             $frontend_posting['edit_page_id'] = $edit_page;
 
-            update_option( 'wpuf_frontend_posting', $frontend_posting );
+            Stores::settings()->write_section( 'wpuf_frontend_posting', $frontend_posting );
         }
 
         $account_page = $this->get_or_create_page(
@@ -550,7 +551,7 @@ HTML;
         if ( $account_page ) {
             $account_options['account_page'] = $account_page;
 
-            update_option( 'wpuf_my_account', $account_options );
+            Stores::settings()->write_section( 'wpuf_my_account', $account_options );
         }
 
         // Pro builds the registration page from its own form via this filter.
@@ -580,7 +581,7 @@ HTML;
             $profile_options['register_link_override'] = 'on';
         }
 
-        update_option( 'wpuf_profile', $profile_options );
+        Stores::settings()->write_section( 'wpuf_profile', $profile_options );
     }
 
     /**
