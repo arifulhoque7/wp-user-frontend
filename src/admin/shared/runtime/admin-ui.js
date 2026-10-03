@@ -7,6 +7,7 @@
  */
 import * as ui from '@wedevs/plugin-ui';
 
+import * as wrappers from '../ui';
 import ErrorBoundary from '../providers/ErrorBoundary';
 import ScreenSlots from '../providers/ScreenSlots';
 import WpufProviders from '../providers/WpufProviders';
@@ -14,5 +15,5 @@ import publish from './publish';
 
 publish( {
     ui,
-    components: { WpufProviders, ErrorBoundary, ScreenSlots },
+    components: { ...wrappers, WpufProviders, ErrorBoundary, ScreenSlots },
 } );

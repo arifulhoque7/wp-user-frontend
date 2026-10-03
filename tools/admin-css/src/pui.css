@@ -4,7 +4,7 @@
  * A screen entry with `pui: true` in build.mjs appends this to its one
  * stylesheet (no second Tailwind sheet, same handle). It styles what
  * @wedevs/plugin-ui renders, the FlyHR way:
- * - utilities for every class plugin-ui (and later src/admin/shared) uses,
+ * - utilities for every class plugin-ui and src/admin/shared use,
  *   `!important` and scoped by build.mjs to `.pui-root` and its descendants,
  *   so WordPress admin form rules (forms.css) cannot override them; WPUF's
  *   own markup outside `.pui-root` keeps its utilities untouched;
@@ -27,7 +27,11 @@
 /* plugin-ui's own theme and scoped base (generated, see gen-pui.cjs). */
 @import "./pui-upstream.css";
 
+/* Tailwind 3 palette and font sizes, like the WPUF screens (develop look). */
+@import "./v3-theme.css";
+
 @source "../../../node_modules/@wedevs/plugin-ui/dist";
+@source "../../../src/admin/shared";
 
 /* plugin-ui marks dark mode with a `.dark` class (ThemeProvider), not the OS;
    otherwise an OS in dark mode repaints its fields (FlyHR fix). */

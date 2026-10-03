@@ -29,7 +29,8 @@ export const wpufTokens = Object.freeze( {
     border: '#d1d5db',
     input: '#d1d5db',
     ring: '#059669',
-    radius: '0.375rem',
+    // plugin-ui: rounded-md = radius - 2px (controls 6px), rounded-xl = radius + 4px (cards 12px).
+    radius: '0.5rem',
 } );
 
 export const wpufDarkTokens = wpufTokens;
