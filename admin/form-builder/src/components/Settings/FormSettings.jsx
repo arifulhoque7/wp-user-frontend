@@ -64,28 +64,28 @@ export default function FormSettings() {
         : ( window.wpuf_admin_url || '' ) + 'admin.php?page=wpuf-post-forms';
 
     return (
-        <div className="wpuf-settings-container wpuf-border wpuf-border-gray-200 wpuf-rounded-lg wpuf-m-4 wpuf-flex wpuf-transition-transform wpuf-duration-200 wpuf-ease-in-out">
+        <div className="wpuf-settings-container border border-gray-200 rounded-lg m-4 flex transition-transform duration-200 ease-in-out">
             <SettingsNav
                 activeTab={ activeTab }
                 onTabChange={ setActiveTab }
             />
 
-            <div className="wpuf-w-3/4 wpuf-min-h-screen wpuf-p-8">
+            <div className="w-3/4 min-h-screen p-8">
                 { /* Active tab title */ }
-                <div className="wpuf-pb-8">
-                    <h2 className="wpuf-text-2xl wpuf-m-0 wpuf-leading-none">
+                <div className="pb-8">
+                    <h2 className="text-2xl m-0 leading-none">
                         { activeSettingsTitle }
                     </h2>
                 </div>
 
                 { getLegacySlots().unsupported && (
-                    <div className="wpuf-mb-6 wpuf-p-4 wpuf-bg-yellow-50 wpuf-text-sm wpuf-text-yellow-800 wpuf-border-l-4 wpuf-border-yellow-400">
+                    <div className="mb-6 p-4 bg-yellow-50 text-sm text-yellow-800 border-l-4 border-yellow-400">
                         { __( 'An extension added builder settings that need scripts or Vue templates. They are shown as static fields here; their interactive parts do not run.', 'wp-user-frontend' ) }
                     </div>
                 ) }
 
                 { /* Section body */ }
-                <div className="wpuf-border-y wpuf-border-gray-200 wpuf-py-8">
+                <div className="border-y border-gray-200 py-8">
                     <SettingsSection
                         sectionKey={ activeTab }
                         sectionData={ activeSectionData }
@@ -96,7 +96,7 @@ export default function FormSettings() {
                     ) }
 
                     { ! activeSectionData && activeTab && activeTab !== 'modules' && (
-                        <div className="wpuf-text-center wpuf-py-12 wpuf-text-gray-500">
+                        <div className="text-center py-12 text-gray-500">
                             <p>{ __( 'No settings available for this section.', 'wp-user-frontend' ) }</p>
                         </div>
                     ) }
@@ -104,14 +104,14 @@ export default function FormSettings() {
 
                 { /* Settings other plugins printed on the settings tab hooks
                     (wpuf_form_builder_settings_tabs_{type}, wpuf_{post,profile}_form_tab). */ }
-                <LegacySlot id="tab-settings" html={ getLegacySlots().tabs.settings } className="wpuf-mt-8" />
-                <LegacySlot id="tab-form-tab" html={ getLegacySlots().tabs.form_tab } className="wpuf-mt-8" />
+                <LegacySlot id="tab-settings" html={ getLegacySlots().tabs.settings } className="mt-8" />
+                <LegacySlot id="tab-form-tab" html={ getLegacySlots().tabs.form_tab } className="mt-8" />
 
                 { /* Cancel + Save buttons */ }
-                <div className="wpuf-flex wpuf-space-x-4 wpuf-items-center wpuf-mt-8">
+                <div className="flex [&>:not([hidden])~:not([hidden])]:ml-4 [&>:not([hidden])~:not([hidden])]:mr-0 items-center mt-8">
                     <a
                         href={ postFormsUrl }
-                        className="wpuf-inline-flex wpuf-items-center wpuf-gap-x-2 wpuf-rounded-md wpuf-px-8 wpuf-py-3 wpuf-text-gray-700 hover:wpuf-text-gray-700 hover:wpuf-bg-gray-50 wpuf-ring-1 wpuf-ring-inset wpuf-ring-gray-300 hover:wpuf-cursor-pointer"
+                        className="inline-flex items-center gap-x-2 rounded-md px-8 py-3 text-gray-700 hover:text-gray-700 hover:bg-gray-50 ring-1 ring-inset ring-gray-300 hover:cursor-pointer"
                     >
                         { __( 'Cancel', 'wp-user-frontend' ) }
                     </a>
@@ -119,7 +119,7 @@ export default function FormSettings() {
                         type="button"
                         onClick={ saveForm }
                         disabled={ isSaving }
-                        className="wpuf-btn-primary wpuf-w-full"
+                        className="wpuf-btn-primary w-full"
                     >
                         { isSaving
                             ? __( 'Saving…', 'wp-user-frontend' )

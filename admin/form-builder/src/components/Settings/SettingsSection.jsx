@@ -116,12 +116,12 @@ export default function SettingsSection( { sectionKey, sectionData } ) {
                     const isFirst = index === 0;
                     const isLast = index === sectionEntries.length - 1 && sectionEntries.length > 1;
 
-                    let classList = 'wpuf-settings-body wpuf-pb-8';
+                    let classList = 'wpuf-settings-body pb-8';
                     if ( ! isFirst ) {
-                        classList = 'wpuf-settings-body wpuf-pb-8 wpuf-pt-6 wpuf-border-t wpuf-border-gray-200';
+                        classList = 'wpuf-settings-body pb-8 pt-6 border-t border-gray-200';
                     }
                     if ( isLast ) {
-                        classList = 'wpuf-settings-body wpuf-pt-6 wpuf-border-t wpuf-border-gray-200';
+                        classList = 'wpuf-settings-body pt-6 border-t border-gray-200';
                     }
 
                     return (
@@ -131,12 +131,12 @@ export default function SettingsSection( { sectionKey, sectionData } ) {
                             data-settings-body={ sectionKey }
                         >
                             { subSection.label && (
-                                <p className="wpuf-text-lg wpuf-font-medium wpuf-mb-3 wpuf-mt-0 wpuf-leading-none">
+                                <p className="text-lg font-medium mb-3 mt-0 leading-none">
                                     { subSection.label }
                                 </p>
                             ) }
                             { subSection.desc && (
-                                <p className="wpuf-text-gray-500 wpuf-text-[13px] wpuf-leading-5 !wpuf-mb-4 !wpuf-mt-0">
+                                <p className="text-gray-500 text-[13px] leading-5 mb-4! mt-0!">
                                     { subSection.desc }
                                 </p>
                             ) }
@@ -171,11 +171,11 @@ export default function SettingsSection( { sectionKey, sectionData } ) {
         );
     }
 
-    // Direct fields at top level (no section prop) — Vue uses wpuf-settings-body wpuf--mt-6
+    // Direct fields at top level (no section prop) — Vue uses wpuf-settings-body -mt-6
     return (
         <div className="wpuf-settings-section">
             <div
-                className="wpuf-settings-body wpuf--mt-6"
+                className="wpuf-settings-body -mt-6"
                 data-settings-body={ sectionKey }
             >
                 { Object.entries( filteredData ).map( ( [ fieldName, fieldDef ] ) => {

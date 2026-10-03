@@ -1,0 +1,48 @@
+/**
+ * WPUF React forms lists + post/registration builders: Tailwind CSS 4 entry.
+ * Replaces, on those screens only, admin/form-builder.css and forms-list.min.css
+ * (the classic post edit screen keeps admin/form-builder.css).
+ *
+ * Plain Tailwind classes (no prefix, like FlyHR) for the React sources.
+ * build.mjs scopes them to body.wpuf-admin-react and adds the Tailwind 3 part
+ * of the old sheet (src/base-v3/forms.pre.css: scoped preflight, daisyUI and
+ * custom components, and the wpuf- utilities that PHP views, modals and legacy
+ * slots still use; forms.post.css: the custom rules).
+ */
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities) source(none);
+@import "./v3-theme.css";
+
+@source "../../../admin/form-builder/src";
+@source "../../../admin/forms-list/src";
+
+/* Words in these sources that read as Tailwind classes but never had CSS in
+   the Tailwind 3 build (unprefixed there, or not classes at all). Kept out so
+   the screens look exactly as before. */
+@source not inline("!leading-6");
+@source not inline("container");
+@source not inline("contents");
+@source not inline("filter");
+@source not inline("focus-visible:outline");
+@source not inline("focus-visible:outline-2");
+@source not inline("focus-visible:outline-offset-2");
+@source not inline("inline");
+@source not inline("static");
+@source not inline("table");
+@source not inline("text-sm/6");
+@source not inline("transform");
+@source not inline("visible");
+
+@theme {
+    --color-primary: #059669;
+    --color-primaryHover: #10b981;
+    --text-2xs: 13px;
+}
+
+@utility min-w-btn-cancel {
+    min-width: 101px;
+}
+
+@utility min-w-btn-save {
+    min-width: 158px;
+}

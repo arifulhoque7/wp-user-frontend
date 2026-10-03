@@ -21,7 +21,7 @@ export default function SettingsNav( { activeTab, onTabChange } ) {
     }, [] ); // eslint-disable-line react-hooks/exhaustive-deps
 
     return (
-        <div className="wpuf-w-1/4 wpuf-min-h-screen wpuf-border-r wpuf-p-8">
+        <div className="w-1/4 min-h-screen border-r p-8">
             { Object.entries( settingsTitles ).map( ( [ topKey, topItem ] ) => {
                 const subItems = topItem.sub_items || {};
                 const hasSubItems = Object.keys( subItems ).length > 0;
@@ -33,26 +33,26 @@ export default function SettingsNav( { activeTab, onTabChange } ) {
                 return (
                     <div key={ topKey }>
                         { /* Top-level section header */ }
-                        <div className="wpuf-mb-4 wpuf-flex wpuf-justify-between wpuf-items-center">
+                        <div className="mb-4 flex justify-between items-center">
                             <h2
                                 id={ isClickableHeader ? `${ topKey }-menu` : undefined }
                                 onClick={ isClickableHeader ? () => onTabChange( topKey ) : undefined }
-                                className={ `wpuf-group/sidebar-item wpuf-text-base wpuf-m-0 wpuf-flex wpuf-items-center wpuf-w-full wpuf-py-2 wpuf-px-3 wpuf--ml-3 wpuf-rounded-lg wpuf-transition-all wpuf-duration-200 wpuf-ease-in-out ${ isClickableHeader ? 'hover:wpuf-bg-primary hover:wpuf-cursor-pointer hover:wpuf-text-white' : '' } ${ isHeaderActive ? 'wpuf-bg-primary active_settings_tab wpuf-text-white' : 'wpuf-text-gray-600' }` }
+                                className={ `group/sidebar-item text-base m-0 flex items-center w-full py-2 px-3 -ml-3 rounded-lg wpuf-transition-all duration-200 ease-in-out ${ isClickableHeader ? 'hover:bg-primary hover:cursor-pointer hover:text-white' : '' } ${ isHeaderActive ? 'bg-primary active_settings_tab text-white' : 'text-gray-600' }` }
                             >
                                 { topItem.icon && (
                                     <span
-                                        className={ `${ isHeaderActive ? '[&_.custom-stroke]:wpuf-stroke-white' : '[&_.custom-stroke]:wpuf-stroke-gray-500' } ${ isClickableHeader ? 'group-hover/sidebar-item:[&_.custom-stroke]:wpuf-stroke-white' : '' }` }
+                                        className={ `${ isHeaderActive ? '[&_.custom-stroke]:stroke-white' : '[&_.custom-stroke]:stroke-gray-500' } ${ isClickableHeader ? 'group-hover/sidebar-item:[&_.custom-stroke]:stroke-white' : '' }` }
                                         dangerouslySetInnerHTML={ { __html: topItem.icon } }
                                     />
                                 ) }
-                                <span className="wpuf-ml-2">{ topItem.label }</span>
+                                <span className="ml-2">{ topItem.label }</span>
                             </h2>
                         </div>
 
                         { /* Sub-items list */ }
                         { hasSubItems && (
-                            <div className="wpuf-mb-4">
-                                <ul className="wpuf-sidebar-menu wpuf-list-none wpuf-space-y-2">
+                            <div className="mb-4">
+                                <ul className="wpuf-sidebar-menu list-none [&>:not([hidden])~:not([hidden])]:mt-2 [&>:not([hidden])~:not([hidden])]:mb-0">
                                     { Object.entries( subItems ).map( ( [ subKey, subItem ] ) => {
                                         const isActive = activeTab === subKey;
 
@@ -60,19 +60,19 @@ export default function SettingsNav( { activeTab, onTabChange } ) {
                                             <li
                                                 key={ subKey }
                                                 onClick={ () => onTabChange( subKey ) }
-                                                className={ `wpuf-group/sidebar-item wpuf-mx-2 wpuf-py-2 wpuf-px-3 hover:wpuf-bg-primary hover:wpuf-cursor-pointer wpuf-rounded-lg wpuf-transition-all wpuf-duration-200 wpuf-ease-in-out wpuf-items-center wpuf-flex wpuf-justify-between ${ isActive ? 'wpuf-bg-primary active_settings_tab' : '' }` }
+                                                className={ `group/sidebar-item mx-2 py-2 px-3 hover:bg-primary hover:cursor-pointer rounded-lg wpuf-transition-all duration-200 ease-in-out items-center flex justify-between ${ isActive ? 'bg-primary active_settings_tab' : '' }` }
                                                 data-settings={ subKey }
                                             >
                                                 <a
-                                                    className={ `wpuf-ml-2 wpuf-text-sm group-hover/sidebar-item:wpuf-text-white wpuf-transition-all wpuf-duration-200 wpuf-ease-in-out focus:wpuf-shadow-none focus:wpuf-outline-none wpuf-flex wpuf-items-center ${ isActive ? 'wpuf-text-white' : 'wpuf-text-gray-600' }` }
+                                                    className={ `ml-2 text-sm group-hover/sidebar-item:text-white wpuf-transition-all duration-200 ease-in-out focus:shadow-none focus:outline-hidden flex items-center ${ isActive ? 'text-white' : 'text-gray-600' }` }
                                                 >
                                                     { subItem.icon && (
                                                         <span
-                                                            className={ `[&>svg]:wpuf-w-5 [&>svg]:wpuf-h-5 ${ isActive ? '[&_.custom-stroke]:wpuf-stroke-white' : '[&_.custom-stroke]:wpuf-stroke-gray-500 group-hover/sidebar-item:[&_.custom-stroke]:wpuf-stroke-white' }` }
+                                                            className={ `[&>svg]:w-5 [&>svg]:h-5 ${ isActive ? '[&_.custom-stroke]:stroke-white' : '[&_.custom-stroke]:stroke-gray-500 group-hover/sidebar-item:[&_.custom-stroke]:stroke-white' }` }
                                                             dangerouslySetInnerHTML={ { __html: subItem.icon } }
                                                         />
                                                     ) }
-                                                    <span className="wpuf-ml-2">{ subItem.label }</span>
+                                                    <span className="ml-2">{ subItem.label }</span>
                                                 </a>
                                                 { ! isProActive && BADGE_MENUS.includes( subKey ) && (
                                                     <span>

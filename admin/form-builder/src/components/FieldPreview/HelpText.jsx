@@ -15,7 +15,7 @@ export default function HelpText( { text, className } ) {
 
     return (
         <p
-            className="wpuf-mt-2 wpuf-mb-0 wpuf-text-sm wpuf-text-gray-500"
+            className="mt-2 mb-0 text-sm text-gray-500"
             dangerouslySetInnerHTML={ { __html: text } }
         />
     );

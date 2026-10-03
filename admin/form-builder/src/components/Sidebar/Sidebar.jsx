@@ -15,14 +15,14 @@ export default function Sidebar() {
     const isFieldOptions = currentPanel === 'field-options';
 
     return (
-        <div className="wpuf-p-6 wpuf-pb-0 wpuf-mb-8">
+        <div className="p-6 pb-0 mb-8">
             <div
                 role="tablist"
-                className="wpuf-tabs wpuf-tabs-boxed wpuf-text-gray-500 wpuf-rounded-xl wpuf-px-3 wpuf-py-2 wpuf-text-base wpuf-font-medium wpuf-bg-gray-100"
+                className="wpuf-tabs wpuf-tabs-boxed text-gray-500 rounded-xl px-3 py-2 text-base font-medium bg-gray-100"
             >
                 <a
                     role="tab"
-                    className={ `wpuf-tab wpuf-h-10 hover:wpuf-bg-white hover:wpuf-text-gray-800 hover:wpuf-shadow-sm focus:wpuf-shadow-none wpuf-transition-all ${ isAddFields ? 'wpuf-bg-white wpuf-text-gray-800 wpuf-shadow-sm' : '' }` }
+                    className={ `wpuf-tab h-10 hover:bg-white hover:text-gray-800 hover:shadow-xs focus:shadow-none wpuf-transition-all ${ isAddFields ? 'bg-white text-gray-800 shadow-xs' : '' }` }
                     href="#add-fields"
                     onClick={ ( e ) => {
                         e.preventDefault();
@@ -33,7 +33,7 @@ export default function Sidebar() {
                 </a>
                 <a
                     role="tab"
-                    className={ `wpuf-tab wpuf-h-10 hover:wpuf-bg-white hover:wpuf-text-gray-800 hover:wpuf-shadow-sm focus:wpuf-shadow-none wpuf-ml-1 wpuf-transition-all ${ isFieldOptions ? 'wpuf-bg-white wpuf-text-gray-800 wpuf-shadow-sm' : 'wpuf-text-gray-500' }` }
+                    className={ `wpuf-tab h-10 hover:bg-white hover:text-gray-800 hover:shadow-xs focus:shadow-none ml-1 wpuf-transition-all ${ isFieldOptions ? 'bg-white text-gray-800 shadow-xs' : 'text-gray-500' }` }
                     href="#field-options"
                     onClick={ ( e ) => {
                         e.preventDefault();
@@ -44,7 +44,7 @@ export default function Sidebar() {
                 </a>
             </div>
             <section>
-                <div className="wpuf-form-builder-panel wpuf-mt-6 wpuf-mb-32">
+                <div className="wpuf-form-builder-panel mt-6 mb-32">
                     { isAddFields && <FieldPanel /> }
                     { isFieldOptions && <FieldOptionsPanel /> }
                 </div>

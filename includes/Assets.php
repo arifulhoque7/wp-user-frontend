@@ -45,6 +45,72 @@ class Assets {
             ]
         );
         add_action( 'init', [ $this, 'register_all_scripts' ] );
+        add_action( 'admin_enqueue_scripts', [ $this, 'use_react_forms_styles' ], PHP_INT_MAX );
+        add_filter( 'admin_body_class', [ $this, 'react_forms_body_class' ] );
+    }
+
+    /**
+     * Whether this is a React forms list or builder page (post forms, and the
+     * registration forms page Pro adds).
+     *
+     * @since WPUF_SINCE
+     *
+     * @return bool
+     */
+    protected function is_react_forms_page() {
+        global $plugin_page;
+
+        return is_admin() && in_array( $plugin_page, [ 'wpuf-post-forms', 'wpuf-profile-forms' ], true );
+    }
+
+    /**
+     * On the React forms lists and builders, serve the Tailwind 4 sheet
+     * (assets/css/admin/forms-react.css) instead of admin/form-builder.css and
+     * forms-list.min.css. The last of those handles in the queue gets the new
+     * file and the other prints nothing, so the sheet keeps its place in the
+     * cascade (e.g. after Pro's styles on the lists) and the handles Free and
+     * Pro enqueue keep working. The classic post edit screen keeps the old sheet.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return void
+     */
+    public function use_react_forms_styles() {
+        if ( ! $this->is_react_forms_page() ) {
+            return;
+        }
+
+        $styles = wp_styles();
+        $queued = array_values( array_intersect( $styles->queue, [ 'wpuf-admin-form-builder', 'wpuf-forms-list' ] ) );
+
+        if ( ! $queued ) {
+            return;
+        }
+
+        $last = end( $queued );
+
+        foreach ( $queued as $handle ) {
+            if ( isset( $styles->registered[ $handle ] ) ) {
+                $styles->registered[ $handle ]->src = $handle === $last ? WPUF_ASSET_URI . '/css/admin/forms-react.css' : false;
+            }
+        }
+    }
+
+    /**
+     * The Tailwind 4 sheet scopes its utilities to this body class.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param string $classes Admin body classes
+     *
+     * @return string
+     */
+    public function react_forms_body_class( $classes ) {
+        if ( ! $this->is_react_forms_page() ) {
+            return $classes;
+        }
+
+        return trim( $classes . ' wpuf-admin-react' );
     }
 
     /**

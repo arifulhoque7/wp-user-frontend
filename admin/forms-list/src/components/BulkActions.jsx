@@ -15,11 +15,11 @@ const BulkActions = ( {
     const isDisabled = ! selectedBulkAction || disabled;
 
     return (
-        <div className="wpuf-flex">
+        <div className="flex">
             <select
                 value={ selectedBulkAction }
                 onChange={ ( e ) => onBulkActionChange( e.target.value ) }
-                className="wpuf-block wpuf-w-full wpuf-min-w-full !wpuf-py-[10px] !wpuf-px-[14px] wpuf-text-gray-700 wpuf-font-normal !wpuf-leading-none !wpuf-shadow-sm wpuf-border !wpuf-border-gray-300 !wpuf-rounded-[6px] focus:!wpuf-ring-transparent focus:checked:!wpuf-ring-transparent hover:checked:!wpuf-ring-transparent hover:wpuf-text-gray-700 !wpuf-text-base !leading-6"
+                className="block w-full min-w-full py-[10px]! px-[14px]! text-gray-700 font-normal leading-none! shadow-xs! border border-gray-300! rounded-[6px]! focus:ring-transparent! focus:checked:ring-transparent! hover:checked:ring-transparent! hover:text-gray-700 text-base! !leading-6"
             >
                 <option value="">{ __( 'Bulk actions', 'wp-user-frontend' ) }</option>
                 { currentTab !== 'trash' && (
@@ -36,8 +36,8 @@ const BulkActions = ( {
                 onClick={ onApply }
                 disabled={ isDisabled }
                 className={
-                    'wpuf-ml-4 wpuf-inline-flex wpuf-items-center wpuf-justify-center wpuf-rounded-md wpuf-border wpuf-border-transparent wpuf-bg-primary wpuf-px-3 wpuf-py-2 wpuf-text-sm wpuf-font-semibold wpuf-text-white hover:wpuf-bg-primaryHover focus:wpuf-bg-primaryHover focus:wpuf-text-white' +
-                    ( isDisabled ? ' wpuf-opacity-50 wpuf-cursor-not-allowed' : '' )
+                    'ml-4 inline-flex items-center justify-center rounded-md border border-transparent bg-primary px-3 py-2 text-sm font-semibold text-white hover:bg-primaryHover focus:bg-primaryHover focus:text-white' +
+                    ( isDisabled ? ' opacity-50 cursor-not-allowed' : '' )
                 }
             >
                 { __( 'Apply', 'wp-user-frontend' ) }

@@ -79,9 +79,9 @@ export default function MultiSelectInput( { optionField, field, value, onChange 
 
     return (
         <div className="panel-field-opt panel-field-opt-select">
-            <div className="wpuf-flex">
+            <div className="flex">
                 { optionField.title && (
-                    <label className="!wpuf-mb-0">
+                    <label className="mb-0!">
                         { optionField.title }
                         <SettingHelpText text={ optionField.help_text } />
                     </label>
@@ -90,7 +90,7 @@ export default function MultiSelectInput( { optionField, field, value, onChange 
 
             <select
                 ref={ selectRef }
-                className="term-list-selector wpuf-w-full wpuf-mt-2 wpuf-border-primary wpuf-z-30"
+                className="term-list-selector w-full mt-2 border-primary z-30"
                 value={ Array.isArray( value ) ? value : [] }
                 onChange={ handleNativeChange }
                 multiple
@@ -99,7 +99,7 @@ export default function MultiSelectInput( { optionField, field, value, onChange 
                     <option
                         key={ key }
                         value={ key }
-                        className="checked:wpuf-bg-primary"
+                        className="checked:bg-primary"
                     >
                         { label }
                     </option>

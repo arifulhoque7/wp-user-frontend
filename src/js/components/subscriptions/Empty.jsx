@@ -26,7 +26,7 @@ const Empty = ( { message, currentSubscriptionStatus, onAddSubscription } ) => {
 						<button
 							type="button"
 							onClick={ onAddSubscription }
-							className="rounded-md bg-primary px-3 py-2 text-sm text-white shadow-xs hover:bg-primaryHover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+							className="rounded-md bg-primary px-3 py-2 text-sm text-white shadow-xs hover:bg-primaryHover focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
 						>
 							<span className="dashicons dashicons-plus-alt"></span>&nbsp;&nbsp;&nbsp;
 							{ __( 'Add Subscription', 'wp-user-frontend' ) }

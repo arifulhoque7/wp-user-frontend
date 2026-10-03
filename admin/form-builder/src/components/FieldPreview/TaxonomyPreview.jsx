@@ -141,7 +141,7 @@ export default function TaxonomyPreview( { field } ) {
         () => sortTerms( field ),
         [ field.name, field.exclude_type, field.exclude, field.orderby, field.order ]
     );
-    const selectClass = `${ builderClassNames( 'select' ) } !wpuf-text-base`;
+    const selectClass = `${ builderClassNames( 'select' ) } text-base!`;
     // Develop renders no preview for a taxonomy without builder settings (e.g.
     // a custom taxonomy while Pro is off).
     const isAvailable = useSelect( ( select ) => !! select( STORE_NAME ).getFieldSettings()[ field.name ], [ field.name ] );
@@ -163,7 +163,7 @@ export default function TaxonomyPreview( { field } ) {
                 <div className="category-wrap">
                     <div>
                         <select className={ selectClass }>
-                            <option className="wpuf-text-base !wpuf-leading-none">{ __( '— Select —', 'wp-user-frontend' ) }</option>
+                            <option className="text-base leading-none!">{ __( '— Select —', 'wp-user-frontend' ) }</option>
                             { terms.map( ( term ) => (
                                 <option key={ term.term_id || term.id } value={ term.id }>{ term.name }</option>
                             ) ) }

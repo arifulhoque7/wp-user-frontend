@@ -14,9 +14,9 @@ export default function RadioPreview( { field } ) {
 
     return (
         <div className="wpuf-fields">
-            <div className={ isInline ? 'wpuf-space-y-6 sm:wpuf-flex sm:wpuf-items-center sm:wpuf-space-x-10 sm:wpuf-space-y-0' : 'wpuf-space-y-2' }>
+            <div className={ isInline ? '[&>:not([hidden])~:not([hidden])]:mt-6 [&>:not([hidden])~:not([hidden])]:mb-0 sm:flex sm:items-center sm:[&>:not([hidden])~:not([hidden])]:ml-10 sm:[&>:not([hidden])~:not([hidden])]:mr-0 sm:[&>:not([hidden])~:not([hidden])]:mt-0 sm:[&>:not([hidden])~:not([hidden])]:mb-0' : '[&>:not([hidden])~:not([hidden])]:mt-2 [&>:not([hidden])~:not([hidden])]:mb-0' }>
                 { Object.entries( options ).map( ( [ val, label ] ) => (
-                    <div key={ val } className="wpuf-flex wpuf-items-center">
+                    <div key={ val } className="flex items-center">
                         <input
                             type="radio"
                             value={ val }

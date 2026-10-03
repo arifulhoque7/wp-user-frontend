@@ -75,10 +75,10 @@ export default function ConditionRow( {
     }
 
     return (
-        <div className="wpuf-flex wpuf-items-center wpuf-gap-2 wpuf-mb-2">
+        <div className="flex items-center gap-2 mb-2">
             { /* Field selector */ }
             <select
-                className="cond-field wpuf-flex-1 wpuf-border wpuf-border-gray-300 wpuf-rounded wpuf-px-2 wpuf-py-1 wpuf-text-sm"
+                className="cond-field flex-1 border border-gray-300 rounded-sm px-2 py-1 text-sm"
                 value={ condition.name }
                 onChange={ handleFieldChange }
             >
@@ -96,7 +96,7 @@ export default function ConditionRow( {
 
             { /* Operator selector */ }
             <select
-                className="cond-operator wpuf-flex-1 wpuf-border wpuf-border-gray-300 wpuf-rounded wpuf-px-2 wpuf-py-1 wpuf-text-sm"
+                className="cond-operator flex-1 border border-gray-300 rounded-sm px-2 py-1 text-sm"
                 value={ condition.operator }
                 onChange={ handleOperatorChange }
             >
@@ -110,7 +110,7 @@ export default function ConditionRow( {
             { /* Value input — dropdown or text based on field type */ }
             { showDropdown ? (
                 <select
-                    className="cond-option wpuf-flex-1 wpuf-border wpuf-border-gray-300 wpuf-rounded wpuf-px-2 wpuf-py-1 wpuf-text-sm"
+                    className="cond-option flex-1 border border-gray-300 rounded-sm px-2 py-1 text-sm"
                     value={ condition.option }
                     onChange={ handleOptionChange }
                     disabled={ disabled }
@@ -124,7 +124,7 @@ export default function ConditionRow( {
             ) : (
                 <input
                     type="text"
-                    className="cond-option wpuf-flex-1 wpuf-border wpuf-border-gray-300 wpuf-rounded wpuf-px-2 wpuf-py-1 wpuf-text-sm"
+                    className="cond-option flex-1 border border-gray-300 rounded-sm px-2 py-1 text-sm"
                     value={ condition.option }
                     onChange={ handleOptionChange }
                     disabled={ disabled }
@@ -135,12 +135,12 @@ export default function ConditionRow( {
             { /* Remove button */ }
             <button
                 type="button"
-                className="wpuf-text-red-500 hover:wpuf-text-red-700 wpuf-p-1"
+                className="text-red-500 hover:text-red-700 p-1"
                 onClick={ () => onRemove( index ) }
                 disabled={ ! canRemove }
                 title={ __( 'Remove condition', 'wp-user-frontend' ) }
             >
-                <svg className="wpuf-w-4 wpuf-h-4" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
             </button>

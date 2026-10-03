@@ -43,9 +43,9 @@ export default function VisibilityInput( { optionField, field, value, onChange, 
 
     return (
         <div className="panel-field-opt panel-field-opt-radio">
-            <div className="wpuf-flex">
+            <div className="flex">
                 { optionField.title && (
-                    <label className="wpuf-option-field-title wpuf-font-sm wpuf-text-gray-700 wpuf-font-medium">
+                    <label className="wpuf-option-field-title wpuf-font-sm text-gray-700 font-medium">
                         { optionField.title }
                     </label>
                 ) }
@@ -54,10 +54,10 @@ export default function VisibilityInput( { optionField, field, value, onChange, 
 
             { /* Radio options */ }
             { isInline ? (
-                <div className="wpuf-mt-2 wpuf-flex wpuf-flex-wrap">
+                <div className="mt-2 flex flex-wrap">
                     { Object.entries( options ).map( ( [ key, label ] ) => (
-                        <div key={ key } className="wpuf-items-center wpuf-mr-9">
-                            <label className="wpuf-block wpuf-my-1 wpuf-mr-2 wpuf-font-medium wpuf-text-gray-900">
+                        <div key={ key } className="items-center mr-9">
+                            <label className="block my-1 mr-2 font-medium text-gray-900">
                                 <input
                                     type="radio"
                                     name={ `visibility_${ field.id }` }
@@ -73,15 +73,15 @@ export default function VisibilityInput( { optionField, field, value, onChange, 
                 </div>
             ) : (
                 Object.entries( options ).map( ( [ key, label ] ) => (
-                    <div key={ key } className="wpuf-flex wpuf-items-center wpuf-gap-x-2 wpuf-m-2">
-                        <label className="wpuf-block text-sm/6 wpuf-font-medium wpuf-text-gray-900">
+                    <div key={ key } className="flex items-center gap-x-2 m-2">
+                        <label className="block text-sm/6 font-medium text-gray-900">
                             <input
                                 type="radio"
                                 name={ `visibility_${ field.id }` }
                                 value={ key }
                                 checked={ selected === key }
                                 onChange={ () => handleSelectedChange( key ) }
-                                className="checked:!wpuf-bg-primary checked:before:!wpuf-bg-transparent"
+                                className="checked:bg-primary! checked:before:bg-transparent!"
                             />
                             { label }
                         </label>
@@ -91,13 +91,13 @@ export default function VisibilityInput( { optionField, field, value, onChange, 
 
             { /* Role choices when logged_in is selected */ }
             { selected === 'logged_in' && (
-                <div className="condiotional-logic-container wpuf-mt-2">
+                <div className="condiotional-logic-container mt-2">
                     <ul>
                         { Object.entries( roles ).map( ( [ role, roleName ] ) => (
-                            <li key={ role } className="wpuf-mt-2 wpuf-flex wpuf-items-center">
-                                <label className="wpuf-flex wpuf-items-center">
+                            <li key={ role } className="mt-2 flex items-center">
+                                <label className="flex items-center">
                                     <input
-                                        className={ `${ builderClassNames( 'checkbox' ) } !wpuf-mr-2` }
+                                        className={ `${ builderClassNames( 'checkbox' ) } mr-2!` }
                                         type="checkbox"
                                         value={ role }
                                         checked={ choices.includes( role ) }
@@ -113,14 +113,14 @@ export default function VisibilityInput( { optionField, field, value, onChange, 
 
             { /* Subscription choices when subscribed_users is selected */ }
             { selected === 'subscribed_users' && (
-                <div className="condiotional-logic-container wpuf-mt-2">
+                <div className="condiotional-logic-container mt-2">
                     <ul>
                         { subscriptions.length > 0 ? (
                             subscriptions.map( ( pack ) => (
-                                <li key={ pack.id } className="wpuf-mt-2 wpuf-flex wpuf-items-center">
-                                    <label className="wpuf-flex wpuf-items-center">
+                                <li key={ pack.id } className="mt-2 flex items-center">
+                                    <label className="flex items-center">
                                         <input
-                                            className={ `${ builderClassNames( 'checkbox' ) } !wpuf-mr-2` }
+                                            className={ `${ builderClassNames( 'checkbox' ) } mr-2!` }
                                             type="checkbox"
                                             value={ String( pack.id ) }
                                             checked={ choices.includes( String( pack.id ) ) }

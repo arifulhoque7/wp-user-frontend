@@ -61,17 +61,17 @@ export default function FieldPanel() {
             if ( fieldMsg.asset_type === 'image' ) {
                 iconHtml = `<img src="${ fieldMsg.asset_url }" alt="${ template }" loading="lazy" onload="this.closest('div').classList.add('wpuf-is-loaded')">`;
             } else if ( fieldMsg.asset_type === 'video' ) {
-                iconHtml = `<iframe onload="this.closest('div').classList.add('wpuf-is-loaded')" class="wpuf-w-full" src="${ fieldMsg.asset_url }" title="${ template }" frameborder="0" allowfullscreen></iframe>`;
+                iconHtml = `<iframe onload="this.closest('div').classList.add('wpuf-is-loaded')" class="w-full" src="${ fieldMsg.asset_url }" title="${ template }" frameborder="0" allowfullscreen></iframe>`;
             }
 
-            const html = `<div class="wpuf-flex wpuf-text-left">
-                <div class="wpuf-w-1/2">
+            const html = `<div class="flex text-left">
+                <div class="w-1/2">
                     <img src="${ data.lock_icon || '' }" alt="">
-                    <h2 class="wpuf-text-black"><span class="wpuf-text-primary">${ title } </span>${ i18n.is_a_pro_feature || '' }</h2>
+                    <h2 class="text-black"><span class="text-primary">${ title } </span>${ i18n.is_a_pro_feature || '' }</h2>
                     <p>${ i18n.pro_feature_msg || '' }</p>
                 </div>
-                <div class="wpuf-w-1/2">
-                    <div class="wpuf-icon-container wpuf-flex wpuf-justify-center wpuf-items-center">
+                <div class="w-1/2">
+                    <div class="wpuf-icon-container flex justify-center items-center">
                         ${ iconHtml }
                         <div class="wpuf-shimmer"></div>
                     </div>
@@ -82,8 +82,8 @@ export default function FieldPanel() {
                 html,
                 showCloseButton: true,
                 customClass: {
-                    confirmButton: '!wpuf-flex focus:!wpuf-shadow-none',
-                    closeButton: 'wpuf-absolute',
+                    confirmButton: 'flex! focus:shadow-none!',
+                    closeButton: 'absolute',
                 },
                 width: '50rem',
                 padding: '1.5rem',
@@ -99,12 +99,12 @@ export default function FieldPanel() {
                 html: i18n.pro_feature_msg || '',
                 showCloseButton: true,
                 customClass: {
-                    confirmButton: '!wpuf-flex focus:!wpuf-shadow-none',
-                    closeButton: 'wpuf-absolute',
+                    confirmButton: 'flex! focus:shadow-none!',
+                    closeButton: 'absolute',
                 },
                 width: '40rem',
                 padding: '2rem 3rem',
-                title: '<span class="wpuf-text-primary">' + title + '</span> ' + ( i18n.is_a_pro_feature || '' ),
+                title: '<span class="text-primary">' + title + '</span> ' + ( i18n.is_a_pro_feature || '' ),
                 imageUrl: data.lock_icon || '',
                 confirmButtonColor: '#059669',
                 confirmButtonText: i18n.upgrade_to_pro || 'Upgrade to PRO',
@@ -138,9 +138,9 @@ export default function FieldPanel() {
             width: '40rem',
             padding: '2rem 3rem',
             customClass: {
-                confirmButton: '!wpuf-bg-white !wpuf-text-gray-700 focus:!wpuf-shadow-none !wpuf-p-0 hover:!wpuf-bg-none',
-                closeButton: 'wpuf-absolute wpuf-top-4 wpuf-right-4',
-                cancelButton: '!wpuf-bg-primary !wpuf-text-white',
+                confirmButton: 'bg-white! text-gray-700! focus:shadow-none! p-0! hover:bg-none!',
+                closeButton: 'absolute top-4 right-4',
+                cancelButton: 'bg-primary! text-white!',
             },
         } );
     }, [ fieldSettings ] );
@@ -148,7 +148,7 @@ export default function FieldPanel() {
     return (
         <div>
             <FieldSearch onSearch={ setSearchTerm } />
-            <div className="wpuf-form-builder-form-fields wpuf-mt-4">
+            <div className="wpuf-form-builder-form-fields mt-4">
                 { filteredSections.map( ( section, index ) => (
                     <FieldGroup key={ section.id } section={ section } index={ index }>
                         { section.fields.map( ( template ) => (

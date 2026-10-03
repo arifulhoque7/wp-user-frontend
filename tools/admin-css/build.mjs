@@ -43,6 +43,14 @@ const ENTRIES = {
         output: 'assets/css/subscriptions.css',
         rtl: true,
     },
+    forms: {
+        input: 'src/forms.css',
+        pre: 'src/base-v3/forms.pre.css',
+        post: 'src/base-v3/forms.post.css',
+        scope: '.wpuf-admin-react',
+        output: 'assets/css/admin/forms-react.css',
+        rtl: false,
+    },
 };
 
 const compile = async ( css, from ) =>
@@ -64,9 +72,10 @@ function scopeUtilities( layer, scope ) {
  */
 /**
  * Rendering details pinned to Tailwind 3: `rounded-full` is 9999px (Tailwind 4:
- * calc(infinity * 1px), which anti-aliases curved edges differently) and colors
+ * calc(infinity * 1px), which anti-aliases curved edges differently), colors
  * with an opacity modifier keep the hex + alpha value (Tailwind 4 adds an
- * `@supports (color-mix)` override mixing in oklab).
+ * `@supports (color-mix)` override mixing in oklab) and gradients interpolate
+ * in sRGB.
  */
 function pinV3Rendering( tree ) {
     tree.walkAtRules( 'supports', ( rule ) => {
@@ -77,6 +86,10 @@ function pinV3Rendering( tree ) {
     tree.walkDecls( ( decl ) => {
         if ( /^border(-[a-z]+)*-radius$/.test( decl.prop ) && /3\.40282e38px|calc\(infinity/.test( decl.value ) ) {
             decl.value = '9999px';
+        }
+        // Gradients interpolate in sRGB as in Tailwind 3 (Tailwind 4: `in oklab`).
+        if ( '--tw-gradient-position' === decl.prop ) {
+            decl.value = decl.value.replace( /\s+in\s+oklab/, '' );
         }
     } );
 }

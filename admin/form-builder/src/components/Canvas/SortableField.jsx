@@ -49,15 +49,15 @@ export default function SortableField( { field, index, container = TOP_LEVEL } )
     const variant = 'top' === container.type ? 'top' : container.type;
 
     const classNames = ( 'column' === variant ? [
-        '!wpuf-m-0 !wpuf-p-0 wpuf-group/column-inner hover:wpuf-bg-green-50 wpuf-transition wpuf-duration-150 wpuf-ease-out column-field-items wpuf-el wpuf-rounded-t-md',
+        'm-0! p-0! group/column-inner hover:bg-green-50 transition duration-150 wpuf-ease-out column-field-items wpuf-el rounded-t-md',
         field.name,
         field.css,
         'form-field-' + field.template,
         field.width ? 'field-size-' + field.width : '',
         isHidden ? 'hidden-field' : '',
-        isEditing ? 'wpuf-bg-green-50' : '',
+        isEditing ? 'bg-green-50' : '',
     ] : 'repeat' === variant ? [
-        '!wpuf-m-0 !wpuf-p-0 wpuf-group/repeat-inner hover:wpuf-bg-green-50 wpuf-transition wpuf-duration-150 wpuf-ease-out repeat-field-items wpuf-el wpuf-rounded-t-md',
+        'm-0! p-0! group/repeat-inner hover:bg-green-50 transition duration-150 wpuf-ease-out repeat-field-items wpuf-el rounded-t-md',
         field.name,
         'form-field-' + field.template,
         field.width ? 'field-size-' + field.width : '',
@@ -69,7 +69,7 @@ export default function SortableField( { field, index, container = TOP_LEVEL } )
         'form-field-' + field.template,
         field.width ? 'field-size-' + field.width : '',
         isHidden ? 'hidden-field' : '',
-        'wpuf-group wpuf-rounded-lg hover:!wpuf-bg-green-50 wpuf-transition wpuf-duration-150 wpuf-ease-out !wpuf-m-0 !wpuf-p-0 wpuf-overflow-hidden',
+        'group rounded-lg hover:bg-green-50! transition duration-150 wpuf-ease-out m-0! p-0! overflow-hidden',
     ] ).filter( Boolean ).join( ' ' );
 
     return (

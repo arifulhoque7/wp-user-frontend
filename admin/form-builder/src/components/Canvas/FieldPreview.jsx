@@ -20,8 +20,8 @@ function previewKey( field ) {
  * badge, small label, named hover group.
  */
 const INNER_ROW = {
-    column: 'wpuf-flex wpuf-flex-col md:wpuf-flex-row wpuf-gap-2 wpuf-p-4 wpuf-border-transparent group-hover/column-inner:wpuf-border-primary wpuf-rounded-t-md wpuf-border-t wpuf-border-r wpuf-border-l wpuf-border-dashed wpuf-border-emerald-400',
-    repeat: 'wpuf-flex wpuf-flex-col md:wpuf-flex-row wpuf-gap-2 wpuf-p-4 wpuf-border-transparent group-hover/repeat-inner:wpuf-border-green-400 wpuf-rounded-t-md wpuf-border-t wpuf-border-r wpuf-border-l wpuf-border-dashed wpuf-border-green-400',
+    column: 'flex flex-col md:flex-row gap-2 p-4 border-transparent group-hover/column-inner:border-primary rounded-t-md border-t border-r border-l border-dashed border-emerald-400',
+    repeat: 'flex flex-col md:flex-row gap-2 p-4 border-transparent group-hover/repeat-inner:border-green-400 rounded-t-md border-t border-r border-l border-dashed border-green-400',
 };
 
 export default function FieldPreview( { field, variant = 'top' } ) {
@@ -52,9 +52,9 @@ export default function FieldPreview( { field, variant = 'top' } ) {
                 <PreviewComponent key={ previewKey( field ) } field={ field } />
             ) : null }
             { isProPreview && (
-                <div className="stage-pro-alert wpuf-text-center">
+                <div className="stage-pro-alert text-center">
                     <label className="wpuf-pro-text-alert">
-                        <a href={ proLink } target="_blank" rel="noopener noreferrer" className="wpuf-text-gray-700 wpuf-text-base">
+                        <a href={ proLink } target="_blank" rel="noopener noreferrer" className="text-gray-700 text-base">
                             <strong>{ config ? config.title : field.template }</strong>
                             { ' ' + __( 'is available in Pro Version', 'wp-user-frontend' ) }
                         </a>
@@ -68,18 +68,18 @@ export default function FieldPreview( { field, variant = 'top' } ) {
         return (
             <div className={ INNER_ROW[ variant ] }>
                 { ! ( isFullWidth || isProPreview ) && (
-                    <div className={ 'repeat' === variant ? 'wpuf-w-1/4 wpuf-flex wpuf-items-center' : undefined }>
+                    <div className={ 'repeat' === variant ? 'w-1/4 flex items-center' : undefined }>
                         { ! isInvisible && (
-                            <label htmlFor={ `wpuf-${ field.name || 'cls' }` } className="wpuf-block wpuf-text-sm">
+                            <label htmlFor={ `wpuf-${ field.name || 'cls' }` } className="block text-sm">
                                 { field.label }
                                 { field.required === 'yes' && <span className="required"> *</span> }
                             </label>
                         ) }
                     </div>
                 ) }
-                <div className={ `wpuf-relative wpuf-min-w-0 ${ ( isFullWidth || isProPreview ) ? 'wpuf-w-full' : 'wpuf-w-full md:wpuf-w-3/4' }` }>
-                    <div className="wpuf-absolute wpuf-w-full wpuf-h-full wpuf-z-10" />
-                    <div className="wpuf-relative">{ body }</div>
+                <div className={ `relative min-w-0 ${ ( isFullWidth || isProPreview ) ? 'w-full' : 'w-full md:w-3/4' }` }>
+                    <div className="absolute w-full h-full z-10" />
+                    <div className="relative">{ body }</div>
                 </div>
             </div>
         );
@@ -87,12 +87,12 @@ export default function FieldPreview( { field, variant = 'top' } ) {
 
     return (
         <div
-            className={ `wpuf-flex wpuf-justify-between wpuf-p-6 wpuf-rounded-t-md wpuf-border-t wpuf-border-r wpuf-border-l wpuf-border-dashed group-hover:wpuf-border-primary group-hover:wpuf-cursor-pointer !wpuf-pb-3 ${ isEditing ? 'wpuf-bg-green-50 wpuf-border-primary' : 'wpuf-border-transparent' }` }
+            className={ `flex justify-between p-6 rounded-t-md border-t border-r border-l border-dashed group-hover:border-primary group-hover:cursor-pointer pb-3! ${ isEditing ? 'bg-green-50 border-primary' : 'border-transparent' }` }
         >
             { ! ( isFullWidth || isProPreview ) && (
-                <div className="wpuf-w-1/4 wpuf-flex wpuf-items-center">
+                <div className="w-1/4 flex items-center">
                     { field.show_icon === 'yes' && field.field_icon && field.icon_position === 'left_label' && (
-                        <span className="wpuf-field-label-icon wpuf-inline-flex wpuf-items-center wpuf-mr-1">
+                        <span className="wpuf-field-label-icon inline-flex items-center mr-1">
                             { field.field_icon.indexOf( 'http' ) === 0 || field.field_icon.indexOf( '/' ) === 0
                                 ? <img src={ field.field_icon } alt="" className="wpuf-field-icon wpuf-field-icon-img" />
                                 : <i className={ `${ field.field_icon } wpuf-field-icon` } />
@@ -102,16 +102,16 @@ export default function FieldPreview( { field, variant = 'top' } ) {
                     { ! isInvisible && (
                         <label
                             htmlFor={ `wpuf-${ field.name || 'cls' }` }
-                            className="wpuf-block wpuf-text-sm wpuf-font-medium wpuf-leading-6 wpuf-text-gray-900"
+                            className="block text-sm font-medium leading-6 text-gray-900"
                         >
                             { field.label }
                             { field.required === 'yes' && <span className="required"> *</span> }
                             { hasHiddenCssClass( field.css ) && (
                                 <span
-                                    className="wpuf-inline-flex wpuf-items-center wpuf-ml-2 wpuf-px-2 wpuf-py-0.5 wpuf-rounded wpuf-text-xs wpuf-font-medium wpuf-bg-yellow-100 wpuf-text-yellow-800 wpuf-border wpuf-border-yellow-300"
+                                    className="inline-flex items-center ml-2 px-2 py-0.5 rounded-sm text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-300"
                                     title={ __( 'This field will be hidden on the frontend due to CSS class', 'wp-user-frontend' ) }
                                 >
-                                    <svg className="wpuf-w-3 wpuf-h-3 wpuf-mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fillRule="evenodd" clipRule="evenodd" />
                                     </svg>
                                     { __( 'Hidden on frontend', 'wp-user-frontend' ) }
@@ -120,7 +120,7 @@ export default function FieldPreview( { field, variant = 'top' } ) {
                         </label>
                     ) }
                     { field.show_icon === 'yes' && field.field_icon && field.icon_position === 'right_label' && (
-                        <span className="wpuf-field-label-icon wpuf-inline-flex wpuf-items-center wpuf-ml-2">
+                        <span className="wpuf-field-label-icon inline-flex items-center ml-2">
                             { field.field_icon.indexOf( 'http' ) === 0 || field.field_icon.indexOf( '/' ) === 0
                                 ? <img src={ field.field_icon } alt="" className="wpuf-field-icon wpuf-field-icon-img" />
                                 : <i className={ `${ field.field_icon } wpuf-field-icon` } />
@@ -130,9 +130,9 @@ export default function FieldPreview( { field, variant = 'top' } ) {
                 </div>
             ) }
             <div
-                className={ `wpuf-relative ${ ( isFullWidth || isProPreview ) ? 'wpuf-w-full' : 'wpuf-w-3/4' }` }
+                className={ `relative ${ ( isFullWidth || isProPreview ) ? 'w-full' : 'w-3/4' }` }
             >
-                <div className="wpuf-absolute wpuf-w-full wpuf-h-full wpuf-z-10" />
+                <div className="absolute w-full h-full z-10" />
                 { body }
             </div>
         </div>

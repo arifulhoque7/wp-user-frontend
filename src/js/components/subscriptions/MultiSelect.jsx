@@ -234,7 +234,7 @@ const MultiSelect = ( { options, value, onChange, placeholder, sortable = false,
 							{ ! disabled && (
 								<button
 									type="button"
-									className="ml-1 text-gray-400 hover:text-red-500 text-xs opacity-0 group-hover/item:wpuf-opacity-100 transition-opacity duration-150 w-4 h-4 flex items-center justify-center"
+									className="ml-1 text-gray-400 hover:text-red-500 text-xs opacity-0 group-hover/item:opacity-100 transition-opacity duration-150 w-4 h-4 flex items-center justify-center"
 									aria-label={ __( 'Remove', 'wp-user-frontend' ) }
 									onClick={ () => handleRemove( key ) }
 								>

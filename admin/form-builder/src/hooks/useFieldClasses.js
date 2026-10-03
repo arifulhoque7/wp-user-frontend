@@ -3,11 +3,11 @@ import { useSelect } from '@wordpress/data';
 import { STORE_NAME } from '../store/constants';
 
 const INPUT_CLASSES = {
-    upload_btn: 'file-selector wpuf-rounded-md wpuf-btn-secondary',
-    radio: '!wpuf-mt-0 !wpuf-mr-2 wpuf-radio !wpuf-shadow-none checked:!wpuf-shadow-none focus:checked:!wpuf-shadow-primary !wpuf-border-gray-300 checked:!wpuf-border-primary checked:!wpuf-bg-primary before:checked:!wpuf-bg-white hover:checked:!wpuf-bg-primary focus:!wpuf-ring-transparent focus:checked:!wpuf-ring-transparent hover:checked:!wpuf-ring-transparent focus:checked:!wpuf-bg-primary focus:checked:!wpuf-shadow-none focus:wpuf-shadow-primary',
-    checkbox: '!wpuf-mt-0 !wpuf-mr-2 wpuf-h-4 wpuf-w-4 !wpuf-shadow-none checked:!wpuf-shadow-none focus:checked:!wpuf-shadow-primary focus:checked:!wpuf-shadow-none !wpuf-border-gray-300 checked:!wpuf-border-primary before:checked:!wpuf-bg-white hover:checked:!wpuf-bg-primary focus:!wpuf-ring-transparent focus:checked:!wpuf-ring-transparent hover:checked:!wpuf-ring-transparent focus:checked:!wpuf-bg-primary focus:wpuf-shadow-primary checked:focus:!wpuf-bg-primary checked:hover:wpuf-bg-primary checked:!wpuf-bg-primary before:!wpuf-content-none wpuf-rounded',
-    dropdown: 'wpuf-block wpuf-w-full wpuf-min-w-full !wpuf-bg-white !wpuf-py-2.5 !wpuf-px-3.5 wpuf-text-gray-700 wpuf-font-normal !wpuf-leading-none !wpuf-shadow-sm !wpuf-border !wpuf-border-solid !wpuf-border-gray-300 !wpuf-rounded-md focus:!wpuf-ring-transparent focus:checked:!wpuf-ring-transparent hover:checked:!wpuf-ring-transparent hover:!wpuf-text-gray-700 !wpuf-text-base',
-    default: 'wpuf-block wpuf-min-w-full !wpuf-bg-white !wpuf-m-0 !wpuf-leading-none !wpuf-py-2.5 !wpuf-px-3.5 wpuf-text-gray-700 !wpuf-shadow-sm placeholder:wpuf-text-gray-400 !wpuf-border !wpuf-border-solid !wpuf-border-gray-300 !wpuf-rounded-md wpuf-max-w-full focus:!wpuf-ring-transparent',
+    upload_btn: 'file-selector rounded-md wpuf-btn-secondary',
+    radio: 'mt-0! mr-2! wpuf-radio shadow-none! checked:shadow-none! focus:checked:shadow-primary! border-gray-300! checked:border-primary! checked:bg-primary! checked:before:bg-white! hover:checked:bg-primary! focus:ring-transparent! focus:checked:ring-transparent! hover:checked:ring-transparent! focus:checked:bg-primary! focus:checked:shadow-none! focus:shadow-primary',
+    checkbox: 'mt-0! mr-2! h-4 w-4 shadow-none! checked:shadow-none! focus:checked:shadow-primary! focus:checked:shadow-none! border-gray-300! checked:border-primary! checked:before:bg-white! hover:checked:bg-primary! focus:ring-transparent! focus:checked:ring-transparent! hover:checked:ring-transparent! focus:checked:bg-primary! focus:shadow-primary checked:focus:bg-primary! checked:hover:bg-primary checked:bg-primary! before:content-none! rounded-sm',
+    dropdown: 'block w-full min-w-full bg-white! py-2.5! px-3.5! text-gray-700 font-normal leading-none! shadow-xs! border! border-solid! border-gray-300! rounded-md! focus:ring-transparent! focus:checked:ring-transparent! hover:checked:ring-transparent! hover:text-gray-700! text-base!',
+    default: 'block min-w-full bg-white! m-0! leading-none! py-2.5! px-3.5! text-gray-700 shadow-xs! placeholder:text-gray-400 border! border-solid! border-gray-300! rounded-md! max-w-full focus:ring-transparent!',
 };
 
 /**

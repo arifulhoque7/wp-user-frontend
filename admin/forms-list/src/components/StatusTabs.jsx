@@ -5,7 +5,7 @@
  */
 const StatusTabs = ( { postCounts, currentTab, onTabChange } ) => {
     return (
-        <div className="wpuf-flex wpuf-mt-9">
+        <div className="flex mt-9">
             { Object.entries( postCounts ).map( ( [ key, value ] ) => {
                 const tabKey = key === 'all' ? 'any' : key;
                 const isActive = currentTab === tabKey || ( key === 'all' && currentTab === 'any' );
@@ -15,14 +15,14 @@ const StatusTabs = ( { postCounts, currentTab, onTabChange } ) => {
                         key={ key }
                         onClick={ () => onTabChange( tabKey ) }
                         className={
-                            'wpuf-flex hover:wpuf-border-primary hover:wpuf-text-primary wpuf-whitespace-nowrap wpuf-py-4 wpuf-px-1 wpuf-border-b-2 wpuf-font-medium wpuf-text-sm wpuf-mr-8 focus:wpuf-outline-none focus:wpuf-shadow-none wpuf-transition-all hover:wpuf-cursor-pointer ' +
+                            'flex hover:border-primary hover:text-primary whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm mr-8 focus:outline-hidden focus:shadow-none wpuf-transition-all hover:cursor-pointer ' +
                             ( isActive
-                                ? 'wpuf-border-primary wpuf-text-primary'
-                                : 'wpuf-border-transparent wpuf-text-gray-500' )
+                                ? 'border-primary text-primary'
+                                : 'border-transparent text-gray-500' )
                         }
                     >
                         { value.label }
-                        <span className="wpuf-bg-gray-100 wpuf-text-gray-900 wpuf-ml-3 wpuf-rounded-full wpuf-py-0.5 wpuf-px-2.5 wpuf-text-xs wpuf-font-medium md:wpuf-inline-block">
+                        <span className="bg-gray-100 text-gray-900 ml-3 rounded-full py-0.5 px-2.5 text-xs font-medium md:inline-block">
                             { value.count }
                         </span>
                     </span>

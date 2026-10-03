@@ -35,17 +35,17 @@ const FIELD_MAP = {
  * Matches admin/form-builder/assets/js/form-builder.js:1036
  */
 export const SETTING_CLASS_NAMES = {
-    text: 'wpuf-block wpuf-min-w-full wpuf-my-0 wpuf-mb-0 !wpuf-leading-none !wpuf-py-2.5 !wpuf-px-3.5 wpuf-text-gray-700 !wpuf-shadow-sm placeholder:wpuf-text-gray-400 wpuf-border !wpuf-border-gray-300 !wpuf-rounded-md wpuf-max-w-full focus:!wpuf-ring-transparent',
-    number: 'wpuf-block wpuf-min-w-full wpuf-my-0 wpuf-mb-0 !wpuf-leading-none !wpuf-py-2.5 !wpuf-px-3.5 wpuf-text-gray-700 !wpuf-shadow-sm placeholder:wpuf-text-gray-400 wpuf-border !wpuf-border-gray-300 !wpuf-rounded-md wpuf-max-w-full focus:!wpuf-ring-transparent',
-    textarea: 'wpuf-block wpuf-min-w-full wpuf-my-0 wpuf-mb-0 !wpuf-leading-none !wpuf-py-2.5 !wpuf-px-3.5 wpuf-text-gray-700 !wpuf-shadow-sm placeholder:wpuf-text-gray-400 wpuf-border !wpuf-border-gray-300 !wpuf-rounded-md wpuf-max-w-full focus:!wpuf-ring-transparent',
-    dropdown: 'wpuf-block wpuf-w-full wpuf-min-w-full wpuf-text-gray-700 wpuf-font-normal !wpuf-shadow-sm wpuf-border !wpuf-border-gray-300 !wpuf-rounded-md focus:!wpuf-ring-transparent focus:checked:!wpuf-ring-transparent hover:checked:!wpuf-ring-transparent hover:!wpuf-text-gray-700 !wpuf-text-base !leading-6',
-    checkbox: '!wpuf-mt-0 !wpuf-mr-2 wpuf-h-4 wpuf-w-4 !wpuf-shadow-none checked:!wpuf-shadow-none focus:checked:!wpuf-shadow-primary focus:checked:!wpuf-shadow-none !wpuf-border-gray-300 checked:!wpuf-border-primary checked:!wpuf-bg-primary before:checked:!wpuf-bg-white hover:checked:!wpuf-bg-primary focus:!wpuf-ring-transparent focus:checked:!wpuf-ring-transparent hover:checked:!wpuf-ring-transparent focus:checked:!wpuf-bg-primary focus:wpuf-shadow-primary checked:focus:!wpuf-bg-primary checked:hover:wpuf-bg-primary checked:!wpuf-bg-primary before:!wpuf-content-none wpuf-rounded',
+    text: 'block min-w-full my-0 mb-0 leading-none! py-2.5! px-3.5! text-gray-700 shadow-xs! placeholder:text-gray-400 border border-gray-300! rounded-md! max-w-full focus:ring-transparent!',
+    number: 'block min-w-full my-0 mb-0 leading-none! py-2.5! px-3.5! text-gray-700 shadow-xs! placeholder:text-gray-400 border border-gray-300! rounded-md! max-w-full focus:ring-transparent!',
+    textarea: 'block min-w-full my-0 mb-0 leading-none! py-2.5! px-3.5! text-gray-700 shadow-xs! placeholder:text-gray-400 border border-gray-300! rounded-md! max-w-full focus:ring-transparent!',
+    dropdown: 'block w-full min-w-full text-gray-700 font-normal shadow-xs! border border-gray-300! rounded-md! focus:ring-transparent! focus:checked:ring-transparent! hover:checked:ring-transparent! hover:text-gray-700! text-base! !leading-6',
+    checkbox: 'mt-0! mr-2! h-4 w-4 shadow-none! checked:shadow-none! focus:checked:shadow-primary! focus:checked:shadow-none! border-gray-300! checked:border-primary! checked:bg-primary! checked:before:bg-white! hover:checked:bg-primary! focus:ring-transparent! focus:checked:ring-transparent! hover:checked:ring-transparent! focus:checked:bg-primary! focus:shadow-primary checked:focus:bg-primary! checked:hover:bg-primary checked:bg-primary! before:content-none! rounded-sm',
 };
 
 /**
  * Dispatches to the appropriate field component based on field type.
  *
- * Wraps each field in Vue's `wpuf-mt-6 wpuf-input-container` div
+ * Wraps each field in Vue's `mt-6 wpuf-input-container` div
  * matching the wpuf_render_settings_field() PHP function.
  */
 export default function SettingsField( { slotKey, hideControl = false, ...props } ) {
@@ -71,10 +71,10 @@ export default function SettingsField( { slotKey, hideControl = false, ...props 
  * The control for one settings row.
  */
 function SettingsFieldControl( { field, name, value, onChange, settings } ) {
-    // inline_fields is a special container type — Vue uses wpuf-mt-6 wpuf-flex wpuf-input-container
+    // inline_fields is a special container type — Vue uses mt-6 flex wpuf-input-container
     if ( field.type === 'inline_fields' || ( ! field.type && field.fields ) ) {
         return (
-            <div className="wpuf-mt-6 wpuf-flex wpuf-input-container">
+            <div className="mt-6 flex wpuf-input-container">
                 <InlineFieldsGroup
                     field={ field }
                     settings={ settings || {} }
@@ -87,7 +87,7 @@ function SettingsFieldControl( { field, name, value, onChange, settings } ) {
     // submit-button-conditional-logics is a special Vue component — render React equivalent
     if ( field.type === 'submit-button-conditional-logics' ) {
         return (
-            <div className="wpuf-mt-6 wpuf-input-container">
+            <div className="mt-6 wpuf-input-container">
                 <SubmitConditionalLogic label={ field.label } />
             </div>
         );
@@ -96,8 +96,8 @@ function SettingsFieldControl( { field, name, value, onChange, settings } ) {
     // `note`: develop's yellow notice box (e.g. a newsletter module with no API key).
     if ( field.type === 'note' ) {
         return (
-            <div className="wpuf-my-4 wpuf-input-container">
-                <RawHTML className="wpuf-p-4 wpuf-bg-yellow-50 wpuf-text-sm wpuf-text-yellow-800 wpuf-border-l-4 wpuf-border-yellow-400 wpuf-w-full">
+            <div className="my-4 wpuf-input-container">
+                <RawHTML className="p-4 bg-yellow-50 text-sm text-yellow-800 border-l-4 border-yellow-400 w-full">
                     { field.note || '' }
                 </RawHTML>
             </div>
@@ -110,11 +110,11 @@ function SettingsFieldControl( { field, name, value, onChange, settings } ) {
         return null;
     }
 
-    // Vue wraps every field in <div class="wpuf-mt-6 wpuf-input-container"> and
+    // Vue wraps every field in <div class="mt-6 wpuf-input-container"> and
     // prints `long_help` under any field. `note` and `long_help` are filtered
     // with wp_kses_post before they leave PHP.
     return (
-        <div className="wpuf-mt-6 wpuf-input-container">
+        <div className="mt-6 wpuf-input-container">
             <FieldComponent
                 field={ field }
                 name={ name }
@@ -122,7 +122,7 @@ function SettingsFieldControl( { field, name, value, onChange, settings } ) {
                 onChange={ onChange }
             />
             { field.long_help && (
-                <RawHTML className="wpuf-text-sm wpuf-mt-4 wpuf-long-help">{ field.long_help }</RawHTML>
+                <RawHTML className="text-sm mt-4 wpuf-long-help">{ field.long_help }</RawHTML>
             ) }
         </div>
     );

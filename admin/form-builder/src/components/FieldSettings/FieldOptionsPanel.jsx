@@ -14,16 +14,16 @@ function SettingSection( { title, settings, field, defaultOpen, isBasic = false 
     }
 
     return (
-        <div className={ isBasic ? 'option-fields-section wpuf-mt-6' : 'option-fields-section' }>
+        <div className={ isBasic ? 'option-fields-section mt-6' : 'option-fields-section' }>
             <h3
-                className={ `wpuf-flex wpuf-mt-0 wpuf-mb-6 wpuf-justify-between hover:wpuf-cursor-pointer wpuf-font-medium wpuf-text-lg ${ isOpen ? 'wpuf-text-primary' : 'wpuf-text-gray-500' }` }
+                className={ `flex mt-0 mb-6 justify-between hover:cursor-pointer font-medium text-lg ${ isOpen ? 'text-primary' : 'text-gray-500' }` }
                 onClick={ () => setIsOpen( ! isOpen ) }
                 role="button"
                 tabIndex={ 0 }
                 onKeyDown={ ( e ) => e.key === 'Enter' && setIsOpen( ! isOpen ) }
             >
                 { title }
-                <i className={ isOpen ? 'fa fa-angle-down wpuf-text-primary' : 'fa fa-angle-right wpuf-text-gray-500' } />
+                <i className={ isOpen ? 'fa fa-angle-down text-primary' : 'fa fa-angle-right text-gray-500' } />
             </h3>
             { /* Hidden, not unmounted, when closed (develop's v-show): inputs keep their state. */ }
             <div className="option-field-section-fields" style={ isOpen ? undefined : { display: 'none' } }>
@@ -76,7 +76,7 @@ export default function FieldOptionsPanel() {
         return (
             <div className="wpuf-form-builder-field-options">
                 <div className="options-fileds-section text-center">
-                    <p className="wpuf-text-gray-500 wpuf-text-lg wpuf-font-medium">
+                    <p className="text-gray-500 text-lg font-medium">
                         { i18n.empty_field_options_msg || __( 'Click on a field to edit its options.', 'wp-user-frontend' ) }
                     </p>
                 </div>

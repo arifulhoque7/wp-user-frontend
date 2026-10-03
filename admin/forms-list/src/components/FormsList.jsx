@@ -203,7 +203,7 @@ const FormsList = ( {
             const $ = window.jQuery;
             const $modal = $( '.wpuf-form-template-modal' );
 
-            $modal.show().removeClass( 'wpuf-hidden' );
+            $modal.show().removeClass( 'hidden' );
             $modal[ 0 ].offsetHeight;
 
             setTimeout( function () {
@@ -256,14 +256,14 @@ const FormsList = ( {
                 {
                     label: __( 'Restore', 'wp-user-frontend' ),
                     action: 'restore',
-                    className: '!wpuf-text-gray-900',
-                    hoverClassName: 'hover:!wpuf-bg-primary hover:!wpuf-text-white',
+                    className: 'text-gray-900!',
+                    hoverClassName: 'hover:bg-primary! hover:text-white!',
                 },
                 {
                     label: __( 'Delete Permanently', 'wp-user-frontend' ),
                     action: 'delete',
-                    className: '!wpuf-text-red-600',
-                    hoverClassName: 'hover:!wpuf-bg-red-500 hover:!wpuf-text-white',
+                    className: 'text-red-600!',
+                    hoverClassName: 'hover:bg-red-500! hover:text-white!',
                 },
             ];
         }
@@ -272,20 +272,20 @@ const FormsList = ( {
             {
                 label: __( 'Edit', 'wp-user-frontend' ),
                 action: 'edit',
-                className: '!wpuf-text-gray-900',
-                hoverClassName: 'hover:!wpuf-bg-primary hover:!wpuf-text-white',
+                className: 'text-gray-900!',
+                hoverClassName: 'hover:bg-primary! hover:text-white!',
             },
             {
                 label: __( 'Duplicate', 'wp-user-frontend' ),
                 action: 'duplicate',
-                className: '!wpuf-text-gray-900',
-                hoverClassName: 'hover:!wpuf-bg-primary hover:!wpuf-text-white',
+                className: 'text-gray-900!',
+                hoverClassName: 'hover:bg-primary! hover:text-white!',
             },
             {
                 label: __( 'Trash', 'wp-user-frontend' ),
                 action: 'trash',
-                className: '!wpuf-text-red-600',
-                hoverClassName: 'hover:!wpuf-bg-red-500 hover:!wpuf-text-white',
+                className: 'text-red-600!',
+                hoverClassName: 'hover:bg-red-500! hover:text-white!',
             },
         ];
     }, [ currentTab ] );
@@ -305,27 +305,27 @@ const FormsList = ( {
         <div>
             { /* Permalink Notice */ }
             { isPlainPermalink && (
-                <div className="wpuf-bg-yellow-50 wpuf-border wpuf-border-yellow-200 wpuf-rounded-md wpuf-p-4 wpuf-mt-6">
-                    <div className="wpuf-flex">
-                        <div className="wpuf-flex-shrink-0">
-                            <svg className="wpuf-h-5 wpuf-w-5 wpuf-text-yellow-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mt-6">
+                    <div className="flex">
+                        <div className="shrink-0">
+                            <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                 <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
                             </svg>
                         </div>
-                        <div className="wpuf-ml-3">
-                            <h3 className="wpuf-text-sm wpuf-font-medium wpuf-text-yellow-800">
+                        <div className="ml-3">
+                            <h3 className="text-sm font-medium text-yellow-800">
                                 { __( 'WordPress REST API Issue Detected', 'wp-user-frontend' ) }
                             </h3>
-                            <div className="wpuf-mt-2 wpuf-text-sm wpuf-text-yellow-700">
+                            <div className="mt-2 text-sm text-yellow-700">
                                 <p>
                                     { __( 'Your WordPress permalinks are set to "Plain" which may cause issues with fetching the forms. For better functionality, please consider changing your permalink structure.', 'wp-user-frontend' ) }
                                 </p>
                             </div>
-                            <div className="wpuf-mt-4">
-                                <div className="wpuf-flex">
+                            <div className="mt-4">
+                                <div className="flex">
                                     <a
                                         href={ permalinkUrl }
-                                        className="wpuf-bg-yellow-50 wpuf-text-yellow-800 wpuf-rounded-md wpuf-border wpuf-border-yellow-300 wpuf-px-3 wpuf-py-2 wpuf-text-sm wpuf-font-medium hover:wpuf-bg-yellow-100 focus:wpuf-outline-none focus:wpuf-ring-2 focus:wpuf-ring-offset-2 focus:wpuf-ring-yellow-500"
+                                        className="bg-yellow-50 text-yellow-800 rounded-md border border-yellow-300 px-3 py-2 text-sm font-medium hover:bg-yellow-100 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
                                     >
                                         { __( 'Go to Permalink Settings', 'wp-user-frontend' ) }
                                     </a>
@@ -337,17 +337,17 @@ const FormsList = ( {
             ) }
 
             { /* Page title and action buttons */ }
-            <div className="wpuf-flex wpuf-justify-between wpuf-items-center wpuf-mt-9">
-                <h3 className="wpuf-text-2xl wpuf-font-bold wpuf-m-0 wpuf-p-0 wpuf-leading-none">
+            <div className="flex justify-between items-center mt-9">
+                <h3 className="text-2xl font-bold m-0 p-0 leading-none">
                     { filteredPageTitle }
                 </h3>
-                <div className="wpuf-flex wpuf-gap-3">
+                <div className="flex gap-3">
                     { aiFormBuilderAvailable && ( <button
                         type="button"
                         onClick={ openAIFormBuilder }
-                        className="wpuf-rounded-md wpuf-text-center wpuf-bg-gradient-to-r wpuf-from-purple-600 wpuf-to-blue-600 wpuf-px-3 wpuf-py-2 wpuf-text-sm wpuf-font-semibold wpuf-text-white wpuf-shadow-sm hover:wpuf-from-purple-700 hover:wpuf-to-blue-700 hover:wpuf-text-white focus:wpuf-from-purple-700 focus:wpuf-to-blue-700 focus:wpuf-text-white focus:wpuf-shadow-none hover:wpuf-cursor-pointer wpuf-inline-flex wpuf-items-center"
+                        className="rounded-md text-center bg-gradient-to-r from-purple-600 to-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-xs hover:from-purple-700 hover:to-blue-700 hover:text-white focus:from-purple-700 focus:to-blue-700 focus:text-white focus:shadow-none hover:cursor-pointer inline-flex items-center"
                     >
-                        <svg className="wpuf-w-5 wpuf-h-5 wpuf-pr-1" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <svg className="w-5 h-5 pr-1" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M8.17766 13.2532L7.5 15.625L6.82234 13.2532C6.4664 12.0074 5.4926 11.0336 4.24682 10.6777L1.875 10L4.24683 9.32234C5.4926 8.9664 6.4664 7.9926 6.82234 6.74682L7.5 4.375L8.17766 6.74683C8.5336 7.9926 9.5074 8.9664 10.7532 9.32234L13.125 10L10.7532 10.6777C9.5074 11.0336 8.5336 12.0074 8.17766 13.2532Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                             <path d="M15.2157 7.26211L15 8.125L14.7843 7.26212C14.5324 6.25444 13.7456 5.46764 12.7379 5.21572L11.875 5L12.7379 4.78428C13.7456 4.53236 14.5324 3.74556 14.7843 2.73789L15 1.875L15.2157 2.73788C15.4676 3.74556 16.2544 4.53236 17.2621 4.78428L18.125 5L17.2621 5.21572C16.2544 5.46764 15.4676 6.25444 15.2157 7.26211Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                             <path d="M14.0785 17.1394L13.75 18.125L13.4215 17.1394C13.2348 16.5795 12.7955 16.1402 12.2356 15.9535L11.25 15.625L12.2356 15.2965C12.7955 15.1098 13.2348 14.6705 13.4215 14.1106L13.75 13.125L14.0785 14.1106C14.2652 14.6705 14.7045 15.1098 15.2644 15.2965L16.25 15.625L15.2644 15.9535C14.7045 16.1402 14.2652 16.5795 14.0785 17.1394Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -357,7 +357,7 @@ const FormsList = ( {
                     <button
                         type="button"
                         onClick={ openModal }
-                        className="new-wpuf-form wpuf-rounded-md wpuf-text-center wpuf-bg-primary wpuf-px-3 wpuf-py-2 wpuf-text-sm wpuf-font-semibold wpuf-text-white wpuf-shadow-sm hover:wpuf-bg-primaryHover hover:wpuf-text-white focus:wpuf-bg-primaryHover focus:wpuf-text-white focus:wpuf-shadow-none hover:wpuf-cursor-pointer"
+                        className="new-wpuf-form rounded-md text-center bg-primary px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-primaryHover hover:text-white focus:bg-primaryHover focus:text-white focus:shadow-none hover:cursor-pointer"
                     >
                         <span className="dashicons dashicons-plus-alt2"></span>
                         &nbsp;
@@ -374,7 +374,7 @@ const FormsList = ( {
             />
 
             { /* Bulk Actions & Search */ }
-            <div className="wpuf-flex wpuf-justify-between wpuf-my-8">
+            <div className="flex justify-between my-8">
                 <BulkActions
                     currentTab={ currentTab }
                     selectedBulkAction={ selectedBulkAction }
@@ -409,7 +409,7 @@ const FormsList = ( {
                             animation: hollow-dots-spinner-animation 1s ease infinite 0ms;
                         }
                     ` }</style>
-                    <div className="wpuf-flex wpuf-h-16 wpuf-items-center wpuf-justify-center">
+                    <div className="flex h-16 items-center justify-center">
                         <div className="wpuf-hollow-dots-spinner">
                             <div className="wpuf-dot" style={ { animationDelay: '0.3s' } }></div>
                             <div className="wpuf-dot" style={ { animationDelay: '0.6s' } }></div>

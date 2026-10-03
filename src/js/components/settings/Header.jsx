@@ -63,7 +63,7 @@ const Header = ( { utm = 'wpuf-settings' } ) => {
                 ) }
                 <span
                     id="wpuf-headway-icon"
-                    className="border border-gray-100 mr-[16px] rounded-full p-1 shadow-xs hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                    className="border border-gray-100 mr-[16px] rounded-full p-1 shadow-xs hover:bg-slate-100 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2"
                 ></span>
                 <a
                     className="border border-gray-100 mr-[16px] wpuf-feedback-link text-center rounded-md px-3 py-2 text-sm font-semibold shadow-xs hover:bg-slate-100 focus:bg-slate-100"

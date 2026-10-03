@@ -12,7 +12,7 @@ export default function RangeInput( { optionField, field, value, onChange } ) {
 
     return (
         <div className="panel-field-opt panel-field-opt-text">
-            <div className="wpuf-flex">
+            <div className="flex">
                 <label>
                     { optionField.title }
                     <SettingHelpText text={ optionField.help_text } />

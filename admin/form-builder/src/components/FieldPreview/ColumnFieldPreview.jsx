@@ -37,19 +37,19 @@ export default function ColumnFieldPreview( { field } ) {
 
     return (
         <div
-            className={ `has-columns-${ columnsCount } wpuf-field-columns wpuf-flex md:wpuf-flex-row wpuf-gap-4 wpuf-p-4 wpuf-w-full wpuf-justify-between wpuf-rounded-t-md !wpuf-border-t !wpuf-border-r !wpuf-border-l !wpuf-border-dashed !wpuf-border-transparent group-hover:!wpuf-border-green-400 group-hover:wpuf-cursor-pointer` }
+            className={ `has-columns-${ columnsCount } wpuf-field-columns flex md:flex-row gap-4 p-4 w-full justify-between rounded-t-md border-t! border-r! border-l! border-dashed! border-transparent! group-hover:border-green-400! group-hover:cursor-pointer` }
         >
             { columns.map( ( column ) => (
                 <div
                     key={ column }
                     style={ { paddingRight: ( field.column_space || 0 ) + 'px' } }
-                    className="wpuf-flex-1 wpuf-min-w-0 wpuf-min-h-full wpuf-column-inner-fields"
+                    className="flex-1 min-w-0 min-h-full wpuf-column-inner-fields"
                 >
                     <div
                         data-column={ column }
-                        className="wpuf-border wpuf-border-dashed wpuf-border-green-400 wpuf-bg-green-50 wpuf-shadow-sm wpuf-rounded-md wpuf-p-1"
+                        className="border border-dashed border-green-400 bg-green-50 shadow-xs rounded-md p-1"
                     >
-                        <ul className="wpuf-column-fields-sortable-list wpuf-min-h-16 wpuf-list-none !wpuf-m-0 !wpuf-p-0">
+                        <ul className="wpuf-column-fields-sortable-list min-h-16 list-none m-0! p-0!">
                             { ( innerFields[ column ] || [] ).map( ( innerField, innerIndex ) => {
                                 const InnerPreview = getFieldPreview( innerField.template );
                                 const innerConfig = fieldSettings[ innerField.template ];
@@ -59,15 +59,15 @@ export default function ColumnFieldPreview( { field } ) {
                                 return (
                                     <li
                                         key={ innerField.id || innerIndex }
-                                        className={ `!wpuf-m-0 !wpuf-p-0 wpuf-rounded-t-md ${ innerField.name || '' } ${ innerField.css || '' } form-field-${ innerField.template } ${ innerField.template === 'custom_hidden_field' ? 'hidden-field' : '' }` }
+                                        className={ `m-0! p-0! rounded-t-md ${ innerField.name || '' } ${ innerField.css || '' } form-field-${ innerField.template } ${ innerField.template === 'custom_hidden_field' ? 'hidden-field' : '' }` }
                                     >
-                                        <div className="wpuf-flex wpuf-flex-col md:wpuf-flex-row wpuf-gap-2 wpuf-p-4 wpuf-border-transparent wpuf-rounded-t-md wpuf-border-t wpuf-border-r wpuf-border-l wpuf-border-dashed wpuf-border-emerald-400">
+                                        <div className="flex flex-col md:flex-row gap-2 p-4 border-transparent rounded-t-md border-t border-r border-l border-dashed border-emerald-400">
                                             { ! ( innerIsFullWidth || innerIsProPreview ) && (
                                                 <div>
                                                     { ! isInvisible( innerField ) && (
                                                         <label
                                                             htmlFor={ `wpuf-${ innerField.name || 'cls' }` }
-                                                            className="wpuf-block wpuf-text-sm"
+                                                            className="block text-sm"
                                                         >
                                                             { innerField.label }
                                                             { innerField.required === 'yes' && (
@@ -77,16 +77,16 @@ export default function ColumnFieldPreview( { field } ) {
                                                     ) }
                                                 </div>
                                             ) }
-                                            <div className={ `wpuf-relative wpuf-min-w-0 ${ ( innerIsFullWidth || innerIsProPreview ) ? 'wpuf-w-full' : 'wpuf-w-full md:wpuf-w-3/4' }` }>
-                                                <div className="wpuf-absolute wpuf-w-full wpuf-h-full wpuf-z-10" />
-                                                <div className="wpuf-relative">
+                                            <div className={ `relative min-w-0 ${ ( innerIsFullWidth || innerIsProPreview ) ? 'w-full' : 'w-full md:w-3/4' }` }>
+                                                <div className="absolute w-full h-full z-10" />
+                                                <div className="relative">
                                                     { InnerPreview && ! innerIsProPreview && (
                                                         <InnerPreview field={ innerField } />
                                                     ) }
                                                     { innerIsProPreview && (
-                                                        <div className="stage-pro-alert wpuf-text-center">
+                                                        <div className="stage-pro-alert text-center">
                                                             <label className="wpuf-pro-text-alert">
-                                                                <a href={ proLink } target="_blank" rel="noopener noreferrer" className="wpuf-text-gray-700 wpuf-text-base">
+                                                                <a href={ proLink } target="_blank" rel="noopener noreferrer" className="text-gray-700 text-base">
                                                                     <strong>{ innerConfig ? innerConfig.title : innerField.template }</strong>
                                                                     { ' ' + __( 'is available in Pro Version', 'wp-user-frontend' ) }
                                                                 </a>

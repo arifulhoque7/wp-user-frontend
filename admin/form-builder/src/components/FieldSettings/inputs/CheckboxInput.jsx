@@ -55,10 +55,10 @@ export default function CheckboxInput( { optionField, value, onChange, builderCl
     // set) above, the option's own text next to the box.
     if ( isSingleOpt ) {
         return (
-            <div className="panel-field-opt panel-field-opt-checkbox wpuf-mb-6">
+            <div className="panel-field-opt panel-field-opt-checkbox mb-6">
                 { optionField.title && (
-                    <div className="wpuf-flex">
-                        <label className="wpuf-option-field-title wpuf-font-sm wpuf-text-gray-700 wpuf-font-medium">
+                    <div className="flex">
+                        <label className="wpuf-option-field-title wpuf-font-sm text-gray-700 font-medium">
                             { optionField.title }
                             <SettingHelpText text={ optionField.help_text } />
                         </label>
@@ -66,10 +66,10 @@ export default function CheckboxInput( { optionField, value, onChange, builderCl
                 ) }
                 <ul>
                     <li>
-                        <label className="wpuf-block text-sm/6 wpuf-font-medium wpuf-text-gray-900 !wpuf-mb-0">
+                        <label className="block text-sm/6 font-medium text-gray-900 mb-0!">
                             <input
                                 type="checkbox"
-                                className={ `${ builderClassNames( 'checkbox' ) } !wpuf-mr-2` }
+                                className={ `${ builderClassNames( 'checkbox' ) } mr-2!` }
                                 value={ optionKeys[ 0 ] }
                                 checked={ isChecked }
                                 onChange={ handleSingleOptChange }
@@ -85,10 +85,10 @@ export default function CheckboxInput( { optionField, value, onChange, builderCl
 
     // Multi-option checkboxes
     return (
-        <div className="panel-field-opt panel-field-opt-checkbox wpuf-mb-6">
-            <div className="wpuf-flex">
+        <div className="panel-field-opt panel-field-opt-checkbox mb-6">
+            <div className="flex">
                 { optionField.title && (
-                    <label className="wpuf-option-field-title wpuf-font-sm wpuf-text-gray-700 wpuf-font-medium">
+                    <label className="wpuf-option-field-title wpuf-font-sm text-gray-700 font-medium">
                         { optionField.title }
                         <SettingHelpText text={ optionField.help_text } />
                     </label>
@@ -97,10 +97,10 @@ export default function CheckboxInput( { optionField, value, onChange, builderCl
             <ul className={ optionField.inline ? 'list-inline' : '' }>
                 { optionKeys.map( ( key ) => (
                     <li key={ key }>
-                        <label className="wpuf-block text-sm/6 wpuf-font-medium wpuf-text-gray-900 !wpuf-mb-0">
+                        <label className="block text-sm/6 font-medium text-gray-900 mb-0!">
                             <input
                                 type="checkbox"
-                                className={ `${ builderClassNames( 'checkbox' ) } !wpuf-mr-2` }
+                                className={ `${ builderClassNames( 'checkbox' ) } mr-2!` }
                                 value={ key }
                                 checked={ isBooleanBox ? isBoxChecked : Array.isArray( value ) && value.includes( key ) }
                                 onChange={ ( e ) => handleMultiChange( key, e.target.checked ) }

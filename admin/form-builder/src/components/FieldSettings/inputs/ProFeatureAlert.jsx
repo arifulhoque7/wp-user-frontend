@@ -8,11 +8,11 @@ export default function ProFeatureAlert( { optionField } ) {
     const data = window.wpuf_form_builder || {};
 
     return (
-        <div className="panel-field-opt panel-field-opt-pro-feature wpuf-flex wpuf-items-center wpuf-text-sm wpuf-text-gray-700 wpuf-font-medium">
+        <div className="panel-field-opt panel-field-opt-pro-feature flex items-center text-sm text-gray-700 font-medium">
             <label>{ optionField.title } </label>
             <br />
             <label
-                className="wpuf-pro-text-alert wpuf-ml-2 wpuf-tooltip-top"
+                className="wpuf-pro-text-alert ml-2 wpuf-tooltip-top"
                 data-tip={ __( 'Available in PRO version', 'wp-user-frontend' ) }
             >
                 <a href={ data.pro_link || '' } target="_blank" rel="noopener noreferrer">

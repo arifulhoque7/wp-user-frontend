@@ -89,15 +89,15 @@ export default function RepeatField( { field } ) {
         if ( ! ALLOWED_IN_REPEAT.includes( template ) ) {
             if ( typeof window.Swal !== 'undefined' ) {
                 window.Swal.fire( {
-                    title: '<span class="wpuf-text-primary">Oops...</span>',
-                    html: '<p class="wpuf-text-gray-500 wpuf-text-xl wpuf-m-0 wpuf-p-0">' + __( 'This field type is not supported in repeat field', 'wp-user-frontend' ) + '</p>',
+                    title: '<span class="text-primary">Oops...</span>',
+                    html: '<p class="text-gray-500 text-xl m-0 p-0">' + __( 'This field type is not supported in repeat field', 'wp-user-frontend' ) + '</p>',
                     imageUrl: ( ( window.wpuf_form_builder || {} ).asset_url || '' ) + '/images/oops.svg',
                     showCloseButton: true,
                     padding: '1rem',
                     width: '35rem',
                     customClass: {
-                        confirmButton: '!wpuf-flex focus:!wpuf-shadow-none !wpuf-bg-primary',
-                        closeButton: 'wpuf-absolute',
+                        confirmButton: 'flex! focus:shadow-none! bg-primary!',
+                        closeButton: 'absolute',
                     },
                 } );
             }
@@ -130,25 +130,25 @@ export default function RepeatField( { field } ) {
             >
                 <SortableContext items={ fieldIds } strategy={ verticalListSortingStrategy }>
                     <div className="wpuf-fields wpuf-repeat-field-builder-container">
-                        <label htmlFor={ field.name } className="wpuf-option-field-title wpuf-font-sm wpuf-text-gray-700 wpuf-font-medium">
+                        <label htmlFor={ field.name } className="wpuf-option-field-title wpuf-font-sm text-gray-700 font-medium">
                             { field.label } <SettingHelpText text={ field.help_text } />
                         </label>
-                        <hr className="wpuf-mt-4" />
+                        <hr className="mt-4" />
                         <ul
-                            className={ `wpuf-repeat-fields-sortable-list wpuf-min-h-16 wpuf-list-none wpuf-p-0 wpuf-m-0 wpuf-transition-colors ${ isDragOver ? 'wpuf-bg-green-50' : '' }` }
+                            className={ `wpuf-repeat-fields-sortable-list min-h-16 list-none p-0 m-0 transition-colors ${ isDragOver ? 'bg-green-50' : '' }` }
                             onDrop={ handleNativeDrop }
                             onDragOver={ handleNativeDragOver }
                             onDragLeave={ () => setIsDragOver( false ) }
                         >
                             { innerFields.length === 0 && (
-                                <div className="wpuf-flex wpuf-flex-col wpuf-items-center wpuf-justify-center wpuf-py-12 wpuf-px-4 wpuf-text-center">
-                                    <svg className="wpuf-w-12 wpuf-h-12 wpuf-text-gray-300 wpuf-mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+                                    <svg className="w-12 h-12 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                                         <path vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
                                     </svg>
-                                    <h3 className="wpuf-text-sm wpuf-font-medium wpuf-text-gray-900 wpuf-mb-2">
+                                    <h3 className="text-sm font-medium text-gray-900 mb-2">
                                         { __( 'No fields added yet', 'wp-user-frontend' ) }
                                     </h3>
-                                    <p className="wpuf-text-xs wpuf-text-gray-500 wpuf-max-w-sm">
+                                    <p className="text-xs text-gray-500 max-w-sm">
                                         { __( 'Drag and drop fields from the sidebar to build your repeatable section.', 'wp-user-frontend' ) }
                                     </p>
                                 </div>
@@ -164,9 +164,9 @@ export default function RepeatField( { field } ) {
                         </ul>
 
                         { /* Static + and - icons, as develop (no interactivity in the builder). */ }
-                        <div className="wpuf-repeat-controls wpuf-p-4">
-                            <button type="button" className="wpuf-border wpuf-border-gray-100 wpuf-bg-white wpuf-px-[8px] wpuf-py-[2px] wpuf-rounded-[3px]">+</button>
-                            <button type="button" className="wpuf-border wpuf-border-gray-100 wpuf-bg-white wpuf-px-[8px] wpuf-py-[2px] wpuf-rounded-[3px]">-</button>
+                        <div className="wpuf-repeat-controls p-4">
+                            <button type="button" className="border border-gray-100 bg-white px-[8px] py-[2px] rounded-[3px]">+</button>
+                            <button type="button" className="border border-gray-100 bg-white px-[8px] py-[2px] rounded-[3px]">-</button>
                         </div>
 
                         <HelpText text={ field.help } />

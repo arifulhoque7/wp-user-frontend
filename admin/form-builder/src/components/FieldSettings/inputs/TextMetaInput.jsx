@@ -11,16 +11,16 @@ export default function TextMetaInput( { optionField, field, value, onChange, bu
 
     return (
         <div className="panel-field-opt panel-field-opt-text panel-field-opt-text-meta">
-            <div className="wpuf-flex">
+            <div className="flex">
                 <label
                     htmlFor={ optionField.name }
-                    className="wpuf-option-field-title wpuf-font-sm wpuf-text-gray-700 wpuf-font-medium"
+                    className="wpuf-option-field-title wpuf-font-sm text-gray-700 font-medium"
                 >
                     { optionField.title }
                 </label>
                 <SettingHelpText text={ optionField.help_text } />
             </div>
-            <div className="wpuf-mt-2">
+            <div className="mt-2">
                 <input
                     id={ optionField.name }
                     type="text"

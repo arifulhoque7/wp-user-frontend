@@ -137,8 +137,8 @@ export default function BuilderCanvas() {
             onDragEnd={ handleDragEnd }
         >
             <SortableContext items={ fieldIds } strategy={ verticalListSortingStrategy }>
-                <div id="form-preview-stage" className="wpuf-h-[70vh]" { ...dropHandlers }>
-                    <ul ref={ listRef } className={ `wpuf-form sortable-list wpuf-py-8 form-label-${ labelType } ${ canvasClass }` }>
+                <div id="form-preview-stage" className="h-[70vh]" { ...dropHandlers }>
+                    <ul ref={ listRef } className={ `wpuf-form sortable-list py-8 form-label-${ labelType } ${ canvasClass }` }>
                         { formFields.map( ( field, index ) => (
                             <Fragment key={ field.id }>
                                 { dropIndex === index && <li className="form-preview-stage-dropzone" /> }

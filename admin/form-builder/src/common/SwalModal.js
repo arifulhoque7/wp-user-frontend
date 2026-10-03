@@ -36,7 +36,7 @@ export function showAlert( { title, message } ) {
 
     return window.Swal.fire( {
         title,
-        html: '<span class="wpuf-text-gray-500 wpuf-font-medium">' + message + '</span>',
+        html: '<span class="text-gray-500 font-medium">' + message + '</span>',
         iconHtml: '<img src="' + iconSrc + '" alt="warning">',
         showCancelButton: false,
         confirmButtonText: __( 'OK', 'wp-user-frontend' ),
@@ -75,7 +75,7 @@ export function showConfirm( {
 
     return window.Swal.fire( {
         title,
-        html: '<span class="wpuf-text-gray-500 wpuf-font-medium">' + message + '</span>',
+        html: '<span class="text-gray-500 font-medium">' + message + '</span>',
         iconHtml: '<img src="' + iconSrc + '" alt="warning">',
         showCancelButton: true,
         confirmButtonText: confirmText || __( 'Yes', 'wp-user-frontend' ),

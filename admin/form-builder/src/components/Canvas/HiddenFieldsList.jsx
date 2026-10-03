@@ -22,16 +22,16 @@ export default function HiddenFieldsList() {
     }
 
     return (
-        <div className="wpuf-border-t wpuf-border-dashed wpuf-border-gray-300 wpuf-mt-2">
+        <div className="border-t border-dashed border-gray-300 mt-2">
             <h4>{ __( 'Hidden Fields', 'wp-user-frontend' ) }</h4>
             <ul className="wpuf-form">
                 { hidden.map( ( { field, index } ) => {
                     const isEditing = parseInt( editingFieldId ) === parseInt( field.id );
 
                     return (
-                        <li key={ field.id } className="field-items wpuf-group wpuf-group/hidden-fields !wpuf-m-0 !wpuf-p-0 hover:wpuf-cursor-pointer">
-                            <div className={ `wpuf-flex wpuf-rounded-t-lg wpuf-border-t wpuf-border-r wpuf-border-l wpuf-border-dashed group-hover/hidden-fields:wpuf-border-primaryHover group-hover/hidden-fields:wpuf-bg-green-50 ${ isEditing ? 'wpuf-bg-green-50 wpuf-border-primaryHover' : 'wpuf-border-transparent' }` }>
-                                <div className="wpuf-bg-primary wpuf-m-4 wpuf-py-2 wpuf-px-4 wpuf-w-full wpuf-rounded-lg">
+                        <li key={ field.id } className="field-items group group/hidden-fields m-0! p-0! hover:cursor-pointer">
+                            <div className={ `flex rounded-t-lg border-t border-r border-l border-dashed group-hover/hidden-fields:border-primaryHover group-hover/hidden-fields:bg-green-50 ${ isEditing ? 'bg-green-50 border-primaryHover' : 'border-transparent' }` }>
+                                <div className="bg-primary m-4 py-2 px-4 w-full rounded-lg">
                                     <strong>{ __( 'key', 'wp-user-frontend' ) }</strong>: { field.name } |{ ' ' }
                                     <strong>{ __( 'value', 'wp-user-frontend' ) }</strong>: { field.meta_value }
                                 </div>

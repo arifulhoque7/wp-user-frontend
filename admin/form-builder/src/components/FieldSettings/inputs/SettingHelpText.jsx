@@ -28,7 +28,7 @@ export default function SettingHelpText( { text } ) {
     return (
         <span
             ref={ ref }
-            className="field-helper-text wpuf-ml-2"
+            className="field-helper-text ml-2"
             data-placement="top"
             data-toggle="tooltip"
             data-container="body"

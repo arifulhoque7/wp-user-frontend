@@ -27,16 +27,16 @@ const Header = ( { utm = 'wpuf-header' } ) => {
         : '';
 
     return (
-        <div className="wpuf-w-[calc(100%+40px)] wpuf-ml-[-20px] wpuf-px-[20px] wpuf-flex wpuf-mt-4 wpuf-justify-between wpuf-items-center wpuf-border-b-2 wpuf-border-gray-100 wpuf-pb-4">
-            <div className="wpuf-flex wpuf-justify-start wpuf-items-center">
-                <img src={ logoUrl } alt="WPUF Icon" className="wpuf-w-12 wpuf-mr-4" />
-                <h2 className="wpuf-text-2xl wpuf-leading-7 wpuf-font-bold">{ headerTitle }</h2>
+        <div className="w-[calc(100%+40px)] ml-[-20px] px-[20px] flex mt-4 justify-between items-center border-b-2 border-gray-100 pb-4">
+            <div className="flex justify-start items-center">
+                <img src={ logoUrl } alt="WPUF Icon" className="w-12 mr-4" />
+                <h2 className="text-2xl leading-7 font-bold">{ headerTitle }</h2>
                 { headerPlan && (
-                    <span className="wpuf-ml-2 wpuf-inline-flex wpuf-items-center wpuf-rounded-full wpuf-bg-green-100 wpuf-px-2 wpuf-py-1 wpuf-text-xs wpuf-font-semibold wpuf-text-green-700 wpuf-ring-1 wpuf-ring-inset wpuf-ring-green-600/20">
+                    <span className="ml-2 inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-700 ring-1 ring-inset ring-green-600/20">
                         { headerPlan }
                     </span>
                 ) }
-                <span className="wpuf-ml-2 wpuf-inline-flex wpuf-items-center wpuf-rounded-full wpuf-bg-green-100 wpuf-px-2 wpuf-py-1 wpuf-text-xs wpuf-font-medium wpuf-text-green-700 wpuf-ring-1 wpuf-ring-inset wpuf-ring-green-600/20">
+                <span className="ml-2 inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
                     v{ headerVersion }
                 </span>
                 { ! wpuf.isProActive && (
@@ -44,19 +44,19 @@ const Header = ( { utm = 'wpuf-header' } ) => {
                         href={ upgradeUrl }
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="wpuf-btn-primary wpuf-flex wpuf-ml-4 wpuf-p-2"
+                        className="wpuf-btn-primary flex ml-4 p-2"
                     >
                         { __( 'Upgrade to PRO', 'wp-user-frontend' ) }
                     </a>
                 ) }
             </div>
-            <div className="wpuf-flex wpuf-justify-end wpuf-items-center wpuf-w-2/4">
+            <div className="flex justify-end items-center w-2/4">
                 <span
                     id="wpuf-headway-icon"
-                    className="wpuf-border wpuf-border-gray-100 wpuf-mr-[16px] wpuf-rounded-full wpuf-p-1 wpuf-shadow-sm hover:wpuf-bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                    className="border border-gray-100 mr-[16px] rounded-full p-1 shadow-xs hover:bg-slate-100 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2"
                 ></span>
                 <a
-                    className="wpuf-border wpuf-border-gray-100 wpuf-mr-[16px] wpuf-feedback-link wpuf-text-center wpuf-rounded-md wpuf-px-3 wpuf-py-2 wpuf-text-sm wpuf-font-semibold wpuf-shadow-sm hover:wpuf-bg-slate-100 focus:wpuf-bg-slate-100"
+                    className="border border-gray-100 mr-[16px] wpuf-feedback-link text-center rounded-md px-3 py-2 text-sm font-semibold shadow-xs hover:bg-slate-100 focus:bg-slate-100"
                     target="_blank"
                     rel="noopener noreferrer"
                     href="https://feedback.wedevs.com/b/user-frontend"
@@ -67,7 +67,7 @@ const Header = ( { utm = 'wpuf-header' } ) => {
                     href={ supportUrl }
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="wpuf-rounded-md wpuf-text-center wpuf-bg-primary wpuf-px-3 wpuf-py-2 wpuf-text-sm wpuf-font-semibold wpuf-text-white wpuf-shadow-sm hover:wpuf-bg-primaryHover hover:wpuf-text-white focus:wpuf-bg-primaryHover focus:wpuf-text-white"
+                    className="rounded-md text-center bg-primary px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-primaryHover hover:text-white focus:bg-primaryHover focus:text-white"
                 >
                     { __( 'Support ', 'wp-user-frontend' ) }
                     &nbsp;&nbsp;

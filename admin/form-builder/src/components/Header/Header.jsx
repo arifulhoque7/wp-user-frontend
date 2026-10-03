@@ -53,50 +53,50 @@ export default function Header( { activeTab, onTabChange } ) {
     ];
 
     return (
-        <div className="wpuf-bg-white wpuf-p-8 wpuf-justify-between wpuf-items-center wpuf-pb-7">
-            <div className="wpuf-flex wpuf-justify-between">
-                <div className="wpuf-flex wpuf-items-center">
+        <div className="bg-white p-8 justify-between items-center pb-7">
+            <div className="flex justify-between">
+                <div className="flex items-center">
                     <img
                         src={ `${ data.asset_url || '' }/images/wpuf-icon-circle.svg` }
                         alt="WPUF Icon"
-                        className="wpuf-mr-2"
+                        className="mr-2"
                     />
-                    <nav className="wpuf-flex wpuf-items-center" aria-label="Tabs">
-                        <div className="wpuf-relative wpuf-flex">
-                            <div className="wpuf-flex wpuf-items-center">
+                    <nav className="flex items-center" aria-label="Tabs">
+                        <div className="relative flex">
+                            <div className="flex items-center">
                                 <input
                                     onClick={ () => setIsTitleEditing( ! isTitleEditing ) }
                                     value={ title }
                                     onChange={ handleTitleChange }
                                     type="text"
                                     name="post_title"
-                                    className={ `wpuf-text-gray-900 wpuf-text-base wpuf-field-sizing-content focus:!wpuf-ring-primary focus:!wpuf-border-transparent focus:!wpuf-shadow-none ${ isTitleEditing ? '' : '!wpuf-border-transparent' }` }
+                                    className={ `text-gray-900 text-base wpuf-field-sizing-content focus:ring-primary! focus:border-transparent! focus:shadow-none! ${ isTitleEditing ? '' : 'border-transparent!' }` }
                                 />
                                 { isTitleEditing && (
                                     <i
                                         onClick={ handleTitleConfirm }
-                                        className="fa fa-check !wpuf-leading-none hover:wpuf-cursor-pointer wpuf-ml-1 wpuf-text-base"
+                                        className="fa fa-check leading-none! hover:cursor-pointer ml-1 text-base"
                                         role="button"
                                         tabIndex={ 0 }
                                         onKeyDown={ ( e ) => e.key === 'Enter' && handleTitleConfirm() }
                                     />
                                 ) }
                                 { ! isTitleEditing && forms.length > 1 && (
-                                    <div className="wpuf-relative wpuf-ml-1">
+                                    <div className="relative ml-1">
                                         <button
                                             type="button"
-                                            className="wpuf-btn wpuf-m-1 wpuf-h-min wpuf-min-h-min wpuf-border-0 wpuf-ring-0 wpuf-shadow-none wpuf-p-0"
+                                            className="wpuf-btn m-1 h-min min-h-min border-0 ring-0 shadow-none p-0"
                                             onClick={ () => setIsDropdownOpen( ! isDropdownOpen ) }
                                             onBlur={ () => setTimeout( () => setIsDropdownOpen( false ), 150 ) }
                                         >
-                                            <i className={ `!wpuf-font-bold !wpuf-text-xl !wpuf-leading-none ${ isDropdownOpen ? 'fa fa-angle-up' : 'fa fa-angle-down' }` } />
+                                            <i className={ `font-bold! text-xl! leading-none! ${ isDropdownOpen ? 'fa fa-angle-up' : 'fa fa-angle-down' }` } />
                                         </button>
                                         { isDropdownOpen && (
-                                            <ul className="wpuf-absolute wpuf-z-10 wpuf-w-52 wpuf-bg-white wpuf-rounded-md wpuf-shadow wpuf-mt-1 wpuf-p-0 wpuf-list-none">
+                                            <ul className="absolute z-10 w-52 bg-white rounded-md shadow-sm mt-1 p-0 list-none">
                                                 { forms.map( ( form ) => (
                                                     <li key={ form.id }>
                                                         <a
-                                                            className="wpuf-block wpuf-rounded-none wpuf-font-medium wpuf-text-left wpuf-px-4 wpuf-py-2 !wpuf-text-sm wpuf-text-gray-700 hover:wpuf-bg-gray-100 hover:wpuf-text-gray-900 focus:wpuf-shadow-none focus:wpuf-outline-none"
+                                                            className="block rounded-none font-medium text-left px-4 py-2 text-sm! text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:shadow-none focus:outline-hidden"
                                                             href={ `admin.php?page=wpuf-${ formType }-forms&action=edit&id=${ form.id }` }
                                                         >
                                                             { form.title }
@@ -123,18 +123,18 @@ export default function Header( { activeTab, onTabChange } ) {
                             <button
                                 key={ scKey }
                                 type="button"
-                                className="wpuf-group wpuf-flex wpuf-items-center wpuf-px-4.5 wpuf-py-2.5 wpuf-rounded-md wpuf-border wpuf-border-gray-300 hover:wpuf-cursor-pointer wpuf-ml-6 wpuf-text-gray-700 wpuf-text-base wpuf-leading-none wpuf-shadow-sm wpuf-bg-white"
+                                className="group flex items-center px-4.5 py-2.5 rounded-md border border-gray-300 hover:cursor-pointer ml-6 text-gray-700 text-base leading-none shadow-xs bg-white"
                                 title={ __( 'Click to copy shortcode', 'wp-user-frontend' ) }
                                 onClick={ () => copyShortcode( clipText, scKey ) }
                             >
                                 { label }
-                                <span className="wpuf-ml-2">
+                                <span className="ml-2">
                                     { copiedShortcode === scKey ? (
-                                        <svg className="wpuf-rotate-6 !wpuf-stroke-primary" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <svg className="rotate-6 stroke-primary!" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <path d="M5 13l4 4L19 7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" stroke="currentColor" />
                                         </svg>
                                     ) : (
-                                        <svg className="group-hover:wpuf-rotate-6 group-hover:wpuf-stroke-gray-500 wpuf-stroke-gray-400" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <svg className="group-hover:rotate-6 group-hover:stroke-gray-500 stroke-gray-400" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <path d="M13.125 14.375V17.1875C13.125 17.7053 12.7053 18.125 12.1875 18.125H4.0625C3.54473 18.125 3.125 17.7053 3.125 17.1875V6.5625C3.125 6.04473 3.54473 5.625 4.0625 5.625H5.625C6.05089 5.625 6.46849 5.6605 6.875 5.7287M13.125 14.375H15.9375C16.4553 14.375 16.875 13.9553 16.875 13.4375V9.375C16.875 5.65876 14.1721 2.5738 10.625 1.9787C10.2185 1.9105 9.80089 1.875 9.375 1.875H7.8125C7.29473 1.875 6.875 2.29473 6.875 2.8125V5.7287M13.125 14.375H7.8125C7.29473 14.375 6.875 13.9553 6.875 13.4375V5.7287M16.875 11.25V9.6875C16.875 8.1342 15.6158 6.875 14.0625 6.875H12.8125C12.2947 6.875 11.875 6.45527 11.875 5.9375V4.6875C11.875 3.1342 10.6158 1.875 9.0625 1.875H8.125" stroke="#6B7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                                         </svg>
                                     ) }
@@ -143,13 +143,13 @@ export default function Header( { activeTab, onTabChange } ) {
                         );
                     } ) }
                 </div>
-                <div className="wpuf-flex wpuf-space-x-4">
+                <div className="flex [&>:not([hidden])~:not([hidden])]:ml-4 [&>:not([hidden])~:not([hidden])]:mr-0">
                     { previewUrl && (
                         <a
                             href={ `${ previewUrl }?wpuf_preview=1&form_id=${ post.ID }` }
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="wpuf-inline-flex wpuf-items-center wpuf-gap-x-3 wpuf-rounded-md wpuf-px-4.5 wpuf-py-2.5 wpuf-text-base wpuf-text-gray-700 hover:wpuf-text-gray-700 hover:wpuf-bg-gray-50 wpuf-ring-1 wpuf-ring-inset wpuf-ring-gray-300 focus:wpuf-shadow-none focus:wpuf-border-none wpuf-leading-none wpuf-shadow-sm"
+                            className="inline-flex items-center gap-x-3 rounded-md px-4.5 py-2.5 text-base text-gray-700 hover:text-gray-700 hover:bg-gray-50 ring-1 ring-inset ring-gray-300 focus:shadow-none focus:border-none leading-none shadow-xs"
                         >
                             { __( 'Preview', 'wp-user-frontend' ) }
                             <svg width="20" height="14" viewBox="0 0 20 14" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -162,7 +162,7 @@ export default function Header( { activeTab, onTabChange } ) {
                         <button
                             onClick={ saveForm }
                             type="button"
-                            className="wpuf-btn-primary wpuf-leading-none wpuf-cursor-pointer"
+                            className="wpuf-btn-primary leading-none cursor-pointer"
                         >
                             { __( 'Save', 'wp-user-frontend' ) }
                         </button>
@@ -174,8 +174,8 @@ export default function Header( { activeTab, onTabChange } ) {
                     ) }
                 </div>
             </div>
-            <div className="wpuf-flex wpuf-items-center wpuf-mt-8">
-                <div className="wpuf-flex wpuf-bg-gray-100 wpuf-w-max wpuf-rounded-lg wpuf-p-2">
+            <div className="flex items-center mt-8">
+                <div className="flex bg-gray-100 w-max rounded-lg p-2">
                     { tabs.map( ( tab ) => (
                         <a
                             key={ tab.id }
@@ -183,7 +183,7 @@ export default function Header( { activeTab, onTabChange } ) {
                                 e.preventDefault();
                                 onTabChange( tab.id );
                             } }
-                            className={ `wpuf-nav-tab wpuf-py-2 wpuf-px-4 wpuf-text-base hover:wpuf-bg-white hover:wpuf-text-gray-800 hover:wpuf-rounded-md hover:wpuf-drop-shadow-sm focus:wpuf-shadow-none wpuf-mr-2 hover:wpuf-cursor-pointer ${ activeTab === tab.id ? 'wpuf-bg-white wpuf-text-gray-800 wpuf-rounded-md wpuf-drop-shadow-sm' : 'wpuf-text-gray-500' }` }
+                            className={ `wpuf-nav-tab py-2 px-4 text-base hover:bg-white hover:text-gray-800 hover:rounded-md hover:drop-shadow-xs focus:shadow-none mr-2 hover:cursor-pointer ${ activeTab === tab.id ? 'bg-white text-gray-800 rounded-md drop-shadow-xs' : 'text-gray-500' }` }
                             href={ `#${ tab.id }` }
                             role="tab"
                             aria-selected={ activeTab === tab.id }
@@ -193,7 +193,7 @@ export default function Header( { activeTab, onTabChange } ) {
                     ) ) }
                     <div id="wpuf-pro-tab-slot" />
                     { /* Tabs other plugins printed on wpuf-form-builder-tabs-{type}. */ }
-                    <LegacySlot id="tab-nav" html={ getLegacySlots().tabs.nav } className="wpuf-flex wpuf-items-center" />
+                    <LegacySlot id="tab-nav" html={ getLegacySlots().tabs.nav } className="flex items-center" />
                 </div>
             </div>
         </div>

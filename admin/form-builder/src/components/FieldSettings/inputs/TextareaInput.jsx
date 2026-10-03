@@ -7,8 +7,8 @@ import SettingHelpText from './SettingHelpText';
 export default function TextareaInput( { optionField, value, onChange, builderClassNames } ) {
     return (
         <div className="panel-field-opt panel-field-opt-textarea">
-            <div className="wpuf-flex">
-                <label className="wpuf-mb-2">
+            <div className="flex">
+                <label className="mb-2">
                     { optionField.title }
                     <SettingHelpText text={ optionField.help_text } />
                 </label>

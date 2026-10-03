@@ -4,9 +4,9 @@ import HelpTextIcon from './HelpTextIcon';
 /**
  * Renders inline fields in a horizontal row — matches Vue inline_fields rendering.
  *
- * Vue structure: <div class="wpuf-mt-6 wpuf-flex wpuf-input-container">
- *   For each sub-field: <div class="wpuf-w-1/2 [wpuf-mr-6 for first]">
- *     <label> + <input :class="setting_class_names(type)" class="!wpuf-mt-2">
+ * Vue structure: <div class="mt-6 flex wpuf-input-container">
+ *   For each sub-field: <div class="w-1/2 [wpuf-mr-6 for first]">
+ *     <label> + <input :class="setting_class_names(type)" class="mt-2!">
  */
 export default function InlineFieldsGroup( { field, settings, onChange } ) {
     const subFields = field.fields || {};
@@ -15,14 +15,14 @@ export default function InlineFieldsGroup( { field, settings, onChange } ) {
     return (
         <>
             { entries.map( ( [ subName, subField ], index ) => {
-                const classes = `wpuf-w-1/2${ index === 0 ? ' wpuf-mr-6' : '' }`;
+                const classes = `w-1/2${ index === 0 ? ' mr-6' : '' }`;
                 const subValue = settings[ subName ];
                 const inputClasses = SETTING_CLASS_NAMES[ subField.type ] || SETTING_CLASS_NAMES.text;
 
                 return (
                     <div key={ subName } className={ classes }>
                         { subField.label && (
-                            <label htmlFor={ subName } className="wpuf-text-sm wpuf-text-gray-700 wpuf-my-2">
+                            <label htmlFor={ subName } className="text-sm text-gray-700 my-2">
                                 { subField.label }
                             </label>
                         ) }
@@ -33,7 +33,7 @@ export default function InlineFieldsGroup( { field, settings, onChange } ) {
                                 id={ subName }
                                 value={ subValue !== undefined && subValue !== null ? subValue : ( subField.default || '' ) }
                                 onChange={ ( e ) => onChange( subName, e.target.value ) }
-                                className={ `!wpuf-mt-2 ${ inputClasses }` }
+                                className={ `mt-2! ${ inputClasses }` }
                                 placeholder={ subField.placeholder || '' }
                             />
                         ) }
@@ -43,7 +43,7 @@ export default function InlineFieldsGroup( { field, settings, onChange } ) {
                                 id={ subName }
                                 value={ subValue || '' }
                                 onChange={ ( e ) => onChange( subName, e.target.value ) }
-                                className={ `datepicker !wpuf-mt-2 ${ SETTING_CLASS_NAMES.text }` }
+                                className={ `datepicker mt-2! ${ SETTING_CLASS_NAMES.text }` }
                             />
                         ) }
                         { subField.type === 'select' && (
@@ -51,7 +51,7 @@ export default function InlineFieldsGroup( { field, settings, onChange } ) {
                                 id={ subName }
                                 value={ subValue || subField.default || '' }
                                 onChange={ ( e ) => onChange( subName, e.target.value ) }
-                                className={ `!wpuf-mt-2 ${ SETTING_CLASS_NAMES.dropdown }` }
+                                className={ `mt-2! ${ SETTING_CLASS_NAMES.dropdown }` }
                             >
                                 { Object.entries( subField.options || {} ).map( ( [ optValue, optLabel ] ) => (
                                     <option key={ optValue } value={ optValue }>
@@ -65,7 +65,7 @@ export default function InlineFieldsGroup( { field, settings, onChange } ) {
             } ) }
             { field.long_help && (
                 <div
-                    className="wpuf-text-sm wpuf-mt-4 wpuf-long-help"
+                    className="text-sm mt-4 wpuf-long-help"
                     dangerouslySetInnerHTML={ { __html: field.long_help } }
                 />
             ) }

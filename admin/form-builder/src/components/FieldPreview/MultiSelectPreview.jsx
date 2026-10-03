@@ -11,7 +11,7 @@ export default function MultiSelectPreview( { field } ) {
     return (
         <div className="wpuf-fields">
             <select
-                className={ `${ builderClassNames( 'multi_label' ) } wpuf-block wpuf-w-full wpuf-min-w-full wpuf-rounded-md wpuf-py-1.5 wpuf-text-gray-900 wpuf-shadow-sm placeholder:wpuf-text-gray-400 sm:wpuf-text-sm sm:wpuf-leading-6 wpuf-border !wpuf-border-gray-300` }
+                className={ `${ builderClassNames( 'multi_label' ) } block w-full min-w-full rounded-md py-1.5 text-gray-900 shadow-xs placeholder:text-gray-400 sm:text-sm sm:leading-6 border border-gray-300!` }
                 multiple
                 value={ selected }
                 readOnly

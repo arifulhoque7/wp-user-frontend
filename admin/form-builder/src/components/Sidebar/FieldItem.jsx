@@ -41,24 +41,24 @@ export default function FieldItem( { template, onAdd, onProAlert, onValidationAl
                 data-form-field={ template }
                 data-source="panel"
                 onClick={ () => onProAlert( template ) }
-                className="wpuf-relative wpuf-group/pro-field"
+                className="relative group/pro-field"
                 role="button"
                 tabIndex={ 0 }
                 onKeyDown={ ( e ) => e.key === 'Enter' && onProAlert( template ) }
             >
-                <div className="wpuf-opacity-50 wpuf-field-button wpuf-flex wpuf-items-center wpuf-rounded-lg wpuf-border wpuf-border-gray-200 wpuf-bg-white wpuf-shadow-sm wpuf-p-4 hover:wpuf-border-gray-300 hover:wpuf-cursor-pointer">
+                <div className="opacity-50 wpuf-field-button flex items-center rounded-lg border border-gray-200 bg-white shadow-xs p-4 hover:border-gray-300 hover:cursor-pointer">
                     { iconUrl && (
-                        <div className="wpuf-shrink-0 wpuf-mr-2 wpuf-text-gray-400">
+                        <div className="shrink-0 mr-2 text-gray-400">
                             <img src={ iconUrl } alt="" />
                         </div>
                     ) }
-                    <div className="wpuf-min-w-0 wpuf-flex-1">
-                        <p className="wpuf-text-base wpuf-font-normal wpuf-text-gray-500 wpuf-m-0">
+                    <div className="min-w-0 flex-1">
+                        <p className="text-base font-normal text-gray-500 m-0">
                             { title }
                         </p>
                     </div>
                 </div>
-                <div className="wpuf-absolute wpuf-top-4 wpuf-right-4 wpuf-opacity-0 group-hover/pro-field:wpuf-opacity-100 wpuf-transition-all">
+                <div className="absolute top-4 right-4 opacity-0 group-hover/pro-field:opacity-100 wpuf-transition-all">
                     <img src={ `${ ( window.wpuf_form_builder || {} ).asset_url || '' }/images/pro-badge.svg` } alt="" />
                 </div>
             </div>
@@ -71,18 +71,18 @@ export default function FieldItem( { template, onAdd, onProAlert, onValidationAl
                 data-form-field={ template }
                 data-source="panel"
                 onClick={ () => onValidationAlert( template ) }
-                className="wpuf-relative wpuf-flex wpuf-items-center wpuf-rounded-lg wpuf-border wpuf-border-gray-200 wpuf-bg-white wpuf-shadow-sm wpuf-px-3 wpuf-py-4 hover:wpuf-border-gray-300 hover:wpuf-cursor-pointer"
+                className="relative flex items-center rounded-lg border border-gray-200 bg-white shadow-xs px-3 py-4 hover:border-gray-300 hover:cursor-pointer"
                 role="button"
                 tabIndex={ 0 }
                 onKeyDown={ ( e ) => e.key === 'Enter' && onValidationAlert( template ) }
             >
                 { iconUrl && (
-                    <div className="wpuf-shrink-0 wpuf-mr-2">
+                    <div className="shrink-0 mr-2">
                         <img src={ iconUrl } alt="" />
                     </div>
                 ) }
-                <div className="wpuf-min-w-0 wpuf-flex-1">
-                    <p className="wpuf-text-base wpuf-font-normal wpuf-text-gray-500 wpuf-m-0">
+                <div className="min-w-0 flex-1">
+                    <p className="text-base font-normal text-gray-500 m-0">
                         { title }
                     </p>
                 </div>
@@ -101,18 +101,18 @@ export default function FieldItem( { template, onAdd, onProAlert, onValidationAl
                 e.dataTransfer.effectAllowed = 'copy';
             } }
             onClick={ () => onAdd( template ) }
-            className="wpuf-field-button wpuf-relative wpuf-flex wpuf-items-center wpuf-rounded-lg wpuf-border wpuf-border-gray-200 wpuf-bg-white wpuf-shadow wpuf-px-3 wpuf-py-4 hover:wpuf-cursor-pointer hover:wpuf-border-primary"
+            className="wpuf-field-button relative flex items-center rounded-lg border border-gray-200 bg-white shadow-sm px-3 py-4 hover:cursor-pointer hover:border-primary"
             role="button"
             tabIndex={ 0 }
             onKeyDown={ ( e ) => e.key === 'Enter' && onAdd( template ) }
         >
             { iconUrl && (
-                <div className="wpuf-shrink-0 wpuf-mr-2">
+                <div className="shrink-0 mr-2">
                     <img src={ iconUrl } alt="" />
                 </div>
             ) }
-            <div className="wpuf-min-w-0 wpuf-flex-1">
-                <p className="wpuf-text-base wpuf-font-normal wpuf-text-gray-500 wpuf-m-0">
+            <div className="min-w-0 flex-1">
+                <p className="text-base font-normal text-gray-500 m-0">
                     { title }
                 </p>
             </div>

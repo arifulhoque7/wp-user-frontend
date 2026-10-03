@@ -30,7 +30,7 @@ function ColumnDropList( { columnKey, items, children } ) {
 
     return (
         <SortableContext items={ items } strategy={ verticalListSortingStrategy }>
-            <ul ref={ setNodeRef } className="wpuf-column-fields-sortable-list wpuf-min-h-16 wpuf-list-none !wpuf-m-0 !wpuf-p-0">
+            <ul ref={ setNodeRef } className="wpuf-column-fields-sortable-list min-h-16 list-none m-0! p-0!">
                 { children }
             </ul>
         </SortableContext>
@@ -128,15 +128,15 @@ export default function ColumnField( { field } ) {
         if ( RESTRICTED_IN_COLUMN.includes( template ) ) {
             if ( typeof window.Swal !== 'undefined' ) {
                 window.Swal.fire( {
-                    title: '<span class="wpuf-text-primary">Oops...</span>',
-                    html: '<p class="wpuf-text-gray-500 wpuf-text-xl wpuf-m-0 wpuf-p-0">' + __( 'You cannot add this field as inner column field', 'wp-user-frontend' ) + '</p>',
+                    title: '<span class="text-primary">Oops...</span>',
+                    html: '<p class="text-gray-500 text-xl m-0 p-0">' + __( 'You cannot add this field as inner column field', 'wp-user-frontend' ) + '</p>',
                     imageUrl: ( data.asset_url || '' ) + '/images/oops.svg',
                     showCloseButton: true,
                     padding: '1rem',
                     width: '35rem',
                     customClass: {
-                        confirmButton: '!wpuf-flex focus:!wpuf-shadow-none !wpuf-bg-primary',
-                        closeButton: 'wpuf-absolute',
+                        confirmButton: 'flex! focus:shadow-none! bg-primary!',
+                        closeButton: 'absolute',
                     },
                 } );
             }
@@ -147,15 +147,15 @@ export default function ColumnField( { field } ) {
         if ( isFieldSingleInstance( template, singleObjects ) && containsField( formFields, template ) ) {
             if ( typeof window.Swal !== 'undefined' ) {
                 window.Swal.fire( {
-                    title: '<span class="wpuf-text-primary">Oops...</span>',
-                    html: '<p class="wpuf-text-gray-500 wpuf-text-xl wpuf-m-0 wpuf-p-0">' + __( 'You already have this field in the form', 'wp-user-frontend' ) + '</p>',
+                    title: '<span class="text-primary">Oops...</span>',
+                    html: '<p class="text-gray-500 text-xl m-0 p-0">' + __( 'You already have this field in the form', 'wp-user-frontend' ) + '</p>',
                     imageUrl: ( data.asset_url || '' ) + '/images/oops.svg',
                     showCloseButton: true,
                     padding: '1rem',
                     width: '35rem',
                     customClass: {
-                        confirmButton: '!wpuf-flex focus:!wpuf-shadow-none !wpuf-bg-primary',
-                        closeButton: 'wpuf-absolute',
+                        confirmButton: 'flex! focus:shadow-none! bg-primary!',
+                        closeButton: 'absolute',
                     },
                 } );
             }
@@ -189,7 +189,7 @@ export default function ColumnField( { field } ) {
     return (
         <DndContext sensors={ sensors } collisionDetection={ closestCenter } onDragEnd={ handleDragEnd }>
             <div
-                className={ `has-columns-${ numColumns } wpuf-field-columns wpuf-flex md:wpuf-flex-row wpuf-gap-4 wpuf-p-4 wpuf-w-full wpuf-justify-between wpuf-rounded-t-md !wpuf-border-t !wpuf-border-r !wpuf-border-l !wpuf-border-dashed !wpuf-border-transparent group-hover:!wpuf-border-green-400 group-hover:wpuf-cursor-pointer` }
+                className={ `has-columns-${ numColumns } wpuf-field-columns flex md:flex-row gap-4 p-4 w-full justify-between rounded-t-md border-t! border-r! border-l! border-dashed! border-transparent! group-hover:border-green-400! group-hover:cursor-pointer` }
             >
                 { columnKeys.map( ( columnKey ) => {
                     const colFields = columns[ columnKey ] || [];
@@ -200,11 +200,11 @@ export default function ColumnField( { field } ) {
                         <div
                             key={ columnKey }
                             style={ { paddingRight: ( field.column_space || 0 ) + 'px' } }
-                            className="wpuf-flex-1 wpuf-min-w-0 wpuf-min-h-full wpuf-column-inner-fields"
+                            className="flex-1 min-w-0 min-h-full wpuf-column-inner-fields"
                         >
                             <div
                                 data-column={ columnKey }
-                                className={ `wpuf-border wpuf-border-dashed wpuf-border-green-400 wpuf-bg-green-50 wpuf-shadow-sm wpuf-rounded-md wpuf-p-1 wpuf-transition-colors ${ isDragOver ? 'wpuf-bg-green-100 wpuf-border-primary' : '' }` }
+                                className={ `border border-dashed border-green-400 bg-green-50 shadow-xs rounded-md p-1 transition-colors ${ isDragOver ? 'bg-green-100 border-primary' : '' }` }
                                 onDrop={ ( e ) => handleNativeDrop( columnKey, e ) }
                                 onDragOver={ ( e ) => handleNativeDragOver( columnKey, e ) }
                                 onDragLeave={ handleNativeDragLeave }

@@ -13,21 +13,21 @@ export default function ModulesEmptyState( { isProActive } ) {
     const adminUrl = window.wpuf_admin_url || data.admin_url || '';
 
     return (
-        <div className="wpuf-py-4 wpuf-border-b wpuf-border-gray-300 wpuf-flex wpuf-items-center wpuf-justify-evenly wpuf-flex-col wpuf-h-[70vh] wpuf-p-4 wpuf-relative wpuf-rounded wpuf-border wpuf-border-transparent hover:wpuf-border-sky-500 wpuf-border-dashed wpuf-group/pro-item wpuf-transition-all wpuf-opacity-50 hover:wpuf-opacity-100">
+        <div className="py-4 border-b border-gray-300 flex items-center justify-evenly flex-col h-[70vh] p-4 relative rounded-sm border border-transparent hover:border-sky-500 border-dashed group/pro-item wpuf-transition-all opacity-50 hover:opacity-100">
             { ! isProActive && (
                 <>
                     <a
-                        className="wpuf-btn-primary wpuf-absolute wpuf-top-[50%] wpuf-left-[50%] wpuf--translate-y-[50%] wpuf--translate-x-[50%] wpuf-z-30 wpuf-opacity-0 group-hover/pro-item:wpuf-opacity-100 wpuf-transition-all"
+                        className="wpuf-btn-primary absolute top-[50%] left-[50%] -translate-y-[50%] -translate-x-[50%] z-30 opacity-0 group-hover/pro-item:opacity-100 wpuf-transition-all"
                         target="_blank"
                         rel="noopener noreferrer"
                         href={ proLink }
                     >
                         { __( 'Upgrade to PRO', 'wp-user-frontend' ) }
                     </a>
-                    <div className="wpuf-z-20 wpuf-absolute wpuf-top-0 wpuf-left-0 wpuf-w-full wpuf-h-full wpuf-shadow-sm wpuf-bg-emerald-50 group-hover/pro-item:wpuf-opacity-50 wpuf-opacity-0" />
+                    <div className="z-20 absolute top-0 left-0 w-full h-full shadow-xs bg-emerald-50 group-hover/pro-item:opacity-50 opacity-0" />
                 </>
             ) }
-            <div className="wpuf-flex wpuf-flex-col wpuf-items-center">
+            <div className="flex flex-col items-center">
                 <svg width="161" height="161" viewBox="0 0 161 161" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <circle cx="80.5" cy="80.5" r="80.5" fill="#F3F3F4" />
                     <path d="M148.624 58.0946V148.936C148.624 155.477 143.323 160.777 136.783 160.777H26.075C19.5347 160.777 14.2344 155.477 14.2344 148.936V58.0946C14.2344 51.5543 19.5347 46.2539 26.075 46.2539H136.783C143.323 46.2403 148.624 51.5407 148.624 58.0946Z" fill="#DBEEE6" />
@@ -62,15 +62,15 @@ export default function ModulesEmptyState( { isProActive } ) {
                         </filter>
                     </defs>
                 </svg>
-                <p className="wpuf-text-lg wpuf-text-gray-800 wpuf-mt-9 wpuf-mb-0">
+                <p className="text-lg text-gray-800 mt-9 mb-0">
                     { __( 'No modules have been activated yet.', 'wp-user-frontend' ) }
                 </p>
-                <p className="wpuf-text-sm wpuf-text-gray-500 wpuf-mt-2">
+                <p className="text-sm text-gray-500 mt-2">
                     { __( 'No modules have been activated yet.', 'wp-user-frontend' ) }
                 </p>
                 { isProActive && (
                     <a
-                        className="wpuf-btn-primary wpuf-mt-4"
+                        className="wpuf-btn-primary mt-4"
                         target="_blank"
                         rel="noopener noreferrer"
                         href={ `${ adminUrl }admin.php?page=wpuf-modules` }

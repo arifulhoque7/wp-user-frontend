@@ -106,13 +106,13 @@ export default function SubmitConditionalLogic( { label } ) {
     }
 
     return (
-        <div className="wpuf-conditional-logic wpuf-border-t wpuf-border-gray-200 wpuf-pt-4 wpuf-mt-4">
-            <h4 className="wpuf-text-sm wpuf-font-semibold wpuf-text-gray-700 wpuf-mb-3">
+        <div className="wpuf-conditional-logic border-t border-gray-200 pt-4 mt-4">
+            <h4 className="text-sm font-semibold text-gray-700 mb-3">
                 { label || __( 'Conditional Logic on Submit Button', 'wp-user-frontend' ) }
             </h4>
 
-            <div className="wpuf-flex wpuf-items-center wpuf-gap-4 wpuf-mb-3">
-                <label className="wpuf-flex wpuf-items-center wpuf-gap-1 wpuf-text-sm wpuf-cursor-pointer">
+            <div className="flex items-center gap-4 mb-3">
+                <label className="flex items-center gap-1 text-sm cursor-pointer">
                     <input
                         type="radio"
                         name="wpuf_submit_cond_status"
@@ -122,7 +122,7 @@ export default function SubmitConditionalLogic( { label } ) {
                     />
                     { __( 'Enable', 'wp-user-frontend' ) }
                 </label>
-                <label className="wpuf-flex wpuf-items-center wpuf-gap-1 wpuf-text-sm wpuf-cursor-pointer">
+                <label className="flex items-center gap-1 text-sm cursor-pointer">
                     <input
                         type="radio"
                         name="wpuf_submit_cond_status"
@@ -136,10 +136,10 @@ export default function SubmitConditionalLogic( { label } ) {
 
             { isEnabled && (
                 <div className="conditional-rules-wrap">
-                    <div className="wpuf-flex wpuf-items-center wpuf-gap-2 wpuf-mb-3 wpuf-text-sm">
+                    <div className="flex items-center gap-2 mb-3 text-sm">
                         <span>{ __( 'Show submit button when', 'wp-user-frontend' ) }</span>
                         <select
-                            className="wpuf-border wpuf-border-gray-300 wpuf-rounded wpuf-px-2 wpuf-py-1 wpuf-text-sm"
+                            className="border border-gray-300 rounded-sm px-2 py-1 text-sm"
                             value={ currentSettings.cond_logic || 'any' }
                             onChange={ handleLogicChange }
                         >
@@ -166,7 +166,7 @@ export default function SubmitConditionalLogic( { label } ) {
 
                     <button
                         type="button"
-                        className="wpuf-text-sm wpuf-text-blue-600 hover:wpuf-text-blue-800 wpuf-mt-1"
+                        className="text-sm text-blue-600 hover:text-blue-800 mt-1"
                         onClick={ handleAddCondition }
                     >
                         + { __( 'Add condition', 'wp-user-frontend' ) }

@@ -36,15 +36,15 @@ const Pagination = ( { currentPage, totalPages, onPageChange } ) => {
     };
 
     return (
-        <div className="wpuf-flex wpuf-items-center wpuf-justify-center wpuf-mt-20">
-            <nav className="wpuf-flex wpuf-items-center wpuf-w-full">
-                <div className="wpuf-flex">
+        <div className="flex items-center justify-center mt-20">
+            <nav className="flex items-center w-full">
+                <div className="flex">
                     <button
                         onClick={ () => changePage( currentPage - 1 ) }
                         disabled={ currentPage === 1 }
                         className={
-                            'wpuf-mr-3 wpuf-rounded-md wpuf-relative wpuf-inline-flex wpuf-items-center wpuf-text-sm wpuf-font-medium wpuf-text-gray-700 hover:wpuf-text-primary' +
-                            ( currentPage === 1 ? ' wpuf-cursor-not-allowed wpuf-opacity-50' : '' )
+                            'mr-3 rounded-md relative inline-flex items-center text-sm font-medium text-gray-700 hover:text-primary' +
+                            ( currentPage === 1 ? ' cursor-not-allowed opacity-50' : '' )
                         }
                     >
                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -55,16 +55,16 @@ const Pagination = ( { currentPage, totalPages, onPageChange } ) => {
                     </button>
                 </div>
 
-                <div className="wpuf-flex wpuf-items-center">
+                <div className="flex items-center">
                     { paginationRange.map( ( page ) => (
                         <span
                             key={ page }
                             onClick={ () => changePage( page ) }
                             className={
-                                'wpuf-relative wpuf-inline-flex wpuf-items-center wpuf-px-4 wpuf-py-2 wpuf-text-sm wpuf-font-medium wpuf-cursor-pointer wpuf-mx-1 wpuf-border-t-2 hover:wpuf-border-primary wpuf-transition-all ' +
+                                'relative inline-flex items-center px-4 py-2 text-sm font-medium cursor-pointer mx-1 border-t-2 hover:border-primary wpuf-transition-all ' +
                                 ( page === currentPage
-                                    ? 'wpuf-text-primary wpuf-border-primary'
-                                    : 'wpuf-text-gray-500 wpuf-border-transparent' )
+                                    ? 'text-primary border-primary'
+                                    : 'text-gray-500 border-transparent' )
                             }
                         >
                             { page }
@@ -72,13 +72,13 @@ const Pagination = ( { currentPage, totalPages, onPageChange } ) => {
                     ) ) }
                 </div>
 
-                <div className="wpuf-flex">
+                <div className="flex">
                     <button
                         onClick={ () => changePage( currentPage + 1 ) }
                         disabled={ currentPage === totalPages }
                         className={
-                            'wpuf-ml-3 wpuf-rounded-md wpuf-relative wpuf-inline-flex wpuf-items-center wpuf-text-sm wpuf-font-medium wpuf-text-gray-700 hover:wpuf-text-primary' +
-                            ( currentPage === totalPages ? ' wpuf-cursor-not-allowed wpuf-opacity-50' : '' )
+                            'ml-3 rounded-md relative inline-flex items-center text-sm font-medium text-gray-700 hover:text-primary' +
+                            ( currentPage === totalPages ? ' cursor-not-allowed opacity-50' : '' )
                         }
                     >
                         { __( 'Next', 'wp-user-frontend' ) }

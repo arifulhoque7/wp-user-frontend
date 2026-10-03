@@ -9,10 +9,10 @@ export default function TextInput( { optionField, field, value, onChange, builde
 
     return (
         <div className="panel-field-opt panel-field-opt-text">
-            <div className="wpuf-flex">
+            <div className="flex">
                 <label
                     htmlFor={ optionField.name }
-                    className="wpuf-option-field-title wpuf-font-sm wpuf-text-gray-700 wpuf-font-medium"
+                    className="wpuf-option-field-title wpuf-font-sm text-gray-700 font-medium"
                 >
                     { optionField.title }
                     <SettingHelpText text={ optionField.help_text } />

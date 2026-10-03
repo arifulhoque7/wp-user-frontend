@@ -16,15 +16,15 @@ export default function TrailingTextField( { field, name, value, onChange } ) {
 
     return (
         <>
-            <div className="wpuf-flex wpuf-items-center">
+            <div className="flex items-center">
                 { field.label && (
-                    <label htmlFor={ name } className="wpuf-text-sm wpuf-text-gray-700 wpuf-my-2">
+                    <label htmlFor={ name } className="text-sm text-gray-700 my-2">
                         { field.label }
                     </label>
                 ) }
                 { field.help_text && <HelpTextIcon text={ field.help_text } /> }
             </div>
-            <div className="wpuf-relative">
+            <div className="relative">
                 <input
                     type={ inputType }
                     id={ name }
@@ -33,7 +33,7 @@ export default function TrailingTextField( { field, name, value, onChange } ) {
                     className={ inputClasses }
                 />
                 { field.trailing_text && (
-                    <span className="wpuf-absolute wpuf-top-0 wpuf--right-px wpuf-h-full wpuf-bg-gray-50 wpuf-rounded-r-md wpuf-text-gray-700 wpuf-border wpuf-border-gray-300 wpuf-text-base wpuf-py-1.75 wpuf-px-3.75">
+                    <span className="absolute top-0 -right-px h-full bg-gray-50 rounded-r-md text-gray-700 border border-gray-300 text-base py-1.75 px-3.75">
                         { field.trailing_text }
                     </span>
                 ) }

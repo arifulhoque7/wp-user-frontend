@@ -24,15 +24,15 @@ export default function PicRadioField( { field, name, value, onChange } ) {
     return (
         <>
             { field.label && (
-                <div className="wpuf-flex wpuf-items-center">
-                    <label className="wpuf-text-sm wpuf-text-gray-700 wpuf-my-2">
+                <div className="flex items-center">
+                    <label className="text-sm text-gray-700 my-2">
                         { field.label }
                     </label>
                 </div>
             ) }
-            <div className="wpuf-grid wpuf-grid-cols-4 wpuf-pic-radio" id={ name }>
+            <div className="grid grid-cols-4 wpuf-pic-radio" id={ name }>
                 { Object.entries( options ).map( ( [ optKey, option ] ) => (
-                    <div key={ optKey } className="wpuf-relative wpuf-text-center wpuf-p-3 wpuf-pl-0 wpuf-pt-0">
+                    <div key={ optKey } className="relative text-center p-3 pl-0 pt-0">
                         <label>
                             <input
                                 type="radio"
@@ -40,10 +40,10 @@ export default function PicRadioField( { field, name, value, onChange } ) {
                                 value={ optKey }
                                 checked={ value === optKey }
                                 onChange={ handleChange }
-                                className="wpuf-absolute wpuf-opacity-0 wpuf-peer"
+                                className="absolute opacity-0 peer"
                             />
                             <img
-                                className="wpuf-absolute wpuf-opacity-0 peer-checked:wpuf-opacity-100 wpuf-top-[7%] wpuf-right-[12%] wpuf-transition-all wpuf-duration-200 wpuf-ease-in-out"
+                                className="absolute opacity-0 peer-checked:opacity-100 top-[7%] right-[12%] wpuf-transition-all duration-200 ease-in-out"
                                 src={ checkedIcon }
                                 alt=""
                             />
@@ -51,11 +51,11 @@ export default function PicRadioField( { field, name, value, onChange } ) {
                                 <img
                                     src={ option.image }
                                     alt={ optKey }
-                                    className="hover:wpuf-cursor-pointer wpuf-border-transparent wpuf-border-2 wpuf-border-solid wpuf-rounded-lg hover:wpuf-border-primary peer-checked:wpuf-border-primary wpuf-transition-all wpuf-duration-200 wpuf-ease-in-out wpuf-mb-2 wpuf-w-full"
+                                    className="hover:cursor-pointer border-transparent border-2 border-solid rounded-lg hover:border-primary peer-checked:border-primary wpuf-transition-all duration-200 ease-in-out mb-2 w-full"
                                 />
                             ) }
                         </label>
-                        <label className="wpuf-mr-2 wpuf-text-sm wpuf-text-gray-700">
+                        <label className="mr-2 text-sm text-gray-700">
                             { option.label }
                         </label>
                     </div>

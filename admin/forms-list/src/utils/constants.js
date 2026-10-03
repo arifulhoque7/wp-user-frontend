@@ -5,17 +5,17 @@
  */
 
 export const CHECKBOX_CLASSES =
-    '!wpuf-mt-0 !wpuf-mr-2 wpuf-h-4 wpuf-w-4 !wpuf-shadow-none checked:!wpuf-shadow-none focus:checked:!wpuf-shadow-primary focus:checked:!wpuf-shadow-none !wpuf-border-gray-300 checked:!wpuf-border-primary before:checked:!wpuf-bg-white hover:checked:!wpuf-bg-primary focus:!wpuf-ring-transparent focus:checked:!wpuf-ring-transparent hover:checked:!wpuf-ring-transparent focus:checked:!wpuf-bg-primary focus:wpuf-shadow-primary checked:focus:!wpuf-bg-primary checked:hover:wpuf-bg-primary checked:!wpuf-bg-primary before:!wpuf-content-none wpuf-rounded';
+    'mt-0! mr-2! h-4 w-4 shadow-none! checked:shadow-none! focus:checked:shadow-primary! focus:checked:shadow-none! border-gray-300! checked:border-primary! checked:before:bg-white! hover:checked:bg-primary! focus:ring-transparent! focus:checked:ring-transparent! hover:checked:ring-transparent! focus:checked:bg-primary! focus:shadow-primary checked:focus:bg-primary! checked:hover:bg-primary checked:bg-primary! before:content-none! rounded-sm';
 
 export const STATUS_BADGE_CLASSES = {
     publish:
-        'wpuf-bg-emerald-50 wpuf-border-emerald-200 wpuf-text-emerald-800',
+        'bg-emerald-50 border-emerald-200 text-emerald-800',
     pending:
-        'wpuf-bg-yellow-100 wpuf-text-yellow-800',
+        'bg-yellow-100 text-yellow-800',
     private:
-        'wpuf-bg-indigo-50 wpuf-border-indigo-200 wpuf-text-purple-800',
+        'bg-indigo-50 border-indigo-200 text-purple-800',
     draft:
-        'wpuf-bg-gray-100 wpuf-border-gray-200 wpuf-text-gray-800',
+        'bg-gray-100 border-gray-200 text-gray-800',
 };
 
 export const COPY_SVG_PATH =

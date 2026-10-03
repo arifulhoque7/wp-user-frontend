@@ -47,17 +47,17 @@ export default function useAddField() {
         const html = '<div class="wpuf-custom-field-instruction">' +
             '<div class="step-one">' +
             sprintf(
-                '<p class="wpuf-text-base">%s <a href="%s" target="_blank" class="wpuf-text-primary wpuf-font-bold">%s</a>%s"</p>',
+                '<p class="text-base">%s <a href="%s" target="_blank" class="text-primary font-bold">%s</a>%s"</p>',
                 __( 'Navigate through', 'wp-user-frontend' ),
                 settingsUrl,
                 __( 'WP-admin > WPUF > Settings > Frontend Posting', 'wp-user-frontend' ),
                 __( '- there you have to check the checkbox: "Show custom field data in the post content area', 'wp-user-frontend' )
             ) +
-            '<img src="' + imageOne + '" alt="settings" class="wpuf-rounded-md">' +
+            '<img src="' + imageOne + '" alt="settings" class="rounded-md">' +
             '</div>' +
             '<div class="step-two">' +
             sprintf(
-                '<p class="wpuf-text-base">%s<button type="button" class="wpuf-text-primary wpuf-swal-action-link wpuf-font-bold" data-action="open-advanced-options" data-field-id="%s">%s</button>%s<button type="button" class="wpuf-text-primary wpuf-swal-action-link wpuf-font-bold" data-action="open-advanced-options" data-field-id="%s">%s</button>%s</p>',
+                '<p class="text-base">%s<button type="button" class="text-primary wpuf-swal-action-link font-bold" data-action="open-advanced-options" data-field-id="%s">%s</button>%s<button type="button" class="text-primary wpuf-swal-action-link font-bold" data-action="open-advanced-options" data-field-id="%s">%s</button>%s</p>',
                 __( 'Edit the custom field inside the post form and on the right side you will see ', 'wp-user-frontend' ),
                 fieldId,
                 __( '"Advanced Options".', 'wp-user-frontend' ),
@@ -66,7 +66,7 @@ export default function useAddField() {
                 __( '"Show data on post"', 'wp-user-frontend' ),
                 __( ' - set this yes.', 'wp-user-frontend' )
             ) +
-            '<img src="' + imageTwo + '" alt="custom field data" class="wpuf-rounded-md">' +
+            '<img src="' + imageTwo + '" alt="custom field data" class="rounded-md">' +
             '</div>' +
             '</div>';
 
@@ -78,8 +78,8 @@ export default function useAddField() {
             confirmButtonText: __( "Don't show again", 'wp-user-frontend' ),
             cancelButtonText: __( 'Okay', 'wp-user-frontend' ),
             customClass: {
-                confirmButton: '!wpuf-bg-white !wpuf-text-black !wpuf-border !wpuf-border-solid !wpuf-border-gray-300 focus:!wpuf-shadow-none',
-                cancelButton: '!wpuf-text-white',
+                confirmButton: 'bg-white! text-black! border! border-solid! border-gray-300! focus:shadow-none!',
+                cancelButton: 'text-white!',
             },
             cancelButtonColor: '#059669',
             didOpen: ( modal ) => {
@@ -152,15 +152,15 @@ export default function useAddField() {
         if ( isFieldSingleInstance( template, singleObjects ) && containsField( formFields, template ) ) {
             if ( typeof window.Swal !== 'undefined' ) {
                 window.Swal.fire( {
-                    title: '<span class="wpuf-text-primary">Oops...</span>',
-                    html: '<p class="wpuf-text-gray-500 wpuf-text-xl wpuf-m-0 wpuf-p-0">' + __( 'You already have this field in the form', 'wp-user-frontend' ) + '</p>',
+                    title: '<span class="text-primary">Oops...</span>',
+                    html: '<p class="text-gray-500 text-xl m-0 p-0">' + __( 'You already have this field in the form', 'wp-user-frontend' ) + '</p>',
                     imageUrl: ( data.asset_url || '' ) + '/images/oops.svg',
                     showCloseButton: true,
                     padding: '1rem',
                     width: '35rem',
                     customClass: {
-                        confirmButton: '!wpuf-flex focus:!wpuf-shadow-none !wpuf-bg-primary',
-                        closeButton: 'wpuf-absolute',
+                        confirmButton: 'flex! focus:shadow-none! bg-primary!',
+                        closeButton: 'absolute',
                     },
                 } );
             }

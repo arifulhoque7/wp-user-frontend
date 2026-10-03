@@ -24,11 +24,11 @@ export default function FormBuilder() {
             <Header activeTab={ activeTab } onTabChange={ setActiveTab } />
 
             { activeTab === 'form-editor' && (
-                <div className="wpuf-flex wpuf-bg-white wpuf-mr-8">
-                    <div className="wpuf-w-2/3 wpuf-min-h-screen wpuf-max-h-screen wpuf-px-13 wpuf-py-4 wpuf-border-t wpuf-border-l wpuf-border-gray-200 wpuf-overflow-auto">
+                <div className="flex bg-white mr-8">
+                    <div className="w-2/3 min-h-screen max-h-screen px-13 py-4 border-t border-l border-gray-200 overflow-auto">
                         <BuilderCanvas />
                     </div>
-                    <div className="wpuf-w-1/3 wpuf-max-h-screen wpuf-overflow-auto wpuf-rounded-tr-lg wpuf-border wpuf-border-b-0 wpuf-border-gray-200">
+                    <div className="w-1/3 max-h-screen overflow-auto rounded-tr-lg border border-b-0 border-gray-200">
                         <Sidebar />
                     </div>
                 </div>
@@ -39,7 +39,7 @@ export default function FormBuilder() {
             ) }
 
             { /* Tab contents other plugins printed on wpuf-form-builder-tab-contents-{type}. */ }
-            <LegacySlot id="tab-contents" html={ getLegacySlots().tabs.contents } className="wpuf-m-4" />
+            <LegacySlot id="tab-contents" html={ getLegacySlots().tabs.contents } className="m-4" />
         </div>
     );
 }

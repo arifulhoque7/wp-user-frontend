@@ -23,9 +23,9 @@ export default function RichTextField( { field, name, value, onChange } ) {
 
     return (
         <>
-            <div className="wpuf-flex wpuf-items-center">
+            <div className="flex items-center">
                 { field.label && (
-                    <label htmlFor={ `wpuf-editor-${ editorKey }` } className="wpuf-text-sm wpuf-text-gray-700 wpuf-my-2">
+                    <label htmlFor={ `wpuf-editor-${ editorKey }` } className="text-sm text-gray-700 my-2">
                         { field.label }
                     </label>
                 ) }
