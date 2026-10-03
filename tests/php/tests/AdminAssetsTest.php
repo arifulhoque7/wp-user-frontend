@@ -35,6 +35,18 @@ class AdminAssetsTest extends WP_UnitTestCase {
 
     }
 
+    public function test_shared_layer_handles_are_registered_but_not_enqueued() {
+        wpuf()->assets->register_all_scripts();
+        $scripts = wp_scripts();
+
+        $this->assertTrue( wp_script_is( 'wpuf-admin-runtime', 'registered' ) );
+        $this->assertTrue( wp_script_is( 'wpuf-admin-ui', 'registered' ) );
+        $this->assertContains( 'wpuf-admin-runtime', $scripts->registered['wpuf-admin-ui']->deps, 'plugin-ui layer loads after the runtime' );
+        $this->assertContains( 'wp-components', $scripts->registered['wpuf-admin-ui']->deps );
+        $this->assertFalse( wp_script_is( 'wpuf-admin-runtime', 'enqueued' ), 'no screen uses the shared layer yet (task 3.2)' );
+        $this->assertFalse( wp_script_is( 'wpuf-admin-ui', 'enqueued' ) );
+    }
+
     public function test_boot_payload_has_the_common_values_and_scoped_filters() {
         add_filter(
             'wpuf_admin_boot',

@@ -51,6 +51,7 @@ modules/user-directory/node_modules
 /vite.config.js
 /webpack.admin.config.js
 /webpack.config.js
+/webpack.wpuf-externals.js
 /tailwind.config.js
 /postcss.config.js
 /postcss.user-directory.config.js

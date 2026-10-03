@@ -4,11 +4,14 @@
  *
  * Output names are unchanged (assets/js/<name>.min.js + .min.asset.php,
  * assets/css/<name>.css + -rtl.css), so the registered handles keep working.
+ * Plus the shared layer entries admin-runtime and admin-ui (design.md D24).
  * Build one app with `WPUF_ENTRY=<name>`, e.g. `WPUF_ENTRY=form-builder`.
  */
 const defaultConfig = require( '@wordpress/scripts/config/webpack.config' );
+const DependencyExtractionWebpackPlugin = require( '@wordpress/dependency-extraction-webpack-plugin' );
 const RtlCssPlugin = require( 'rtlcss-webpack-plugin' );
 const path = require( 'path' );
+const wpufExternals = require( './webpack.wpuf-externals' );
 
 const entries = {
     'form-builder': './admin/form-builder/src/index.jsx',
@@ -17,10 +20,17 @@ const entries = {
     'settings-react': './src/js/settings.jsx',
 };
 
+// The shared layer (design.md D24): bundles @wpuf/* sources and plugin-ui,
+// published on window.wpuf. Built without the externals map below.
+const sharedEntries = {
+    'admin-runtime': './src/admin/shared/runtime/admin-runtime.js',
+    'admin-ui': './src/admin/shared/runtime/admin-ui.js',
+};
+
 const only = process.env.WPUF_ENTRY;
 
-if ( only && ! entries[ only ] ) {
-    throw new Error( `WPUF_ENTRY "${ only }" is not one of: ${ Object.keys( entries ).join( ', ' ) }` );
+if ( only && ! entries[ only ] && ! sharedEntries[ only ] ) {
+    throw new Error( `WPUF_ENTRY "${ only }" is not one of: ${ [ ...Object.keys( entries ), ...Object.keys( sharedEntries ) ].join( ', ' ) }` );
 }
 
 // Keep wp-scripts' own mini-css-extract-plugin instance (its CSS loader only
@@ -39,16 +49,38 @@ if ( cssExtract ) {
 
 plugins.push( new RtlCssPlugin( { filename: 'css/[name]-rtl.css' } ) );
 
-module.exports = {
+/**
+ * One config per group; the screen group resolves `@wpuf/*` and
+ * `@wedevs/plugin-ui` to window.wpuf (their handles join each `.asset.php`).
+ *
+ * @param {Object}  group           Entry name => path.
+ * @param {boolean} withWpufExternals Map the shared layer to window.wpuf.
+ *
+ * @return {Object} webpack config
+ */
+const config = ( group, withWpufExternals ) => ( {
     ...defaultConfig,
-    entry: only ? { [ only ]: entries[ only ] } : entries,
+    entry: group,
     output: {
         filename: 'js/[name].min.js',
         path: path.resolve( __dirname, 'assets' ),
         // assets/ holds every other build's output and tracked sources: never clean it.
         clean: false,
     },
-    plugins,
+    plugins: withWpufExternals
+        ? plugins.map( ( plugin ) =>
+            'DependencyExtractionWebpackPlugin' === plugin.constructor.name
+                ? new DependencyExtractionWebpackPlugin( {
+                    ...plugin.options,
+                    requestToExternal: wpufExternals.requestToExternal,
+                    requestToHandle: wpufExternals.requestToHandle,
+                } )
+                : plugin
+        )
+        : // The shared group has no CSS: only its own dependency extraction.
+        plugins
+            .filter( ( plugin ) => 'DependencyExtractionWebpackPlugin' === plugin.constructor.name )
+            .map( ( plugin ) => new DependencyExtractionWebpackPlugin( plugin.options ) ),
     resolve: {
         ...defaultConfig.resolve,
         alias: {
@@ -59,4 +91,11 @@ module.exports = {
     watchOptions: {
         ignored: [ '**/assets/js/**', '**/assets/css/**', '**/node_modules/**' ],
     },
-};
+} );
+
+const pick = ( group ) => ( only ? ( group[ only ] ? { [ only ]: group[ only ] } : null ) : group );
+
+module.exports = [
+    pick( entries ) && config( pick( entries ), true ),
+    pick( sharedEntries ) && config( pick( sharedEntries ), false ),
+].filter( Boolean );

@@ -345,6 +345,10 @@ class Assets {
         $settings_asset      = $this->react_asset( 'settings-react', [ 'wp-element', 'wp-data', 'wp-api-fetch', 'wp-i18n', 'wp-hooks', 'wp-components' ] );
         $subscriptions_asset = $this->react_asset( 'subscriptions', [ 'wp-element', 'wp-data', 'wp-api-fetch', 'wp-i18n', 'wp-hooks', 'wp-components', 'wp-primitives' ] );
         $form_builder_asset  = $this->react_asset( 'form-builder', [] );
+        // The shared React admin layer (design.md D24): screens and Pro get
+        // these as dependencies through the `@wpuf/*` / plugin-ui externals.
+        $admin_runtime_asset = $this->react_asset( 'admin-runtime', [ 'wp-api-fetch', 'wp-element', 'wp-hooks', 'wp-url' ] );
+        $admin_ui_asset      = $this->react_asset( 'admin-ui', [ 'react', 'react-dom', 'react-jsx-runtime', 'wp-components', 'wp-element', 'wp-i18n', 'wp-plugins' ] );
         $form_builder_js_deps = apply_filters(
             'wpuf_form_builder_js_deps',
             [
@@ -572,6 +576,19 @@ class Assets {
                 'src'       => WPUF_ASSET_URI . '/js/subscriptions.min.js',
                 'deps'      => $subscriptions_asset['dependencies'],
                 'version'   => $subscriptions_asset['version'],
+                'in_footer' => true,
+            ],
+            'admin-runtime'      => [
+                'src'       => WPUF_ASSET_URI . '/js/admin-runtime.min.js',
+                'deps'      => $admin_runtime_asset['dependencies'],
+                'version'   => $admin_runtime_asset['version'],
+                'in_footer' => true,
+            ],
+            // @wedevs/plugin-ui, loaded once; the page also needs the wp-components style.
+            'admin-ui'           => [
+                'src'       => WPUF_ASSET_URI . '/js/admin-ui.min.js',
+                'deps'      => array_values( array_unique( array_merge( [ 'wpuf-admin-runtime' ], $admin_ui_asset['dependencies'] ) ) ),
+                'version'   => $admin_ui_asset['version'],
                 'in_footer' => true,
             ],
             'form-builder-react' => [
