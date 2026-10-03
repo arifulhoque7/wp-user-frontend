@@ -8,6 +8,7 @@
 
 namespace WeDevs\Wpuf\Platform\Providers;
 
+use WeDevs\Wpuf\Admin\Screens\Registry;
 use WeDevs\Wpuf\Builder\HookBridge;
 use WeDevs\Wpuf\Platform\REST\Manager;
 use WeDevs\Wpuf\Platform\ServiceProvider;
@@ -41,6 +42,14 @@ class CoreServiceProvider extends ServiceProvider {
             VersionGuard::class,
             function () {
                 return new VersionGuard();
+            }
+        );
+
+        // Admin screens on their menu slugs, notice capture for React screens.
+        $this->share_tagged(
+            Registry::class,
+            function () {
+                return new Registry();
             }
         );
 

@@ -100,6 +100,17 @@ class Menu {
     }
 
     /**
+     * The admin screen registry (Admin\Screens).
+     *
+     * @since WPUF_SINCE
+     *
+     * @return Screens\Registry
+     */
+    protected function screens() {
+        return wpuf()->platform()->get( Screens\Registry::class );
+    }
+
+    /**
      * Build the Premium submenu title with its crown icon.
      *
      * WordPress prints submenu titles unescaped, so markup is allowed here. The
@@ -184,70 +195,8 @@ class Menu {
      * @return void
      */
     public function wpuf_post_forms_page() {
-        if ( wpuf_is_pro_active() && defined( 'WPUF_PRO_VERSION' ) && version_compare( WPUF_PRO_VERSION, '4.1.0', '<' ) ) {
-            require_once WPUF_INCLUDES . '/Admin/views/need-to-update.php';
-
-            return;
-        }
-
-        // phpcs:ignore WordPress.Security.NonceVerification
-        $action           = ! empty( $_GET['action'] ) ? sanitize_text_field( wp_unslash( $_GET['action'] ) ) : null;
-        $add_new_page_url = admin_url( 'admin.php?page=wpuf-post-forms&action=add-new' );
-        $form_type        = __( 'Post Form', 'wp-user-frontend' );
-
-        switch ( $action ) {
-            case 'edit':
-            case 'add-new':
-                require_once WPUF_INCLUDES . '/Admin/views/post-form.php';
-                break;
-
-            default:
-                wp_enqueue_style( 'wpuf-admin' );
-                wp_enqueue_style( 'wpuf-forms-list' );
-                wp_enqueue_script( 'wpuf-forms-list-react' );
-                wp_set_script_translations( 'wpuf-forms-list-react', 'wp-user-frontend' );
-
-                // Check AI configuration status
-                $ai_settings = get_option( 'wpuf_ai', [] );
-                $ai_provider = isset( $ai_settings['ai_provider'] ) ? $ai_settings['ai_provider'] : '';
-                $ai_model    = isset( $ai_settings['ai_model'] ) ? $ai_settings['ai_model'] : '';
-                $provider_key_field = $ai_provider . '_api_key';
-                $ai_api_key = isset( $ai_settings[ $provider_key_field ] ) ? $ai_settings[ $provider_key_field ] : '';
-                $ai_configured = ! empty( $ai_provider ) && ! empty( $ai_api_key ) && ! empty( $ai_model );
-
-                wp_localize_script(
-                    'wpuf-forms-list-react', 'wpuf_forms_list',
-                    [
-                        'post_counts'            => wpuf_get_forms_counts_with_status(),
-                        'rest_nonce'             => wp_create_nonce( 'wp_rest' ),
-                        'rest_url'               => esc_url_raw( rest_url() ),
-                        'bulk_nonce'             => wp_create_nonce( 'bulk-post-forms' ),
-                        'template_nonce'         => wp_create_nonce( 'wpuf_create_from_template' ),
-                        'is_plain_permalink'     => empty( get_option( 'permalink_structure' ) ),
-                        'permalink_settings_url' => admin_url( 'options-permalink.php' ),
-                        'ai_configured'          => $ai_configured,
-                        'ai_settings_url'        => admin_url( 'admin.php?page=wpuf-settings#wpuf_ai' ),
-                    ]
-                );
-                require_once WPUF_INCLUDES . '/Admin/views/post-forms-list-table-view.php';
-
-                $registry       = wpuf_get_post_form_templates();
-                $pro_templates  = wpuf_get_pro_form_previews();
-                $blank_form_url = admin_url( 'admin.php?page=wpuf-post-forms&action=add-new' );
-                $action_name    = 'post_form_template';
-                $footer_help    = sprintf(
-                    // translators: %s: mailto link
-                    __( 'Want a new integration? <a href="%s" target="_blank">Let us know</a>.', 'wp-user-frontend' ), 'mailto:support@wedevs.com?subject=WPUF Custom Post Template Integration Request'
-                );
-
-                if ( ! $registry ) {
-                    break;
-                }
-
-                include WPUF_ROOT . '/includes/Admin/template-parts/modal-v4.2.php';
-
-                break;
-        }
+        // Rendered by Admin\Screens\PostFormsList (task 2.5a).
+        $this->screens()->render( 'wpuf-post-forms' );
     }
 
     /**
@@ -269,19 +218,13 @@ class Menu {
      * @return void
      */
     public function post_form_menu_action() {
-        /**
-         * Backdoor for calling the menu hook.
-         * This hook won't get translated even the site language is changed
-         */
-        do_action( 'wpuf_load_post_forms' );
+        // Fires wpuf_load_post_forms (Admin\Screens\PostFormsList, task 2.5a).
+        $this->screens()->load( 'wpuf-post-forms' );
     }
 
     public function subscription_menu_action() {
-        /**
-         * Backdoor for calling the menu hook.
-         * This hook won't get translated even the site language is changed
-         */
-        do_action( 'wpuf_load_subscription_page' );
+        // Fires wpuf_load_subscription_page (Admin\Screens\Subscriptions, task 2.5a).
+        $this->screens()->load( 'wpuf_subscription' );
     }
 
     /**
@@ -292,9 +235,8 @@ class Menu {
      * @return void
      */
     public function subscription_menu_page() {
-        $page = WPUF_INCLUDES . '/Admin/views/subscriptions.php';
-
-        wpuf_require_once( $page );
+        // Rendered by Admin\Screens\Subscriptions (task 2.5a).
+        $this->screens()->render( 'wpuf_subscription' );
     }
 
     /**
@@ -448,70 +390,8 @@ class Menu {
      * @return void
      */
     public function enqueue_settings_page_scripts() {
-        // Legacy mode renders the WeDevs_Settings_API screen (which enqueues its
-        // own assets via admin_init) — skip the React bundle entirely.
-        if ( function_exists( 'wpuf_settings_use_legacy' ) && wpuf_settings_use_legacy() ) {
-            wp_enqueue_script( 'wpuf-subscriptions' );
-            wp_enqueue_script( 'wpuf-settings' );
-
-            return;
-        }
-
-        wp_enqueue_style( 'wpuf-admin' );
-        wp_enqueue_style( 'wp-components' );
-
-        // Rich-text (wysiwyg) settings fields need the WordPress TinyMCE editor.
-        wp_enqueue_editor();
-        wp_enqueue_media();
-
-        // Hide the WordPress admin footer text/version on the React settings page.
-        add_filter( 'admin_footer_text', '__return_empty_string', 99 );
-        add_filter( 'update_footer', '__return_empty_string', 99 );
-
-        wp_enqueue_style(
-            'wpuf-settings-react',
-            WPUF_ASSET_URI . '/css/settings-react.css',
-            [],
-            WPUF_VERSION
-        );
-
-        $handle     = 'wpuf-settings-react';
-        $asset_file = WPUF_ROOT . '/assets/js/settings-react.min.asset.php';
-        $asset      = file_exists( $asset_file )
-            ? require $asset_file
-            : [
-                'dependencies' => [ 'wp-element', 'wp-data', 'wp-api-fetch', 'wp-i18n', 'wp-hooks', 'wp-components' ],
-                'version' => WPUF_VERSION,
-            ];
-
-        wp_register_script(
-            $handle,
-            WPUF_ASSET_URI . '/js/settings-react.min.js',
-            $asset['dependencies'],
-            $asset['version'],
-            true
-        );
-
-        wp_enqueue_script( $handle );
-        wp_set_script_translations( $handle, 'wp-user-frontend' );
-
-        wp_localize_script(
-            $handle,
-            'wpuf_settings',
-            [
-                'rest_url'    => esc_url_raw( rest_url() ),
-                'nonce'       => wp_create_nonce( 'wp_rest' ),
-                'is_pro'      => class_exists( 'WP_User_Frontend_Pro' ),
-                'asset_url'   => WPUF_ASSET_URI,
-                'version'     => WPUF_VERSION,
-                'pro_version' => defined( 'WPUF_PRO_VERSION' ) ? WPUF_PRO_VERSION : '',
-                'plan'        => function_exists( 'wpuf_pro_current_plan' ) ? wpuf_pro_current_plan() : '',
-                'upgrade_url'   => 'https://wedevs.com/wp-user-frontend-pro/pricing/',
-                'support_url'   => 'https://wedevs.com/docs/wp-user-frontend-pro/',
-                // Nonce-protected link to fall back to the classic settings UI.
-                'switch_ui_url' => function_exists( 'wpuf_settings_ui_switch_url' ) ? wpuf_settings_ui_switch_url() : '',
-            ]
-        );
+        // Enqueued by Admin\Screens\Settings (task 2.5a).
+        $this->screens()->load( 'wpuf-settings' );
     }
 
     /**
@@ -520,56 +400,8 @@ class Menu {
      * @return void
      */
     public function plugin_settings_page() {
-        // Fallback to the legacy WeDevs_Settings_API screen when requested — both
-        // screens use the same wpuf_* options, so the data stays in sync.
-        if ( function_exists( 'wpuf_settings_use_legacy' ) && wpuf_settings_use_legacy() ) {
-            ?>
-        <div class="wrap">
-            <h2 class="with-headway-icon">
-                <span class="title-area">
-                    <?php esc_html_e( 'Settings', 'wp-user-frontend' ); ?>
-                    <?php if ( function_exists( 'wpuf_settings_ui_switch_url' ) ) : ?>
-                        <a href="<?php echo esc_url( wpuf_settings_ui_switch_url() ); ?>" class="page-title-action">
-                            <?php esc_html_e( 'Switch to new settings', 'wp-user-frontend' ); ?>
-                        </a>
-                    <?php endif; ?>
-                </span>
-                <span class="flex-end">
-                    <span
-                        id="wpuf-headway-icon"
-                        class="wpuf-border wpuf-border-gray-100 wpuf-mr-[16px] wpuf-rounded-full wpuf-p-1 wpuf-shadow-sm hover:wpuf-bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
-                    ></span>
-                    <a class="feedback-link" target="_blank" href="<?php echo esc_url( 'https://feedback.wedevs.com/b/user-frontend' ); ?>">💡 
-                    <?php
-                    esc_html_e(
-                        'Submit Ideas', 'wp-user-frontend'
-                    );
-                    ?>
-                    </a>
-                </span>
-            </h2>
-            <div class="wpuf-settings-wrap">
-                <?php
-                settings_errors();
-
-                wpuf()->admin->settings->get_settings_api()->show_navigation();
-                wpuf()->admin->settings->get_settings_api()->show_forms();
-                ?>
-            </div>
-        </div>
-            <?php
-            return;
-        }
-        ?>
-        <div id="wpuf-settings-root" class="!wpuf-ml-[-20px] wpuf-min-h-screen wpuf-w-[calc(100%+20px)]">
-            <noscript>
-                <strong>
-                    <?php esc_html_e( 'This page requires JavaScript. Please enable it to manage settings.', 'wp-user-frontend' ); ?>
-                </strong>
-            </noscript>
-            <h2><?php esc_html_e( 'Loading', 'wp-user-frontend' ); ?>...</h2>
-        </div>
-        <?php
+        // Rendered by Admin\Screens\Settings (task 2.5a).
+        $this->screens()->render( 'wpuf-settings' );
     }
 
     /**
