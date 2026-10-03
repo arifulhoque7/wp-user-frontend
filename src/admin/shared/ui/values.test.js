@@ -20,3 +20,30 @@ test( 'options normalize from lists and maps', () => {
     expect( normalizeOptions( { x: 'X' } ) ).toEqual( [ { value: 'x', label: 'X' } ] );
     expect( normalizeOptions( null ) ).toEqual( [] );
 } );
+
+import { dateToYmd, isChecked, toList, ymdToDate } from './values';
+
+test( 'two-state controls read the caller shape', () => {
+    expect( isChecked( 'on', 'on' ) ).toBe( true );
+    expect( isChecked( 'off', 'on' ) ).toBe( false );
+    expect( isChecked( undefined, 'on' ) ).toBe( false );
+    expect( isChecked( 'yes', 'yes' ) ).toBe( true );
+    expect( isChecked( true, true ) ).toBe( true );
+    expect( isChecked( 'true', true ) ).toBe( true );
+    expect( isChecked( false, true ) ).toBe( false );
+} );
+
+test( 'lists normalize, falsy -> []', () => {
+    expect( toList( [ 'link', 2 ] ) ).toEqual( [ 'link', '2' ] );
+    expect( toList( '' ) ).toEqual( [] );
+    expect( toList( null ) ).toEqual( [] );
+    expect( toList( 'a' ) ).toEqual( [ 'a' ] );
+} );
+
+test( 'dates round-trip without a timezone shift', () => {
+    expect( dateToYmd( ymdToDate( '2026-01-31' ) ) ).toBe( '2026-01-31' );
+    expect( dateToYmd( ymdToDate( '2026-03-29 23:30:00' ) ) ).toBe( '2026-03-29' );
+    expect( ymdToDate( '' ) ).toBeUndefined();
+    expect( ymdToDate( 'nope' ) ).toBeUndefined();
+    expect( dateToYmd( undefined ) ).toBe( '' );
+} );

@@ -51,3 +51,69 @@ export function normalizeOptions( options ) {
 
     return Object.keys( options || {} ).map( ( key ) => ( { value: key, label: String( options[ key ] ) } ) );
 }
+
+/**
+ * Whether a two-state control is on. The stored shape differs per screen
+ * (`'on'/'off'`, `'yes'/''`, `true/false`, key absent), so the caller says
+ * which value means on.
+ *
+ * @param {*} value        Stored value.
+ * @param {*} checkedValue The value that means on.
+ *
+ * @return {boolean} On.
+ */
+export function isChecked( value, checkedValue ) {
+    return value === checkedValue || ( true === checkedValue && 'true' === value );
+}
+
+/**
+ * A list value as an array of strings (falsy -> []), for MultiSelect.
+ *
+ * @param {*} value Stored value.
+ *
+ * @return {string[]} Values.
+ */
+export function toList( value ) {
+    if ( ! value ) {
+        return [];
+    }
+
+    return ( Array.isArray( value ) ? value : [ value ] ).map( String );
+}
+
+/**
+ * `YYYY-MM-DD` (optionally with a time part) -> local Date at noon; anything else -> undefined.
+ *
+ * @param {string} value Stored date.
+ *
+ * @return {Date|undefined} Date.
+ */
+export function ymdToDate( value ) {
+    const match = /^(\d{4})-(\d{2})-(\d{2})/.exec( String( value || '' ) );
+
+    if ( ! match ) {
+        return undefined;
+    }
+
+    // Local noon: formatting in the site timezone (up to +/-12h away) keeps the same day.
+    const date = new Date( Number( match[ 1 ] ), Number( match[ 2 ] ) - 1, Number( match[ 3 ] ), 12 );
+
+    return Number.isNaN( date.getTime() ) ? undefined : date;
+}
+
+/**
+ * Local Date -> `YYYY-MM-DD` ('' when none). No timezone shift.
+ *
+ * @param {Date|undefined} date Date.
+ *
+ * @return {string} Date string.
+ */
+export function dateToYmd( date ) {
+    if ( ! ( date instanceof Date ) || Number.isNaN( date.getTime() ) ) {
+        return '';
+    }
+
+    const pad = ( n ) => String( n ).padStart( 2, '0' );
+
+    return `${ date.getFullYear() }-${ pad( date.getMonth() + 1 ) }-${ pad( date.getDate() ) }`;
+}
