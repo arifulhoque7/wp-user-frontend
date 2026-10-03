@@ -8,3 +8,4 @@ allowBuilds:
   optipng-bin: true
   unrs-resolver: true
   vue-demi: true
+  '@wedevs/plugin-ui@https://codeload.github.com/getdokan/plugin-ui/tar.gz/acc2771a07c2e4319a742c422629c252e9911bee': true
