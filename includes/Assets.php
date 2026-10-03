@@ -45,7 +45,7 @@ class Assets {
             ]
         );
         add_action( 'init', [ $this, 'register_all_scripts' ] );
-        add_action( 'admin_enqueue_scripts', [ $this, 'use_react_forms_styles' ], PHP_INT_MAX );
+        add_filter( 'style_loader_src', [ $this, 'use_react_forms_styles' ], 10, 2 );
         add_filter( 'admin_body_class', [ $this, 'react_forms_body_class' ] );
     }
 
@@ -65,35 +65,34 @@ class Assets {
 
     /**
      * On the React forms lists and builders, serve the Tailwind 4 sheet
-     * (assets/css/admin/forms-react.css) instead of admin/form-builder.css and
-     * forms-list.min.css. The last of those handles in the queue gets the new
-     * file and the other prints nothing, so the sheet keeps its place in the
-     * cascade (e.g. after Pro's styles on the lists) and the handles Free and
-     * Pro enqueue keep working. The classic post edit screen keeps the old sheet.
+     * (assets/css/admin/forms-react.css) once, in the place the old sheets had
+     * in the cascade: on the builders through admin/form-builder.css (head), on
+     * the lists through forms-list.min.css (enqueued while rendering, printed
+     * after Pro's styles), with the other handle printing nothing. Done when the
+     * tag is printed, so every handle Free and Pro enqueue keeps working. The
+     * classic post edit screen keeps the old sheet.
      *
      * @since WPUF_SINCE
      *
-     * @return void
+     * @param string $src    Stylesheet URL
+     * @param string $handle Style handle
+     *
+     * @return string|false
      */
-    public function use_react_forms_styles() {
-        if ( ! $this->is_react_forms_page() ) {
-            return;
+    public function use_react_forms_styles( $src, $handle = '' ) {
+        if ( ! in_array( $handle, [ 'wpuf-admin-form-builder', 'wpuf-forms-list' ], true ) || ! $this->is_react_forms_page() ) {
+            return $src;
         }
 
-        $styles = wp_styles();
-        $queued = array_values( array_intersect( $styles->queue, [ 'wpuf-admin-form-builder', 'wpuf-forms-list' ] ) );
+        $action  = isset( $_GET['action'] ) ? sanitize_key( wp_unslash( $_GET['action'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only view switch.
+        $builder = in_array( $action, [ 'edit', 'add-new' ], true );
+        $serves  = $builder ? 'wpuf-admin-form-builder' : 'wpuf-forms-list';
 
-        if ( ! $queued ) {
-            return;
+        if ( $handle !== $serves ) {
+            return false;
         }
 
-        $last = end( $queued );
-
-        foreach ( $queued as $handle ) {
-            if ( isset( $styles->registered[ $handle ] ) ) {
-                $styles->registered[ $handle ]->src = $handle === $last ? WPUF_ASSET_URI . '/css/admin/forms-react.css' : false;
-            }
-        }
+        return add_query_arg( 'ver', WPUF_VERSION, WPUF_ASSET_URI . '/css/admin/forms-react.css' );
     }
 
     /**

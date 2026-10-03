@@ -100,29 +100,28 @@ class AdminAssetsTest extends WP_UnitTestCase {
         global $plugin_page;
 
         set_current_screen( 'dashboard' ); // is_admin()
-        $styles = wp_styles();
-
-        foreach ( [ 'wpuf-admin-form-builder' => 'admin/form-builder.css', 'wpuf-forms-list' => 'forms-list.min.css' ] as $handle => $file ) {
-            wp_deregister_style( $handle );
-            wp_register_style( $handle, WPUF_ASSET_URI . '/css/' . $file, [], WPUF_VERSION );
-        }
+        $old    = WPUF_ASSET_URI . '/css/admin/form-builder.css?ver=1';
+        $assets = wpuf()->assets;
 
         // Classic screens keep the old sheet.
         $plugin_page = 'wpuf-settings'; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
-        wp_enqueue_style( 'wpuf-admin-form-builder' );
-        wpuf()->assets->use_react_forms_styles();
-        $this->assertStringEndsWith( '/css/admin/form-builder.css', $styles->registered['wpuf-admin-form-builder']->src );
-        $this->assertSame( 'a', wpuf()->assets->react_forms_body_class( 'a' ) );
+        $this->assertSame( $old, $assets->use_react_forms_styles( $old, 'wpuf-admin-form-builder' ) );
+        $this->assertSame( 'a', $assets->react_forms_body_class( 'a' ) );
 
-        // Lists enqueue both: the later handle gets the new file, the other prints nothing.
-        $plugin_page = 'wpuf-post-forms'; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
-        wp_enqueue_style( 'wpuf-forms-list' );
-        wpuf()->assets->use_react_forms_styles();
-        $this->assertFalse( $styles->registered['wpuf-admin-form-builder']->src );
-        $this->assertStringEndsWith( '/css/admin/forms-react.css', $styles->registered['wpuf-forms-list']->src );
-        $this->assertSame( 'a wpuf-admin-react', wpuf()->assets->react_forms_body_class( 'a' ) );
+        // Builders: the builder handle prints the new sheet, forms-list prints nothing.
+        $plugin_page    = 'wpuf-post-forms'; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+        $_GET['action'] = 'edit';
+        $this->assertStringContainsString( '/css/admin/forms-react.css?ver=', $assets->use_react_forms_styles( $old, 'wpuf-admin-form-builder' ) );
+        $this->assertFalse( $assets->use_react_forms_styles( 'y.css', 'wpuf-forms-list' ) );
+        $this->assertSame( 'x.css', $assets->use_react_forms_styles( 'x.css', 'wpuf-admin' ) );
+        $this->assertSame( 'a wpuf-admin-react', $assets->react_forms_body_class( 'a' ) );
+
+        // Lists: forms-list (printed after Pro's styles) carries the new sheet.
+        unset( $_GET['action'] );
+        $this->assertFalse( $assets->use_react_forms_styles( $old, 'wpuf-admin-form-builder' ) );
+        $this->assertStringContainsString( '/css/admin/forms-react.css', $assets->use_react_forms_styles( 'y.css', 'wpuf-forms-list' ) );
 
         $plugin_page = 'wpuf-profile-forms'; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
-        $this->assertSame( 'wpuf-admin-react', wpuf()->assets->react_forms_body_class( '' ) );
+        $this->assertSame( 'wpuf-admin-react', $assets->react_forms_body_class( '' ) );
     }
 }
