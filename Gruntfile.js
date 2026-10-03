@@ -244,6 +244,8 @@ module.exports = function( grunt) {
                     '!**/postcss.config.js',
                     '!**/tailwind.config.js',
                     '!**/vite.config.mjs',
+                    '!webpack.admin.config.js',
+                    '!webpack.config.js',
                     '!**/CLAUDE.md',
                     '!.claude/**',
                     '!**/.DS_Store',
