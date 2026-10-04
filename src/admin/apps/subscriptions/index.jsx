@@ -4,11 +4,11 @@
  */
 import { createRoot } from '@wordpress/element';
 import { useSelect, useDispatch } from '@wordpress/data';
-import { useState, useCallback, useEffect } from '@wordpress/element';
+import { useState, useCallback, useEffect, createInterpolateElement } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { SlotFillProvider } from '@wordpress/components';
 import { doAction } from '@wordpress/hooks';
-import { WpufProviders, PageHeader, UnsavedGuard } from '@wpuf/components';
+import { WpufProviders, PageFooter, PageHeader, PageShell, UnsavedGuard } from '@wpuf/components';
 import SubscriptionForm from './components/subscriptions/SubscriptionForm';
 import SubscriptionList from './components/subscriptions/SubscriptionList';
 import SidebarMenu from './components/subscriptions/SidebarMenu';
@@ -112,9 +112,16 @@ const SubscriptionsApp = () => {
         setPendingStatus(null);
     }, [setIsUnsavedPopupOpen]);
 
+    // Boot payload (Admin\BootPayload).
+    const adminUrl = ( window.wpufAdmin || {} ).adminUrl || '';
+
     return (
-        <>
-            <PageHeader utm="wpuf-subscription" />
+        <PageShell>
+            <PageHeader
+                utm="wpuf-subscription"
+                helpUrl="https://wedevs.com/docs/wp-user-frontend-pro/subscription-payment/?utm_source=wpuf-footer-help&utm_medium=text-link&utm_campaign=learn-more-subscription"
+                helpLabel={ __( 'Learn more about Subscription', 'wp-user-frontend' ) }
+            />
             <ContentHeader
                 currentSubscriptionStatus={status}
                 allCount={allCount}
@@ -161,7 +168,16 @@ const SubscriptionsApp = () => {
 
             {/* Quick edit / preferences notices go to the shared toasts (develop's Notice list position) */}
             <Notices />
-        </>
+
+            {/* WordPress's footer is hidden on shared-layer screens (D26): its
+                "classic UI" link (Admin_Subscription::admin_footer_text) moves here. */}
+            <PageFooter>
+                { createInterpolateElement(
+                    __( 'Use the <a>classic UI</a>.', 'wp-user-frontend' ),
+                    { a: <a href={ adminUrl + 'edit.php?post_type=wpuf_subscription' } /> }
+                ) }
+            </PageFooter>
+        </PageShell>
     );
 };
 

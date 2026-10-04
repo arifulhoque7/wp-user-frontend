@@ -4,7 +4,7 @@
  * @since WPUF_SINCE
  */
 import { __ } from '@wordpress/i18n';
-import { WpufProviders, PageHeader } from '@wpuf/components';
+import { WpufProviders, PageFooter, PageHeader, PageShell } from '@wpuf/components';
 import FormsList from './components/FormsList';
 
 const FormsListApp = () => {
@@ -18,16 +18,30 @@ const FormsListApp = () => {
         ? __( 'Post Forms', 'wp-user-frontend' )
         : __( 'Profile Forms', 'wp-user-frontend' );
 
+    // The docs links of the former "Learn more" footer bands (list views, D26).
+    const help = formType === 'post'
+        ? {
+            url: 'https://wedevs.com/docs/wp-user-frontend-pro/posting-forms/?utm_source=wpuf-footer-help&utm_medium=text-link&utm_campaign=learn-more-frontend-posting',
+            label: __( 'Learn more about Frontend Posting', 'wp-user-frontend' ),
+        }
+        : {
+            url: 'https://wedevs.com/docs/wp-user-frontend-pro/registration-profile-forms/',
+            label: __( 'Learn more about Registration Forms', 'wp-user-frontend' ),
+        };
+
     // `host`: the screen keeps its own layout markup (title row, table), design.md D25.
     return (
         <WpufProviders host>
-            <PageHeader utm="wpuf-form-builder" />
-            <FormsList
-                postType={ postType }
-                formType={ formType }
-                pageSlug={ pageSlug }
-                pageTitle={ pageTitle }
-            />
+            <PageShell>
+                <PageHeader utm="wpuf-form-builder" helpUrl={ help.url } helpLabel={ help.label } />
+                <FormsList
+                    postType={ postType }
+                    formType={ formType }
+                    pageSlug={ pageSlug }
+                    pageTitle={ pageTitle }
+                />
+                <PageFooter />
+            </PageShell>
         </WpufProviders>
     );
 };

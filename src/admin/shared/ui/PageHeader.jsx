@@ -46,8 +46,11 @@ export function planLabel( plan ) {
  * @param {string} [props.utm]        utm_source of the upgrade link.
  * @param {string} [props.supportUrl] Support link (screens differ).
  * @param {*}      [props.extra]      Extra links before the Headway icon (e.g. "Classic view").
+ * @param {string} [props.helpUrl]    The screen's docs page: a help icon before the
+ *                                    Headway icon (was the "Learn more" footer band, D26).
+ * @param {string} [props.helpLabel]  Its accessible name / tooltip.
  */
-export default function PageHeader( { variant = 'bleed', utm = 'wpuf-header', supportUrl = SUPPORT_URL, extra, className } ) {
+export default function PageHeader( { variant = 'bleed', utm = 'wpuf-header', supportUrl = SUPPORT_URL, extra, helpUrl, helpLabel, className } ) {
     const boot = useBoot();
     const isPro = true === boot.isPro;
     const version = isPro && boot.proVersion ? boot.proVersion : boot.version;
@@ -80,6 +83,21 @@ export default function PageHeader( { variant = 'bleed', utm = 'wpuf-header', su
             </div>
             <div className="flex justify-end items-center w-2/4">
                 { extra }
+                { helpUrl && (
+                    <a
+                        href={ helpUrl }
+                        target="_blank"
+                        rel="noreferrer"
+                        title={ helpLabel || __( 'Documentation', 'wp-user-frontend' ) }
+                        aria-label={ helpLabel || __( 'Documentation', 'wp-user-frontend' ) }
+                        className={ cn( 'mr-4 inline-flex size-8 items-center justify-center rounded-full border border-solid border-gray-100 bg-white text-gray-500 no-underline hover:bg-slate-100 hover:text-gray-700 focus:text-gray-700 focus:shadow-none', SHADOW ) }
+                    >
+                        <svg className="size-5" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <circle cx="10" cy="10" r="7.5" />
+                            <path d="M7.9 7.6a2.2 2.2 0 0 1 4.2.9c0 1.5-2.1 1.9-2.1 3.1M10 14.2h.01" />
+                        </svg>
+                    </a>
+                ) }
                 <span id="wpuf-headway-icon" className={ cn( 'border border-solid border-gray-100 mr-4 rounded-full p-1 hover:bg-slate-100', SHADOW ) }></span>
                 <a className={ cn( OUTLINE, SHADOW, 'wpuf-feedback-link' ) } target="_blank" rel="noreferrer" href={ IDEAS_URL }>
                     { '💡 ' + __( 'Submit Ideas', 'wp-user-frontend' ) }
