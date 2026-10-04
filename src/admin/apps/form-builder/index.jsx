@@ -1,4 +1,5 @@
 import { createRoot } from '@wordpress/element';
+import { WpufProviders } from '@wpuf/components';
 import { dispatch } from '@wordpress/data';
 import { STORE_NAME } from './store';
 import {
@@ -154,5 +155,11 @@ document.addEventListener( 'DOMContentLoaded', () => {
     }
 
     const root = createRoot( container );
-    root.render( <FormBuilder /> );
+    // The shared layer (design.md D24): `host` keeps the builder's own markup
+    // as it is; only the shared wrappers get the plugin-ui styles (D25).
+    root.render(
+        <WpufProviders host>
+            <FormBuilder />
+        </WpufProviders>
+    );
 } );

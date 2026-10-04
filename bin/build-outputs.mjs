@@ -17,6 +17,7 @@ export const built = [
     'assets/css/admin.css',
     'assets/css/admin/form-builder.css',
     'assets/css/admin/forms-react.css',
+    'assets/css/admin/forms-react-rtl.css',
     'assets/css/admin/forms-list-react.css',
     'assets/css/admin/forms-list-react-rtl.css',
     'assets/css/ai-form-builder.min.css',

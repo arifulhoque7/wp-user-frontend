@@ -67,10 +67,10 @@ class Assets {
      * On the React forms lists and builders, serve the Tailwind 4 sheet once,
      * in the place the old sheets had in the cascade: on the builders
      * assets/css/admin/forms-react.css through admin/form-builder.css (head), on
-     * the lists assets/css/admin/forms-list-react.css (the same sheet plus the
-     * shared components' part, right-to-left copy on RTL sites) through
-     * forms-list.min.css (enqueued while rendering, printed after Pro's styles),
-     * with the other handle printing nothing. Done when the tag is printed, so
+     * the lists assets/css/admin/forms-list-react.css through forms-list.min.css
+     * (enqueued while rendering, printed after Pro's styles), with the other
+     * handle printing nothing. Both sheets carry the shared components' part
+     * and have a right-to-left copy, served on RTL sites. Done when the tag is printed, so
      * every handle Free and Pro enqueue keeps working. The classic post edit
      * screen keeps the old sheet.
      *
@@ -94,13 +94,20 @@ class Assets {
             return false;
         }
 
-        $file = $builder ? 'forms-react' : ( is_rtl() ? 'forms-list-react-rtl' : 'forms-list-react' );
+        $file = $builder ? 'forms-react' : 'forms-list-react';
+
+        if ( is_rtl() ) {
+            $file .= '-rtl';
+        }
 
         return add_query_arg( 'ver', WPUF_VERSION, WPUF_ASSET_URI . '/css/admin/' . $file . '.css' );
     }
 
     /**
-     * The Tailwind 4 sheet scopes its utilities to this body class.
+     * The Tailwind 4 sheet scopes its utilities to this body class; builders
+     * also get `wpuf-builder-screen`, which keeps the shared page look (gray
+     * page, no #wpcontent gutter, hidden footer) off their own full-screen
+     * layout.
      *
      * @since WPUF_SINCE
      *
@@ -111,6 +118,12 @@ class Assets {
     public function react_forms_body_class( $classes ) {
         if ( ! $this->is_react_forms_page() ) {
             return $classes;
+        }
+
+        $action = isset( $_GET['action'] ) ? sanitize_key( wp_unslash( $_GET['action'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only view switch.
+
+        if ( in_array( $action, [ 'edit', 'add-new' ], true ) ) {
+            $classes .= ' wpuf-builder-screen';
         }
 
         return trim( $classes . ' wpuf-admin-react' );

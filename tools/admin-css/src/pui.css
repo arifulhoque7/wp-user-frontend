@@ -82,20 +82,21 @@
    page edge to edge (no #wpcontent left gutter; WordPress notices keep their
    own margins), white header strip (PageHeader), white cards on top and the
    white logo footer (PageFooter) instead of WordPress's #wpfooter.
-   Set once here, so each screen that adopts the shared layer gets it. */
-body.wpuf-admin-react,
-body.wpuf-admin-react #wpcontent {
+   Set once here, so each screen that adopts the shared layer gets it; the
+   builders (body.wpuf-builder-screen) keep their own full-screen layout. */
+body.wpuf-admin-react:not(.wpuf-builder-screen),
+body.wpuf-admin-react:not(.wpuf-builder-screen) #wpcontent {
     background-color: #f0f0f1;
 }
 
-body.wpuf-admin-react #wpcontent {
+body.wpuf-admin-react:not(.wpuf-builder-screen) #wpcontent {
     padding-left: 0;
 }
 
-body.wpuf-admin-react #wpbody-content {
+body.wpuf-admin-react:not(.wpuf-builder-screen) #wpbody-content {
     padding-bottom: 0;
 }
 
-body.wpuf-admin-react #wpfooter {
+body.wpuf-admin-react:not(.wpuf-builder-screen) #wpfooter {
     display: none;
 }

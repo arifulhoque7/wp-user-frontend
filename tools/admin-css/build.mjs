@@ -54,7 +54,9 @@ const ENTRIES = {
         post: 'src/base-v3/forms.post.css',
         scope: '.wpuf-admin-react',
         output: 'assets/css/admin/forms-react.css',
-        rtl: false,
+        rtl: true,
+        // Builders on the shared wrappers since 4.4c (field settings inputs).
+        pui: true,
     },
     // The forms lists (post + registration) on the shared wrappers since 4.2:
     // the forms sheet + the FlyHR list page background (src/forms-list.css)

@@ -126,9 +126,14 @@ class AdminAssetsTest extends WP_UnitTestCase {
         $plugin_page    = 'wpuf-post-forms'; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
         $_GET['action'] = 'edit';
         $this->assertStringContainsString( '/css/admin/forms-react.css?ver=', $assets->use_react_forms_styles( $old, 'wpuf-admin-form-builder' ) );
+
+        $GLOBALS['wp_locale']->text_direction = 'rtl';
+        $rtl_builder = $assets->use_react_forms_styles( $old, 'wpuf-admin-form-builder' );
+        $GLOBALS['wp_locale']->text_direction = 'ltr';
+        $this->assertStringContainsString( '/css/admin/forms-react-rtl.css?ver=', $rtl_builder );
         $this->assertFalse( $assets->use_react_forms_styles( 'y.css', 'wpuf-forms-list' ) );
         $this->assertSame( 'x.css', $assets->use_react_forms_styles( 'x.css', 'wpuf-admin' ) );
-        $this->assertSame( 'a wpuf-admin-react', $assets->react_forms_body_class( 'a' ) );
+        $this->assertSame( 'a wpuf-builder-screen wpuf-admin-react', $assets->react_forms_body_class( 'a' ) );
 
         // Lists: forms-list (printed after Pro's styles) carries the lists' sheet
         // (forms sheet + shared components), its RTL copy on RTL sites.
