@@ -13,8 +13,8 @@
 @import "tailwindcss/utilities.css" layer(utilities) source(none);
 @import "./v3-theme.css";
 
-@source "../../../admin/form-builder/src";
-@source "../../../admin/forms-list/src";
+@source "../../../src/admin/apps/form-builder";
+@source "../../../src/admin/apps/forms-list";
 
 /* Words in these sources that read as Tailwind classes but never had CSS in
    the Tailwind 3 build (unprefixed there, or not classes at all). Kept out so

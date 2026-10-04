@@ -129,7 +129,7 @@ module.exports = function( grunt) {
 
             reactFormBuilder: {
                 files: [
-                    'admin/form-builder/src/**/*.{js,jsx}',
+                    'src/admin/apps/form-builder/**/*.{js,jsx}',
                 ],
                 tasks: [
                     'shell:npm_build_form_builder_react'
@@ -154,7 +154,7 @@ module.exports = function( grunt) {
                     // Vue cleanup: old Vue component PHP templates removed
                     // 'admin/form-builder/assets/js/**/*.php',
                     // 'admin/form-builder/assets/js/**/*.js',
-                    'admin/form-builder/src/**/*.{js,jsx}',
+                    'src/admin/apps/form-builder/**/*.{js,jsx}',
                     'includes/Admin/**/*.php',
                     'templates/**/*.php',
                     'includes/Free/Free_Loader.php',

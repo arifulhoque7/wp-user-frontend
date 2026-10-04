@@ -2,7 +2,7 @@
  * One wp-scripts config for the React admin apps (builder, forms list,
  * subscriptions, settings).
  *
- * Output names are unchanged (assets/js/<name>.min.js + .min.asset.php,
+ * Sources live in src/admin/apps/<app> (task 3.5); output names are unchanged (assets/js/<name>.min.js + .min.asset.php,
  * assets/css/<name>.css + -rtl.css), so the registered handles keep working.
  * Plus the shared layer entries admin-runtime and admin-ui (design.md D24).
  * Build one app with `WPUF_ENTRY=<name>`, e.g. `WPUF_ENTRY=form-builder`.
@@ -14,10 +14,10 @@ const path = require( 'path' );
 const wpufExternals = require( './webpack.wpuf-externals' );
 
 const entries = {
-    'form-builder': './admin/form-builder/src/index.jsx',
-    'forms-list-react': './admin/forms-list/src/index.jsx',
-    subscriptions: './src/js/subscriptions.jsx',
-    'settings-react': './src/js/settings.jsx',
+    'form-builder': './src/admin/apps/form-builder/index.jsx',
+    'forms-list-react': './src/admin/apps/forms-list/index.jsx',
+    subscriptions: './src/admin/apps/subscriptions/index.jsx',
+    'settings-react': './src/admin/apps/settings/index.jsx',
 };
 
 // The shared layer (design.md D24): bundles @wpuf/* sources and plugin-ui,

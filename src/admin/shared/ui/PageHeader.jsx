@@ -1,5 +1,5 @@
 /**
- * Page header of the WPUF admin screens (develop look, src/js/components/Header.jsx):
+ * Page header of the WPUF admin screens (develop look, src/admin/apps/subscriptions/components/Header.jsx):
  * logo, product title, plan + version badges, "Upgrade to PRO" (free only),
  * Headway changelog icon (`#wpuf-headway-icon`, the id the Headway widget
  * attaches to), "Submit Ideas" and "Support".

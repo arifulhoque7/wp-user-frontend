@@ -11,14 +11,7 @@
 @import "tailwindcss/utilities.css" layer(utilities) source(none);
 @import "./v3-theme.css";
 
-@source "../../../src/js/subscriptions.jsx";
-@source "../../../src/js/api";
-@source "../../../src/js/hooks";
-@source "../../../src/js/slots";
-@source "../../../src/js/stores-react";
-@source not "../../../src/js/stores-react/settings";
-@source "../../../src/js/components";
-@source not "../../../src/js/components/settings";
+@source "../../../src/admin/apps/subscriptions";
 @source "../../../includes/Admin/views/subscriptions.php";
 
 /* Words in these sources that read as Tailwind classes but never had CSS in

@@ -36,7 +36,7 @@
     "dev:user-directory": "cd modules/user-directory && npm ci && npm run dev",
     "build:css": "grunt tailwind && grunt tailwind-minify",
     "build:account": "ENTRY=account vite build",
-    "test:form-builder": "jest --config admin/form-builder/jest.config.js",
+    "test:form-builder": "jest --config src/admin/apps/form-builder/jest.config.js",
     "test:shared": "jest --config src/admin/shared/jest.config.js"
   },
   "devDependencies": {

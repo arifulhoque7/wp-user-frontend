@@ -2,7 +2,7 @@
  * Shared Tailwind class names for settings field controls.
  *
  * Ported verbatim from the Form Builder React Settings kit
- * (admin/form-builder/src/components/Settings/SettingsField.jsx) so the
+ * (src/admin/apps/form-builder/components/Settings/SettingsField.jsx) so the
  * settings screen renders identically to the rest of the React admin.
  * The field components in ./fields import SETTING_CLASS_NAMES from here.
  */

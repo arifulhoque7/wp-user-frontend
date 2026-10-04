@@ -19,8 +19,8 @@ module.exports = {
         './admin/form-builder/views/*.php',
         // Vue cleanup: old Vue component PHP templates deleted
         // './admin/form-builder/assets/js/**/*.php',
-        './admin/form-builder/src/**/*.{js,jsx}',
-        './admin/forms-list/src/**/*.{js,jsx}',
+        './src/admin/apps/form-builder/**/*.{js,jsx}',
+        './src/admin/apps/forms-list/**/*.{js,jsx}',
         './templates/**/*.php',
         'wpuf-functions.php',
         './src/**/*.{js,jsx,css}',

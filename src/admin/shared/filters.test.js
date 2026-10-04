@@ -8,7 +8,7 @@ const path = require( 'path' );
 import { HOOKS, HOOK_NAMES, SLOTS } from './filters';
 
 const root = path.resolve( __dirname, '../../..' );
-const dirs = [ 'admin/form-builder/src', 'admin/forms-list/src', 'src/js', 'src/admin' ];
+const dirs = [ 'src/admin', 'src/js' ];
 
 function files( dir ) {
     const abs = path.join( root, dir );

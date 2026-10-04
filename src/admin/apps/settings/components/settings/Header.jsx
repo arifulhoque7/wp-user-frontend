@@ -1,6 +1,6 @@
 /**
  * Header — matches the WPUF subscriptions React page top bar.
- * Ported from recover/pr-1824 (src/js/components/Header.jsx); reads the settings
+ * Ported from recover/pr-1824 (now src/admin/apps/subscriptions/components/Header.jsx); reads the settings
  * page's localized `wpuf_settings` bootstrap instead of `wpuf_admin_script`.
  */
 import { __ } from '@wordpress/i18n';

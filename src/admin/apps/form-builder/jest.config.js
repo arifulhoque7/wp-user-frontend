@@ -1,6 +1,6 @@
 module.exports = {
     rootDir: __dirname,
-    testMatch: [ '<rootDir>/src/**/*.test.js' ],
+    testMatch: [ '<rootDir>/**/*.test.js' ],
     transform: {
         '^.+\\.jsx?$': [
             'babel-jest',
@@ -16,7 +16,7 @@ module.exports = {
         'node_modules/(?!(@wordpress)/)',
     ],
     moduleNameMapper: {
-        '^@wordpress/data$': '<rootDir>/src/__mocks__/@wordpress/data.js',
-        '^@wordpress/hooks$': '<rootDir>/src/__mocks__/@wordpress/hooks.js',
+        '^@wordpress/data$': '<rootDir>/__mocks__/@wordpress/data.js',
+        '^@wordpress/hooks$': '<rootDir>/__mocks__/@wordpress/hooks.js',
     },
 };
