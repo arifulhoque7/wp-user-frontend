@@ -4,15 +4,16 @@
  * Variants: primary, secondary, link (tertiary), destructive, icon.
  * Sizes: sm (32px, 6px 12px, 13px/500), md (38px, 8px 16px, 14px/600).
  * No outer margin: spacing comes from the group gap or the container.
+ * Disabled / busy buttons do not change on hover (develop daisyUI buttons).
  */
 import { Button as PuiButton, Spinner, cn } from '@wedevs/plugin-ui';
 
 const VARIANTS = {
-    primary: { pui: 'default', className: 'bg-primary text-primary-foreground border-transparent hover:bg-[#10b981] active:bg-[#10b981]' },
-    secondary: { pui: 'outline', className: 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:text-gray-700' },
-    link: { pui: 'link', className: 'text-primary hover:underline p-0 h-auto border-0' },
-    destructive: { pui: 'destructive', className: 'bg-red-600 text-white border-transparent hover:bg-red-700' },
-    icon: { pui: 'ghost', className: 'text-gray-500 hover:text-gray-700 hover:bg-gray-100' },
+    primary: { pui: 'default', className: 'bg-primary text-primary-foreground border-transparent enabled:hover:bg-[#10b981] enabled:active:bg-[#10b981]' },
+    secondary: { pui: 'outline', className: 'bg-white text-gray-700 border border-gray-300 enabled:hover:bg-gray-50 enabled:hover:text-gray-700' },
+    link: { pui: 'link', className: 'text-primary enabled:hover:underline p-0 h-auto border-0' },
+    destructive: { pui: 'destructive', className: 'bg-red-600 text-white border-transparent enabled:hover:bg-red-700' },
+    icon: { pui: 'ghost', className: 'text-gray-500 enabled:hover:text-gray-700 enabled:hover:bg-gray-100' },
 };
 
 const SIZES = {
