@@ -14,7 +14,8 @@
  * - cascade layers are flattened, so WordPress admin CSS (unlayered) competes
  *   with these rules by specificity and order, as it did with Tailwind 3;
  * - a screen with `pui: true` also gets the plugin-ui part (src/pui.css,
- *   see puiPart()) in the same file.
+ *   see puiPart()) in the same file, and with `dataviews: true` the DataViews
+ *   styles (src/pui-dataviews.css).
  *
  * Usage: node build.mjs [entry...]
  */
@@ -209,6 +210,11 @@ async function build( name ) {
         const pui = postcss.root();
         ( await puiPart() ).forEach( ( node ) => pui.append( node ) );
         result += pui.toResult( { map: false } ).css;
+    }
+
+    // DataViews styles (generated src/pui-dataviews.css) for screens that list with it.
+    if ( entry.dataviews ) {
+        result += ( await compile( await readFile( join( here, 'src/pui-dataviews.css' ), 'utf8' ), join( here, 'src/pui-dataviews.css' ) ) );
     }
     const target = join( plugin, entry.output );
 

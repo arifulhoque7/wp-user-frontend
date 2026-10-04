@@ -19,7 +19,8 @@ export default function WpufProviders( { children, withToaster = true } ) {
     return (
         <ThemeProvider pluginId={ PLUGIN_ID } tokens={ wpufTokens } darkTokens={ wpufDarkTokens } mode="light">
             <ErrorBoundary>{ children }</ErrorBoundary>
-            { withToaster && <Toaster position="bottom-right" richColors /> }
+            { /* Where develop showed its toasts: 80px from the top, 32px from the right. */ }
+            { withToaster && <Toaster position="top-right" offset={ { top: 80, right: 32 } } richColors /> }
         </ThemeProvider>
     );
 }
