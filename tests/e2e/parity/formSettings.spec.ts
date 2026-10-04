@@ -9,10 +9,9 @@ import { paritySite, paritySitesConfigured } from '../utils/paritySites';
  * builders show the same rows. Develop's silent canonicalization on save (every
  * rendered input posted, so untouched keys gain their shown default) is not
  * copied (owner, Q6): such keys are folded in by `withoutCanonicalization`.
- * Notification Settings belong to task 4.4f.
  */
 const FIXTURE = 'post-form-parity.json';
-const TABS = ['General', 'Payment Settings', 'Display Settings', 'Advanced', 'Post Expiration', 'AI Review', 'N8N', 'SMS'];
+const TABS = ['General', 'Payment Settings', 'Notification Settings', 'Display Settings', 'Advanced', 'Post Expiration', 'AI Review', 'N8N', 'SMS'];
 
 type Settings = Record<string, unknown>;
 
