@@ -109,7 +109,8 @@ body.wpuf-admin-react #wpbody-content a:focus-visible {
    own margins), white header strip (PageHeader), white cards on top and the
    white logo footer (PageFooter) instead of WordPress's #wpfooter.
    Set once here, so each screen that adopts the shared layer gets it; the
-   builders (body.wpuf-builder-screen) keep their own full-screen layout. */
+   builders (body.wpuf-builder-screen) keep their own layout (no gutter rule)
+   but share the footer rules and get the gray page below. */
 body.wpuf-admin-react:not(.wpuf-builder-screen),
 body.wpuf-admin-react:not(.wpuf-builder-screen) #wpcontent {
     background-color: #f0f0f1;
@@ -119,10 +120,26 @@ body.wpuf-admin-react:not(.wpuf-builder-screen) #wpcontent {
     padding-left: 0;
 }
 
-body.wpuf-admin-react:not(.wpuf-builder-screen) #wpbody-content {
+body.wpuf-admin-react #wpbody-content {
     padding-bottom: 0;
 }
 
-body.wpuf-admin-react:not(.wpuf-builder-screen) #wpfooter {
+body.wpuf-admin-react #wpfooter {
     display: none;
+}
+
+/* The builders keep their own full-screen layout but get the same gray page:
+   the white header strip (Header) and the white editor / settings cards sit on
+   it (owner 2026-10-04). The legacy form wrapper is white (!important class). */
+body.wpuf-builder-screen,
+body.wpuf-builder-screen #wpcontent,
+body.wpuf-builder-screen form#wpuf-form-builder {
+    background-color: #f0f0f1 !important;
+}
+
+/* The wrapper is 100% + 20px wide to cover #wpcontent's gutter, but its
+   `wpuf-ml-[-20px]` utility is not built (develop's sheet lacked it too), so
+   it ran 20px past the window and the card's right edge was cut off. */
+body.wpuf-builder-screen form#wpuf-form-builder {
+    margin-left: -20px !important;
 }

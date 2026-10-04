@@ -1,51 +1,46 @@
-import { useCallback, useEffect, useRef } from '@wordpress/element';
-import { SETTING_CLASS_NAMES } from '../SettingsField';
+import { useEffect, useRef } from '@wordpress/element';
+import { TextInput } from '@wpuf/components';
+import SettingLabel from './SettingLabel';
 
 /**
- * Date picker field — matches Vue wpuf_render_settings_field() for type="date".
- *
- * Initializes jQuery datetimepicker on mount, mirroring Vue's SettingsTab.init().
+ * Date setting (develop type="date": a text input with jQuery
+ * datetimepicker, default format `Y/m/d H:i`, typing allowed) on the shared
+ * TextInput (4.4e). The picker is kept so a picked date stores develop's text.
  */
-export default function DateField( { field, name, value, onChange } ) {
-    const inputRef = useRef( null );
-
-    const handleChange = useCallback( ( e ) => {
-        onChange( name, e.target.value );
-    }, [ name, onChange ] );
+export function DateInput( { id, value, onChange, className } ) {
+    const wrapRef = useRef( null );
+    const onChangeRef = useRef( onChange );
+    onChangeRef.current = onChange;
 
     useEffect( () => {
-        if ( inputRef.current && window.jQuery && jQuery.fn.datetimepicker ) {
-            jQuery( inputRef.current ).datetimepicker( {
-                onChangeDateTime( dp, $input ) {
-                    onChange( name, $input.val() );
-                },
-            } );
+        const input = wrapRef.current && wrapRef.current.querySelector( 'input' );
+        const $ = window.jQuery;
+
+        if ( ! input || ! $ || ! $.fn.datetimepicker ) {
+            return;
         }
 
-        return () => {
-            if ( inputRef.current && window.jQuery && jQuery.fn.datetimepicker ) {
-                jQuery( inputRef.current ).datetimepicker( 'destroy' );
-            }
-        };
-    }, [ name, onChange ] );
+        $( input ).datetimepicker( {
+            onChangeDateTime( dp, $input ) {
+                onChangeRef.current( $input.val() );
+            },
+        } );
+
+        return () => $( input ).datetimepicker( 'destroy' );
+    }, [] );
 
     return (
+        <div ref={ wrapRef } className={ className }>
+            <TextInput id={ id } className="datepicker w-full" value={ value ?? '' } onChange={ ( next ) => onChange( next ) } />
+        </div>
+    );
+}
+
+export default function DateField( { field, name, value, onChange } ) {
+    return (
         <>
-            { field.label && (
-                <div className="flex items-center">
-                    <label htmlFor={ name } className="text-sm text-gray-700 my-2">
-                        { field.label }
-                    </label>
-                </div>
-            ) }
-            <input
-                ref={ inputRef }
-                type="text"
-                id={ name }
-                value={ value || '' }
-                onChange={ handleChange }
-                className={ `datepicker ${ SETTING_CLASS_NAMES.text }` }
-            />
+            <SettingLabel field={ field } htmlFor={ name } />
+            <DateInput id={ name } value={ value } onChange={ ( next ) => onChange( name, next ) } />
         </>
     );
 }

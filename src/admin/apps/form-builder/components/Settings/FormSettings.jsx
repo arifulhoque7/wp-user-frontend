@@ -64,7 +64,7 @@ export default function FormSettings() {
         : ( window.wpuf_admin_url || '' ) + 'admin.php?page=wpuf-post-forms';
 
     return (
-        <div className="wpuf-settings-container border border-gray-200 rounded-lg m-4 flex transition-transform duration-200 ease-in-out">
+        <div className="wpuf-settings-container bg-white border border-gray-200 rounded-lg mx-4 mt-4 flex transition-transform duration-200 ease-in-out">
             <SettingsNav
                 activeTab={ activeTab }
                 onTabChange={ setActiveTab }

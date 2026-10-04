@@ -1,176 +1,204 @@
-import { useState, useMemo, useCallback } from '@wordpress/element';
-import { useSelect, useDispatch } from '@wordpress/data';
+import { useMemo, useState } from '@wordpress/element';
+import { useDispatch, useSelect } from '@wordpress/data';
 import { __ } from '@wordpress/i18n';
+import { Radio, Select, TextInput } from '@wpuf/components';
 import { STORE_NAME } from '../../store';
-import ConditionRow from './ConditionRow';
-import { RULE_OPTIONS, templateToInputType } from './conditionalUtils';
+import HelpTextIcon from '../Settings/fields/HelpTextIcon';
+import { OPERATORS, RULE_OPTIONS, isEmptyOperator } from './conditionalUtils';
 
-const ALLOWED_TEMPLATES = [
-    'radio_field',
-    'checkbox_field',
-    'dropdown_field',
-    'text_field',
-    'textarea_field',
-    'email_address',
-    'numeric_text_field',
-];
+// Develop's submit-button-conditional-logic: fields a rule can use (top level).
+const ALLOWED_TEMPLATES = [ 'radio_field', 'checkbox_field', 'dropdown_field', 'text_field', 'textarea_field', 'email_address', 'numeric_text_field' ];
+const TEXT_TEMPLATES = [ 'text_field', 'textarea_field', 'email_address', 'numeric_text_field' ];
+const INPUT_TYPES = {
+    radio_field: 'radio',
+    checkbox_field: 'checkbox',
+    dropdown_field: 'select',
+    text_field: 'text',
+    textarea_field: 'textarea',
+    email_address: 'email',
+    numeric_text_field: 'numeric_text',
+};
+
+const blankRule = () => ( { name: '', operator: '=', option: '', input_type: '' } );
 
 /**
- * Submit button conditional logic (Pro).
+ * Operators for a rule's field (develop get_cond_operators): choice fields get
+ * is / is not / any / no selection, text fields the text set, numbers the
+ * number set; no field picked yet shows the text set.
  *
- * Stores data in `settings.submit_button_cond` using the object-array format:
- * { condition_status, cond_logic, conditions: [{ name, operator, option, input_type }] }
+ * @param {Object|undefined} field Form field.
+ * @return {Array} Operators.
+ */
+export function submitOperators( field ) {
+    if ( ! field ) {
+        return OPERATORS.text;
+    }
+
+    switch ( field.template ) {
+        case 'radio_field':
+        case 'dropdown_field':
+        case 'checkbox_field':
+            return OPERATORS.radio;
+        case 'text_field':
+        case 'textarea_field':
+        case 'email_address':
+            return OPERATORS.text;
+        case 'numeric_text_field':
+            return OPERATORS.number;
+        default:
+            return OPERATORS.others;
+    }
+}
+
+/**
+ * Conditional Logic on Submit Button (Pro post forms; develop's Vue
+ * submit-button-conditional-logics printed on
+ * `wpuf_after_post_form_settings_field_limit_message`), on the shared
+ * wrappers (4.4e). Stores `submit_button_cond { condition_status, cond_logic,
+ * conditions[ { name, operator, option, input_type } ] }`.
+ *
+ * As develop: picking a field selects its first operator, clears the value
+ * and stores its input type; "has any / no value" operators clear the value;
+ * new rules go to the end; the last rule cannot be removed. Unlike develop,
+ * opening the tab writes nothing (develop's component rewrote stored rules on
+ * mount; agreed deviation as for field conditions, 4.4d).
  *
  * @param {Object} props
- * @param {string} props.label  - Section heading label
+ * @param {string} [props.label] Row label.
  */
 export default function SubmitConditionalLogic( { label } ) {
-    const { settings, formFields } = useSelect( ( select ) => {
-        const store = select( STORE_NAME );
-        return {
-            settings: store.getSettings(),
-            formFields: store.getFormFields(),
-        };
-    }, [] );
-
+    const { stored, formFields } = useSelect( ( select ) => ( {
+        stored: select( STORE_NAME ).getSettings().submit_button_cond,
+        formFields: select( STORE_NAME ).getFormFields(),
+    } ), [] );
     const { updateFormSetting } = useDispatch( STORE_NAME );
 
-    const currentSettings = settings.submit_button_cond || {
-        condition_status: 'no',
-        cond_logic: 'any',
-        conditions: [ { name: '', operator: '=', option: '', input_type: '' } ],
+    const fields = useMemo( () => formFields.filter( ( field ) => ALLOWED_TEMPLATES.includes( field.template ) && field.name && field.label ), [ formFields ] );
+    const fieldOf = ( name ) => fields.find( ( field ) => field.name === name );
+
+    // Seeded once (develop initializeFromSettings), then kept on screen.
+    const [ state, setState ] = useState( () => ( {
+        condition_status: ( stored && stored.condition_status ) || 'no',
+        cond_logic: ( stored && stored.cond_logic ) || 'any',
+        conditions: stored && Array.isArray( stored.conditions ) && stored.conditions.length
+            ? stored.conditions.map( ( rule ) => ( { name: rule.name || '', operator: rule.operator || '=', option: rule.option || '', input_type: rule.input_type || '' } ) )
+            : [ blankRule() ],
+    } ) );
+
+    const write = ( next ) => {
+        setState( next );
+        updateFormSetting( 'submit_button_cond', {
+            condition_status: next.condition_status,
+            cond_logic: next.cond_logic,
+            conditions: next.conditions.map( ( rule ) => ( { name: rule.name, operator: rule.operator, option: rule.option, input_type: rule.input_type } ) ),
+        } );
+    };
+    const setRule = ( index, rule ) => write( { ...state, conditions: state.conditions.map( ( item, i ) => ( i === index ? rule : item ) ) } );
+
+    const pickField = ( index, name ) => {
+        const field = fieldOf( name );
+        const operators = submitOperators( field );
+
+        setRule( index, {
+            name,
+            operator: operators.length ? operators[ 0 ].value : '=',
+            option: '',
+            input_type: field ? ( INPUT_TYPES[ field.template ] || field.template.replace( '_field', '' ) ) : '',
+        } );
     };
 
-    const availableFields = useMemo( () => {
-        const fields = [];
-
-        formFields.forEach( ( field ) => {
-            if (
-                ALLOWED_TEMPLATES.includes( field.template ) &&
-                field.name &&
-                field.label
-            ) {
-                fields.push( field );
-            }
-        } );
-
-        return fields;
-    }, [ formFields ] );
-
-    const conditions = currentSettings.conditions && currentSettings.conditions.length
-        ? currentSettings.conditions
-        : [ { name: '', operator: '=', option: '', input_type: '' } ];
-
-    const isEnabled = currentSettings.condition_status === 'yes';
-
-    const persist = useCallback( ( updates ) => {
-        updateFormSetting( 'submit_button_cond', {
-            ...currentSettings,
-            ...updates,
-        } );
-    }, [ currentSettings, updateFormSetting ] );
-
-    function handleToggle( status ) {
-        persist( { condition_status: status } );
-    }
-
-    function handleLogicChange( e ) {
-        persist( { cond_logic: e.target.value } );
-    }
-
-    function handleConditionChange( index, updated ) {
-        const newConditions = [ ...conditions ];
-        newConditions[ index ] = {
-            name: updated.name,
-            operator: updated.operator,
-            option: updated.option,
-            input_type: updated.input_type,
-        };
-        persist( { conditions: newConditions } );
-    }
-
-    function handleAddCondition() {
-        persist( {
-            conditions: [
-                ...conditions,
-                { name: '', operator: '=', option: '', input_type: '' },
-            ],
-        } );
-    }
-
-    function handleRemoveCondition( index ) {
-        if ( conditions.length <= 1 ) {
-            return;
-        }
-        persist( { conditions: conditions.filter( ( _, i ) => i !== index ) } );
-    }
+    const assetUrl = ( window.wpuf_form_builder || {} ).asset_url || '';
 
     return (
-        <div className="wpuf-conditional-logic border-t border-gray-200 pt-4 mt-4">
-            <h4 className="text-sm font-semibold text-gray-700 mb-3">
-                { label || __( 'Conditional Logic on Submit Button', 'wp-user-frontend' ) }
-            </h4>
-
-            <div className="flex items-center gap-4 mb-3">
-                <label className="flex items-center gap-1 text-sm cursor-pointer">
-                    <input
-                        type="radio"
-                        name="wpuf_submit_cond_status"
-                        value="yes"
-                        checked={ isEnabled }
-                        onChange={ () => handleToggle( 'yes' ) }
-                    />
-                    { __( 'Enable', 'wp-user-frontend' ) }
-                </label>
-                <label className="flex items-center gap-1 text-sm cursor-pointer">
-                    <input
-                        type="radio"
-                        name="wpuf_submit_cond_status"
-                        value="no"
-                        checked={ ! isEnabled }
-                        onChange={ () => handleToggle( 'no' ) }
-                    />
-                    { __( 'Disable', 'wp-user-frontend' ) }
-                </label>
+        <div className="wpuf-submit-button-conditional-logic-container">
+            <div className="my-4 wpuf-input-container">
+                <div className="flex items-center">
+                    <label className="flex text-sm text-gray-700 my-2">
+                        { label || __( 'Conditional Logic on Submit Button', 'wp-user-frontend' ) }
+                    </label>
+                    <HelpTextIcon text={ __( 'Choose whether to apply conditions for submit button visibility', 'wp-user-frontend' ) } />
+                </div>
+                <Radio
+                    name="wpuf-submit-cond-status"
+                    options={ [
+                        { value: 'yes', label: __( 'Yes', 'wp-user-frontend' ) },
+                        { value: 'no', label: __( 'No', 'wp-user-frontend' ) },
+                    ] }
+                    value={ state.condition_status }
+                    onChange={ ( status ) => write( { ...state, condition_status: status } ) }
+                    inline
+                    className="gap-x-8"
+                />
             </div>
 
-            { isEnabled && (
-                <div className="conditional-rules-wrap">
-                    <div className="flex items-center gap-2 mb-3 text-sm">
-                        <span>{ __( 'Show submit button when', 'wp-user-frontend' ) }</span>
-                        <select
-                            className="border border-gray-300 rounded-sm px-2 py-1 text-sm"
-                            value={ currentSettings.cond_logic || 'any' }
-                            onChange={ handleLogicChange }
-                        >
-                            { RULE_OPTIONS.map( ( opt ) => (
-                                <option key={ opt.value } value={ opt.value }>
-                                    { opt.label }
-                                </option>
-                            ) ) }
-                        </select>
-                        <span>{ __( 'of these rules match', 'wp-user-frontend' ) }</span>
+            { 'yes' === state.condition_status && (
+                <div className="wpuf-conditional-logic-settings my-4">
+                    <div className="text-sm leading-6 mb-4">
+                        <span className="mb-3 block">{ __( 'Show submit button when', 'wp-user-frontend' ) }</span>
+                        <div className="flex items-center">
+                            <div className="w-1/3">
+                                <Select options={ RULE_OPTIONS } value={ state.cond_logic } onChange={ ( logic ) => write( { ...state, cond_logic: logic } ) } />
+                            </div>
+                            <span className="ml-3">{ __( 'of these rules are met', 'wp-user-frontend' ) }</span>
+                        </div>
                     </div>
 
-                    { conditions.map( ( condition, i ) => (
-                        <ConditionRow
-                            key={ i }
-                            condition={ condition }
-                            index={ i }
-                            availableFields={ availableFields }
-                            onChange={ handleConditionChange }
-                            onRemove={ handleRemoveCondition }
-                            canRemove={ conditions.length > 1 }
-                        />
-                    ) ) }
+                    <div className="wpuf-conditional-logic-rules">
+                        { state.conditions.map( ( rule, index ) => {
+                            const field = fieldOf( rule.name );
+                            const isText = ! field || TEXT_TEMPLATES.includes( field.template );
+                            const disabled = isEmptyOperator( rule.operator );
 
-                    <button
-                        type="button"
-                        className="text-sm text-blue-600 hover:text-blue-800 mt-1"
-                        onClick={ handleAddCondition }
-                    >
-                        + { __( 'Add condition', 'wp-user-frontend' ) }
-                    </button>
+                            return (
+                                // eslint-disable-next-line react/no-array-index-key -- rules have no id
+                                <div key={ index } className="wpuf-conditional-rule grid grid-cols-4 gap-4 mb-4 items-center">
+                                    <div className="cond-field">
+                                        <Select
+                                            options={ [ { value: '', label: __( '- Select Field -', 'wp-user-frontend' ) }, ...fields.map( ( item ) => ( { value: item.name, label: item.label } ) ) ] }
+                                            value={ rule.name }
+                                            onChange={ ( name ) => pickField( index, name ) }
+                                            aria-label={ __( 'Field', 'wp-user-frontend' ) }
+                                        />
+                                    </div>
+                                    <div className="cond-operator">
+                                        <Select
+                                            options={ submitOperators( field ) }
+                                            value={ rule.operator }
+                                            placeholder=""
+                                            onChange={ ( operator ) => setRule( index, { ...rule, operator, option: isEmptyOperator( operator ) ? '' : rule.option } ) }
+                                            aria-label={ __( 'Operator', 'wp-user-frontend' ) }
+                                        />
+                                    </div>
+                                    <div className="cond-option">
+                                        { isText ? (
+                                            <TextInput className="w-full" value={ rule.option } disabled={ disabled } onChange={ ( option ) => setRule( index, { ...rule, option } ) } aria-label={ __( 'Value', 'wp-user-frontend' ) } />
+                                        ) : (
+                                            <Select
+                                                options={ [ { value: '', label: __( '- Select Option -', 'wp-user-frontend' ) }, ...Object.keys( field.options || {} ).map( ( key ) => ( { value: key, label: String( field.options[ key ] ) } ) ) ] }
+                                                value={ rule.option }
+                                                disabled={ disabled }
+                                                onChange={ ( option ) => setRule( index, { ...rule, option } ) }
+                                                aria-label={ __( 'Value', 'wp-user-frontend' ) }
+                                            />
+                                        ) }
+                                    </div>
+                                    <div className="flex gap-1">
+                                        <button type="button" className="wpuf-repeater-add p-0 border-0 bg-transparent cursor-pointer" onClick={ () => write( { ...state, conditions: [ ...state.conditions, blankRule() ] } ) } aria-label={ __( 'Add Condition', 'wp-user-frontend' ) }>
+                                            <img src={ `${ assetUrl }/images/plus-circle-green.svg` } alt="" />
+                                        </button>
+                                        { state.conditions.length > 1 && (
+                                            <button type="button" className="wpuf-repeater-remove p-0 border-0 bg-transparent cursor-pointer" onClick={ () => write( { ...state, conditions: state.conditions.filter( ( _, i ) => i !== index ) } ) } aria-label={ __( 'Remove Condition', 'wp-user-frontend' ) }>
+                                                <img src={ `${ assetUrl }/images/minus-circle-green.svg` } alt="" />
+                                            </button>
+                                        ) }
+                                    </div>
+                                </div>
+                            );
+                        } ) }
+                    </div>
+                    <p className="description text-sm text-gray-600 mt-2 mb-0">
+                        { __( 'Submit button will be shown/hidden based on the above conditions.', 'wp-user-frontend' ) }
+                    </p>
                 </div>
             ) }
         </div>

@@ -1,74 +1,61 @@
-import { SETTING_CLASS_NAMES } from '../SettingsField';
+import { RawHTML } from '@wordpress/element';
+import { __ } from '@wordpress/i18n';
+import { NumberInput, Select, TextInput } from '@wpuf/components';
 import HelpTextIcon from './HelpTextIcon';
+import { hasEmptyOption, orderedOptions } from './settingOptions';
+import { DateInput } from './DateField';
 
 /**
- * Renders inline fields in a horizontal row — matches Vue inline_fields rendering.
+ * Settings shown side by side (develop `inline_fields`: e.g. schedule start /
+ * end, expiration time value / unit), on the shared wrappers (4.4e). Each
+ * sub-field reads and writes its own key: `subField.name`
+ * (`wpuf_settings[group][key]`) when it has one, else its key.
  *
- * Vue structure: <div class="mt-6 flex wpuf-input-container">
- *   For each sub-field: <div class="w-1/2 [wpuf-mr-6 for first]">
- *     <label> + <input :class="setting_class_names(type)" class="mt-2!">
+ * @param {Object}   props
+ * @param {Object}   props.field        The inline_fields definition.
+ * @param {Function} props.resolveValue ( subKey, subField ) => shown value.
+ * @param {Function} props.onChange     ( name, value ) => void
  */
-export default function InlineFieldsGroup( { field, settings, onChange } ) {
-    const subFields = field.fields || {};
-    const entries = Object.entries( subFields );
+export default function InlineFieldsGroup( { field, resolveValue, onChange } ) {
+    const entries = Object.entries( field.fields || {} );
 
     return (
         <>
-            { entries.map( ( [ subName, subField ], index ) => {
-                const classes = `w-1/2${ index === 0 ? ' mr-6' : '' }`;
-                const subValue = settings[ subName ];
-                const inputClasses = SETTING_CLASS_NAMES[ subField.type ] || SETTING_CLASS_NAMES.text;
+            { entries.map( ( [ subKey, subField ], index ) => {
+                const name = subField.name || subKey;
+                const value = resolveValue ? resolveValue( subKey, subField ) : '';
+                const change = ( next ) => onChange( name, next );
 
                 return (
-                    <div key={ subName } className={ classes }>
+                    <div key={ subKey } className={ `w-1/2${ 0 === index ? ' mr-6' : '' }` }>
                         { subField.label && (
-                            <label htmlFor={ subName } className="text-sm text-gray-700 my-2">
+                            <label htmlFor={ subKey } className="text-sm text-gray-700 my-2">
                                 { subField.label }
                             </label>
                         ) }
                         { subField.help_text && <HelpTextIcon text={ subField.help_text } /> }
-                        { ( subField.type === 'text' || subField.type === 'number' ) && (
-                            <input
-                                type={ subField.type }
-                                id={ subName }
-                                value={ subValue !== undefined && subValue !== null ? subValue : ( subField.default || '' ) }
-                                onChange={ ( e ) => onChange( subName, e.target.value ) }
-                                className={ `mt-2! ${ inputClasses }` }
-                                placeholder={ subField.placeholder || '' }
-                            />
-                        ) }
-                        { subField.type === 'date' && (
-                            <input
-                                type="text"
-                                id={ subName }
-                                value={ subValue || '' }
-                                onChange={ ( e ) => onChange( subName, e.target.value ) }
-                                className={ `datepicker mt-2! ${ SETTING_CLASS_NAMES.text }` }
-                            />
-                        ) }
-                        { subField.type === 'select' && (
-                            <select
-                                id={ subName }
-                                value={ subValue || subField.default || '' }
-                                onChange={ ( e ) => onChange( subName, e.target.value ) }
-                                className={ `mt-2! ${ SETTING_CLASS_NAMES.dropdown }` }
-                            >
-                                { Object.entries( subField.options || {} ).map( ( [ optValue, optLabel ] ) => (
-                                    <option key={ optValue } value={ optValue }>
-                                        { optLabel }
-                                    </option>
-                                ) ) }
-                            </select>
-                        ) }
+                        <div className="mt-2">
+                            { 'text' === subField.type && (
+                                <TextInput id={ subKey } className="w-full" value={ value ?? '' } onChange={ change } placeholder={ subField.placeholder || '' } />
+                            ) }
+                            { 'number' === subField.type && (
+                                <NumberInput id={ subKey } className="w-full" value={ value ?? '' } onChange={ change } allowNegative />
+                            ) }
+                            { 'date' === subField.type && <DateInput id={ subKey } value={ value } onChange={ change } /> }
+                            { 'select' === subField.type && (
+                                <Select
+                                    id={ subKey }
+                                    options={ orderedOptions( subField.options ) }
+                                    value={ '' === value && ! hasEmptyOption( subField.options ) ? undefined : value }
+                                    placeholder={ __( '- Select -', 'wp-user-frontend' ) }
+                                    onChange={ change }
+                                />
+                            ) }
+                        </div>
                     </div>
                 );
             } ) }
-            { field.long_help && (
-                <div
-                    className="text-sm mt-4 wpuf-long-help"
-                    dangerouslySetInnerHTML={ { __html: field.long_help } }
-                />
-            ) }
+            { field.long_help && <RawHTML className="text-sm mt-4 wpuf-long-help">{ field.long_help }</RawHTML> }
         </>
     );
 }

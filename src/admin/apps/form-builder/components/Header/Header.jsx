@@ -53,7 +53,7 @@ export default function Header( { activeTab, onTabChange } ) {
     ];
 
     return (
-        <div className="bg-white p-8 justify-between items-center pb-7">
+        <div className="bg-white rounded-lg ring-1 ring-gray-200 mx-4 mt-4 px-6 pt-6 pb-6 justify-between items-center">
             <div className="flex justify-between">
                 <div className="flex items-center">
                     <img

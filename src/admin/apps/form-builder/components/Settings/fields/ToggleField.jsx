@@ -1,5 +1,5 @@
-import { useCallback } from '@wordpress/element';
-import HelpTextIcon from './HelpTextIcon';
+import { Toggle } from '@wpuf/components';
+import SettingLabel from './SettingLabel';
 
 /**
  * Fields that show a Pro badge icon next to their label when Pro is not active.
@@ -7,54 +7,33 @@ import HelpTextIcon from './HelpTextIcon';
  */
 const BADGE_FIELDS = [ 'enable_multistep', 'notification_edit' ];
 
+// Same "on" values as PHP wpuf_is_checkbox_or_toggle_on().
+const isOn = ( value ) => true === value || [ 'on', 'yes', 'true', '1' ].includes( value );
+
 /**
- * Toggle switch field — matches Vue wpuf_render_settings_field() for type="toggle".
- *
- * Vue structure: label + help_text on left, checkbox-based toggle on right,
- * all inside a flex row with justify-between and w-2/5.
- * Uses sr-only checkbox + peer classes for the toggle visual.
+ * Toggle setting (develop type="toggle") on the shared Toggle (4.4e): label
+ * and help on the left, the switch on the right, in develop's 2/5 row.
+ * Develop's post form toggle posts a hidden 'off'; the registration form
+ * toggle has none, so off leaves the key out (modules check isset).
  */
 export default function ToggleField( { field, name, value, onChange } ) {
-    // Same "on" values as PHP wpuf_is_checkbox_or_toggle_on().
-    const isOn = value === true || [ 'on', 'yes', 'true', '1' ].includes( value );
     const data = window.wpuf_form_builder || {};
-    // Develop's post form toggle posts a hidden 'off'; the registration form
-    // toggle has none, so off leaves the key out (modules check isset).
     const offValue = data.form_type === 'wpuf_profile' ? undefined : 'off';
-    const isProActive = !! data.is_pro_active;
-    const showProBadge = ! isProActive && BADGE_FIELDS.includes( name );
-    const proBadgeUrl = ( data.asset_url || '' ) + '/images/pro-badge.svg';
-
-    const handleToggle = useCallback( () => {
-        onChange( name, isOn ? offValue : 'on' );
-    }, [ name, isOn, offValue, onChange ] );
+    const showProBadge = ! data.is_pro_active && BADGE_FIELDS.includes( name );
 
     return (
         <div className="flex items-center justify-between w-2/5">
-            <div className="flex items-center">
-                { field.label && (
-                    <label htmlFor={ name } className="text-sm text-gray-700 my-2">
-                        { field.label }
-                    </label>
-                ) }
-                { field.help_text && <HelpTextIcon text={ field.help_text } /> }
-                { showProBadge && (
-                    <img className="ml-2" src={ proBadgeUrl } alt="" />
-                ) }
-            </div>
-            <label
-                htmlFor={ name }
-                className="relative inline-flex items-center cursor-pointer ml-2"
-            >
-                <input
-                    type="checkbox"
-                    id={ name }
-                    checked={ isOn }
-                    onChange={ handleToggle }
-                    className="sr-only peer"
-                />
-                <span className="flex items-center w-10 h-4 bg-gray-300 rounded-full peer peer-checked:bg-primary after:w-6 after:h-6 after:bg-white after:rounded-full after:shadow-md after:duration-300 peer-checked:after:translate-x-4 after:border after:border-solid after:border-gray-50" />
-            </label>
+            <SettingLabel field={ field } htmlFor={ name }>
+                { showProBadge && <img className="ml-2" src={ ( data.asset_url || '' ) + '/images/pro-badge.svg' } alt="" /> }
+            </SettingLabel>
+            <Toggle
+                id={ name }
+                className="ml-2"
+                value={ isOn( value ) ? 'on' : 'off' }
+                checkedValue="on"
+                uncheckedValue={ offValue }
+                onChange={ ( next ) => onChange( name, next ) }
+            />
         </div>
     );
 }

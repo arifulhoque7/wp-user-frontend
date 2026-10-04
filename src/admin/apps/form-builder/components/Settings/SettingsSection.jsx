@@ -7,41 +7,44 @@ import ProPreviewWrapper from './ProPreviewWrapper';
 import { useFieldVisibility, MUTUAL_EXCLUSIONS } from './useFieldDependencies';
 
 /**
- * Parse a PHP-style nested name like wpuf_settings[notification][new]
- * and return [groupKey, subKey] or null if not a nested pattern.
+ * Where a setting is stored, from its input `name` as PHP parses the posted
+ * form (develop): `wpuf_settings[key]` -> [ key ], `wpuf_settings[group][key]`
+ * -> [ group, key ]; any other name is the key itself.
+ *
+ * @param {string} name Input name (`field.name`) or the field key.
+ * @return {Array<string>} [ key ] or [ group, key ].
  */
-function parseNestedName( name ) {
-    if ( ! name ) {
-        return null;
+export function settingPath( name ) {
+    const match = /^wpuf_settings\[(\w+)\](?:\[(\w+)\])?(?:\[\])?$/.exec( name || '' );
+
+    if ( ! match ) {
+        return [ name ];
     }
-    const match = name.match( /wpuf_settings\[(\w+)\]\[(\w+)\]/ );
-    return match ? [ match[ 1 ], match[ 2 ] ] : null;
+
+    return match[ 2 ] ? [ match[ 1 ], match[ 2 ] ] : [ match[ 1 ] ];
 }
 
 /**
- * Resolve a setting value, handling nested field.name patterns.
- * e.g. field.name = "wpuf_settings[notification][new]" → settings.notification.new
+ * The value a settings row shows (develop's wpuf_render_settings_field): the
+ * stored value when it is set (`''` included), else the field's `value`, else
+ * its `default`, else `''`. A key switched off in this session (set to
+ * undefined, left out of the save) shows as off, not as its default.
+ *
+ * @param {Object} settings  Store settings.
+ * @param {string} fieldName Field key.
+ * @param {Object} fieldDef  Field definition.
+ * @return {*} Value to show.
  */
-function resolveSettingValue( settings, fieldName, fieldDef ) {
-    const nested = parseNestedName( fieldDef.name );
+export function resolveSettingValue( settings, fieldName, fieldDef ) {
+    const path = settingPath( fieldDef.name || fieldName );
+    const owner = 2 === path.length ? settings[ path[ 0 ] ] : settings;
+    const key = path[ path.length - 1 ];
 
-    if ( nested ) {
-        const [ group, key ] = nested;
-        const groupObj = settings[ group ];
-
-        if ( groupObj && typeof groupObj === 'object' && groupObj[ key ] !== undefined ) {
-            return groupObj[ key ];
-        }
+    if ( owner && 'object' === typeof owner && Object.prototype.hasOwnProperty.call( owner, key ) && null !== owner[ key ] ) {
+        return owner[ key ];
     }
 
-    // A key set to undefined was switched off in this session (it is left out
-    // of the save); only a key never set falls back to the default.
-    if ( Object.prototype.hasOwnProperty.call( settings, fieldName ) ) {
-        return settings[ fieldName ];
-    }
-
-    // Fall back to the PHP-defined default value
-    return fieldDef.value;
+    return fieldDef.value || fieldDef.default || '';
 }
 
 /**
@@ -74,22 +77,36 @@ export default function SettingsSection( { sectionKey, sectionData } ) {
         return merged;
     }, [ settings ] );
 
-    const isVisible = useFieldVisibility( resolvedSettings );
+    const isFieldVisible = useFieldVisibility( resolvedSettings );
 
+    // An inline group (guest Name / E-Mail labels, schedule From / To) shares
+    // one row: develop hid that row whenever a sub-field with a rule failed
+    // (sub-fields without a rule never touch it).
+    const isVisible = ( fieldName, fieldDef ) => {
+        if ( ! isFieldVisible( fieldName ) ) {
+            return false;
+        }
+
+        const inner = fieldDef && ( 'inline_fields' === fieldDef.type || ( ! fieldDef.type && fieldDef.fields ) ) ? Object.keys( fieldDef.fields || {} ) : [];
+
+        return inner.every( ( key ) => isFieldVisible( key ) );
+    };
+
+    // Stores under the key the input name points at (develop: PHP parses
+    // `wpuf_settings[key]` / `wpuf_settings[group][key]` from the posted form).
     const handleChange = useCallback( ( name, value ) => {
-        // Check if this is a nested settings key (e.g. wpuf_settings[notification][new])
-        const nested = parseNestedName( name );
+        const path = settingPath( name );
+        const key = path[ path.length - 1 ];
 
-        if ( nested ) {
-            const [ group, key ] = nested;
-            const currentGroup = settings[ group ] || {};
-            updateFormSetting( group, { ...currentGroup, [ key ]: value } );
+        if ( 2 === path.length ) {
+            const currentGroup = settings[ path[ 0 ] ] || {};
+            updateFormSetting( path[ 0 ], { ...currentGroup, [ key ]: value } );
         } else {
-            updateFormSetting( name, value );
+            updateFormSetting( key, value );
         }
 
         // Handle mutual exclusivity (e.g. payment_options <-> enable_pricing_payment)
-        const exclusion = MUTUAL_EXCLUSIONS[ name ];
+        const exclusion = MUTUAL_EXCLUSIONS[ key ];
         if ( exclusion ) {
             // If turning ON this toggle, turn OFF the other
             const isOn = value === 'on' || value === 'yes' || value === true;
@@ -148,12 +165,13 @@ export default function SettingsSection( { sectionKey, sectionData } ) {
                                     <SettingsField
                                         key={ fieldName }
                                         slotKey={ fieldName }
-                                        hideControl={ ! isVisible( fieldName ) }
+                                        hideControl={ ! isVisible( fieldName, fieldDef ) }
                                         field={ fieldDef }
                                         name={ settingName }
                                         value={ settingValue }
                                         onChange={ handleChange }
                                         settings={ resolvedSettings }
+                                        resolveValue={ ( subName, subDef ) => resolveSettingValue( settings, subName, subDef ) }
                                     />
                                 );
                             } ) }
@@ -192,12 +210,13 @@ export default function SettingsSection( { sectionKey, sectionData } ) {
                         <SettingsField
                             key={ fieldName }
                             slotKey={ fieldName }
-                            hideControl={ ! isVisible( fieldName ) }
+                            hideControl={ ! isVisible( fieldName, fieldDef ) }
                             field={ fieldDef }
                             name={ settingName }
                             value={ settingValue }
                             onChange={ handleChange }
                             settings={ resolvedSettings }
+                            resolveValue={ ( subName, subDef ) => resolveSettingValue( settings, subName, subDef ) }
                         />
                     );
                 } ) }

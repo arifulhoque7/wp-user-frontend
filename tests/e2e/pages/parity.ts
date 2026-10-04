@@ -676,6 +676,272 @@ export class ParitySitePage {
         return done;
     }
 
+    /**
+     * G2 for form settings (task 4.4e): in the open builder's Settings, open the
+     * tab `tab` and make one deterministic edit on every visible settings row
+     * (rows revealed by an edit are filled too). Drives develop's controls
+     * (native inputs, selectize) and the branch's (native, selectize or the
+     * shared wrappers). Returns one reading per row: `label | actions`.
+     */
+    async doFillFormSettings(tab: string, tag: string): Promise<string[]> {
+        const root = this.page.locator('#wpuf-form-builder');
+        // The settings sidebar item (develop `wpuf-group/sidebar-item`, branch `group/sidebar-item`).
+        await root.locator('li[class*="sidebar-item"]').filter({ hasText: new RegExp(`^\\s*${tab}\\s*$`) }).first().click();
+        await this.page.waitForTimeout(400);
+        // Next row = the first visible row not filled yet (develop fades rows in and
+        // out over 200 ms and fetches taxonomy rows by AJAX, so indexes shift).
+        const pending = root.locator('.wpuf-input-container:visible:not([data-parity-row])');
+        const done: string[] = [];
+        for (let i = 0; i < 80 && await pending.count(); i++) {
+            // Tag the row so the locator keeps pointing at it (a filtered locator re-resolves).
+            await pending.first().evaluate((el, n) => el.setAttribute('data-parity-row', String(n)), i);
+            const row = root.locator(`.wpuf-input-container[data-parity-row="${i}"]`);
+            const label = (((await row.locator('label').first().textContent().catch(() => '')) || '').trim().replace(/\s+/g, ' ')) || `row ${i}`;
+            const actions: string[] = [];
+
+            // Selectize lists (develop; branch before 4.4e): last option through the API.
+            const selectized = row.locator('select.selectized');
+            for (let c = 0; c < await selectized.count(); c++) {
+                const picked = await selectized.nth(c).evaluate((el) => {
+                    const select = el as HTMLSelectElement & { selectize?: { options: Record<string, { text?: string }>; addItem: (v: string) => void; setValue: (v: string) => void } };
+                    const control = el.nextElementSibling as HTMLElement | null;
+                    if (select.disabled || !control || !control.offsetParent || !select.selectize) {
+                        return '';
+                    }
+                    const keys = Object.keys(select.selectize.options).filter(Boolean);
+                    const value = keys[keys.length - 1];
+                    if (!value) {
+                        return '';
+                    }
+                    if (select.multiple) {
+                        select.selectize.addItem(value);
+                    } else {
+                        select.selectize.setValue(value);
+                    }
+                    return select.selectize.options[value]?.text || value;
+                });
+                if (picked) {
+                    actions.push(`select=${picked}`);
+                }
+            }
+            // Shared Select / MultiSelect wrappers: last option by its text.
+            const puiSelects = row.locator('[data-slot="select-trigger"]:visible:not([disabled]):not([data-disabled])');
+            for (let c = 0; c < await puiSelects.count(); c++) {
+                await puiSelects.nth(c).click();
+                const options = this.page.locator('[data-slot="select-item"]:visible');
+                // The list renders after its open animation starts.
+                await options.first().waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
+                const count = await options.count();
+                if (count) {
+                    const text = ((await options.nth(count - 1).textContent()) || '').trim();
+                    await options.nth(count - 1).click();
+                    actions.push(`select=${text}`);
+                }
+                // The list must be closed before the next row (it can cover its trigger).
+                if (await this.page.locator('[data-slot="select-content"]:visible').count()) {
+                    await this.page.keyboard.press('Escape');
+                }
+                await expect(this.page.locator('[data-slot="select-content"]:visible')).toHaveCount(0);
+            }
+            const puiMulti = row.locator('[data-slot="smart-multi-select-trigger"]:visible:not(.pointer-events-none)');
+            for (let c = 0; c < await puiMulti.count(); c++) {
+                await puiMulti.nth(c).click();
+                const options = this.page.locator('[data-slot="smart-multi-select-content"] [data-slot="command-group"]').first().locator('[data-slot="command-item"]:visible');
+                const count = await options.count();
+                if (count) {
+                    const text = ((await options.nth(count - 1).textContent()) || '').trim();
+                    await options.nth(count - 1).click();
+                    actions.push(`select=${text}`);
+                }
+                await this.page.keyboard.press('Escape');
+            }
+            // Native selects.
+            const selects = row.locator('select:visible:not(.selectized):not([disabled])');
+            for (let c = 0; c < await selects.count(); c++) {
+                const options = await selects.nth(c).locator('option').evaluateAll((list) => list.map((o) => ({ value: (o as HTMLOptionElement).value, text: (o.textContent || '').trim() })));
+                const last = options[options.length - 1];
+                if (last) {
+                    await selects.nth(c).selectOption(last.value);
+                    actions.push(`select=${last.text}`);
+                }
+            }
+            // Shared ColorPicker (branch): open it and type the hex develop's native input gets.
+            const colorTriggers = row.locator('[data-slot="popover-trigger"][aria-label]:visible');
+            for (let c = 0; c < await colorTriggers.count(); c++) {
+                await colorTriggers.nth(c).click();
+                const hex = this.page.locator('[data-slot="popover-content"] .components-input-control__input:visible').first();
+                await hex.fill('123456');
+                await hex.press('Enter');
+                await this.page.keyboard.press('Escape');
+                actions.push('fill=#123456');
+            }
+            // Text-like inputs.
+            const inputs = row.locator('input:visible:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([aria-hidden="true"]), textarea:visible')
+                .filter({ hasNot: this.page.locator('xpath=self::*[ancestor::div[contains(@class,"selectize-input")]]') });
+            for (let t = 0; t < await inputs.count(); t++) {
+                const input = inputs.nth(t);
+                if (!(await input.isEditable())) {
+                    actions.push('readonly');
+                    continue;
+                }
+                const type = (await input.getAttribute('type')) || 'text';
+                const isDate = /datepicker/.test((await input.getAttribute('class')) || '');
+                // Text from the row label (not its index): rows one builder adds or drops do not shift the values.
+                const value = 'number' === type ? String(7 + t) : 'color' === type ? '#123456' : isDate ? '2026-12-01 10:00' : `S ${tag} ${label.slice(0, 24)}.${t}`;
+                if ('color' === type) {
+                    await input.evaluate((el, v) => {
+                        const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!;
+                        setter.call(el, v);
+                        el.dispatchEvent(new Event('input', { bubbles: true }));
+                        el.dispatchEvent(new Event('change', { bubbles: true }));
+                    }, value);
+                } else {
+                    await input.fill(value);
+                }
+                if (isDate) {
+                    await this.page.keyboard.press('Escape');
+                }
+                await input.blur();
+                actions.push(`fill=${value}`);
+            }
+            // Toggles and checkboxes (develop's toggle input is sr-only) / wrapper switches.
+            const boxes = row.locator('input[type="checkbox"]:not([aria-hidden="true"]), [role="switch"]:visible, [role="checkbox"]:visible');
+            for (let c = 0; c < await boxes.count(); c++) {
+                await boxes.nth(c).click({ force: true });
+                actions.push('toggle');
+            }
+            // Picture radios: the last one.
+            const radios = row.locator('input[type="radio"]:not([aria-hidden="true"]), [role="radio"]:visible');
+            if (await radios.count()) {
+                const radio = radios.last();
+                await radio.click({ force: true });
+                actions.push(`radio=${(await radio.getAttribute('value')) ?? (await radio.getAttribute('data-value'))}`);
+            }
+            await this.doDismissAlerts();
+            done.push(`${label} | ${actions.join(', ') || 'no control'}`);
+            await this.page.waitForTimeout(300);
+            await this.page.waitForLoadState('networkidle');
+        }
+        return done;
+    }
+
+    /**
+     * Settings condition matrix (task 4.4e): in Settings tab `tab`, set every
+     * toggle / checkbox (on, off) and every select (each option) and record the
+     * settings rows shown after each state. A control is then left in the state
+     * that showed the most rows, and controls that appeared are probed too, so
+     * nested conditions are reached. Same walk on both builders.
+     * Returns `label = state -> shown labels` lines.
+     */
+    async doProbeSettingsConditions(tab: string): Promise<string[]> {
+        const root = this.page.locator('#wpuf-form-builder');
+        await root.locator('li[class*="sidebar-item"]').filter({ hasText: new RegExp(`^\\s*${tab}\\s*$`) }).first().click();
+        await this.page.waitForTimeout(500);
+        // Develop fades rows with jQuery's default 400 ms.
+        const settle = async () => {
+            await this.page.waitForTimeout(600);
+            await this.page.waitForLoadState('networkidle');
+        };
+        const shown = async () => (await root.locator('.wpuf-input-container:visible').evaluateAll((rows) => rows
+            .map((row) => ((row.querySelector('label')?.textContent) || '').trim().replace(/\s+/g, ' '))
+            .filter((text) => text && !text.startsWith('Default ')))).join(' ; ');
+        const out: string[] = [];
+        const probed = new Set<string>();
+
+        for (let guard = 0; guard < 60; guard++) {
+            // Next unprobed control row.
+            const rows = root.locator('.wpuf-input-container:visible');
+            let target = -1;
+            let label = '';
+            for (let i = 0; i < await rows.count(); i++) {
+                const text = (((await rows.nth(i).locator('label').first().textContent().catch(() => '')) || '').trim().replace(/\s+/g, ' '));
+                // Multi-selects never show or hide rows: not probed (develop's are selectized <select multiple>).
+                const hasControl = await rows.nth(i).locator('input[type="checkbox"]:not([aria-hidden="true"]), [role="switch"], [role="checkbox"], select:not([multiple]), [data-slot="select-trigger"]').count();
+                if (text && !text.startsWith('Default ') && hasControl && !probed.has(text)) {
+                    target = i;
+                    label = text;
+                    break;
+                }
+            }
+            if (target < 0) {
+                break;
+            }
+            probed.add(label);
+            const row = rows.nth(target);
+            await row.evaluate((el) => el.setAttribute('data-parity-probe', ''));
+            const probe = root.locator('.wpuf-input-container[data-parity-probe]').last();
+
+            const toggle = probe.locator('input[type="checkbox"]:not([aria-hidden="true"]), [role="switch"], [role="checkbox"]').first();
+            const states: { name: string; count: number; apply: () => Promise<void> }[] = [];
+            if (await toggle.count()) {
+                for (const name of ['flip', 'flip back']) {
+                    await toggle.click({ force: true });
+                    await settle();
+                    const view = await shown();
+                    out.push(`${label} = ${name} -> ${view}`);
+                    states.push({ name, count: view.split(' ; ').length, apply: async () => { await toggle.click({ force: true }); await settle(); } });
+                }
+                // Leave it in the state that showed more rows.
+                if (states[0].count > states[1].count) {
+                    await toggle.click({ force: true });
+                    await settle();
+                }
+            } else {
+                // Options of the select, by text.
+                const selectized = probe.locator('select.selectized:not([multiple])').first();
+                const native = probe.locator('select:not(.selectized):not([multiple])').first();
+                const trigger = probe.locator('[data-slot="select-trigger"]').first();
+                let texts: string[] = [];
+                let pick: (text: string) => Promise<void>;
+                if (await selectized.count()) {
+                    texts = await selectized.evaluate((el) => Object.values((el as unknown as { selectize: { options: Record<string, { text: string }> } }).selectize.options).map((o) => o.text));
+                    pick = async (text) => {
+                        await selectized.evaluate((el, t) => {
+                            const widget = (el as unknown as { selectize: { options: Record<string, { text: string }>; setValue: (v: string) => void } }).selectize;
+                            const key = Object.keys(widget.options).find((k) => widget.options[k].text === t);
+                            if (key !== undefined) {
+                                widget.setValue(key);
+                            }
+                        }, text);
+                    };
+                } else if (await trigger.count()) {
+                    await trigger.click();
+                    const items = this.page.locator('[data-slot="select-item"]:visible');
+                    await items.first().waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
+                    texts = (await items.allInnerTexts()).map((t) => t.trim());
+                    await this.page.keyboard.press('Escape');
+                    pick = async (text) => {
+                        await trigger.click();
+                        await this.page.locator('[data-slot="select-item"]:visible').filter({ hasText: new RegExp(`^\\s*${text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`) }).first().click();
+                    };
+                } else if (await native.count()) {
+                    texts = (await native.locator('option').allInnerTexts()).map((t) => t.trim());
+                    pick = async (text) => { await native.selectOption({ label: text }); };
+                } else {
+                    continue;
+                }
+                // Selects with many options (post types, pages, templates) only show
+                // rows by a few values: probe the first 12. Empty placeholders
+                // ("-- Select --") are skipped: develop's selectize does not list them.
+                let best = { text: '', count: -1 };
+                for (const text of texts.filter((t) => !/^-+\s*Select\b/i.test(t)).slice(0, 12)) {
+                    await pick!(text);
+                    await settle();
+                    const view = await shown();
+                    out.push(`${label} = ${text} -> ${view}`);
+                    if (view.split(' ; ').length > best.count) {
+                        best = { text, count: view.split(' ; ').length };
+                    }
+                }
+                if (best.text) {
+                    await pick!(best.text);
+                    await settle();
+                }
+            }
+        }
+        return out;
+    }
+
     async doClose() {
         await this.context.close();
     }

@@ -1,39 +1,26 @@
-import { useCallback } from '@wordpress/element';
-import { SETTING_CLASS_NAMES } from '../SettingsField';
-import HelpTextIcon from './HelpTextIcon';
+import { NumberInput, TextInput } from '@wpuf/components';
+import SettingLabel from './SettingLabel';
 
 /**
- * Input with trailing text — matches Vue wpuf_render_settings_field() for type="trailing-text".
+ * Input with a trailing unit (develop type="trailing-text", e.g. "hours") on
+ * the shared TextInput / NumberInput (4.4e).
  */
 export default function TrailingTextField( { field, name, value, onChange } ) {
-    const inputType = field.trailing_type || 'text';
-
-    const handleChange = useCallback( ( e ) => {
-        onChange( name, e.target.value );
-    }, [ name, onChange ] );
-
-    const inputClasses = SETTING_CLASS_NAMES[ inputType ] || SETTING_CLASS_NAMES.text;
+    const Input = 'number' === field.trailing_type ? NumberInput : TextInput;
 
     return (
         <>
-            <div className="flex items-center">
-                { field.label && (
-                    <label htmlFor={ name } className="text-sm text-gray-700 my-2">
-                        { field.label }
-                    </label>
-                ) }
-                { field.help_text && <HelpTextIcon text={ field.help_text } /> }
-            </div>
+            <SettingLabel field={ field } htmlFor={ name } />
             <div className="relative">
-                <input
-                    type={ inputType }
+                <Input
                     id={ name }
-                    value={ value || field.default || '' }
-                    onChange={ handleChange }
-                    className={ inputClasses }
+                    className="w-full pe-24"
+                    value={ value ?? '' }
+                    onChange={ ( next ) => onChange( name, next ) }
+                    { ...( 'number' === field.trailing_type ? { allowNegative: true } : {} ) }
                 />
                 { field.trailing_text && (
-                    <span className="absolute top-0 -right-px h-full bg-gray-50 rounded-r-md text-gray-700 border border-gray-300 text-base py-1.75 px-3.75">
+                    <span className="absolute top-0 end-0 h-full flex items-center bg-gray-50 rounded-e-md text-gray-700 border border-gray-300 text-sm px-3">
                         { field.trailing_text }
                     </span>
                 ) }

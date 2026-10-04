@@ -1,27 +1,23 @@
-import { useCallback } from '@wordpress/element';
-import { SETTING_CLASS_NAMES } from '../SettingsField';
+import { Checkbox } from '@wpuf/components';
 import HelpTextIcon from './HelpTextIcon';
 
+const isOn = ( value ) => true === value || [ 'on', 'yes', 'true', '1' ].includes( value );
+
 /**
- * Checkbox field — matches Vue wpuf_render_settings_field() for type="checkbox".
- * Vue renders: checkbox input BEFORE label, both in a flex row.
+ * Checkbox setting (develop type="checkbox") on the shared Checkbox (4.4e):
+ * box before the label. Develop's settings checkbox has no hidden input, so
+ * unchecked leaves the key out.
  */
 export default function CheckboxField( { field, name, value, onChange } ) {
-    const isChecked = value === true || [ 'on', 'yes', 'true', '1' ].includes( value );
-
-    // Develop's settings checkbox has no hidden input: unchecked leaves the key out.
-    const handleChange = useCallback( ( e ) => {
-        onChange( name, e.target.checked ? 'on' : undefined );
-    }, [ name, onChange ] );
-
     return (
         <div className="flex items-center">
-            <input
-                type="checkbox"
+            <Checkbox
                 id={ name }
-                checked={ isChecked }
-                onChange={ handleChange }
-                className={ SETTING_CLASS_NAMES.checkbox + ' mr-2!' }
+                value={ isOn( value ) ? 'on' : '' }
+                checkedValue="on"
+                uncheckedValue={ undefined }
+                onChange={ ( next ) => onChange( name, next ) }
+                className="mr-2"
             />
             { field.label && (
                 <label htmlFor={ name } className="text-sm text-gray-700 my-2">

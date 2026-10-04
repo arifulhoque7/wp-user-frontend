@@ -14,6 +14,7 @@ import PicRadioField from './fields/PicRadioField';
 import RichTextField from './fields/RichTextField';
 import InlineFieldsGroup from './fields/InlineFieldsGroup';
 import SubmitConditionalLogic from '../ConditionalLogic/SubmitConditionalLogic';
+import TaxonomyDefaults from './fields/TaxonomyDefaults';
 
 const FIELD_MAP = {
     toggle: ToggleField,
@@ -30,16 +31,11 @@ const FIELD_MAP = {
     'rich-text': RichTextField,
 };
 
-/**
- * Vue setting_class_names() equivalents.
- * Matches admin/form-builder/assets/js/form-builder.js:1036
- */
-export const SETTING_CLASS_NAMES = {
-    text: 'block min-w-full my-0 mb-0 leading-none! py-2.5! px-3.5! text-gray-700 shadow-xs! placeholder:text-gray-400 border border-gray-300! rounded-md! max-w-full focus:ring-transparent!',
-    number: 'block min-w-full my-0 mb-0 leading-none! py-2.5! px-3.5! text-gray-700 shadow-xs! placeholder:text-gray-400 border border-gray-300! rounded-md! max-w-full focus:ring-transparent!',
-    textarea: 'block min-w-full my-0 mb-0 leading-none! py-2.5! px-3.5! text-gray-700 shadow-xs! placeholder:text-gray-400 border border-gray-300! rounded-md! max-w-full focus:ring-transparent!',
-    dropdown: 'block w-full min-w-full text-gray-700 font-normal shadow-xs! border border-gray-300! rounded-md! focus:ring-transparent! focus:checked:ring-transparent! hover:checked:ring-transparent! hover:text-gray-700! text-base! !leading-6',
-    checkbox: 'mt-0! mr-2! h-4 w-4 shadow-none! checked:shadow-none! focus:checked:shadow-primary! focus:checked:shadow-none! border-gray-300! checked:border-primary! checked:bg-primary! checked:before:bg-white! hover:checked:bg-primary! focus:ring-transparent! focus:checked:ring-transparent! hover:checked:ring-transparent! focus:checked:bg-primary! focus:shadow-primary checked:focus:bg-primary! checked:hover:bg-primary checked:bg-primary! before:content-none! rounded-sm',
+// The label attribute is HTML-escaped by PHP (esc_attr).
+const decodeLabel = ( text ) => {
+    const area = document.createElement( 'textarea' );
+    area.innerHTML = text || '';
+    return area.value;
 };
 
 /**
@@ -50,10 +46,27 @@ export const SETTING_CLASS_NAMES = {
  */
 export default function SettingsField( { slotKey, hideControl = false, ...props } ) {
     const row = slotKey ? getLegacySlots().settings[ slotKey ] : null;
+    // Pro's submit-button conditions follow the Limit Form Entries row on post
+    // forms, shown even while the limit is off (develop printed them on the
+    // after-limit_message hook, outside the row's hidden container).
+    const data = window.wpuf_form_builder || {};
+    const submitConditions = 'limit_message' === slotKey && data.is_pro_active && 'wpuf_profile' !== data.form_type;
 
     if ( ! row ) {
-        return hideControl ? null : <SettingsFieldControl { ...props } />;
+        return (
+            <>
+                { ! hideControl && <SettingsFieldControl fieldKey={ slotKey } { ...props } /> }
+                { submitConditions && <SubmitConditionalLogic /> }
+            </>
+        );
     }
+
+    // Pro prints develop's Vue submit-button conditions on the after-limit_message
+    // hook; React renders that block itself (4.4e) and keeps the rest of the output.
+    const vueSubmit = /<submit-button-conditional-logics[\s\S]*?<\/submit-button-conditional-logics>/;
+    const hasSubmitConditions = vueSubmit.test( row.after || '' );
+    const after = hasSubmitConditions ? row.after.replace( vueSubmit, '' ) : row.after;
+    const submitLabel = hasSubmitConditions ? ( /label="([^"]*)"/.exec( row.after.match( vueSubmit )[ 0 ] ) || [] )[ 1 ] : '';
 
     // Output other plugins printed before / after this row (develop's
     // wpuf_before|after_{post,registration}_form_settings_field hooks). It stays
@@ -61,8 +74,9 @@ export default function SettingsField( { slotKey, hideControl = false, ...props 
     return (
         <>
             <LegacySlot id={ `setting-before-${ slotKey }` } html={ row.before } />
-            { ! hideControl && <SettingsFieldControl { ...props } /> }
-            <LegacySlot id={ `setting-after-${ slotKey }` } html={ row.after } />
+            { ! hideControl && <SettingsFieldControl fieldKey={ slotKey } { ...props } /> }
+            <LegacySlot id={ `setting-after-${ slotKey }` } html={ after } />
+            { ( hasSubmitConditions || submitConditions ) && <SubmitConditionalLogic label={ decodeLabel( submitLabel ) } /> }
         </>
     );
 }
@@ -70,14 +84,21 @@ export default function SettingsField( { slotKey, hideControl = false, ...props 
 /**
  * The control for one settings row.
  */
-function SettingsFieldControl( { field, name, value, onChange, settings } ) {
+function SettingsFieldControl( { fieldKey, field, name, value, onChange, settings, resolveValue } ) {
+    // Develop replaces the static Default Category row with one row per
+    // hierarchical taxonomy of the selected post type (form-builder.js
+    // populate_default_categories).
+    if ( 'default_category' === fieldKey ) {
+        return <TaxonomyDefaults settings={ settings || {} } onChange={ onChange } />;
+    }
+
     // inline_fields is a special container type — Vue uses mt-6 flex wpuf-input-container
     if ( field.type === 'inline_fields' || ( ! field.type && field.fields ) ) {
         return (
             <div className="mt-6 flex wpuf-input-container">
                 <InlineFieldsGroup
                     field={ field }
-                    settings={ settings || {} }
+                    resolveValue={ resolveValue }
                     onChange={ onChange }
                 />
             </div>
