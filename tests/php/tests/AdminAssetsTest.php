@@ -71,7 +71,7 @@ class AdminAssetsTest extends WP_UnitTestCase {
         $settings = $boot->data( 'settings' );
         $forms    = $boot->data( 'post_forms' );
 
-        foreach ( [ 'screen', 'restUrl', 'restNonce', 'ajaxUrl', 'adminUrl', 'assetUrl', 'version', 'proVersion', 'isPro', 'canManage' ] as $key ) {
+        foreach ( [ 'screen', 'restUrl', 'restNonce', 'ajaxUrl', 'adminUrl', 'assetUrl', 'version', 'proVersion', 'isPro', 'plan', 'canManage' ] as $key ) {
             $this->assertArrayHasKey( $key, $settings );
         }
 

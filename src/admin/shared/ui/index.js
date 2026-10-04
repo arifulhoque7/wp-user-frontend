@@ -25,3 +25,4 @@ export { default as ErrorState } from './ErrorState';
 export { default as notify } from './notify';
 export { default as UnsavedGuard } from './UnsavedGuard';
 export { default as DataTable } from './DataTable';
+export { default as PageHeader } from './PageHeader';
