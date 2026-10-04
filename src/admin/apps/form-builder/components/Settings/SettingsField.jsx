@@ -12,6 +12,7 @@ import DateField from './fields/DateField';
 import ColorPickerField from './fields/ColorPickerField';
 import PicRadioField from './fields/PicRadioField';
 import RichTextField from './fields/RichTextField';
+import CardRadioField from './fields/CardRadioField';
 import InlineFieldsGroup from './fields/InlineFieldsGroup';
 import SubmitConditionalLogic from '../ConditionalLogic/SubmitConditionalLogic';
 import TaxonomyDefaults from './fields/TaxonomyDefaults';
@@ -29,6 +30,7 @@ const FIELD_MAP = {
     'color-picker': ColorPickerField,
     'pic-radio': PicRadioField,
     'rich-text': RichTextField,
+    'card-radio': CardRadioField,
 };
 
 // The label attribute is HTML-escaped by PHP (esc_attr).

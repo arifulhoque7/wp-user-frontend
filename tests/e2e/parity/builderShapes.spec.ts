@@ -154,6 +154,7 @@ test.describe('Parity builder shapes', () => {
         await admin.doClose();
 
         const body = parityWp(branch, ['eval', `$s = get_post_meta( ${formId}, "wpuf_form_settings", true ); echo $s["notification"]["verification_body"] ?? "ABSENT";`]).trim();
+        // TinyMCE HTML, as develop's builder save stores it (PAR0034).
         expect(body).toBe('<p>PAR0012 {activation_link}</p>');
     });
 

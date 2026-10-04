@@ -348,7 +348,10 @@ export class ParitySitePage {
 
     /** Set the content of a builder rich-text setting (TinyMCE) by its setting name. */
     async doSetRichTextSetting(settingName: string, html: string) {
-        const editorId = `wpuf-editor-${settingName.replace(/\W+/g, '_')}`;
+        // Develop's PHP wp_editor() posts the setting name (id wpuf_<key>_<post id>);
+        // the branch editor's id is derived from it.
+        const named = this.page.locator(`textarea[name="${settingName}"]`);
+        const editorId = (await named.count()) ? (await named.first().getAttribute('id')) as string : `wpuf-editor-${settingName.replace(/\W+/g, '_')}`;
         await expect.poll(() => this.page.evaluate((id) => !!(window as unknown as { tinymce?: { get: (i: string) => { initialized?: boolean } | null } }).tinymce?.get(id)?.initialized, editorId), { timeout: 10000 }).toBe(true);
         await this.page.evaluate(([id, content]) => {
             const editor = (window as unknown as { tinymce: { get: (i: string) => { setContent: (c: string) => void; fire: (e: string) => void } } }).tinymce.get(id);
@@ -686,7 +689,7 @@ export class ParitySitePage {
     async doFillFormSettings(tab: string, tag: string): Promise<string[]> {
         const root = this.page.locator('#wpuf-form-builder');
         // The settings sidebar item (develop `wpuf-group/sidebar-item`, branch `group/sidebar-item`).
-        await root.locator('li[class*="sidebar-item"]').filter({ hasText: new RegExp(`^\\s*${tab}\\s*$`) }).first().click();
+        await root.locator('li[class*="sidebar-item"]').filter({ hasText: new RegExp(`^\\s*${tab.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`) }).first().click();
         await this.page.waitForTimeout(400);
         // Next row = the first visible row not filled yet (develop fades rows in and
         // out over 200 ms and fetches taxonomy rows by AJAX, so indexes shift).
@@ -694,8 +697,10 @@ export class ParitySitePage {
         const done: string[] = [];
         for (let i = 0; i < 80 && await pending.count(); i++) {
             // Tag the row so the locator keeps pointing at it (a filtered locator re-resolves).
-            await pending.first().evaluate((el, n) => el.setAttribute('data-parity-row', String(n)), i);
-            const row = root.locator(`.wpuf-input-container[data-parity-row="${i}"]`);
+            // Tab + index: develop keeps other tabs' rows in the page (hidden).
+            const rowTag = `${tag}-${i}`;
+            await pending.first().evaluate((el, n) => el.setAttribute('data-parity-row', n), rowTag);
+            const row = root.locator(`.wpuf-input-container[data-parity-row="${rowTag}"]`);
             const label = (((await row.locator('label').first().textContent().catch(() => '')) || '').trim().replace(/\s+/g, ' ')) || `row ${i}`;
             const actions: string[] = [];
 
@@ -807,13 +812,23 @@ export class ParitySitePage {
             // Toggles and checkboxes (develop's toggle input is sr-only) / wrapper switches.
             const boxes = row.locator('input[type="checkbox"]:not([aria-hidden="true"]), [role="switch"]:visible, [role="checkbox"]:visible');
             for (let c = 0; c < await boxes.count(); c++) {
+                // display:none inputs cannot be used (develop's sr-only toggles have a box).
+                if (!(await boxes.nth(c).boundingBox())) {
+                    continue;
+                }
                 await boxes.nth(c).click({ force: true });
                 actions.push('toggle');
             }
             // Picture radios: the last one.
             const radios = row.locator('input[type="radio"]:not([aria-hidden="true"]), [role="radio"]:visible');
-            if (await radios.count()) {
-                const radio = radios.last();
+            let radio = null;
+            for (let r = await radios.count() - 1; r >= 0; r--) {
+                if (await radios.nth(r).boundingBox()) {
+                    radio = radios.nth(r);
+                    break;
+                }
+            }
+            if (radio) {
                 await radio.click({ force: true });
                 actions.push(`radio=${(await radio.getAttribute('value')) ?? (await radio.getAttribute('data-value'))}`);
             }
@@ -835,7 +850,7 @@ export class ParitySitePage {
      */
     async doProbeSettingsConditions(tab: string): Promise<string[]> {
         const root = this.page.locator('#wpuf-form-builder');
-        await root.locator('li[class*="sidebar-item"]').filter({ hasText: new RegExp(`^\\s*${tab}\\s*$`) }).first().click();
+        await root.locator('li[class*="sidebar-item"]').filter({ hasText: new RegExp(`^\\s*${tab.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`) }).first().click();
         await this.page.waitForTimeout(500);
         // Develop fades rows with jQuery's default 400 ms.
         const settle = async () => {
@@ -873,7 +888,7 @@ export class ParitySitePage {
 
             const toggle = probe.locator('input[type="checkbox"]:not([aria-hidden="true"]), [role="switch"], [role="checkbox"]').first();
             const states: { name: string; count: number; apply: () => Promise<void> }[] = [];
-            if (await toggle.count()) {
+            if (await toggle.count() && await toggle.boundingBox()) {
                 for (const name of ['flip', 'flip back']) {
                     await toggle.click({ force: true });
                     await settle();

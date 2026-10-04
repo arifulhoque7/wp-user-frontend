@@ -3,8 +3,27 @@ import { useSelect, useDispatch } from '@wordpress/data';
 import { applyFilters } from '@wordpress/hooks';
 import { STORE_NAME } from '../../store';
 import SettingsField from './SettingsField';
+import { orderedOptions } from './fields/settingOptions';
 import ProPreviewWrapper from './ProPreviewWrapper';
 import { useFieldVisibility, MUTUAL_EXCLUSIONS } from './useFieldDependencies';
+
+/**
+ * The input name a settings row posts (develop's views).
+ *
+ * @param {string} fieldName Field key.
+ * @param {Object} fieldDef  Field definition.
+ * @return {string} Input name.
+ */
+export function settingName( fieldName, fieldDef ) {
+    // Develop's rich-text bodies are wp_editor()s posting
+    // wpuf_settings[notification][<key>] even when the definition has no name
+    // (Welcome Email Body).
+    if ( fieldDef && ! fieldDef.name && 'rich-text' === fieldDef.type ) {
+        return `wpuf_settings[notification][${ fieldName }]`;
+    }
+
+    return ( fieldDef && fieldDef.name ) || fieldName;
+}
 
 /**
  * Where a setting is stored, from its input `name` as PHP parses the posted
@@ -36,12 +55,19 @@ export function settingPath( name ) {
  * @return {*} Value to show.
  */
 export function resolveSettingValue( settings, fieldName, fieldDef ) {
-    const path = settingPath( fieldDef.name || fieldName );
+    const path = settingPath( settingName( fieldName, fieldDef ) );
     const owner = 2 === path.length ? settings[ path[ 0 ] ] : settings;
     const key = path[ path.length - 1 ];
 
     if ( owner && 'object' === typeof owner && Object.prototype.hasOwnProperty.call( owner, key ) && null !== owner[ key ] ) {
         return owner[ key ];
+    }
+
+    // Registration "Required Approval After Registration": the frontend reads
+    // `wpuf_user_status`; forms that only have it (registration templates store
+    // 'pending') show the toggle on (develop showed it off and rewrote it).
+    if ( 'user_status' === fieldName && settings && 'pending' === settings.wpuf_user_status ) {
+        return 'on';
     }
 
     return fieldDef.value || fieldDef.default || '';
@@ -77,7 +103,42 @@ export default function SettingsSection( { sectionKey, sectionData } ) {
         return merged;
     }, [ settings ] );
 
-    const isFieldVisible = useFieldVisibility( resolvedSettings );
+    // Conditions read the value a row shows: a key never stored counts as its
+    // default (develop's DOM select showed it, e.g. "Same page" revealing the
+    // success message); a key switched off in this session stays off.
+    const visibilitySettings = useMemo( () => {
+        const merged = { ...resolvedSettings };
+        const visit = ( fields ) => Object.entries( fields || {} ).forEach( ( [ key, def ] ) => {
+            if ( ! def || 'object' !== typeof def ) {
+                return;
+            }
+            if ( def.fields && ( 'inline_fields' === def.type || ! def.type ) ) {
+                visit( def.fields );
+                return;
+            }
+            const path = settingPath( settingName( key, def ) );
+            const flatKey = path[ path.length - 1 ];
+            if ( ! Object.prototype.hasOwnProperty.call( merged, flatKey ) && def.type ) {
+                let shown = resolveSettingValue( settings, key, def );
+                // A select with nothing stored and no default: develop's DOM select
+                // stood on its first option (the branch shows "- Select -", Q6).
+                if ( '' === shown && 'select' === def.type ) {
+                    const first = orderedOptions( def.options )[ 0 ];
+                    shown = first ? first.value : '';
+                }
+                merged[ flatKey ] = shown;
+            }
+        } );
+        const data = sectionData || {};
+        if ( data.section ) {
+            Object.values( data.section ).forEach( ( sub ) => visit( sub && sub.fields ) );
+        } else {
+            visit( data );
+        }
+        return merged;
+    }, [ resolvedSettings, settings, sectionData ] );
+
+    const isFieldVisible = useFieldVisibility( visibilitySettings );
 
     // An inline group (guest Name / E-Mail labels, schedule From / To) shares
     // one row: develop hid that row whenever a sub-field with a rule failed
@@ -103,6 +164,12 @@ export default function SettingsSection( { sectionKey, sectionData } ) {
             updateFormSetting( path[ 0 ], { ...currentGroup, [ key ]: value } );
         } else {
             updateFormSetting( key, value );
+        }
+
+        // Develop's hidden `wpuf_user_status` followed this toggle (pending when
+        // approval is required, else approved); written on a change only (Q6).
+        if ( 'user_status' === key && 'wpuf_profile' === ( window.wpuf_form_builder || {} ).form_type ) {
+            updateFormSetting( 'wpuf_user_status', 'on' === value ? 'pending' : 'approved' );
         }
 
         // Handle mutual exclusivity (e.g. payment_options <-> enable_pricing_payment)
@@ -158,7 +225,7 @@ export default function SettingsSection( { sectionKey, sectionData } ) {
                                 </p>
                             ) }
                             { subSection.fields && Object.entries( subSection.fields ).map( ( [ fieldName, fieldDef ] ) => {
-                                const settingName = fieldDef.name || fieldName;
+                                const inputName = settingName( fieldName, fieldDef );
                                 const settingValue = resolveSettingValue( settings, fieldName, fieldDef );
 
                                 return (
@@ -167,7 +234,7 @@ export default function SettingsSection( { sectionKey, sectionData } ) {
                                         slotKey={ fieldName }
                                         hideControl={ ! isVisible( fieldName, fieldDef ) }
                                         field={ fieldDef }
-                                        name={ settingName }
+                                        name={ inputName }
                                         value={ settingValue }
                                         onChange={ handleChange }
                                         settings={ resolvedSettings }
@@ -203,7 +270,7 @@ export default function SettingsSection( { sectionKey, sectionData } ) {
                     if ( ! fieldDef || typeof fieldDef !== 'object' ) {
                         return null;
                     }
-                    const settingName = fieldDef.name || fieldName;
+                    const inputName = settingName( fieldName, fieldDef );
                     const settingValue = resolveSettingValue( settings, fieldName, fieldDef );
 
                     return (
@@ -212,7 +279,7 @@ export default function SettingsSection( { sectionKey, sectionData } ) {
                             slotKey={ fieldName }
                             hideControl={ ! isVisible( fieldName, fieldDef ) }
                             field={ fieldDef }
-                            name={ settingName }
+                            name={ inputName }
                             value={ settingValue }
                             onChange={ handleChange }
                             settings={ resolvedSettings }

@@ -31,11 +31,13 @@ const wpEditor = () => ( 'undefined' !== typeof window && window.wp && window.wp
  * @param {string}   [props.value]        HTML.
  * @param {Function} [props.onChange]     ( html: string ) => void
  * @param {boolean}  [props.teeny]        Minimal toolbar.
+ * @param {string}   [props.toolbar]      TinyMCE toolbar1 (overrides teeny / full), e.g. develop's wp_editor teeny buttons.
+ * @param {Object}   [props.tinymce]      Extra TinyMCE settings (plugins, autoresize...), e.g. what develop passed to wp_editor().
  * @param {boolean}  [props.mediaButtons] "Add Media" button (default true).
  * @param {number}   [props.rows]         Textarea rows (Text tab and fallback).
  * @param {string}   [props.format]       html|wp (see above).
  */
-export default function WpEditor( { id, value = '', onChange, teeny = false, mediaButtons = true, rows = 8, format = 'html', className } ) {
+export default function WpEditor( { id, value = '', onChange, teeny = false, toolbar, tinymce, mediaButtons = true, rows = 8, format = 'html', className } ) {
     const instanceId = useInstanceId( WpEditor, 'wpuf-editor' );
     const editorId = id ? `wpuf-editor-${ id }` : instanceId;
     const onChangeRef = useRef( onChange );
@@ -64,14 +66,38 @@ export default function WpEditor( { id, value = '', onChange, teeny = false, med
         // Text tab holds the wpautop-free form; "html" adds the paragraphs back.
         const onText = () => report( 'wp' === format ? textarea.value : api.autop( textarea.value ).trim() );
 
+        // wp.editor.initialize() appends the editor container inside
+        // .wp-editor-tools (a jQuery chain in wp-admin/js/editor.js), unlike PHP
+        // wp_editor(), so the absolutely placed Visual / Code tabs ended up under
+        // the editor. Move it next to the tools before TinyMCE creates its iframe
+        // (moving an iframe later reloads it).
+        const $ = window.jQuery;
+        const fixLayout = ( event, init ) => {
+            if ( ! init || init.selector !== `#${ editorId }` ) {
+                return;
+            }
+            const wrap = document.getElementById( `wp-${ editorId }-wrap` );
+            const container = wrap && wrap.querySelector( '.wp-editor-tools > .wp-editor-container' );
+
+            if ( container ) {
+                wrap.appendChild( container );
+            }
+        };
+
         // wp.editor needs the textarea attached and laid out: start on the next tick.
         const timer = setTimeout( () => {
             textarea.value = lastRef.current;
+            if ( $ ) {
+                $( document ).on( 'wp-before-tinymce-init', fixLayout );
+            }
             api.initialize( editorId, {
                 tinymce: {
                     wpautop: true,
+                    // As PHP wp_editor() with wpautop: no line breaks between blocks.
+                    indent: false,
                     plugins: PLUGINS,
-                    toolbar1: teeny ? TEENY_TOOLBAR : FULL_TOOLBAR,
+                    toolbar1: toolbar || ( teeny ? TEENY_TOOLBAR : FULL_TOOLBAR ),
+                    ...tinymce,
                     setup: ( editor ) => {
                         let ready = false;
 
@@ -88,6 +114,9 @@ export default function WpEditor( { id, value = '', onChange, teeny = false, med
                 quicktags: true,
                 mediaButtons,
             } );
+            if ( $ ) {
+                $( document ).off( 'wp-before-tinymce-init', fixLayout );
+            }
             textarea.addEventListener( 'input', onText );
             started = true;
         }, 0 );
@@ -99,7 +128,7 @@ export default function WpEditor( { id, value = '', onChange, teeny = false, med
                 api.remove( editorId );
             }
         };
-    }, [ editorId, teeny, mediaButtons, format ] ); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [ editorId, teeny, toolbar, mediaButtons, format ] ); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Outside value (reset/discard): push it in unless the editor sent it.
     useEffect( () => {

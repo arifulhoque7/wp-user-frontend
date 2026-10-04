@@ -3,7 +3,7 @@ import { SETTING_CLASS_NAMES } from './SettingsField';
 
 /**
  * WordPress TinyMCE editor wrapper. Ported from the Form Builder kit
- * (src/admin/apps/form-builder/common/TextEditor.jsx). Requires wp.editor, which the
+ * (its former common/TextEditor.jsx, now the shared WpEditor). Requires wp.editor, which the
  * settings page enqueues via wp_enqueue_editor().
  */
 export default function TextEditor( { id, value = '', onChange, teeny = false } ) {
