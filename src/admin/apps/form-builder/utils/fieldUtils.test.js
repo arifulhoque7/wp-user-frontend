@@ -1,4 +1,4 @@
-import { createField } from './fieldUtils';
+import { createField, isPhpTruthy, isRichEditor } from './fieldUtils';
 
 /**
  * Field names as the Vue builder generated them (repeat field check, 1.9).
@@ -20,5 +20,23 @@ describe( 'createField names', () => {
 
     test( 'inner field: non-meta fields get no generated name', () => {
         expect( createField( 'section_break', settings, [], { innerField: true } ).name ).toBe( '' );
+    } );
+} );
+
+describe( 'isRichEditor', () => {
+    it( 'matches the frontend: editor only for yes / teeny', () => {
+        expect( isRichEditor( 'yes' ) ).toBe( true );
+        expect( isRichEditor( 'teeny' ) ).toBe( true );
+        expect( isRichEditor( 'no' ) ).toBe( false );
+        expect( isRichEditor( undefined ) ).toBe( false );
+        expect( isRichEditor( '' ) ).toBe( false );
+        expect( isRichEditor( true ) ).toBe( false );
+    } );
+} );
+
+describe( 'isPhpTruthy', () => {
+    it( 'reads stored values like PHP', () => {
+        [ false, null, undefined, '', '0', 0, [], {} ].forEach( ( value ) => expect( isPhpTruthy( value ) ).toBe( false ) );
+        [ true, 'yes', '1', 1, [ 'true' ], { a: 1 }, 'no' ].forEach( ( value ) => expect( isPhpTruthy( value ) ).toBe( true ) );
     } );
 } );

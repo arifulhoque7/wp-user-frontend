@@ -9,7 +9,7 @@ export default function TextFieldPreview( { field } ) {
             <input
                 type="text"
                 placeholder={ field.placeholder || '' }
-                defaultValue={ field.default || '' }
+                value={ field.default ?? '' }
                 size={ field.size }
                 className={ builderClassNames( 'textfield' ) }
                 readOnly

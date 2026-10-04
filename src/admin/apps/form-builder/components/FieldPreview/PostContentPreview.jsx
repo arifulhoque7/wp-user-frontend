@@ -1,6 +1,7 @@
 import { __ } from '@wordpress/i18n';
 import { useFieldClasses } from '../../hooks/useFieldClasses';
 import HelpText from './HelpText';
+import { isRichEditor } from '../../utils/fieldUtils';
 import TextEditorPreview from './TextEditorPreview';
 
 export default function PostContentPreview( { field } ) {
@@ -21,17 +22,17 @@ export default function PostContentPreview( { field } ) {
 
             { field.insert_image === 'yes' && <br /> }
 
-            { field.rich === 'no' ? (
+            { ! isRichEditor( field.rich ) ? (
                 <textarea
                     rows={ field.rows }
                     cols={ field.cols }
                     placeholder={ field.placeholder || '' }
                     className={ builderClassNames( 'textareafield' ) }
-                    defaultValue={ field.default || '' }
+                    value={ field.default ?? '' }
                     readOnly
                 />
             ) : (
-                <TextEditorPreview rich={ field.rich } defaultText={ field.default || '' } />
+                <TextEditorPreview rich={ field.rich } defaultText={ field.default ?? '' } />
             ) }
 
             <HelpText text={ field.help } className="wpuf-help" />

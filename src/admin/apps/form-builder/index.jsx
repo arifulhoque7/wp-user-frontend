@@ -16,6 +16,7 @@ import { hasRecaptchaApiKeys, hasTurnstileApiKeys } from './utils/globalHelpers'
 import { fireRootInit } from './extensions/hooks';
 import { registerFreeFieldPreviews } from './components/FieldPreview';
 import { useFieldClasses, formatPrice } from './hooks/useFieldClasses';
+import { isPhpTruthy, isRichEditor } from './utils/fieldUtils';
 import HelpText from './components/FieldPreview/HelpText';
 import SettingHelpText from './components/FieldSettings/inputs/SettingHelpText';
 import LegacySlot from './common/LegacySlot';
@@ -88,6 +89,9 @@ window.wpuf.registerFieldValidator = registerFieldValidator;
 window.wpuf.getFieldValidators = getFieldValidators;
 window.wpuf.storeName = STORE_NAME;
 window.wpuf.useFieldClasses = useFieldClasses;
+// Preview rules shared with Pro's previews (rich editor as the frontend, PHP truthiness).
+window.wpuf.isRichEditor = isRichEditor;
+window.wpuf.isPhpTruthy = isPhpTruthy;
 window.wpuf.formatPrice = formatPrice;
 window.wpuf.HelpText = HelpText;
 window.wpuf.SettingHelpText = SettingHelpText;

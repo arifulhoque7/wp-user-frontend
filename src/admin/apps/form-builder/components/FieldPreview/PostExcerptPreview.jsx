@@ -1,5 +1,6 @@
 import { useFieldClasses } from '../../hooks/useFieldClasses';
 import HelpText from './HelpText';
+import { isRichEditor } from '../../utils/fieldUtils';
 import TextEditorPreview from './TextEditorPreview';
 
 export default function PostExcerptPreview( { field } ) {
@@ -7,17 +8,17 @@ export default function PostExcerptPreview( { field } ) {
 
     return (
         <div className="wpuf-fields">
-            { field.rich === 'no' ? (
+            { ! isRichEditor( field.rich ) ? (
                 <textarea
                     rows={ field.rows }
                     cols={ field.cols }
                     placeholder={ field.placeholder || '' }
                     className={ builderClassNames( 'textareafield' ) }
-                    defaultValue={ field.default || '' }
+                    value={ field.default ?? '' }
                     readOnly
                 />
             ) : (
-                <TextEditorPreview rich={ field.rich } defaultText={ field.default || '' } />
+                <TextEditorPreview rich={ field.rich } defaultText={ field.default ?? '' } />
             ) }
             <HelpText text={ field.help } />
         </div>

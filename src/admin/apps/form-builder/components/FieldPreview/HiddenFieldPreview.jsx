@@ -9,7 +9,7 @@ export default function HiddenFieldPreview( { field } ) {
             <input
                 type="text"
                 placeholder={ field.placeholder || '' }
-                defaultValue={ field.default || '' }
+                value={ field.default ?? '' }
                 size={ field.size }
                 className={ builderClassNames( 'text_hidden' ) }
                 readOnly

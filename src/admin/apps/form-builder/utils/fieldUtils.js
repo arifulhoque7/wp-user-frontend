@@ -137,3 +137,41 @@ export function findFieldById( fields, id ) {
 
     return null;
 }
+
+/**
+ * Whether a textarea / post content / excerpt / bio field renders the rich
+ * editor: only `yes` and `teeny`, as the frontend (Form_Field_Textarea,
+ * Form_Field_Post_Content). The builder preview follows it (R14: develop's
+ * preview showed the editor for any value but `no`, a missing one included).
+ *
+ * @since WPUF_SINCE
+ *
+ * @param {*} rich Stored `rich` value.
+ *
+ * @return {boolean} Editor.
+ */
+export function isRichEditor( rich ) {
+    return 'yes' === rich || 'teeny' === rich;
+}
+
+/**
+ * PHP truthiness of a stored value (`'0'`, `''`, `0`, `[]`, `false`, null are
+ * off), for previews of options the frontend tests with `if ( $value )`.
+ *
+ * @since WPUF_SINCE
+ *
+ * @param {*} value Stored value.
+ *
+ * @return {boolean} On.
+ */
+export function isPhpTruthy( value ) {
+    if ( Array.isArray( value ) ) {
+        return value.length > 0;
+    }
+
+    if ( value && 'object' === typeof value ) {
+        return Object.keys( value ).length > 0;
+    }
+
+    return ! ( false === value || null === value || undefined === value || '' === value || '0' === value || 0 === value );
+}

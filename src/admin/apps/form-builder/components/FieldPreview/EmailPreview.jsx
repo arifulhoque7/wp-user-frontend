@@ -9,7 +9,7 @@ export default function EmailPreview( { field } ) {
             <input
                 type="email"
                 placeholder={ field.placeholder || '' }
-                defaultValue={ field.default || '' }
+                value={ field.default ?? '' }
                 size={ field.size }
                 className={ builderClassNames( 'text' ) }
                 readOnly

@@ -9,7 +9,7 @@ export default function WebsiteUrlPreview( { field } ) {
             <input
                 type="url"
                 placeholder={ field.placeholder || '' }
-                defaultValue={ field.default || '' }
+                value={ field.default ?? '' }
                 size={ field.size }
                 className={ builderClassNames( 'url' ) }
                 readOnly
