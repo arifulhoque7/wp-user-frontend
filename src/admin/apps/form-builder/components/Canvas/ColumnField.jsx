@@ -1,68 +1,56 @@
-import { useState, useCallback, useMemo } from '@wordpress/element';
-import { useSelect, useDispatch } from '@wordpress/data';
-import { __ } from '@wordpress/i18n';
-import {
-    DndContext,
-    closestCenter,
-    PointerSensor,
-    useDroppable,
-    useSensor,
-    useSensors,
-} from '@dnd-kit/core';
-import {
-    SortableContext,
-    verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { STORE_NAME } from '../../store';
-import { createField, isFieldSingleInstance, containsField } from '../../utils/fieldUtils';
+import { useMemo } from '@wordpress/element';
+import { columnContainer } from '../../utils/dndTree';
+import { usePlaceholder } from '../Dnd/dropTarget';
+import { Indicator, dropListProps, indicatorFor } from '../Dnd/DropList';
 import SortableField from './SortableField';
 
-const RESTRICTED_IN_COLUMN = [ 'column_field', 'custom_hidden_field', 'step_start' ];
-
-const COLUMN_DROP_PREFIX = 'column-drop:';
-
 /**
- * One column's sortable list; the list itself is a drop target so a field can
- * be moved into an empty column.
+ * One cell of a column field: a drop list of the builder's DndContext
+ * (components/Dnd, design.md D16). Palette fields (develop's rules), fields
+ * of any cell and stage fields can be dropped in; the cell lights up while
+ * it is the drop target (red for a refused palette field).
  */
-function ColumnDropList( { columnKey, items, children } ) {
-    const { setNodeRef } = useDroppable( { id: COLUMN_DROP_PREFIX + columnKey } );
+function ColumnCell( { field, columnKey } ) {
+    const container = columnContainer( field.id, columnKey );
+    const placeholder = usePlaceholder( container );
+    const colFields = ( field.inner_fields || {} )[ columnKey ] || [];
+    let tint = '';
+
+    if ( placeholder ) {
+        tint = placeholder.blocked ? 'bg-red-50! border-red-400!' : 'bg-green-100! border-primary!';
+    }
 
     return (
-        <SortableContext items={ items } strategy={ verticalListSortingStrategy }>
-            <ul ref={ setNodeRef } className="wpuf-column-fields-sortable-list min-h-16 list-none m-0! p-0!">
-                { children }
-            </ul>
-        </SortableContext>
+        <div
+            style={ { paddingRight: ( field.column_space || 0 ) + 'px' } }
+            className="flex-1 min-w-0 min-h-full wpuf-column-inner-fields"
+        >
+            <div
+                data-column={ columnKey }
+                className={ `border border-dashed border-green-400 bg-green-50 shadow-xs rounded-md p-1 transition-colors ${ tint }` }
+            >
+                <ul { ...dropListProps( container, colFields.length ) } className="wpuf-column-fields-sortable-list relative min-h-16 list-none m-0! p-0!">
+                    { placeholder && ! colFields.length && <Indicator blocked={ placeholder.blocked } /> }
+                    { colFields.map( ( innerField, idx ) => (
+                        <SortableField
+                            key={ innerField.id }
+                            field={ innerField }
+                            index={ idx }
+                            container={ { type: 'column', columnFieldId: field.id, column: columnKey } }
+                            indicator={ indicatorFor( placeholder, idx, colFields.length ) }
+                        />
+                    ) ) }
+                </ul>
+            </div>
+        </div>
     );
 }
 
 /**
  * Column field canvas component.
  * inner_fields is an OBJECT: { 'column-1': [], 'column-2': [], 'column-3': [] }
- *
- * Supports drag-and-drop from the sidebar panel via HTML5 native drag API,
- * mirroring Vue's jQuery UI draggable + connectToSortable behavior.
  */
 export default function ColumnField( { field } ) {
-    const { editingFieldId, fieldSettings, formFields } = useSelect( ( select ) => {
-        const store = select( STORE_NAME );
-        return {
-            editingFieldId: store.getEditingFieldId(),
-            fieldSettings: store.getFieldSettings(),
-            formFields: store.getFormFields(),
-        };
-    }, [] );
-
-    const { moveColumnField, addColumnField } = useDispatch( STORE_NAME );
-
-    const [ dragOverColumn, setDragOverColumn ] = useState( null );
-
-    const sensors = useSensors(
-        useSensor( PointerSensor, { activationConstraint: { distance: 5 } } )
-    );
-
-    const columns = field.inner_fields || {};
     const numColumns = parseInt( field.columns ) || 3;
 
     const columnKeys = useMemo( () => {
@@ -73,157 +61,13 @@ export default function ColumnField( { field } ) {
         return keys;
     }, [ numColumns ] );
 
-    // One drag context for the whole column field, so an inner field can be
-    // moved inside its column or into another one (develop connected the lists).
-    const handleDragEnd = useCallback( ( event ) => {
-        const { active, over } = event;
-
-        if ( ! over || active.id === over.id ) {
-            return;
-        }
-
-        const columnOf = ( id ) => Object.keys( columns ).find(
-            ( key ) => ( columns[ key ] || [] ).some( ( f ) => String( f.id ) === id )
-        );
-        const fromColumn = columnOf( active.id );
-
-        if ( ! fromColumn ) {
-            return;
-        }
-
-        const fromIndex = columns[ fromColumn ].findIndex( ( f ) => String( f.id ) === active.id );
-        const overIsColumn = String( over.id ).startsWith( COLUMN_DROP_PREFIX );
-        const toColumn = overIsColumn ? String( over.id ).slice( COLUMN_DROP_PREFIX.length ) : columnOf( over.id );
-
-        if ( ! toColumn ) {
-            return;
-        }
-
-        const target = columns[ toColumn ] || [];
-        // Dropped on the cell itself: to the end of that column.
-        const toIndex = overIsColumn ? target.length - ( fromColumn === toColumn ? 1 : 0 ) : target.findIndex( ( f ) => String( f.id ) === over.id );
-
-        if ( fromColumn === toColumn && fromIndex === toIndex ) {
-            return;
-        }
-
-        moveColumnField( field.id, fromColumn, fromIndex, toColumn, toIndex );
-    }, [ field.id, columns, moveColumnField ] );
-
-    const data = window.wpuf_form_builder || {};
-    const singleObjects = data.wpuf_single_objects || [];
-
-    const handleNativeDrop = useCallback( ( columnKey, e ) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setDragOverColumn( null );
-
-        const template = e.dataTransfer.getData( 'wpuf/field-template' );
-
-        if ( ! template ) {
-            return;
-        }
-
-        // Vue: isAllowedInColumnField check
-        if ( RESTRICTED_IN_COLUMN.includes( template ) ) {
-            if ( typeof window.Swal !== 'undefined' ) {
-                window.Swal.fire( {
-                    title: '<span class="text-primary">Oops...</span>',
-                    html: '<p class="text-gray-500 text-xl m-0 p-0">' + __( 'You cannot add this field as inner column field', 'wp-user-frontend' ) + '</p>',
-                    imageUrl: ( data.asset_url || '' ) + '/images/oops.svg',
-                    showCloseButton: true,
-                    padding: '1rem',
-                    width: '35rem',
-                    customClass: {
-                        confirmButton: 'flex! focus:shadow-none! bg-primary!',
-                        closeButton: 'absolute',
-                    },
-                } );
-            }
-            return;
-        }
-
-        // Vue: isSingleInstance + containsField check
-        if ( isFieldSingleInstance( template, singleObjects ) && containsField( formFields, template ) ) {
-            if ( typeof window.Swal !== 'undefined' ) {
-                window.Swal.fire( {
-                    title: '<span class="text-primary">Oops...</span>',
-                    html: '<p class="text-gray-500 text-xl m-0 p-0">' + __( 'You already have this field in the form', 'wp-user-frontend' ) + '</p>',
-                    imageUrl: ( data.asset_url || '' ) + '/images/oops.svg',
-                    showCloseButton: true,
-                    padding: '1rem',
-                    width: '35rem',
-                    customClass: {
-                        confirmButton: 'flex! focus:shadow-none! bg-primary!',
-                        closeButton: 'absolute',
-                    },
-                } );
-            }
-            return;
-        }
-
-        const newField = createField( template, fieldSettings, formFields, { innerField: true } );
-
-        if ( ! newField ) {
-            return;
-        }
-
-        const colFields = columns[ columnKey ] || [];
-        addColumnField( field.id, columnKey, colFields.length, newField );
-    }, [ field.id, columns, fieldSettings, formFields, singleObjects, addColumnField, data.asset_url ] );
-
-    const handleNativeDragOver = useCallback( ( columnKey, e ) => {
-        const hasFieldData = e.dataTransfer.types.includes( 'wpuf/field-template' );
-
-        if ( hasFieldData ) {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'copy';
-            setDragOverColumn( columnKey );
-        }
-    }, [] );
-
-    const handleNativeDragLeave = useCallback( () => {
-        setDragOverColumn( null );
-    }, [] );
-
     return (
-        <DndContext sensors={ sensors } collisionDetection={ closestCenter } onDragEnd={ handleDragEnd }>
-            <div
-                className={ `has-columns-${ numColumns } wpuf-field-columns flex md:flex-row gap-4 p-4 w-full justify-between rounded-t-md border-t! border-r! border-l! border-dashed! border-transparent! group-hover:border-green-400! group-hover:cursor-pointer` }
-            >
-                { columnKeys.map( ( columnKey ) => {
-                    const colFields = columns[ columnKey ] || [];
-                    const colFieldIds = colFields.map( ( f ) => String( f.id ) );
-                    const isDragOver = dragOverColumn === columnKey;
-
-                    return (
-                        <div
-                            key={ columnKey }
-                            style={ { paddingRight: ( field.column_space || 0 ) + 'px' } }
-                            className="flex-1 min-w-0 min-h-full wpuf-column-inner-fields"
-                        >
-                            <div
-                                data-column={ columnKey }
-                                className={ `border border-dashed border-green-400 bg-green-50 shadow-xs rounded-md p-1 transition-colors ${ isDragOver ? 'bg-green-100 border-primary' : '' }` }
-                                onDrop={ ( e ) => handleNativeDrop( columnKey, e ) }
-                                onDragOver={ ( e ) => handleNativeDragOver( columnKey, e ) }
-                                onDragLeave={ handleNativeDragLeave }
-                            >
-                                <ColumnDropList columnKey={ columnKey } items={ colFieldIds }>
-                                    { colFields.map( ( innerField, idx ) => (
-                                        <SortableField
-                                            key={ innerField.id }
-                                            field={ innerField }
-                                            index={ idx }
-                                            container={ { type: 'column', columnFieldId: field.id, column: columnKey } }
-                                        />
-                                    ) ) }
-                                </ColumnDropList>
-                            </div>
-                        </div>
-                    );
-                } ) }
-            </div>
-        </DndContext>
+        <div
+            className={ `has-columns-${ numColumns } wpuf-field-columns flex md:flex-row gap-4 p-4 w-full justify-between rounded-t-md border-t! border-r! border-l! border-dashed! border-transparent! group-hover:border-green-400! group-hover:cursor-pointer` }
+        >
+            { columnKeys.map( ( columnKey ) => (
+                <ColumnCell key={ columnKey } field={ field } columnKey={ columnKey } />
+            ) ) }
+        </div>
     );
 }

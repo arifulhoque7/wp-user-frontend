@@ -31,7 +31,7 @@ test.describe('Parity inner fields', () => {
         await admin.doDropTemplate(repeatList, 'text_field');
         await admin.doDropTemplate('[data-column="column-1"]', 'text_field');
         // A palette drop on the stage itself inserts at the drop position (top here).
-        await admin.doDropTemplate('#form-preview-stage', 'textarea_field');
+        await admin.doDropTemplate('#form-preview-stage', 'textarea_field', 'top');
         await admin.doSaveBuilder();
         await admin.doClose();
 

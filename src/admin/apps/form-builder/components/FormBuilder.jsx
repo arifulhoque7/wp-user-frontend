@@ -4,6 +4,7 @@ import { STORE_NAME } from '../store';
 import Header from './Header/Header';
 import Sidebar from './Sidebar/Sidebar';
 import BuilderCanvas from './Canvas/BuilderCanvas';
+import BuilderDnd from './Dnd/BuilderDnd';
 import FormSettings from './Settings/FormSettings';
 import useDirtyState from '../hooks/useDirtyState';
 import LegacySlot, { getLegacySlots } from '../common/LegacySlot';
@@ -24,14 +25,17 @@ export default function FormBuilder() {
             <Header activeTab={ activeTab } onTabChange={ setActiveTab } />
 
             { activeTab === 'form-editor' && (
-                <div className="flex bg-white mr-8">
-                    <div className="w-2/3 min-h-screen max-h-screen px-13 py-4 border-t border-l border-gray-200 overflow-auto">
-                        <BuilderCanvas />
+                // One drag-and-drop context for the palette and the canvas (D16).
+                <BuilderDnd>
+                    <div className="flex bg-white mr-8">
+                        <div className="w-2/3 min-h-screen max-h-screen px-13 py-4 border-t border-l border-gray-200 overflow-auto">
+                            <BuilderCanvas />
+                        </div>
+                        <div className="w-1/3 max-h-screen overflow-auto rounded-tr-lg border border-b-0 border-gray-200">
+                            <Sidebar />
+                        </div>
                     </div>
-                    <div className="w-1/3 max-h-screen overflow-auto rounded-tr-lg border border-b-0 border-gray-200">
-                        <Sidebar />
-                    </div>
-                </div>
+                </BuilderDnd>
             ) }
 
             { activeTab === 'form-settings' && (

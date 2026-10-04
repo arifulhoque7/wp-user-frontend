@@ -15,6 +15,7 @@ import {
     ADD_REPEAT_FIELD,
     REMOVE_REPEAT_FIELD,
     MOVE_REPEAT_FIELD,
+    MOVE_FIELD_TO,
     CLONE_REPEAT_FIELD,
     SET_CURRENT_PANEL,
     SET_EDITING_FIELD,
@@ -34,6 +35,7 @@ import {
     MARK_DIRTY,
     MARK_CLEAN,
 } from './constants';
+import { moveField as moveInTree } from '../utils/dndTree';
 
 export const DEFAULT_STATE = {
     post: {},
@@ -472,6 +474,16 @@ export default function reducer( state = DEFAULT_STATE, action ) {
                 return { ...field, inner_fields: innerFields };
             } );
             return { ...state, formFields: newFields, isDirty: true };
+        }
+
+        case MOVE_FIELD_TO: {
+            const moved = moveInTree( state.formFields, action.from, action.to );
+
+            if ( moved === state.formFields ) {
+                return state;
+            }
+
+            return { ...state, formFields: moved, isDirty: true };
         }
 
         case CLONE_REPEAT_FIELD: {

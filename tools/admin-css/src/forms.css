@@ -46,3 +46,11 @@
 @utility min-w-btn-save {
     min-width: 158px;
 }
+
+/* Builder drag and drop (D16): grabbing cursor and no text selection while a
+   field is dragged (BuilderDnd sets the body class). */
+body.wpuf-builder-dragging,
+body.wpuf-builder-dragging * {
+    cursor: grabbing !important;
+    user-select: none;
+}

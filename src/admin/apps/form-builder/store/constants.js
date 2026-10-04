@@ -24,6 +24,8 @@ export const ADD_REPEAT_FIELD = 'ADD_REPEAT_FIELD';
 export const REMOVE_REPEAT_FIELD = 'REMOVE_REPEAT_FIELD';
 export const MOVE_REPEAT_FIELD = 'MOVE_REPEAT_FIELD';
 export const CLONE_REPEAT_FIELD = 'CLONE_REPEAT_FIELD';
+// Any list to any list (canvas drag and drop, utils/dndTree.js).
+export const MOVE_FIELD_TO = 'MOVE_FIELD_TO';
 
 // Panel/UI actions
 export const SET_CURRENT_PANEL = 'SET_CURRENT_PANEL';

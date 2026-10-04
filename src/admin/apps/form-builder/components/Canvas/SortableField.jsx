@@ -1,13 +1,13 @@
-import { useSortable } from '@dnd-kit/sortable';
+import { useDraggable } from '@dnd-kit/core';
 import { useSelect } from '@wordpress/data';
 import { STORE_NAME } from '../../store';
-import { CSS } from '@dnd-kit/utilities';
 import { applyFilters } from '@wordpress/hooks';
 import { filterBuilderCssClasses } from '../../utils/canvasHelpers';
 import FieldPreview from './FieldPreview';
 import FieldActions from './FieldActions';
 import ColumnField from './ColumnField';
 import RepeatField from './RepeatField';
+import { Indicator } from '../Dnd/DropList';
 
 const TOP_LEVEL = { type: 'top' };
 
@@ -17,22 +17,24 @@ const TOP_LEVEL = { type: 'top' };
  * `container` says which list the field lives in, so its actions edit that list:
  * `{ type: 'top' }` (default), `{ type: 'column', columnFieldId, column }` or
  * `{ type: 'repeat', repeatFieldId }`.
+ *
+ * It is a drag source of the builder's one DndContext (components/Dnd,
+ * design.md D16), started from the move handle in its action bar, and a row of
+ * its list for the drop hit test (`data-dnd-item`, `data-index`).
  */
-export default function SortableField( { field, index, container = TOP_LEVEL } ) {
+export default function SortableField( { field, index, container = TOP_LEVEL, indicator = null } ) {
     const {
         attributes,
         listeners,
         setNodeRef,
-        transform,
-        transition,
         isDragging,
-    } = useSortable( { id: String( field.id ) } );
+    } = useDraggable( {
+        id: 'field:' + field.id,
+        data: { kind: 'field', fieldId: field.id, template: field.template, label: field.label },
+    } );
 
-    const style = {
-        transform: CSS.Transform.toString( transform ),
-        transition,
-        opacity: isDragging ? 0.5 : 1,
-    };
+    // The source stays in place, dimmed, while the placeholder shows the drop point.
+    const style = isDragging ? { opacity: 0.4 } : undefined;
 
     const isColumnOrRepeat = field.input_type === 'column_field' || field.input_type === 'repeat';
     const isHidden = field.template === 'custom_hidden_field';
@@ -49,7 +51,7 @@ export default function SortableField( { field, index, container = TOP_LEVEL } )
     const variant = 'top' === container.type ? 'top' : container.type;
 
     const classNames = ( 'column' === variant ? [
-        'm-0! p-0! group/column-inner hover:bg-green-50 transition duration-150 wpuf-ease-out column-field-items wpuf-el rounded-t-md',
+        'relative m-0! p-0! group/column-inner hover:bg-green-50 transition duration-150 wpuf-ease-out column-field-items wpuf-el rounded-t-md',
         field.name,
         field.css,
         'form-field-' + field.template,
@@ -57,7 +59,7 @@ export default function SortableField( { field, index, container = TOP_LEVEL } )
         isHidden ? 'hidden-field' : '',
         isEditing ? 'bg-green-50' : '',
     ] : 'repeat' === variant ? [
-        'm-0! p-0! group/repeat-inner hover:bg-green-50 transition duration-150 wpuf-ease-out repeat-field-items wpuf-el rounded-t-md',
+        'relative m-0! p-0! group/repeat-inner hover:bg-green-50 transition duration-150 wpuf-ease-out repeat-field-items wpuf-el rounded-t-md',
         field.name,
         'form-field-' + field.template,
         field.width ? 'field-size-' + field.width : '',
@@ -69,7 +71,7 @@ export default function SortableField( { field, index, container = TOP_LEVEL } )
         'form-field-' + field.template,
         field.width ? 'field-size-' + field.width : '',
         isHidden ? 'hidden-field' : '',
-        'group rounded-lg hover:bg-green-50! transition duration-150 wpuf-ease-out m-0! p-0! overflow-hidden',
+        'relative group rounded-lg hover:bg-green-50! transition duration-150 wpuf-ease-out m-0! p-0! overflow-hidden',
     ] ).filter( Boolean ).join( ' ' );
 
     return (
@@ -77,9 +79,11 @@ export default function SortableField( { field, index, container = TOP_LEVEL } )
             ref={ setNodeRef }
             style={ style }
             className={ classNames }
+            data-dnd-item=""
             data-index={ index }
             data-source={ 'top' === variant ? 'stage' : variant + '-field-stage' }
         >
+            { indicator && <Indicator edge={ indicator.edge } blocked={ indicator.blocked } /> }
             { ! isColumnOrRepeat && (
                 <FieldPreview field={ field } variant={ variant } />
             ) }

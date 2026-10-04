@@ -14,6 +14,7 @@ import {
     ADD_REPEAT_FIELD,
     REMOVE_REPEAT_FIELD,
     MOVE_REPEAT_FIELD,
+    MOVE_FIELD_TO,
     CLONE_REPEAT_FIELD,
     SET_CURRENT_PANEL,
     SET_EDITING_FIELD,
@@ -819,6 +820,32 @@ describe( 'reducer', () => {
     } );
 
     // ------- ID Generation -------
+
+    describe( 'MOVE_FIELD_TO', () => {
+        const fields = [
+            { id: 1, template: 'text_field' },
+            { id: 2, template: 'column_field', inner_fields: { 'column-1': [ { id: 21, template: 'text_field' } ], 'column-2': [] } },
+        ];
+
+        it( 'moves a stage field into a column cell and marks the form dirty', () => {
+            const state = reducer( { ...DEFAULT_STATE, formFields: fields }, {
+                type: MOVE_FIELD_TO,
+                from: { container: 'top', index: 0 },
+                to: { container: 'column:2:column-2', index: 0 },
+            } );
+
+            expect( state.formFields.map( ( f ) => f.id ) ).toEqual( [ 2 ] );
+            expect( state.formFields[ 0 ].inner_fields[ 'column-2' ] ).toEqual( [ fields[ 0 ] ] );
+            expect( state.isDirty ).toBe( true );
+        } );
+
+        it( 'keeps the state for a no-op move', () => {
+            const before = { ...DEFAULT_STATE, formFields: fields, isDirty: false };
+            const state = reducer( before, { type: MOVE_FIELD_TO, from: { container: 'top', index: 0 }, to: { container: 'top', index: 1 } } );
+
+            expect( state ).toBe( before );
+        } );
+    } );
 
     describe( 'generateFieldId', () => {
         it( 'produces numeric IDs', () => {

@@ -396,16 +396,26 @@ export class ParitySitePage {
     }
 
     /**
-     * Drop a palette field type onto a builder drop zone the way the HTML5 palette
-     * drag does (dataTransfer 'wpuf/field-template'). React builder only.
+     * Drag a palette field type onto a builder drop zone with the mouse (the
+     * builder's one dnd-kit context, D16): from the palette button to the
+     * zone's center, or its top edge (`top`: insert first). React builder only.
      */
-    async doDropTemplate(target: string, template: string) {
-        await this.page.locator(target).first().evaluate((zone, type) => {
-            const data = new DataTransfer();
-            data.setData('wpuf/field-template', type);
-            zone.dispatchEvent(new DragEvent('dragover', { bubbles: true, cancelable: true, dataTransfer: data }));
-            zone.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: data }));
-        }, template);
+    async doDropTemplate(target: string, template: string, where: 'center' | 'top' = 'center') {
+        const source = this.page.locator(Selectors.parity.paletteFieldButton(template)).first();
+        await source.scrollIntoViewIfNeeded();
+        const from = await source.boundingBox();
+        await this.page.mouse.move(from!.x + from!.width / 2, from!.y + from!.height / 2);
+        await this.page.mouse.down();
+        await this.page.mouse.move(from!.x + from!.width / 2 - 10, from!.y + from!.height / 2 + 10, { steps: 4 });
+        const zone = this.page.locator(target).first();
+        await zone.scrollIntoViewIfNeeded();
+        const to = await zone.boundingBox();
+        const y = 'top' === where ? to!.y + 8 : to!.y + to!.height / 2;
+        await this.page.mouse.move(to!.x + to!.width / 2, y, { steps: 16 });
+        await this.page.waitForTimeout(100);
+        await this.page.mouse.up();
+        // dnd-kit swallows a click for a moment after a drag ends.
+        await this.page.waitForTimeout(300);
     }
 
     /**

@@ -16,6 +16,7 @@ import {
     REMOVE_REPEAT_FIELD,
     MOVE_REPEAT_FIELD,
     CLONE_REPEAT_FIELD,
+    MOVE_FIELD_TO,
     SET_CURRENT_PANEL,
     SET_EDITING_FIELD,
     OPEN_FIELD_SETTINGS,
@@ -106,6 +107,20 @@ export function moveRepeatField( repeatFieldId, fromIndex, toIndex ) {
 
 export function cloneRepeatField( repeatFieldId, index, newId ) {
     return { type: CLONE_REPEAT_FIELD, repeatFieldId, index, newId };
+}
+
+/**
+ * Move a field from one canvas list to another (or inside one).
+ *
+ * @since WPUF_SINCE
+ *
+ * @param {Object} from `{ container, index }` (container ids: utils/dndTree.js)
+ * @param {Object} to   `{ container, index }`, insertion index before the field leaves
+ *
+ * @return {Object} Action.
+ */
+export function moveFieldTo( from, to ) {
+    return { type: MOVE_FIELD_TO, from, to };
 }
 
 // Panel / UI actions
