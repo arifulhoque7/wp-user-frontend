@@ -1,4 +1,4 @@
-import { buildCondArrays, condDependencies, condRowsFromStored, conditionInputType, conditionFieldType, getFieldOptions, getOperatorsForType } from './conditionalUtils';
+import { buildCondArrays, condDependencies, condRowsFromStored, conditionInputType, conditionFieldType, getFieldOptions, getOperatorsForType, readPath, writePath } from './conditionalUtils';
 
 /**
  * Condition values a rule stores, matching the Vue builder (task 1.5, B11).
@@ -76,3 +76,27 @@ describe( 'field conditional logic rows (develop field-conditional-logic, 4.4d)'
     } );
 } );
 
+/**
+ * Integration conditions live at a dot path of the form settings (4.5b).
+ */
+describe( 'integration condition paths', () => {
+    const settings = { integrations: { mailchimp: { wpuf_cond: { condition_status: 'yes' } }, other: { keep: 1 } }, role: 'subscriber' };
+
+    test( 'reads a nested value, undefined when a level is missing', () => {
+        expect( readPath( settings, 'integrations.mailchimp.wpuf_cond' ) ).toEqual( { condition_status: 'yes' } );
+        expect( readPath( settings, 'integrations.missing.wpuf_cond' ) ).toBeUndefined();
+        expect( readPath( {}, 'integrations.mailchimp.wpuf_cond' ) ).toBeUndefined();
+    } );
+
+    test( 'writes the top-level key with siblings kept and nothing mutated', () => {
+        const [ key, value ] = writePath( settings, 'integrations.mailchimp.wpuf_cond', { condition_status: 'no' } );
+        expect( key ).toBe( 'integrations' );
+        expect( value ).toEqual( { mailchimp: { wpuf_cond: { condition_status: 'no' } }, other: { keep: 1 } } );
+        expect( settings.integrations.mailchimp.wpuf_cond ).toEqual( { condition_status: 'yes' } );
+    } );
+
+    test( 'creates missing levels (stored [] from PHP included)', () => {
+        expect( writePath( { integrations: [] }, 'integrations.mailchimp.wpuf_cond', 1 ) ).toEqual( [ 'integrations', { mailchimp: { wpuf_cond: 1 } } ] );
+        expect( writePath( {}, 'role', 'editor' ) ).toEqual( [ 'role', 'editor' ] );
+    } );
+} );

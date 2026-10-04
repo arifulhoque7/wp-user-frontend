@@ -306,3 +306,44 @@ export function buildCondArrays( cond, rows ) {
 
     return next;
 }
+
+/**
+ * Value stored at a dot path of the form settings.
+ *
+ * @param {Object} settings Form settings.
+ * @param {string} path     e.g. `integrations.mailchimp.wpuf_cond`.
+ * @return {*} Value or undefined.
+ */
+export function readPath( settings, path ) {
+    return path.split( '.' ).reduce( ( node, key ) => ( node && 'object' === typeof node ? node[ key ] : undefined ), settings );
+}
+
+/**
+ * Copy of the top-level setting a dot path starts with, with the value set
+ * at the path (sibling keys kept, missing levels created as develop's $set did).
+ *
+ * @param {Object} settings Form settings.
+ * @param {string} path     Dot path.
+ * @param {*}      value    Value.
+ * @return {Array} [ top-level key, new top-level value ].
+ */
+export function writePath( settings, path, value ) {
+    const keys = path.split( '.' );
+    const top = keys[ 0 ];
+
+    if ( 1 === keys.length ) {
+        return [ top, value ];
+    }
+
+    const copy = ( node ) => ( node && 'object' === typeof node && ! Array.isArray( node ) ? { ...node } : {} );
+    const root = copy( settings[ top ] );
+    let node = root;
+
+    keys.slice( 1, -1 ).forEach( ( key ) => {
+        node[ key ] = copy( node[ key ] );
+        node = node[ key ];
+    } );
+    node[ keys[ keys.length - 1 ] ] = value;
+
+    return [ top, root ];
+}

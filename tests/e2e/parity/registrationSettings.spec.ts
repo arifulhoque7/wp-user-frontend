@@ -18,9 +18,9 @@ type Settings = Record<string, unknown>;
 // registration form) and adds the rendered defaults (`notification` group, page
 // ids, Mailchimp's integration wpuf_cond: 4.5b).
 const CANONICAL = ['mob_number', 'sms_body', 'sms_enable', 'sms_sender_name', 'wpuf_user_status', 'redirect_to', 'notification', 'reg_page_id', 'profile_page_id', 'integrations'];
-// Mailchimp's conditional logic row is the module's (task 4.5b).
-const DEFERRED_ROWS = ['Conditional Logic |', 'Conditional Logic ='];
-const kept = (list: string[] = []) => list.filter((row) => !DEFERRED_ROWS.some((prefix) => row.startsWith(prefix))).map((row) => row.replace(' ; Conditional Logic', ''));
+// Rows left out on both sides (none since 4.5b ported Mailchimp's conditions).
+const DEFERRED_ROWS: string[] = [];
+const kept = (list: string[] = []) => list.filter((row) => !DEFERRED_ROWS.some((prefix) => row.startsWith(prefix)));
 
 async function tabsOf(admin: ParitySitePage): Promise<string[]> {
     await admin.doOpenBuilderSettings([]);

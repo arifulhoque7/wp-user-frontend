@@ -183,11 +183,11 @@ export default function SubmitConditionalLogic( { label } ) {
                                         ) }
                                     </div>
                                     <div className="flex gap-1">
-                                        <button type="button" className="wpuf-repeater-add p-0 border-0 bg-transparent cursor-pointer" onClick={ () => write( { ...state, conditions: [ ...state.conditions, blankRule() ] } ) } aria-label={ __( 'Add Condition', 'wp-user-frontend' ) }>
+                                        <button type="button" className="wpuf-repeater-add p-0 border-0 bg-transparent cursor-pointer rounded-full focus:outline-hidden focus:shadow-none focus-visible:ring-2 focus-visible:ring-primary/30" onClick={ () => write( { ...state, conditions: [ ...state.conditions, blankRule() ] } ) } aria-label={ __( 'Add Condition', 'wp-user-frontend' ) }>
                                             <img src={ `${ assetUrl }/images/plus-circle-green.svg` } alt="" />
                                         </button>
                                         { state.conditions.length > 1 && (
-                                            <button type="button" className="wpuf-repeater-remove p-0 border-0 bg-transparent cursor-pointer" onClick={ () => write( { ...state, conditions: state.conditions.filter( ( _, i ) => i !== index ) } ) } aria-label={ __( 'Remove Condition', 'wp-user-frontend' ) }>
+                                            <button type="button" className="wpuf-repeater-remove p-0 border-0 bg-transparent cursor-pointer rounded-full focus:outline-hidden focus:shadow-none focus-visible:ring-2 focus-visible:ring-primary/30" onClick={ () => write( { ...state, conditions: state.conditions.filter( ( _, i ) => i !== index ) } ) } aria-label={ __( 'Remove Condition', 'wp-user-frontend' ) }>
                                                 <img src={ `${ assetUrl }/images/minus-circle-green.svg` } alt="" />
                                             </button>
                                         ) }

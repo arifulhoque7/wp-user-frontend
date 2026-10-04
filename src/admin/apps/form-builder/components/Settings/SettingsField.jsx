@@ -1,4 +1,6 @@
 import { RawHTML } from '@wordpress/element';
+import { applyFilters } from '@wordpress/hooks';
+import { __ } from '@wordpress/i18n';
 import LegacySlot, { getLegacySlots } from '../../common/LegacySlot';
 import ToggleField from './fields/ToggleField';
 import TextField from './fields/TextField';
@@ -15,6 +17,7 @@ import RichTextField from './fields/RichTextField';
 import CardRadioField from './fields/CardRadioField';
 import InlineFieldsGroup from './fields/InlineFieldsGroup';
 import SubmitConditionalLogic from '../ConditionalLogic/SubmitConditionalLogic';
+import IntegrationConditionalLogic from '../ConditionalLogic/IntegrationConditionalLogic';
 import TaxonomyDefaults from './fields/TaxonomyDefaults';
 
 const FIELD_MAP = {
@@ -41,6 +44,37 @@ const decodeLabel = ( text ) => {
 };
 
 /**
+ * Integration conditions shown after a registration settings row. Develop's
+ * Pro modules printed a Vue `<integration-conditional-logic>` tag on the
+ * row's after-hook (Mailchimp after Double Optin); the bridge leaves WPUF's
+ * own listeners out (and wp_kses would strip a Vue tag), so React renders
+ * them here (4.5b). The row exists only while its module is active.
+ *
+ * @param {string} slotKey Settings key of the row.
+ * @return {Array} [ { integrationName, settingsPath, label } ].
+ */
+function integrationConditionsAfter( slotKey ) {
+    const data = window.wpuf_form_builder || {};
+
+    if ( 'wpuf_profile' !== data.form_type || ! data.is_pro_active ) {
+        return [];
+    }
+
+    /**
+     * Filters the integration conditions rendered after registration settings rows.
+     *
+     * @param {Object} map Settings key => [ { integrationName, settingsPath, label } ].
+     */
+    const map = applyFilters( 'wpuf.formBuilder.integrationConditions', {
+        enable_double_optin: [
+            { integrationName: 'mailchimp', settingsPath: 'integrations.mailchimp.wpuf_cond', label: __( 'Conditional Logic', 'wp-user-frontend' ) },
+        ],
+    } );
+
+    return Array.isArray( map[ slotKey ] ) ? map[ slotKey ] : [];
+}
+
+/**
  * Dispatches to the appropriate field component based on field type.
  *
  * Wraps each field in Vue's `mt-6 wpuf-input-container` div
@@ -53,12 +87,14 @@ export default function SettingsField( { slotKey, hideControl = false, ...props 
     // after-limit_message hook, outside the row's hidden container).
     const data = window.wpuf_form_builder || {};
     const submitConditions = 'limit_message' === slotKey && data.is_pro_active && 'wpuf_profile' !== data.form_type;
+    const integrations = integrationConditionsAfter( slotKey );
 
     if ( ! row ) {
         return (
             <>
                 { ! hideControl && <SettingsFieldControl fieldKey={ slotKey } { ...props } /> }
                 { submitConditions && <SubmitConditionalLogic /> }
+                { integrations.map( ( item ) => <IntegrationConditionalLogic key={ item.settingsPath } { ...item } /> ) }
             </>
         );
     }
@@ -79,6 +115,7 @@ export default function SettingsField( { slotKey, hideControl = false, ...props 
             { ! hideControl && <SettingsFieldControl fieldKey={ slotKey } { ...props } /> }
             <LegacySlot id={ `setting-after-${ slotKey }` } html={ after } />
             { ( hasSubmitConditions || submitConditions ) && <SubmitConditionalLogic label={ decodeLabel( submitLabel ) } /> }
+            { integrations.map( ( item ) => <IntegrationConditionalLogic key={ item.settingsPath } { ...item } /> ) }
         </>
     );
 }
