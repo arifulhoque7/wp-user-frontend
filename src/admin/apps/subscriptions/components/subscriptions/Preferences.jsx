@@ -48,7 +48,8 @@ const Preferences = () => {
 	}, [buttonColor]);
 
 	return (
-		<div className="p-10 max-w-4xl">
+		// White card on the gray page (shared page look, owner 2026-10-04).
+		<div className="mx-8 my-6 max-w-4xl rounded-[10px] border border-solid border-gray-200 bg-white p-8 shadow-sm">
 			<div className="mb-6">
 				<h2 className="text-2xl font-semibold text-gray-900 mb-2">
 					{__('Subscription Preferences', 'wp-user-frontend')}

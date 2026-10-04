@@ -56,6 +56,18 @@ const ENTRIES = {
         output: 'assets/css/admin/forms-react.css',
         rtl: false,
     },
+    // The forms lists (post + registration) on the shared wrappers since 4.2:
+    // the forms sheet + the FlyHR list page background (src/forms-list.css)
+    // plus the plugin-ui part, so the builders keep theirs.
+    'forms-list': {
+        input: 'src/forms-list.css',
+        pre: 'src/base-v3/forms.pre.css',
+        post: 'src/base-v3/forms.post.css',
+        scope: '.wpuf-admin-react',
+        output: 'assets/css/admin/forms-list-react.css',
+        rtl: true,
+        pui: true,
+    },
 };
 
 const compile = async ( css, from ) =>

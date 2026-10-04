@@ -3,8 +3,9 @@
  * logo, product title, plan + version badges, "Upgrade to PRO" (free only),
  * Headway changelog icon (`#wpuf-headway-icon`, the id the Headway widget
  * attaches to), "Submit Ideas" and "Support".
- * - variant "bleed" (forms lists, subscriptions): spans the wp-admin content
- *   gutter (20px each side), 16px above, 16px below, 2px bottom border;
+ * - variant "bleed" (forms lists, subscriptions): the white strip at the top
+ *   of the gray page (FlyHR top bar), spanning the screen root's 20px side
+ *   padding, 16px inside above and below, 2px bottom border;
  * - variant "card" (settings): white block, 20px padding, 2px bottom border.
  * Data comes from the boot payload (version, proVersion, plan, isPro, assetUrl).
  */
@@ -57,7 +58,7 @@ export default function PageHeader( { variant = 'bleed', utm = 'wpuf-header', su
             data-wpuf-ui=""
             className={ cn(
                 'flex justify-between items-center border-0 border-b-2 border-solid border-gray-100',
-                'card' === variant ? 'bg-white p-5' : 'w-[calc(100%+40px)] -ml-5 px-5 mt-4 pb-4',
+                'card' === variant ? 'bg-white p-5' : 'w-[calc(100%+40px)] -ml-5 px-5 pt-4 pb-4 bg-white',
                 className
             ) }
         >

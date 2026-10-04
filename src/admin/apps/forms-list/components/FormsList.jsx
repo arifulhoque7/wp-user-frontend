@@ -6,16 +6,17 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { applyFilters } from '@wordpress/hooks';
+import { ErrorState, Pagination, Tabs, notify, useConfirm } from '@wpuf/components';
 
-import useFormsFetch from '../hooks/useFormsFetch';
+import useFormsFetch, { PER_PAGE } from '../hooks/useFormsFetch';
 import useClipboard from '../hooks/useClipboard';
 
-import StatusTabs from './StatusTabs';
 import SearchBar from './SearchBar';
-import BulkActions from './BulkActions';
+import SelectionBar from './SelectionBar';
 import FormsTable from './FormsTable';
-import Pagination from './Pagination';
+import TableSkeleton from './TableSkeleton';
 import EmptyState from './EmptyState';
+import CreateButtons from './CreateButtons';
 import AIConfigModal from './AIConfigModal';
 
 const FormsList = ( {
@@ -32,36 +33,26 @@ const FormsList = ( {
     const permalinkUrl = wpuf_forms_list.permalink_settings_url;
     const aiConfigured = wpuf_forms_list.ai_configured || false;
     const aiSettingsUrl = wpuf_forms_list.ai_settings_url || '';
-    const postCounts = wpuf_forms_list.post_counts;
+    const postCounts = wpuf_forms_list.post_counts || {};
 
     const newFormUrl = window.wpuf_admin_script.admin_url + 'admin.php?page=wpuf-' + formType + '-forms&action=add-new';
 
-    const { forms, loading, pagination, fetchForms } = useFormsFetch( { postType } );
+    const { forms, loading, error, pagination, fetchForms } = useFormsFetch( { postType } );
     const { copiedKey, copyToClipboard } = useClipboard();
+    const [ confirm, confirmDialog ] = useConfirm();
 
     const [ currentTab, setCurrentTab ] = useState( 'any' );
     const [ searchTerm, setSearchTerm ] = useState( '' );
     const [ selectedForms, setSelectedForms ] = useState( [] );
-    const [ selectAllChecked, setSelectAllChecked ] = useState( false );
-    const [ selectedBulkAction, setSelectedBulkAction ] = useState( '' );
+    const [ perPage, setPerPage ] = useState( PER_PAGE );
     const [ showAIConfigModal, setShowAIConfigModal ] = useState( false );
 
     const debounceTimerRef = useRef( null );
-    const isInitialMount = useRef( true );
 
-    // Initial fetch
+    // Fetch on mount and whenever the tab or the page size changes (page 1, current search).
     useEffect( () => {
-        fetchForms( 1, currentTab, searchTerm );
-    }, [] );
-
-    // Re-fetch when tab changes (skip initial mount)
-    useEffect( () => {
-        if ( isInitialMount.current ) {
-            isInitialMount.current = false;
-            return;
-        }
-        fetchForms( 1, currentTab, searchTerm );
-    }, [ currentTab ] );
+        fetchForms( 1, currentTab, searchTerm, perPage );
+    }, [ currentTab, perPage ] );
 
     // Debounced search
     const handleSearchChange = useCallback( ( value ) => {
@@ -72,9 +63,9 @@ const FormsList = ( {
         }
 
         debounceTimerRef.current = setTimeout( () => {
-            fetchForms( 1, currentTab, value );
+            fetchForms( 1, currentTab, value, perPage );
         }, 500 );
-    }, [ currentTab, fetchForms ] );
+    }, [ currentTab, perPage, fetchForms ] );
 
     // Cleanup debounce timer on unmount
     useEffect( () => {
@@ -85,27 +76,15 @@ const FormsList = ( {
         };
     }, [] );
 
-    // Sync selectAllChecked with individual selections
-    useEffect( () => {
-        if ( forms.length > 0 && selectedForms.length === forms.length ) {
-            setSelectAllChecked( true );
-        } else {
-            setSelectAllChecked( false );
-        }
-    }, [ selectedForms, forms ] );
-
-    // Reset selections when forms change
+    // A new page of rows clears the selection.
     useEffect( () => {
         setSelectedForms( [] );
-        setSelectAllChecked( false );
     }, [ forms ] );
 
+    const selectAllChecked = forms.length > 0 && selectedForms.length === forms.length;
+
     const handleSelectAll = useCallback( () => {
-        if ( ! selectAllChecked ) {
-            setSelectedForms( forms.map( ( form ) => form.ID ) );
-        } else {
-            setSelectedForms( [] );
-        }
+        setSelectedForms( selectAllChecked ? [] : forms.map( ( form ) => form.ID ) );
     }, [ selectAllChecked, forms ] );
 
     const handleSelectForm = useCallback( ( formId ) => {
@@ -117,15 +96,16 @@ const FormsList = ( {
         } );
     }, [] );
 
-    const handleTabChange = useCallback( ( tab ) => {
-        setCurrentTab( tab );
-    }, [] );
-
     const handlePageChange = useCallback( ( page ) => {
-        fetchForms( page, currentTab, searchTerm );
-    }, [ currentTab, searchTerm, fetchForms ] );
+        fetchForms( page, currentTab, searchTerm, perPage );
+    }, [ currentTab, searchTerm, perPage, fetchForms ] );
 
-    // Build admin URL helper
+    const retry = useCallback( () => {
+        fetchForms( pagination.current_page, currentTab, searchTerm, perPage );
+    }, [ pagination, currentTab, searchTerm, perPage, fetchForms ] );
+
+    // Build admin URL helper (the row actions are the server's nonce-checked
+    // list actions, as on develop: they redirect back with a notice).
     const buildAdminUrl = useCallback( ( formId, action ) => {
         const params = new URLSearchParams( {
             page: pageSlug,
@@ -140,42 +120,49 @@ const FormsList = ( {
         return `${ window.wpuf_admin_script.admin_url }admin.php?${ params.toString() }`;
     }, [ pageSlug ] );
 
-    // Row action handler
-    const handleAction = useCallback( ( action, formId ) => {
-        switch ( action ) {
-            case 'edit':
-                window.location.href = buildAdminUrl( formId, 'edit' );
-                break;
-            case 'duplicate':
-                window.location.href = buildAdminUrl( formId, 'duplicate' );
-                break;
-            case 'trash':
-                window.location.href = buildAdminUrl( formId, 'trash' );
-                break;
-            case 'restore':
-                window.location.href = buildAdminUrl( formId, 'restore' );
-                break;
-            case 'delete':
-                if ( ! window.confirm( __( 'Are you sure you want to delete this form permanently? This action cannot be undone.', 'wp-user-frontend' ) ) ) {
-                    return;
-                }
-                window.location.href = buildAdminUrl( formId, 'delete' );
-                break;
-        }
-    }, [ buildAdminUrl ] );
+    const editUrl = useCallback( ( formId ) => buildAdminUrl( formId, 'edit' ), [ buildAdminUrl ] );
 
-    // Bulk action handler
-    const handleBulkAction = useCallback( () => {
-        if ( ! selectedBulkAction || selectedForms.length === 0 ) {
+    // Row action handler
+    const handleAction = useCallback( async ( action, form ) => {
+        if ( 'delete' === action ) {
+            const ok = await confirm( {
+                title: __( 'Delete Permanently', 'wp-user-frontend' ),
+                message: __( 'Are you sure you want to delete this form permanently? This action cannot be undone.', 'wp-user-frontend' ),
+                confirmText: __( 'Delete Permanently', 'wp-user-frontend' ),
+            } );
+
+            if ( ! ok ) {
+                return;
+            }
+        }
+
+        window.location.href = buildAdminUrl( form.ID, action );
+    }, [ buildAdminUrl, confirm ] );
+
+    // Bulk action handler (develop's bulk request to the server list action)
+    const handleBulkAction = useCallback( async ( bulkAction ) => {
+        if ( ! bulkAction || selectedForms.length === 0 ) {
             return;
+        }
+
+        if ( 'delete' === bulkAction ) {
+            const ok = await confirm( {
+                title: __( 'Delete Permanently', 'wp-user-frontend' ),
+                message: __( 'Are you sure you want to delete the selected forms permanently? This action cannot be undone.', 'wp-user-frontend' ),
+                confirmText: __( 'Delete Permanently', 'wp-user-frontend' ),
+            } );
+
+            if ( ! ok ) {
+                return;
+            }
         }
 
         const params = new URLSearchParams( {
             page: pageSlug,
             _wpnonce: wpuf_forms_list.bulk_nonce,
             _wp_http_referer: window.location.href,
-            action: selectedBulkAction,
-            action2: selectedBulkAction,
+            action: bulkAction,
+            action2: bulkAction,
             bulk_action: 'Apply',
             paged: pagination.current_page.toString(),
         } );
@@ -193,34 +180,35 @@ const FormsList = ( {
         } );
 
         window.location.href = `${ window.wpuf_admin_script.admin_url }admin.php?${ params.toString() }`;
-    }, [ selectedBulkAction, selectedForms, pageSlug, searchTerm, currentTab, pagination ] );
+    }, [ selectedForms, pageSlug, searchTerm, currentTab, pagination, confirm ] );
 
-    // Open jQuery template modal
+    // Open the templates modal (PHP template part, legacy jQuery).
     const openModal = useCallback( ( event ) => {
-        event.preventDefault();
+        event?.preventDefault();
 
-        if ( window.jQuery ) {
-            const $ = window.jQuery;
-            const $modal = $( '.wpuf-form-template-modal' );
+        const $ = window.jQuery;
+        const $modal = $ ? $( '.wpuf-form-template-modal' ) : null;
 
-            $modal.show().removeClass( 'hidden' );
-            $modal[ 0 ].offsetHeight;
-
-            setTimeout( function () {
-                $modal.addClass( 'wpuf-modal-show' );
-            }, 10 );
-
-            $( 'body' ).addClass( 'wpuf-modal-open' );
-            $( 'body' ).css( 'overflow', 'hidden' );
-            $( '#wpbody-content .wrap' ).hide();
-        } else {
+        if ( ! $modal || ! $modal.length ) {
             window.location.href = newFormUrl;
+            return;
         }
+
+        $modal.show().removeClass( 'wpuf-hidden' );
+        $modal[ 0 ].offsetHeight; // eslint-disable-line no-unused-expressions
+
+        setTimeout( function () {
+            $modal.addClass( 'wpuf-modal-show' );
+        }, 10 );
+
+        $( 'body' ).addClass( 'wpuf-modal-open' );
+        $( 'body' ).css( 'overflow', 'hidden' );
+        $( '#wpbody-content .wrap' ).hide();
     }, [ newFormUrl ] );
 
     // AI Form Builder handler
     const openAIFormBuilder = useCallback( ( event ) => {
-        event.preventDefault();
+        event?.preventDefault();
 
         if ( ! aiConfigured ) {
             setShowAIConfigModal( true );
@@ -244,51 +232,34 @@ const FormsList = ( {
         return applyFilters( 'wpuf.formsList.getShortcode', shortcode, formId, formType );
     }, [ formType ] );
 
-    // Copy shortcode handler
+    // Copy shortcode handler (develop failed silently, e.g. on plain http)
     const handleCopyShortcode = useCallback( ( text, key ) => {
-        copyToClipboard( text, key );
+        copyToClipboard( text, key ).catch( () => {
+            notify( __( 'Could not copy the shortcode. Please copy it manually.', 'wp-user-frontend' ), 'error' );
+        } );
     }, [ copyToClipboard ] );
 
-    // Menu items based on current tab
+    // Menu items based on current tab (develop items)
     const menuItems = useMemo( () => {
         if ( currentTab === 'trash' ) {
             return [
-                {
-                    label: __( 'Restore', 'wp-user-frontend' ),
-                    action: 'restore',
-                    className: 'text-gray-900!',
-                    hoverClassName: 'hover:bg-primary! hover:text-white!',
-                },
-                {
-                    label: __( 'Delete Permanently', 'wp-user-frontend' ),
-                    action: 'delete',
-                    className: 'text-red-600!',
-                    hoverClassName: 'hover:bg-red-500! hover:text-white!',
-                },
+                { key: 'restore', label: __( 'Restore', 'wp-user-frontend' ) },
+                { key: 'delete', label: __( 'Delete Permanently', 'wp-user-frontend' ), destructive: true },
             ];
         }
 
         return [
-            {
-                label: __( 'Edit', 'wp-user-frontend' ),
-                action: 'edit',
-                className: 'text-gray-900!',
-                hoverClassName: 'hover:bg-primary! hover:text-white!',
-            },
-            {
-                label: __( 'Duplicate', 'wp-user-frontend' ),
-                action: 'duplicate',
-                className: 'text-gray-900!',
-                hoverClassName: 'hover:bg-primary! hover:text-white!',
-            },
-            {
-                label: __( 'Trash', 'wp-user-frontend' ),
-                action: 'trash',
-                className: 'text-red-600!',
-                hoverClassName: 'hover:bg-red-500! hover:text-white!',
-            },
+            { key: 'edit', label: __( 'Edit', 'wp-user-frontend' ) },
+            { key: 'duplicate', label: __( 'Duplicate', 'wp-user-frontend' ) },
+            { key: 'trash', label: __( 'Trash', 'wp-user-frontend' ), destructive: true },
         ];
     }, [ currentTab ] );
+
+    const tabs = Object.entries( postCounts ).map( ( [ key, value ] ) => ( {
+        id: key === 'all' ? 'any' : key,
+        label: value.label,
+        count: value.count,
+    } ) );
 
     // Determine empty state type
     const getEmptyStateType = () => {
@@ -300,6 +271,53 @@ const FormsList = ( {
         }
         return 'tab-empty';
     };
+
+    const aiHandler = aiFormBuilderAvailable ? openAIFormBuilder : null;
+
+    let content;
+
+    if ( loading ) {
+        content = <TableSkeleton />;
+    } else if ( error ) {
+        content = (
+            <ErrorState
+                title={ __( 'Could not load the forms', 'wp-user-frontend' ) }
+                message={ error.message }
+                onRetry={ retry }
+            />
+        );
+    } else if ( forms.length === 0 ) {
+        content = <EmptyState type={ getEmptyStateType() } onAddNew={ openModal } onAIFormBuilder={ aiHandler } />;
+    } else {
+        content = (
+            <>
+                <FormsTable
+                    forms={ forms }
+                    selectedForms={ selectedForms }
+                    selectAllChecked={ selectAllChecked }
+                    onSelectAll={ handleSelectAll }
+                    onSelectForm={ handleSelectForm }
+                    onAction={ handleAction }
+                    editUrl={ editUrl }
+                    postType={ postType }
+                    formType={ formType }
+                    getShortcode={ getShortcode }
+                    copiedKey={ copiedKey }
+                    onCopyShortcode={ handleCopyShortcode }
+                    menuItems={ menuItems }
+                />
+
+                <Pagination
+                    variant="footer"
+                    currentPage={ pagination.current_page }
+                    total={ pagination.total_items }
+                    perPage={ pagination.per_page }
+                    onPageChange={ handlePageChange }
+                    onPerPageChange={ setPerPage }
+                />
+            </>
+        );
+    }
 
     return (
         <div>
@@ -341,126 +359,47 @@ const FormsList = ( {
                 <h3 className="text-2xl font-bold m-0 p-0 leading-none">
                     { filteredPageTitle }
                 </h3>
-                <div className="flex gap-3">
-                    { aiFormBuilderAvailable && ( <button
-                        type="button"
-                        onClick={ openAIFormBuilder }
-                        className="rounded-md text-center bg-gradient-to-r from-purple-600 to-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-xs hover:from-purple-700 hover:to-blue-700 hover:text-white focus:from-purple-700 focus:to-blue-700 focus:text-white focus:shadow-none hover:cursor-pointer inline-flex items-center"
-                    >
-                        <svg className="w-5 h-5 pr-1" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M8.17766 13.2532L7.5 15.625L6.82234 13.2532C6.4664 12.0074 5.4926 11.0336 4.24682 10.6777L1.875 10L4.24683 9.32234C5.4926 8.9664 6.4664 7.9926 6.82234 6.74682L7.5 4.375L8.17766 6.74683C8.5336 7.9926 9.5074 8.9664 10.7532 9.32234L13.125 10L10.7532 10.6777C9.5074 11.0336 8.5336 12.0074 8.17766 13.2532Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                            <path d="M15.2157 7.26211L15 8.125L14.7843 7.26212C14.5324 6.25444 13.7456 5.46764 12.7379 5.21572L11.875 5L12.7379 4.78428C13.7456 4.53236 14.5324 3.74556 14.7843 2.73789L15 1.875L15.2157 2.73788C15.4676 3.74556 16.2544 4.53236 17.2621 4.78428L18.125 5L17.2621 5.21572C16.2544 5.46764 15.4676 6.25444 15.2157 7.26211Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                            <path d="M14.0785 17.1394L13.75 18.125L13.4215 17.1394C13.2348 16.5795 12.7955 16.1402 12.2356 15.9535L11.25 15.625L12.2356 15.2965C12.7955 15.1098 13.2348 14.6705 13.4215 14.1106L13.75 13.125L14.0785 14.1106C14.2652 14.6705 14.7045 15.1098 15.2644 15.2965L16.25 15.625L15.2644 15.9535C14.7045 16.1402 14.2652 16.5795 14.0785 17.1394Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                        { __( 'AI Form Builder', 'wp-user-frontend' ) }
-                    </button> ) }
-                    <button
-                        type="button"
-                        onClick={ openModal }
-                        className="new-wpuf-form rounded-md text-center bg-primary px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-primaryHover hover:text-white focus:bg-primaryHover focus:text-white focus:shadow-none hover:cursor-pointer"
-                    >
-                        <span className="dashicons dashicons-plus-alt2"></span>
-                        &nbsp;
-                        { __( 'Add New ', 'wp-user-frontend' ) }
-                    </button>
+                <CreateButtons onAddNew={ openModal } onAIFormBuilder={ aiHandler } />
+            </div>
+
+            { /* List card (FlyHR): toolbar with status tabs + search, selection
+                 bar, table or state, footer pagination. */ }
+            <div className="mt-9 rounded-[10px] border border-solid border-gray-200 bg-white shadow-sm">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-0 border-b border-solid border-gray-200 px-4 pt-3 pb-2">
+                    <Tabs
+                        variant="toolbar"
+                        tabs={ tabs }
+                        value={ currentTab }
+                        onChange={ setCurrentTab }
+                        label={ __( 'Form status', 'wp-user-frontend' ) }
+                    />
+                    <SearchBar
+                        value={ searchTerm }
+                        onChange={ handleSearchChange }
+                    />
                 </div>
-            </div>
 
-            { /* Status Tabs */ }
-            <StatusTabs
-                postCounts={ postCounts }
-                currentTab={ currentTab }
-                onTabChange={ handleTabChange }
-            />
-
-            { /* Bulk Actions & Search */ }
-            <div className="flex justify-between my-8">
-                <BulkActions
-                    currentTab={ currentTab }
-                    selectedBulkAction={ selectedBulkAction }
-                    onBulkActionChange={ setSelectedBulkAction }
-                    onApply={ handleBulkAction }
-                    disabled={ selectedForms.length === 0 }
-                />
-                <SearchBar
-                    value={ searchTerm }
-                    onChange={ handleSearchChange }
-                />
-            </div>
-
-            { /* Loading State — matches Vue HollowDotsSpinner */ }
-            { loading && (
-                <>
-                    <style>{ `
-                        @keyframes hollow-dots-spinner-animation {
-                            50% { transform: scale(1); opacity: 1; }
-                            100% { opacity: 0; }
-                        }
-                        .wpuf-hollow-dots-spinner {
-                            display: flex;
-                            gap: 15px;
-                        }
-                        .wpuf-hollow-dots-spinner .wpuf-dot {
-                            width: 20px;
-                            height: 20px;
-                            border: 3px solid #7DC442;
-                            border-radius: 50%;
-                            transform: scale(0);
-                            animation: hollow-dots-spinner-animation 1s ease infinite 0ms;
-                        }
-                    ` }</style>
-                    <div className="flex h-16 items-center justify-center">
-                        <div className="wpuf-hollow-dots-spinner">
-                            <div className="wpuf-dot" style={ { animationDelay: '0.3s' } }></div>
-                            <div className="wpuf-dot" style={ { animationDelay: '0.6s' } }></div>
-                            <div className="wpuf-dot" style={ { animationDelay: '0.9s' } }></div>
-                        </div>
-                    </div>
-                </>
-            ) }
-
-            { /* Empty States */ }
-            { ! loading && forms.length === 0 && (
-                <EmptyState
-                    type={ getEmptyStateType() }
-                    onAddNew={ openModal }
-                    onAIFormBuilder={ aiFormBuilderAvailable ? openAIFormBuilder : null }
-                />
-            ) }
-
-            { /* Forms Table */ }
-            { ! loading && forms.length > 0 && (
-                <>
-                    <FormsTable
-                        forms={ forms }
+                { selectedForms.length > 0 && (
+                    <SelectionBar
+                        count={ selectedForms.length }
                         currentTab={ currentTab }
-                        selectedForms={ selectedForms }
-                        selectAllChecked={ selectAllChecked }
-                        onSelectAll={ handleSelectAll }
-                        onSelectForm={ handleSelectForm }
-                        onAction={ handleAction }
-                        postType={ postType }
-                        formType={ formType }
-                        getShortcode={ getShortcode }
-                        copiedKey={ copiedKey }
-                        onCopyShortcode={ handleCopyShortcode }
-                        menuItems={ menuItems }
+                        onAction={ handleBulkAction }
+                        onClear={ () => setSelectedForms( [] ) }
                     />
+                ) }
 
-                    <Pagination
-                        currentPage={ pagination.current_page }
-                        totalPages={ pagination.total_pages }
-                        onPageChange={ handlePageChange }
-                    />
-                </>
-            ) }
+                { content }
+            </div>
 
-            { /* AI Config Modal */ }
             <AIConfigModal
                 isOpen={ showAIConfigModal }
                 onClose={ () => setShowAIConfigModal( false ) }
-                onGoToSettings={ () => { window.location.href = aiSettingsUrl; } }
+                onGoToSettings={ () => {
+                    window.location.href = aiSettingsUrl;
+                } }
             />
+
+            { confirmDialog }
         </div>
     );
 };

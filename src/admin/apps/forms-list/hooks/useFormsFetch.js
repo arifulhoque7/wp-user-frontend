@@ -3,7 +3,10 @@
  *
  * @since WPUF_SINCE
  */
-import { useState, useCallback } from '@wordpress/element';
+import { useState, useCallback, useRef } from '@wordpress/element';
+import { request, restPath } from '@wpuf/api';
+
+export const PER_PAGE = 10;
 
 /**
  * Parse JSON from a response that may contain PHP notices mixed in.
@@ -12,7 +15,7 @@ import { useState, useCallback } from '@wordpress/element';
  *
  * @return {Object} Parsed JSON object.
  */
-const parseJsonFromResponse = ( responseText ) => {
+export const parseJsonFromResponse = ( responseText ) => {
     try {
         return JSON.parse( responseText );
     } catch ( initialError ) {
@@ -52,72 +55,78 @@ const parseJsonFromResponse = ( responseText ) => {
 /**
  * Hook to fetch and manage forms list data.
  *
+ * Requests go through the shared request layer (`@wpuf/api`: WordPress REST
+ * root and nonce, timeout, GET retry on a 5xx). The body is read as text so a
+ * response with PHP notices in front of the JSON still loads (develop).
+ * Only the latest request writes the list: a slower, older answer (search
+ * typing, tab switches) is dropped.
+ *
  * @param {Object} options
  * @param {string} options.postType Post type slug. Default 'wpuf_forms'.
  *
- * @return {Object} { forms, loading, pagination, fetchForms }
+ * @return {Object} { forms, loading, error, pagination, fetchForms }
  */
 const useFormsFetch = ( { postType = 'wpuf_forms' } = {} ) => {
     const [ forms, setForms ] = useState( [] );
     const [ loading, setLoading ] = useState( true );
     const [ pagination, setPagination ] = useState( {
+        total_items: 0,
         total_pages: 0,
         current_page: 1,
+        per_page: PER_PAGE,
     } );
     const [ error, setError ] = useState( null );
+    const latest = useRef( 0 );
 
-    const fetchForms = useCallback( async ( page = 1, status = 'any', search = '' ) => {
+    const fetchForms = useCallback( async ( page = 1, status = 'any', search = '', perPage = PER_PAGE ) => {
+        const requestId = ++latest.current;
+
+        setLoading( true );
+        setError( null );
+
+        const query = {
+            page,
+            per_page: perPage,
+            status,
+            post_type: postType,
+        };
+
+        if ( search ) {
+            query.s = search;
+        }
+
         try {
-            setLoading( true );
-            setError( null );
+            const response = await request( restPath( 'wpuf/v1', '/wpuf_form' ), { query, parse: false } );
+            const data = parseJsonFromResponse( await response.text() );
 
-            const restApiRoot = ( wpuf_forms_list.rest_url || '' ).replace( /\/$/, '' );
-            const params = new URLSearchParams( {
-                page: page.toString(),
-                per_page: '10',
-                status,
-                post_type: postType,
-            } );
-
-            if ( search ) {
-                params.append( 's', search );
+            if ( requestId !== latest.current ) {
+                return;
             }
-
-            // rest_url may already include 'wpuf/v1' namespace (Pro) or be a bare root (free).
-            const hasNamespace = restApiRoot.indexOf( '/wpuf/v1' ) !== -1;
-            const apiUrl = hasNamespace
-                ? `${ restApiRoot }/wpuf_form?${ params.toString() }`
-                : `${ restApiRoot }/wpuf/v1/wpuf_form?${ params.toString() }`;
-
-            const response = await fetch( apiUrl, {
-                headers: {
-                    'X-WP-Nonce': wpuf_forms_list.rest_nonce,
-                },
-            } );
-
-            if ( ! response.ok ) {
-                throw new Error( `HTTP error! status: ${ response.status }` );
-            }
-
-            const responseText = await response.text();
-            const data = parseJsonFromResponse( responseText );
 
             if ( data.success && data.result ) {
                 setForms( data.result );
                 setPagination( {
+                    total_items: parseInt( data.pagination?.total_items, 10 ) || 0,
                     total_pages: data.pagination?.total_pages || 0,
                     current_page: page,
+                    per_page: perPage,
                 } );
             } else {
                 setForms( [] );
-                setPagination( { total_pages: 0, current_page: 1 } );
+                setPagination( { total_items: 0, total_pages: 0, current_page: 1, per_page: perPage } );
             }
         } catch ( err ) {
+            if ( requestId !== latest.current ) {
+                return;
+            }
+
             setError( err );
             setForms( [] );
-            setPagination( { total_pages: 0, current_page: 1 } );
+            setPagination( { total_items: 0, total_pages: 0, current_page: 1, per_page: perPage } );
         } finally {
-            setLoading( false );
+            if ( requestId === latest.current ) {
+                setLoading( false );
+            }
         }
     }, [ postType ] );
 

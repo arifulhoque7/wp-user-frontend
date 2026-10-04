@@ -77,9 +77,29 @@
     color: inherit;
 }
 
-/* Page background token (design-tokens.md "Page background"): every screen
-   that uses the shared layer gets develop's white page, set once here
-   (develop subscriptions: body.user-frontend_page_wpuf_subscription). */
-body.wpuf-admin-react {
-    background-color: #ffffff;
+/* Page look of every screen on the shared layer (design-tokens.md "Page
+   background", owner 2026-10-04, FlyHR's admin page): WordPress admin gray
+   page edge to edge (no #wpcontent left gutter; WordPress notices keep their
+   own margins), white header strip (PageHeader) and white cards on top.
+   Set once here, so each screen that adopts the shared layer gets it. */
+body.wpuf-admin-react,
+body.wpuf-admin-react #wpcontent {
+    background-color: #f0f0f1;
+}
+
+body.wpuf-admin-react #wpcontent {
+    padding-left: 0;
+}
+
+/* The "Learn more" band under a screen (admin.css: white, pulled -20px into
+   the gutter that is gone now; it has no RTL copy, so both sides): gray like
+   the page, its pill white. */
+body.wpuf-admin-react .wpuf-footer-help {
+    margin-left: 0;
+    margin-right: 0;
+    background: #f0f0f1;
+}
+
+body.wpuf-admin-react .wpuf-footer-help .wpuf-footer-help-content {
+    background: #fff;
 }

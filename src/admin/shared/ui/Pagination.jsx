@@ -4,16 +4,30 @@
  * - variant "simple" (forms lists): Previous / Next, pages current +/- 2
  *   with an underline on the current one; nothing for a single page;
  * - variant "summary" (subscriptions): "Showing X to Y of Z results" and a
- *   boxed group of 3 pages whose edge buttons go to the first / last page.
+ *   boxed group of 3 pages whose edge buttons go to the first / last page;
+ * - variant "footer" (FlyHR list-card footer, forms lists since 4.2):
+ *   "Showing X–Y of Z" on the left; rows per page, previous / next icon
+ *   buttons and "page of total" on the right. Shown for one page too.
  */
-import { Pagination as PuiPagination, PaginationContent, PaginationItem, PaginationLink, cn } from '@wedevs/plugin-ui';
+import {
+    Pagination as PuiPagination,
+    PaginationContent,
+    PaginationItem,
+    PaginationLink,
+    Select as PuiSelect,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+    cn,
+} from '@wedevs/plugin-ui';
 import { __, sprintf } from '@wordpress/i18n';
 
 import { pagesAround, pagesFixed } from './pages';
 
 // Points the reading direction's way: mirrored in right-to-left admin.
-const Chevron = ( { dir } ) => (
-    <svg className="size-5 rtl:-scale-x-100" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+const Chevron = ( { dir, className = 'size-5' } ) => (
+    <svg className={ cn( className, 'rtl:-scale-x-100' ) } viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
         { 'prev' === dir
             ? <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
             : <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" /> }
@@ -27,15 +41,74 @@ const Chevron = ( { dir } ) => (
  * @param {string}   [props.variant]    simple|summary
  * @param {number}   [props.totalPages] simple: total pages.
  * @param {number}   [props.total]      summary: number of items.
- * @param {number}   [props.perPage]    summary: items per page.
+ * @param {number}   [props.perPage]    summary / footer: items per page.
+ * @param {Function} [props.onPerPageChange] footer: ( perPage ) => void (shows the rows-per-page select).
+ * @param {number[]} [props.perPageOptions]  footer: choices (default 10, 20, 50, 100).
  */
-export default function Pagination( { currentPage, onPageChange, variant = 'simple', totalPages, total = 0, perPage = 10, className } ) {
-    const pageCount = 'summary' === variant ? Math.ceil( total / perPage ) : totalPages;
+export default function Pagination( { currentPage, onPageChange, variant = 'simple', totalPages, total = 0, perPage = 10, onPerPageChange, perPageOptions = [ 10, 20, 50, 100 ], className } ) {
+    const pageCount = 'simple' === variant ? totalPages : Math.ceil( total / perPage );
     const go = ( page ) => {
         if ( page >= 1 && page <= pageCount && page !== currentPage ) {
             onPageChange( page );
         }
     };
+
+    if ( 'footer' === variant ) {
+        const pages = Math.max( pageCount, 1 );
+        const start = 0 === total ? 0 : ( currentPage - 1 ) * perPage + 1;
+        const end = Math.min( currentPage * perPage, total );
+        const step = 'inline-flex size-8 items-center justify-center rounded-md border border-solid border-gray-200 bg-white text-gray-900 cursor-pointer enabled:hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed';
+
+        return (
+            <footer data-wpuf-ui="" className={ cn( 'flex flex-wrap items-center justify-between gap-3 border-0 border-t border-solid border-gray-200 px-4 py-3 text-sm text-gray-500', className ) }>
+                <span className="text-xs">
+                    { sprintf(
+                        /* translators: 1: first item number, 2: last item number, 3: total items */
+                        __( 'Showing %1$d–%2$d of %3$d', 'wp-user-frontend' ),
+                        start,
+                        end,
+                        total
+                    ) }
+                </span>
+                <div className="flex flex-wrap items-center gap-3">
+                    { onPerPageChange && (
+                        <label className="flex items-center gap-2">
+                            <span className="text-xs whitespace-nowrap">{ __( 'Rows per page', 'wp-user-frontend' ) }</span>
+                            <PuiSelect value={ String( perPage ) } onValueChange={ ( next ) => onPerPageChange( parseInt( String( next ), 10 ) ) }>
+                                <SelectTrigger
+                                    aria-label={ __( 'Rows per page', 'wp-user-frontend' ) }
+                                    className="h-8 data-[size=default]:h-8 shrink-0 cursor-pointer rounded-md border border-gray-200 bg-white pl-2 pr-2 text-xs font-medium text-gray-900 shadow-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30"
+                                >
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent align="start" alignItemWithTrigger={ false }>
+                                    { perPageOptions.map( ( option ) => (
+                                        <SelectItem key={ option } value={ String( option ) }>{ option }</SelectItem>
+                                    ) ) }
+                                </SelectContent>
+                            </PuiSelect>
+                        </label>
+                    ) }
+                    <div className="inline-flex items-center gap-1">
+                        <button type="button" className={ step } onClick={ () => go( currentPage - 1 ) } disabled={ currentPage <= 1 } aria-label={ __( 'Previous page', 'wp-user-frontend' ) }>
+                            <Chevron dir="prev" className="size-3.5" />
+                        </button>
+                        <span className="min-w-20 px-2 text-center text-xs font-medium text-gray-900">
+                            { sprintf(
+                                /* translators: 1: current page, 2: number of pages */
+                                __( '%1$d of %2$d', 'wp-user-frontend' ),
+                                currentPage,
+                                pages
+                            ) }
+                        </span>
+                        <button type="button" className={ step } onClick={ () => go( currentPage + 1 ) } disabled={ currentPage >= pages } aria-label={ __( 'Next page', 'wp-user-frontend' ) }>
+                            <Chevron dir="next" className="size-3.5" />
+                        </button>
+                    </div>
+                </div>
+            </footer>
+        );
+    }
 
     if ( 'summary' === variant ) {
         const first = ( currentPage - 1 ) * perPage + 1;

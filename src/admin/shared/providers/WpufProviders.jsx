@@ -18,7 +18,8 @@ export const PLUGIN_ID = 'wpuf-admin';
  *                                      migrated): plugin-ui styles then reach only plugin-ui
  *                                      parts (`[data-slot]`) and wrapper roots
  *                                      (`[data-wpuf-ui]`), so the legacy markup keeps its
- *                                      look (design.md D25). Drop it when the screen is done.
+ *                                      look (design.md D25). Keep it while the screen renders
+ *                                      its own layout markup (headings, tables, grids).
  */
 export default function WpufProviders( { children, withToaster = true, host = false } ) {
     return (

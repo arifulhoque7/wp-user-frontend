@@ -130,10 +130,16 @@ class AdminAssetsTest extends WP_UnitTestCase {
         $this->assertSame( 'x.css', $assets->use_react_forms_styles( 'x.css', 'wpuf-admin' ) );
         $this->assertSame( 'a wpuf-admin-react', $assets->react_forms_body_class( 'a' ) );
 
-        // Lists: forms-list (printed after Pro's styles) carries the new sheet.
+        // Lists: forms-list (printed after Pro's styles) carries the lists' sheet
+        // (forms sheet + shared components), its RTL copy on RTL sites.
         unset( $_GET['action'] );
         $this->assertFalse( $assets->use_react_forms_styles( $old, 'wpuf-admin-form-builder' ) );
-        $this->assertStringContainsString( '/css/admin/forms-react.css', $assets->use_react_forms_styles( 'y.css', 'wpuf-forms-list' ) );
+        $this->assertStringContainsString( '/css/admin/forms-list-react.css?ver=', $assets->use_react_forms_styles( 'y.css', 'wpuf-forms-list' ) );
+
+        $GLOBALS['wp_locale']->text_direction = 'rtl';
+        $rtl = $assets->use_react_forms_styles( 'y.css', 'wpuf-forms-list' );
+        $GLOBALS['wp_locale']->text_direction = 'ltr';
+        $this->assertStringContainsString( '/css/admin/forms-list-react-rtl.css?ver=', $rtl );
 
         $plugin_page = 'wpuf-profile-forms'; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
         $this->assertSame( 'wpuf-admin-react', $assets->react_forms_body_class( '' ) );

@@ -64,13 +64,15 @@ class Assets {
     }
 
     /**
-     * On the React forms lists and builders, serve the Tailwind 4 sheet
-     * (assets/css/admin/forms-react.css) once, in the place the old sheets had
-     * in the cascade: on the builders through admin/form-builder.css (head), on
-     * the lists through forms-list.min.css (enqueued while rendering, printed
-     * after Pro's styles), with the other handle printing nothing. Done when the
-     * tag is printed, so every handle Free and Pro enqueue keeps working. The
-     * classic post edit screen keeps the old sheet.
+     * On the React forms lists and builders, serve the Tailwind 4 sheet once,
+     * in the place the old sheets had in the cascade: on the builders
+     * assets/css/admin/forms-react.css through admin/form-builder.css (head), on
+     * the lists assets/css/admin/forms-list-react.css (the same sheet plus the
+     * shared components' part, right-to-left copy on RTL sites) through
+     * forms-list.min.css (enqueued while rendering, printed after Pro's styles),
+     * with the other handle printing nothing. Done when the tag is printed, so
+     * every handle Free and Pro enqueue keeps working. The classic post edit
+     * screen keeps the old sheet.
      *
      * @since WPUF_SINCE
      *
@@ -92,7 +94,9 @@ class Assets {
             return false;
         }
 
-        return add_query_arg( 'ver', WPUF_VERSION, WPUF_ASSET_URI . '/css/admin/forms-react.css' );
+        $file = $builder ? 'forms-react' : ( is_rtl() ? 'forms-list-react-rtl' : 'forms-list-react' );
+
+        return add_query_arg( 'ver', WPUF_VERSION, WPUF_ASSET_URI . '/css/admin/' . $file . '.css' );
     }
 
     /**

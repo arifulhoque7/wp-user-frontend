@@ -30,7 +30,7 @@ class BootPayload {
      *
      * @since WPUF_SINCE
      *
-     * @param string $screen Screen key (`post_forms`, `form_builder`, `subscriptions`, `settings`)
+     * @param string $screen Screen key (`post_forms`, `form_builder`, `subscriptions`, `settings`; Pro: `registration_forms`)
      *
      * @return array
      */

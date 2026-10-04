@@ -1,31 +1,48 @@
 /**
  * FormsTable component — renders the forms data table with columns and rows.
  *
+ * Columns are a filter contract (`wpuf.formsList.tableColumns`): each has a
+ * `key`, `label`, `thClassName`, optional `renderHeader()` and
+ * `render( form )` returning the row's `<td>`; Pro swaps columns on the
+ * registration list. So the list stays a plain table (not DataTable),
+ * in FlyHR's list-table structure (owner, 4.2), inside the list card:
+ * uppercase 12px gray header row (40px), 72px rows with a hover tint, the
+ * selection checkbox in its own first column (drawn by the table, outside
+ * the filterable columns) and a vertical-dots actions menu.
+ *
  * @since WPUF_SINCE
  */
 import { useMemo } from '@wordpress/element';
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
 import { applyFilters } from '@wordpress/hooks';
+import { ActionMenu, Checkbox } from '@wpuf/components';
 
-import { CHECKBOX_CLASSES, STATUS_BADGE_CLASSES } from '../utils/constants';
+import { STATUS_BADGE_CLASSES } from '../utils/constants';
 import ShortcodeCopy from './ShortcodeCopy';
-import ActionMenu from './ActionMenu';
 
-const STATUS_LABELS = {
-    publish: 'Published',
-    pending: 'Pending Review',
-    private: 'Private',
-    draft: 'Draft',
+// FlyHR list-table cells: header text comes from the row (uppercase 12px gray).
+const TH = 'px-2 font-normal';
+const TD = 'px-2 py-3 align-middle text-sm';
+
+const statusLabel = ( status ) => {
+    const labels = {
+        publish: __( 'Published', 'wp-user-frontend' ),
+        pending: __( 'Pending Review', 'wp-user-frontend' ),
+        private: __( 'Private', 'wp-user-frontend' ),
+        draft: __( 'Draft', 'wp-user-frontend' ),
+    };
+
+    return labels[ status ] || status;
 };
 
 const FormsTable = ( {
     forms,
-    currentTab,
     selectedForms,
     selectAllChecked,
     onSelectAll,
     onSelectForm,
     onAction,
+    editUrl,
     postType,
     formType,
     getShortcode,
@@ -39,22 +56,15 @@ const FormsTable = ( {
         {
             key: 'form_name',
             label: __( 'Form Name', 'wp-user-frontend' ),
-            thClassName: 'py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6',
+            thClassName: TH,
             render: ( form ) => (
-                <td key="form_name" className="py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                    <input
-                        type="checkbox"
-                        value={ form.ID }
-                        checked={ selectedForms.includes( form.ID ) }
-                        onChange={ () => onSelectForm( form.ID ) }
-                        className={ CHECKBOX_CLASSES }
-                    />
-                    <span
-                        onClick={ () => onAction( 'edit', form.ID ) }
-                        className="hover:cursor-pointer"
+                <td key="form_name" className={ TD + ' text-gray-900' }>
+                    <a
+                        href={ editUrl( form.ID ) }
+                        className="font-medium text-gray-900 no-underline hover:text-primary hover:underline focus:text-primary"
                     >
                         { form.post_title }
-                    </span>
+                    </a>
                     { form.form_status === 'draft' && (
                         <span className="text-gray-400">
                             { ' ' }&mdash; { __( 'Draft', 'wp-user-frontend' ) }
@@ -62,29 +72,13 @@ const FormsTable = ( {
                     ) }
                 </td>
             ),
-            renderHeader: () => (
-                <th key="form_name" scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">
-                    <input
-                        type="checkbox"
-                        checked={ selectAllChecked }
-                        onChange={ onSelectAll }
-                        ref={ ( el ) => {
-                            if ( el ) {
-                                el.indeterminate = indeterminate;
-                            }
-                        } }
-                        className={ CHECKBOX_CLASSES }
-                    />
-                    { __( 'Form Name', 'wp-user-frontend' ) }
-                </th>
-            ),
         },
         {
             key: 'post_type',
             label: __( 'Post Type', 'wp-user-frontend' ),
-            thClassName: 'px-3 py-3.5 text-left text-sm font-semibold text-gray-900',
+            thClassName: TH,
             render: ( form ) => (
-                <td key="post_type" className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                <td key="post_type" className={ TD + ' whitespace-nowrap text-gray-500' }>
                     { form.settings_post_type }
                 </td>
             ),
@@ -92,16 +86,16 @@ const FormsTable = ( {
         {
             key: 'post_status',
             label: __( 'Post Status', 'wp-user-frontend' ),
-            thClassName: 'px-3 py-3.5 text-left text-sm font-semibold text-gray-900',
+            thClassName: TH,
             render: ( form ) => (
-                <td key="post_status" className="whitespace-nowrap px-3 py-4 text-sm">
+                <td key="post_status" className={ TD + ' whitespace-nowrap' }>
                     <span
                         className={
                             'inline-flex items-center py-[2px] px-[12px] rounded-[5px] text-xs font-medium border ' +
                             ( STATUS_BADGE_CLASSES[ form.post_status ] || STATUS_BADGE_CLASSES.draft )
                         }
                     >
-                        { STATUS_LABELS[ form.post_status ] || form.post_status }
+                        { statusLabel( form.post_status ) }
                     </span>
                 </td>
             ),
@@ -109,9 +103,9 @@ const FormsTable = ( {
         {
             key: 'shortcode',
             label: __( 'Shortcode', 'wp-user-frontend' ),
-            thClassName: 'px-3 py-3.5 text-left text-sm font-semibold text-gray-900',
+            thClassName: TH,
             render: ( form ) => (
-                <td key="shortcode" className="whitespace-nowrap px-3 py-4 text-sm font-medium text-gray-500">
+                <td key="shortcode" className={ TD + ' whitespace-nowrap font-medium text-gray-500' }>
                     { /* Pro swaps in the registration + edit profile pair on profile forms. */ }
                     { applyFilters(
                         'wpuf.formsList.shortcodeRender',
@@ -133,15 +127,15 @@ const FormsTable = ( {
         {
             key: 'guest_post',
             label: __( 'Guest Post', 'wp-user-frontend' ),
-            thClassName: 'px-3 py-3.5 text-left text-sm font-semibold text-gray-900',
+            thClassName: TH,
             render: ( form ) => (
-                <td key="guest_post" className="whitespace-nowrap px-3 py-4 text-sm font-medium text-gray-500">
+                <td key="guest_post" className={ TD + ' whitespace-nowrap text-gray-500' }>
                     { form.settings_guest_post ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" className="size-4 w-6">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" className="size-4 w-6" role="img" aria-label={ __( 'Yes', 'wp-user-frontend' ) }>
                             <path fill="#059669" fillRule="evenodd" d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z" clipRule="evenodd" />
                         </svg>
                     ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" className="size-4 w-6">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" className="size-4 w-6" role="img" aria-label={ __( 'No', 'wp-user-frontend' ) }>
                             <path fill="#ef4444" d="M5.28 4.22a.75.75 0 0 0-1.06 1.06L6.94 8l-2.72 2.72a.75.75 0 1 0 1.06 1.06L8 9.06l2.72 2.72a.75.75 0 1 0 1.06-1.06L9.06 8l2.72-2.72a.75.75 0 0 0-1.06-1.06L8 6.94 5.28 4.22Z" />
                         </svg>
                     ) }
@@ -151,59 +145,74 @@ const FormsTable = ( {
         {
             key: 'menu',
             label: '',
-            thClassName: 'px-3 py-3.5 text-left text-sm font-semibold text-gray-900',
+            thClassName: 'w-20 px-4',
             renderHeader: () => (
-                <th key="menu" scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                    <span className="sr-only">Menu</span>
+                <th key="menu" scope="col" className="w-20 px-4">
+                    <span className="sr-only">{ __( 'Actions', 'wp-user-frontend' ) }</span>
                 </th>
             ),
             render: ( form ) => (
-                <td key="menu" className="whitespace-nowrap px-3 py-4 text-sm font-medium text-gray-500 text-right">
-                    <ActionMenu
-                        items={ menuItems }
-                        onAction={ ( action ) => onAction( action, form.ID ) }
-                    />
+                <td key="menu" className="px-4 align-middle">
+                    <div className="flex justify-end">
+                        <ActionMenu
+                            vertical
+                            /* translators: %s: form name */
+                            label={ sprintf( __( 'Actions for %s', 'wp-user-frontend' ), form.post_title ) }
+                            items={ menuItems.map( ( item ) => ( {
+                                ...item,
+                                onClick: () => onAction( item.key, form ),
+                            } ) ) }
+                        />
+                    </div>
                 </td>
             ),
         },
-    ], [ selectAllChecked, indeterminate, selectedForms, onSelectAll, onSelectForm, onAction, formType, getShortcode, copiedKey, onCopyShortcode, menuItems ] );
+    ], [ onAction, editUrl, formType, getShortcode, copiedKey, onCopyShortcode, menuItems ] );
 
     const columns = applyFilters( 'wpuf.formsList.tableColumns', defaultColumns, postType );
 
     return (
-        <div className="flow-root">
-            <div className="-mx-4 -my-2 sm:-mx-6 lg:-mx-8">
-                <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-                    <div className="shadow-sm border border-gray-200 sm:rounded-lg">
-                        <table className="min-w-full [&>:not([hidden])~:not([hidden])]:border-t [&>:not([hidden])~:not([hidden])]:border-b-0 [&>:not([hidden])~:not([hidden])]:border-gray-200">
-                            <thead>
-                                <tr>
-                                    { columns.map( ( col ) =>
-                                        col.renderHeader
-                                            ? col.renderHeader()
-                                            : (
-                                                <th
-                                                    key={ col.key }
-                                                    scope="col"
-                                                    className={ col.thClassName || 'px-3 py-3.5 text-left text-sm font-semibold text-gray-900' }
-                                                >
-                                                    { col.label }
-                                                </th>
-                                            )
-                                    ) }
-                                </tr>
-                            </thead>
-                            <tbody className="[&>:not([hidden])~:not([hidden])]:border-t [&>:not([hidden])~:not([hidden])]:border-b-0 [&>:not([hidden])~:not([hidden])]:border-gray-200">
-                                { forms.map( ( form ) => (
-                                    <tr key={ form.ID } className="relative group">
-                                        { columns.map( ( col ) => col.render( form ) ) }
-                                    </tr>
-                                ) ) }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+        <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+                <thead className="border-0 border-b border-solid border-gray-200 bg-white">
+                    <tr className="h-10 text-xs font-normal uppercase leading-[1.4] text-[#828282]">
+                        <th scope="col" className="w-10 px-4">
+                            <Checkbox
+                                value={ selectAllChecked }
+                                onChange={ onSelectAll }
+                                indeterminate={ indeterminate }
+                                aria-label={ __( 'Select all', 'wp-user-frontend' ) }
+                                className="align-middle"
+                            />
+                        </th>
+                        { columns.map( ( col ) =>
+                            col.renderHeader
+                                ? col.renderHeader()
+                                : (
+                                    <th key={ col.key } scope="col" className={ col.thClassName || TH }>
+                                        { col.label }
+                                    </th>
+                                )
+                        ) }
+                    </tr>
+                </thead>
+                <tbody>
+                    { forms.map( ( form ) => (
+                        <tr key={ form.ID } className="h-18 border-0 border-b border-solid border-gray-200 bg-white last:border-b-0 hover:bg-gray-50">
+                            <td className="w-10 px-4 align-middle">
+                                <Checkbox
+                                    value={ selectedForms.includes( form.ID ) }
+                                    onChange={ () => onSelectForm( form.ID ) }
+                                    /* translators: %s: form name */
+                                    aria-label={ sprintf( __( 'Select %s', 'wp-user-frontend' ), form.post_title ) }
+                                    className="align-middle"
+                                />
+                            </td>
+                            { columns.map( ( col ) => col.render( form ) ) }
+                        </tr>
+                    ) ) }
+                </tbody>
+            </table>
         </div>
     );
 };

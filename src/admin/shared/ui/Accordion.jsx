@@ -3,7 +3,7 @@
  * description, optional icon and badge, chevron that turns; the content is
  * unmounted while closed. Uncontrolled (defaultOpen) or controlled
  * (open + onToggle).
- * Variant "card": develop's subscription subsection (bordered rounded box,
+ * Variant "card": develop's subscription subsection (bordered white rounded box,
  * gray header, small chevron, description as an italic sub-label).
  */
 import { cn } from '@wedevs/plugin-ui';
@@ -34,7 +34,7 @@ export default function Accordion( { title, description, icon, badge, defaultOpe
 
     if ( 'card' === variant ) {
         return (
-            <div data-wpuf-ui="" className={ cn( 'border border-gray-200 rounded-xl mt-4 mb-4', className ) }>
+            <div data-wpuf-ui="" className={ cn( 'border border-gray-200 rounded-xl mt-4 mb-4 bg-white', className ) }>
                 <h2 className="m-0">
                     <button
                         type="button"

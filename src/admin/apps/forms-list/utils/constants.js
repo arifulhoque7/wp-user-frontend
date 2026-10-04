@@ -4,9 +4,6 @@
  * @since WPUF_SINCE
  */
 
-export const CHECKBOX_CLASSES =
-    'mt-0! mr-2! h-4 w-4 shadow-none! checked:shadow-none! focus:checked:shadow-primary! focus:checked:shadow-none! border-gray-300! checked:border-primary! checked:before:bg-white! hover:checked:bg-primary! focus:ring-transparent! focus:checked:ring-transparent! hover:checked:ring-transparent! focus:checked:bg-primary! focus:shadow-primary checked:focus:bg-primary! checked:hover:bg-primary checked:bg-primary! before:content-none! checkbox-tick! rounded-sm';
-
 export const STATUS_BADGE_CLASSES = {
     publish:
         'bg-emerald-50 border-emerald-200 text-emerald-800',

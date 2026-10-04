@@ -13,16 +13,19 @@ import { Dialog, DialogContent, DialogTitle, cn } from '@wedevs/plugin-ui';
  * @param {Function} props.onClose     () => void (Esc, overlay, close button).
  * @param {*}        props.title       Dialog title.
  * @param {boolean}  [props.hideTitle] Title for screen readers only.
+ * @param {string}   [props.titleClassName] Title look (default 16px semibold).
+ * @param {*}        [props.icon]      Shown above the title.
  * @param {*}        props.children    Body.
  */
-export default function Modal( { open, onClose, title, hideTitle = false, className, children } ) {
+export default function Modal( { open, onClose, title, hideTitle = false, titleClassName, icon, className, children } ) {
     return (
         <Dialog open={ open } onOpenChange={ ( next ) => ! next && onClose?.() }>
             <DialogContent
                 showCloseButton={ false }
                 className={ cn( 'w-1/3 min-w-[360px] max-w-none sm:max-w-none p-6 gap-0 bg-white rounded-lg border border-gray-200 shadow', className ) }
             >
-                <DialogTitle className={ hideTitle ? 'sr-only' : 'm-0 mb-4 text-base font-semibold text-gray-900' }>{ title }</DialogTitle>
+                { icon }
+                <DialogTitle className={ hideTitle ? 'sr-only' : titleClassName || 'm-0 mb-4 text-base font-semibold text-gray-900' }>{ title }</DialogTitle>
                 { children }
             </DialogContent>
         </Dialog>
