@@ -125,6 +125,11 @@ class Assets {
         do_action( 'wpuf_before_register_scripts', $scripts, $styles );
         $this->register_styles( $styles );
         $this->register_scripts( $scripts );
+
+        // The shared admin components (window.wpuf.components) print their own
+        // strings, so they load translations like the screens do.
+        wp_set_script_translations( 'wpuf-admin-ui', 'wp-user-frontend' );
+
         do_action( 'wpuf_after_register_scripts', $scripts, $styles );
     }
 
