@@ -44,6 +44,7 @@ class AdminAssetsTest extends WP_UnitTestCase {
         $this->assertContains( 'wpuf-admin-runtime', $scripts->registered['wpuf-admin-ui']->deps, 'plugin-ui layer loads after the runtime' );
         $this->assertContains( 'wp-components', $scripts->registered['wpuf-admin-ui']->deps );
         $this->assertSame( 'wp-user-frontend', $scripts->registered['wpuf-admin-ui']->textdomain, 'shared components load translations' );
+        $this->assertSame( 'replace', wp_styles()->get_data( 'wpuf-subscriptions-react', 'rtl' ), 'subscriptions-rtl.css on RTL sites' );
         $this->assertFalse( wp_script_is( 'wpuf-admin-runtime', 'enqueued' ), 'no screen uses the shared layer yet (task 3.2)' );
         $this->assertFalse( wp_script_is( 'wpuf-admin-ui', 'enqueued' ) );
     }

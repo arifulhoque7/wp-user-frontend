@@ -124,6 +124,7 @@ export default function WpEditor( { id, value = '', onChange, teeny = false, med
     if ( ! hasEditor ) {
         return (
             <textarea
+                data-wpuf-ui=""
                 id={ editorId }
                 rows={ rows }
                 defaultValue={ value ?? '' }
@@ -134,7 +135,7 @@ export default function WpEditor( { id, value = '', onChange, teeny = false, med
     }
 
     return (
-        <div className={ cn( 'wpuf-wp-editor', className ) }>
+        <div data-wpuf-ui="" className={ cn( 'wpuf-wp-editor', className ) }>
             <textarea id={ editorId } name={ editorId } rows={ rows } className="wp-editor-area" defaultValue={ value ?? '' } />
         </div>
     );

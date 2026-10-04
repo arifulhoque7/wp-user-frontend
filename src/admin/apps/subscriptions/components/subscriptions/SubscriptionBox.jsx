@@ -5,16 +5,18 @@
 import { __ } from '@wordpress/i18n';
 import { useState, useEffect, useCallback, useMemo } from '@wordpress/element';
 import { useSelect, useDispatch } from '@wordpress/data';
-import { DropdownMenu, Modal, Button, ButtonGroup } from '@wordpress/components';
-import { moreVertical, pencil, trash, check, closeSmall } from '@wordpress/icons';
 import { applyFilters } from '@wordpress/hooks';
+import { pencil, trash, check, closeSmall } from '@wordpress/icons';
+import { decodeEntities } from '@wordpress/html-entities';
+import { ActionMenu, ConfirmDialog, notify } from '@wpuf/components';
 import { useSubscriptionActions } from '../../hooks';
 import { SubscriptionBoxFooter } from '../../slots';
 import { fetchSubscribers } from '../../api/subscription';
 
-const SubscriptionBox = ({ subscription, onEdit }) => {
-	const [showTrashModal, setShowTrashModal] = useState(false);
-	const [showBox, setShowBox] = useState(true);
+const SubscriptionBox = ({ subscription, onEdit, onChanged }) => {
+	// 'trash' | 'delete' while develop's confirm popup is open.
+	const [confirming, setConfirming] = useState(null);
+	const [busy, setBusy] = useState(false);
 	const [subscribers, setSubscribers] = useState(0);
 
 	// These selectors need state argument, so use useSelect directly
@@ -57,8 +59,9 @@ const SubscriptionBox = ({ subscription, onEdit }) => {
 		}
 	}, [subscription.post_status]);
 
+	// Plain text like develop; currency symbols arrive as HTML entities (&#36;).
 	const billingAmount = useMemo(() => {
-		return getReadableBillingAmount(subscription);
+		return decodeEntities(getReadableBillingAmount(subscription));
 	}, [subscription, getReadableBillingAmount]);
 
 	const isRecurringSub = useMemo(() => {
@@ -91,71 +94,47 @@ const SubscriptionBox = ({ subscription, onEdit }) => {
 		setQuickEditStatus(true);
 	}, [subscription, setItem, setQuickEditStatus]);
 
-	const handleToggleStatus = useCallback(() => {
-		const newStatus = subscription.post_status === 'draft' ? 'publish' : 'draft';
-		const updatedSubscription = {
+	// develop's processPromiseResult: toast with the server message, then the
+	// list and counts reload (no page reload); failures keep the popup open.
+	const finish = useCallback((result) => {
+		setBusy(false);
+		if (result && result.success) {
+			notify(result.message, 'success');
+			setConfirming(null);
+			setItem(null);
+			onChanged?.();
+			return;
+		}
+		notify((result && result.message) || __('Something went wrong', 'wp-user-frontend'), 'danger');
+	}, [setItem, onChanged]);
+
+	const changeStatus = useCallback((newStatus) => {
+		setItem({
 			...subscription,
 			edit_single_row: true,
 			edit_row_name: 'post_status',
 			edit_row_value: newStatus,
-		};
-		setItem(updatedSubscription);
-		updateItem().then((result) => {
-			if (result.success) {
-				setShowBox(false);
-				// Refresh the list
-				window.location.reload();
-			}
 		});
-	}, [subscription, setItem, updateItem]);
+		setBusy(true);
+		updateItem().then(finish, () => finish(null));
+	}, [subscription, setItem, updateItem, finish]);
 
-	const handleTrash = useCallback(() => {
-		setShowTrashModal(true);
-	}, []);
-
-	// Actually move the item to trash
-	const confirmTrash = useCallback(() => {
-		const updatedSubscription = {
-			...subscription,
-			edit_single_row: true,
-			edit_row_name: 'post_status',
-			edit_row_value: 'trash',
-		};
-		setItem(updatedSubscription);
-		updateItem().then((result) => {
-			if (result.success) {
-				setShowBox(false);
-				window.location.reload();
-			}
-		});
-		setShowTrashModal(false);
-	}, [subscription, setItem, updateItem]);
+	const handleToggleStatus = useCallback(() => {
+		changeStatus(subscription.post_status === 'draft' ? 'publish' : 'draft');
+	}, [subscription.post_status, changeStatus]);
 
 	const handleRestore = useCallback(() => {
-		const updatedSubscription = {
-			...subscription,
-			edit_single_row: true,
-			edit_row_name: 'post_status',
-			edit_row_value: 'draft',
-		};
-		setItem(updatedSubscription);
-		updateItem().then((result) => {
-			if (result.success) {
-				setShowBox(false);
-				window.location.reload();
-			}
-		});
-	}, [subscription, setItem, updateItem]);
+		changeStatus('draft');
+	}, [changeStatus]);
 
-	const handleDelete = useCallback(() => {
-		deleteItem(subscription.ID).then((result) => {
-			if (result.success) {
-				setShowBox(false);
-				window.location.reload();
-			}
-		});
-		setShowTrashModal(false);
-	}, [subscription.ID, deleteItem]);
+	const handleConfirm = useCallback(() => {
+		if ('trash' === confirming) {
+			changeStatus('trash');
+			return;
+		}
+		setBusy(true);
+		deleteItem(subscription.ID).then(finish, () => finish(null));
+	}, [confirming, changeStatus, deleteItem, subscription.ID, finish]);
 
 	const getMenuItems = () => {
 		const items = [];
@@ -178,7 +157,7 @@ const SubscriptionBox = ({ subscription, onEdit }) => {
 			items.push({
 				icon: trash,
 				title: __('Trash', 'wp-user-frontend'),
-				onClick: handleTrash,
+				onClick: () => setConfirming('trash'),
 			});
 		} else {
 			items.push({
@@ -189,15 +168,20 @@ const SubscriptionBox = ({ subscription, onEdit }) => {
 			items.push({
 				icon: trash,
 				title: __('Delete Permanently', 'wp-user-frontend'),
-				onClick: handleDelete,
+				onClick: () => setConfirming('delete'),
 			});
 		}
 		return applyFilters( 'wpuf.subscription.boxMenuItems', items, subscription );
 	};
 
-	if (!showBox) {
-		return null;
-	}
+	// The filter keeps its item shape ({ icon, title, onClick }); the menu shows
+	// the titles like develop (no icons).
+	const menuItems = getMenuItems().map((item, index) => ({
+		key: `${index}-${item.title}`,
+		label: item.title,
+		onClick: item.onClick,
+		disabled: busy,
+	}));
 
 	return (
 		<>
@@ -208,29 +192,24 @@ const SubscriptionBox = ({ subscription, onEdit }) => {
 				>
 					<div>
 						<div className="flex py-1 text-gray-900 m-0 font-medium" title={`id: ${subscription.ID}`}>
-							{subscription.post_title}&nbsp;
+							{/* develop: `{{ title }} &nbsp;` (a space and a no-break space) */}
+							{subscription.post_title}{' '}&nbsp;
 							{isPasswordProtected && (
-								<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
 									<path fillRule="evenodd" clipRule="evenodd" d="M5.99999 10.8V8.4C5.99999 5.08629 8.68628 2.4 12 2.4C15.3137 2.4 18 5.08629 18 8.4V10.8C19.3255 10.8 20.4 11.8745 20.4 13.2V19.2C20.4 20.5255 19.3255 21.6 18 21.6H5.99999C4.67451 21.6 3.59999 20.5255 3.59999 19.2V13.2C3.59999 11.8745 4.67451 10.8 5.99999 10.8ZM15.6 8.4V10.8H8.39999V8.4C8.39999 6.41178 10.0118 4.8 12 4.8C13.9882 4.8 15.6 6.41178 15.6 8.4Z" fill="#a0aec0" />
 								</svg>
 							)}
 						</div>
-						<p className="text-gray-500 text-base m-0" dangerouslySetInnerHTML={{ __html: billingAmount }}></p>
+						<p className="text-gray-500 text-base m-0">{billingAmount}</p>
 					</div>
 				</div>
 
-				{/* Quick Menu Button */}
+				{/* Quick menu (develop: horizontal dots, top right) */}
 				<div className="absolute top-4 right-4">
-					<DropdownMenu
-						icon={moreVertical}
-						label={__('Actions', 'wp-user-frontend')}
-						controls={getMenuItems()}
-						className="wpuf-quick-menu-button"
-						popoverProps={{ position: 'bottom left' }}
-					/>
+					<ActionMenu items={menuItems} label={__('Actions', 'wp-user-frontend')} />
 				</div>
 
-				{/* Status Pill and Recurring Icon */}
+			{/* Status Pill and Recurring Icon */}
 				<div className="flex px-6 py-6 justify-between items-center">
 					<div className={`text-sm w-fit px-2.5 py-1 shadow-xs rounded-md border ${pillColor}`}>
 						{postStatus}
@@ -254,40 +233,20 @@ const SubscriptionBox = ({ subscription, onEdit }) => {
 				/>
 			</div>
 
-			{/* Confirmation Popup */}
-			{showTrashModal && (
-				<Modal
-					title={subscription.post_status === 'trash' ? __('Delete Permanently', 'wp-user-frontend') : __('Move to Trash', 'wp-user-frontend')}
-					onRequestClose={() => setShowTrashModal(false)}
-					className="wpuf-delete-modal"
-				>
-					<div className="p-4">
-						<p className="text-sm text-gray-500 mb-6">
-							{subscription.post_status === 'trash'
-								? __('Are you sure you want to permanently delete this subscription? This action cannot be undone.', 'wp-user-frontend')
-								: __('Are you sure you want to move this subscription to trash?', 'wp-user-frontend')}
-						</p>
-						<div className="flex justify-end [&>:not([hidden])~:not([hidden])]:ml-3 [&>:not([hidden])~:not([hidden])]:mr-0">
-							<ButtonGroup>
-								<Button
-									variant="secondary"
-									onClick={() => setShowTrashModal(false)}
-									className="mr-2"
-								>
-									{__('Cancel', 'wp-user-frontend')}
-								</Button>
-								<Button
-									variant="primary"
-									isDestructive
-									onClick={subscription.post_status === 'trash' ? handleDelete : confirmTrash}
-								>
-									{subscription.post_status === 'trash' ? __('Delete', 'wp-user-frontend') : __('Trash', 'wp-user-frontend')}
-								</Button>
-							</ButtonGroup>
-						</div>
-					</div>
-				</Modal>
-			)}
+			{/* develop's Popup: trash / permanent delete confirmation */}
+			<ConfirmDialog
+				open={null !== confirming}
+				tone="danger"
+				busy={busy}
+				title={'delete' === confirming ? __('Delete Subscription', 'wp-user-frontend') : __('Trash Subscription', 'wp-user-frontend')}
+				message={'delete' === confirming
+					? __('Are you sure you want to delete this subscription? This action cannot be undone.', 'wp-user-frontend')
+					: __('This subscription will be moved to the trash. Are you sure?', 'wp-user-frontend')}
+				confirmText={'delete' === confirming ? __('Delete', 'wp-user-frontend') : __('Trash', 'wp-user-frontend')}
+				cancelText={__('Cancel', 'wp-user-frontend')}
+				onConfirm={handleConfirm}
+				onCancel={() => setConfirming(null)}
+			/>
 		</>
 	);
 };

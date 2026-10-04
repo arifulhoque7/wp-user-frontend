@@ -14,7 +14,7 @@
  * - cascade layers are flattened, so WordPress admin CSS (unlayered) competes
  *   with these rules by specificity and order, as it did with Tailwind 3;
  * - a screen with `pui: true` also gets the plugin-ui part (src/pui.css,
- *   see puiPart()) in the same file, and with `dataviews: true` the DataViews
+ *   see puiPart()) at the top of the same file, and with `dataviews: true` the DataViews
  *   styles (src/pui-dataviews.css).
  *
  * Usage: node build.mjs [entry...]
@@ -45,6 +45,8 @@ const ENTRIES = {
         scope: '.wpuf-admin-react',
         output: 'assets/css/subscriptions.css',
         rtl: true,
+        // Shared wrappers since 4.1a (plugin-ui part, page background).
+        pui: true,
     },
     forms: {
         input: 'src/forms.css',
@@ -155,13 +157,42 @@ function flatten( css, baseNodes, postNodes, scope ) {
 // skip `.wp-editor-wrap` (zero added specificity; utilities still apply).
 const WP_EDITOR_SKIP = ':where(:not(.wp-editor-wrap, .wp-editor-wrap *))';
 
-function skipWpEditor( selector ) {
-    if ( ! /\.pui-root[\s>~+]/.test( selector ) || selector.includes( WP_EDITOR_SKIP ) ) {
+// Appends a zero-specificity condition to a selector's subject, before any
+// pseudo-element.
+function addCondition( selector, condition ) {
+    if ( selector.includes( condition ) ) {
         return selector;
     }
     const at = selector.indexOf( '::' );
 
-    return -1 === at ? selector + WP_EDITOR_SKIP : selector.slice( 0, at ) + WP_EDITOR_SKIP + selector.slice( at );
+    return -1 === at ? selector + condition : selector.slice( 0, at ) + condition + selector.slice( at );
+}
+
+function skipWpEditor( selector ) {
+    return /\.pui-root[\s>~+]/.test( selector ) ? addCondition( selector, WP_EDITOR_SKIP ) : selector;
+}
+
+// Legacy host (design.md D25): a screen still being migrated renders
+// WpufProviders with `host`, so its ThemeProvider root gets `.wpuf-pui-host`.
+// Inside it, plugin-ui styles reach only plugin-ui parts (`[data-slot]`),
+// wrapper roots (`[data-wpuf-ui]`) and what is inside them; the screen's own
+// markup keeps its look. Outside a host (portals, fully migrated screens)
+// nothing changes.
+const HOST = '.wpuf-pui-host';
+const ISLAND = `:where(:not(${ HOST } *), [data-slot], [data-slot] *, [data-wpuf-ui], [data-wpuf-ui] *)`;
+
+function island( selector ) {
+    return /\.pui-root/.test( selector ) ? addCondition( selector, ISLAND ) : selector;
+}
+
+// Base rules on the root itself (font, color, line-height) do not apply to a
+// host root, so they do not leak into its legacy markup by inheritance.
+function rootBase( rule ) {
+    const onlyVariables = rule.nodes.every( ( node ) => 'decl' !== node.type || node.prop.startsWith( '--' ) );
+
+    if ( ! onlyVariables ) {
+        rule.selectors = rule.selectors.map( ( selector ) => ( '.pui-root' === selector.trim() ? `.pui-root:not(${ HOST })` : selector ) );
+    }
 }
 
 async function puiPart() {
@@ -195,12 +226,13 @@ async function puiPart() {
                     return trimmed.startsWith( '.' )
                         ? [ `:where(.pui-root) ${ trimmed }`, `:where(.pui-root)${ trimmed }` ]
                         : [ `:where(.pui-root) ${ trimmed }` ];
-                } );
+                } ).map( island );
             } );
         }
         if ( 'theme' !== node.params && 'utilities' !== node.params ) {
             node.walkRules( ( rule ) => {
-                rule.selectors = rule.selectors.map( skipWpEditor );
+                rootBase( rule );
+                rule.selectors = rule.selectors.map( skipWpEditor ).map( island );
             } );
         }
         node.each( ( child ) => out.push( child.clone() ) );
@@ -209,7 +241,8 @@ async function puiPart() {
     // Unlayered rules of pui.css (WordPress forms.css resets).
     out.forEach( ( node ) => {
         if ( 'rule' === node.type ) {
-            node.selectors = node.selectors.map( skipWpEditor );
+            rootBase( node );
+            node.selectors = node.selectors.map( skipWpEditor ).map( island );
         }
     } );
 
@@ -235,7 +268,10 @@ async function build( name ) {
     if ( entry.pui ) {
         const pui = postcss.root();
         ( await puiPart() ).forEach( ( node ) => pui.append( node ) );
-        result += pui.toResult( { map: false } ).css;
+        // First in the file: with equal specificity the screen's own utilities
+        // (classes a screen passes to a wrapper) then win over the plugin-ui
+        // preflight, while plugin-ui's !important utilities still win.
+        result = pui.toResult( { map: false } ).css + result;
     }
 
     // DataViews styles (generated src/pui-dataviews.css) for screens that list with it.

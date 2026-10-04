@@ -30,7 +30,7 @@ export default function Accordion( { title, description, icon, badge, defaultOpe
     };
 
     return (
-        <div className={ cn( 'border-b border-gray-200', className ) }>
+        <div data-wpuf-ui="" className={ cn( 'border-b border-gray-200', className ) }>
             <button
                 type="button"
                 aria-expanded={ open }

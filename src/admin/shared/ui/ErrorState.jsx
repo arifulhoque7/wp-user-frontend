@@ -15,7 +15,7 @@ import Button from './Button';
  */
 export default function ErrorState( { title, message, onRetry, className } ) {
     return (
-        <div role="alert" className={ cn( 'flex flex-col items-center text-center bg-white px-6 py-16', className ) }>
+        <div data-wpuf-ui="" role="alert" className={ cn( 'flex flex-col items-center text-center bg-white px-6 py-16', className ) }>
             <span className="flex size-14 items-center justify-center rounded-full bg-red-50" aria-hidden="true">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />

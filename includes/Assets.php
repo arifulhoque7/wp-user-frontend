@@ -147,6 +147,10 @@ class Assets {
             $media   = ! empty( $style['media'] ) ? $style['media'] : 'all';
 
             wp_register_style( 'wpuf-' . $handle, $this->existing_src( $style['src'] ), $deps, $version, $media );
+
+            if ( ! empty( $style['rtl'] ) ) {
+                wp_style_add_data( 'wpuf-' . $handle, 'rtl', 'replace' );
+            }
         }
     }
 
@@ -216,6 +220,8 @@ class Assets {
             'subscriptions-react' => [
                 'src'     => WPUF_ASSET_URI . '/css/subscriptions.css',
                 'version' => $this->react_asset( 'subscriptions', [] )['version'],
+                // subscriptions-rtl.css (built by tools/admin-css) on RTL sites.
+                'rtl'     => true,
             ],
             'elementor-frontend-forms'      => [
                 'src' => WPUF_ASSET_URI . '/css/elementor-frontend-forms.css',

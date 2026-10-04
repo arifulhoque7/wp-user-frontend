@@ -14,13 +14,14 @@ import { cn } from '@wedevs/plugin-ui';
  * @param {*}      props.title         Title.
  * @param {*}      [props.description] Text under the title.
  * @param {string} [props.image]       Image URL (local asset).
+ * @param {*}      [props.icon]        Inline icon above the title (lg).
  * @param {*}      [props.actions]     Buttons.
  * @param {string} [props.size]        md|compact|lg
  */
-export default function EmptyState( { title, description, image, actions, size = 'md', className } ) {
+export default function EmptyState( { title, description, image, icon, actions, size = 'md', className } ) {
     if ( 'compact' === size ) {
         return (
-            <div className={ cn( 'text-center', className ) }>
+            <div data-wpuf-ui="" className={ cn( 'text-center', className ) }>
                 <h2 className="m-0 mt-8 text-lg font-normal text-gray-800">{ title }</h2>
             </div>
         );
@@ -28,9 +29,10 @@ export default function EmptyState( { title, description, image, actions, size =
 
     if ( 'lg' === size ) {
         return (
-            <div className={ cn( 'flex h-[50vh] items-center justify-center', className ) }>
+            <div data-wpuf-ui="" className={ cn( 'flex h-[50vh] items-center justify-center', className ) }>
                 <div className="w-3/4 text-center">
                     { image && <img src={ image } alt="" className="mx-auto max-w-full" /> }
+                    { icon }
                     { title && <h3 className="m-0 text-3xl font-normal text-gray-900">{ title }</h3> }
                     { description && <p className="m-0 mt-8 text-sm text-gray-500 text-center">{ description }</p> }
                     { actions && <div className="mt-12 flex justify-center gap-3">{ actions }</div> }
@@ -40,7 +42,7 @@ export default function EmptyState( { title, description, image, actions, size =
     }
 
     return (
-        <div className={ cn( 'grid min-h-full bg-white px-6 py-24 sm:py-32 lg:px-8', className ) }>
+        <div data-wpuf-ui="" className={ cn( 'grid min-h-full bg-white px-6 py-24 sm:py-32 lg:px-8', className ) }>
             <div className="flex flex-col items-center">
                 { image && <img src={ image } alt="" className="max-w-full" /> }
                 { title && <h2 className="m-0 mt-8 text-lg font-normal text-gray-800">{ title }</h2> }

@@ -20,6 +20,7 @@ export default function NumberInput( { value, onChange, allowNegative = false, v
     if ( 'range' === variant ) {
         return (
             <input
+                data-wpuf-ui=""
                 type="range"
                 value={ value ?? '' }
                 onChange={ change }

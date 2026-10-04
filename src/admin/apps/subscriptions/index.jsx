@@ -8,10 +8,10 @@ import { useState, useCallback, useEffect } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { SlotFillProvider } from '@wordpress/components';
 import { doAction } from '@wordpress/hooks';
+import { WpufProviders, PageHeader } from '@wpuf/components';
 import SubscriptionForm from './components/subscriptions/SubscriptionForm';
 import SubscriptionList from './components/subscriptions/SubscriptionList';
 import SidebarMenu from './components/subscriptions/SidebarMenu';
-import Header from './components/Header';
 import ContentHeader from './components/subscriptions/ContentHeader';
 import QuickEdit from './components/subscriptions/QuickEdit';
 import UnsavedChanges from './components/subscriptions/UnsavedChanges';
@@ -100,7 +100,7 @@ const SubscriptionsApp = () => {
 
     return (
         <>
-            <Header utm="wpuf-subscriptions" />
+            <PageHeader utm="wpuf-subscription" />
             <ContentHeader
                 currentSubscriptionStatus={status}
                 allCount={allCount}
@@ -145,7 +145,7 @@ const SubscriptionsApp = () => {
             {/* Quick Edit modal */}
             <QuickEdit />
 
-            {/* Toasts from quick edit / preferences (develop's Notice list) */}
+            {/* Quick edit / preferences notices go to the shared toasts (develop's Notice list position) */}
             <Notices />
         </>
     );
@@ -156,8 +156,11 @@ const container = document.getElementById('wpuf-subscription-page');
 if (container) {
     const root = createRoot(container);
     root.render(
-        <SlotFillProvider>
-            <SubscriptionsApp />
-        </SlotFillProvider>
+        // host: the form views are still legacy markup until 4.1b (design.md D25).
+        <WpufProviders host>
+            <SlotFillProvider>
+                <SubscriptionsApp />
+            </SlotFillProvider>
+        </WpufProviders>
     );
 }

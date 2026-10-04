@@ -9,8 +9,7 @@ const ListHeader = ( { message } ) => {
 	// The Vue version uses the store to get currentSubscriptionStatus
 	const getStatusTitle = ( status ) => {
 		switch ( status ) {
-			case 'all':
-				return __( 'All Subscriptions', 'wp-user-frontend' );
+			// develop's ListHeader: "all" falls through to "Subscriptions".
 			case 'publish':
 				return __( 'Published', 'wp-user-frontend' );
 			case 'draft':

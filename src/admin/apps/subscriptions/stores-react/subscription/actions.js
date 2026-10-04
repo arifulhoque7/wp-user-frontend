@@ -67,6 +67,20 @@ export function setItemCopy(itemCopy) {
     };
 }
 
+/**
+ * Message of a failed list fetch ('' clears it).
+ *
+ * @param {string} message Message.
+ *
+ * @return {Object} Action.
+ */
+export function setListError(message) {
+    return {
+        type: ACTION_TYPES.SET_LIST_ERROR,
+        message,
+    };
+}
+
 export function setErrors(errors) {
     return {
         type: ACTION_TYPES.SET_ERRORS,
@@ -186,8 +200,13 @@ export function populateDefaultValue(item, field) {
     };
 }
 
+// Only the latest list request may write the list: the getItems resolver
+// and the page/status fetch can overlap, and an older answer must not win.
+let latestListRequest = 0;
+
 export function fetchItems(status, offset = 0) {
     return async ({ dispatch }) => {
+        const request = ++latestListRequest;
         dispatch.setIsLoading(true);
         dispatch.setCurrentStatus(status);
 
@@ -202,15 +221,27 @@ export function fetchItems(status, offset = 0) {
         try {
             const response = await fetchSubscriptions(queryParams);
 
+            if (request !== latestListRequest) {
+                return response;
+            }
+
             if (response.success) {
                 dispatch.setItems(response.subscriptions);
+                dispatch.setListError('');
                 doAction( 'wpuf.subscription.itemsLoaded', response.subscriptions );
+            } else {
+                dispatch.setListError(response.message || __('Something went wrong', 'wp-user-frontend'));
             }
             return response;
         } catch (error) {
-            console.error(error);
+            // The list shows an error with Retry instead of an empty list.
+            if (request === latestListRequest) {
+                dispatch.setListError((error && error.message) || __('Something went wrong', 'wp-user-frontend'));
+            }
         } finally {
-            dispatch.setIsLoading(false);
+            if (request === latestListRequest) {
+                dispatch.setIsLoading(false);
+            }
         }
     };
 }

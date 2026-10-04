@@ -20,14 +20,17 @@ import { __ } from '@wordpress/i18n';
  * @param {Object}   props.paginationInfo { totalItems, totalPages }
  */
 export default function DataTable( { screen, searchLabel, ...props } ) {
+    // Marked so DataViews keeps its styles inside a legacy host (design.md D25).
     return (
-        <DataViews
-            namespace={ `wpuf-${ screen }-table` }
-            defaultLayouts={ { table: {} } }
-            search
-            searchLabel={ searchLabel || __( 'Search', 'wp-user-frontend' ) }
-            responsive
-            { ...props }
-        />
+        <div data-wpuf-ui="">
+            <DataViews
+                namespace={ `wpuf-${ screen }-table` }
+                defaultLayouts={ { table: {} } }
+                search
+                searchLabel={ searchLabel || __( 'Search', 'wp-user-frontend' ) }
+                responsive
+                { ...props }
+            />
+        </div>
     );
 }

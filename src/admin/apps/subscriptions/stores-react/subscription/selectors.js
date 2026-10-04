@@ -43,6 +43,17 @@ export function isLoading(state) {
     return state.isLoading;
 }
 
+/**
+ * Message of the last failed list fetch, '' when the list loaded.
+ *
+ * @param {Object} state Store state.
+ *
+ * @return {string} Message.
+ */
+export function getListError(state) {
+    return state.listError || '';
+}
+
 export function isUpdating(state) {
     return state.isUpdating;
 }

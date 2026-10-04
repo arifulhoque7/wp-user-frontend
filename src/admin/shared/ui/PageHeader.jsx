@@ -21,8 +21,8 @@ export const IDEAS_URL = 'https://feedback.wedevs.com/b/user-frontend';
 // Tailwind 3 values of develop's classes (ring-green-600/20, shadow-xs).
 const BADGE = 'ml-2 inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs text-green-700 ring-1 ring-inset ring-[rgba(22,163,74,0.2)]';
 const SHADOW = 'shadow-[0_1px_2px_0_rgba(0,0,0,0.05)]';
-// develop's Ideas link kept the wp-admin link color (admin color scheme).
-const OUTLINE = 'border border-solid border-gray-100 mr-4 text-center rounded-md px-3 py-2 text-sm font-semibold text-(--wp-admin-theme-color,#2271b1) no-underline hover:bg-slate-100 focus:bg-slate-100 focus:shadow-none';
+// develop's Ideas link: WordPress body text color (#3c434a), not the link color (measured on develop, 4.1a).
+const OUTLINE = 'border border-solid border-gray-100 mr-4 text-center rounded-md px-3 py-2 text-sm font-semibold text-[#3c434a] no-underline hover:bg-slate-100 hover:text-[#3c434a] focus:bg-slate-100 focus:text-[#3c434a] focus:shadow-none';
 
 /**
  * "pro-business" -> "Pro Business".
@@ -54,6 +54,7 @@ export default function PageHeader( { variant = 'bleed', utm = 'wpuf-header', su
 
     return (
         <div
+            data-wpuf-ui=""
             className={ cn(
                 'flex justify-between items-center border-0 border-b-2 border-solid border-gray-100',
                 'card' === variant ? 'bg-white p-5' : 'w-[calc(100%+40px)] -ml-5 px-5 mt-4 pb-4',
@@ -89,7 +90,8 @@ export default function PageHeader( { variant = 'bleed', utm = 'wpuf-header', su
                         rel="noreferrer"
                         className={ cn( 'rounded-md text-center bg-primary px-3 py-2 text-sm font-semibold text-white no-underline hover:bg-[#10b981] hover:text-white focus:bg-[#10b981] focus:text-white', SHADOW ) }
                     >
-                        { __( 'Support', 'wp-user-frontend' ) + ' \u00a0\u00a0' }
+                        { /* develop: "Support ", two no-break spaces, then a space before the icon */ }
+                        { __( 'Support', 'wp-user-frontend' ) + ' \u00a0\u00a0 ' }
                         <span className="dashicons dashicons-businessperson" aria-hidden="true"></span>
                     </a>
                 ) }

@@ -159,7 +159,9 @@ const storeConfig = {
 	reducer,
 	selectors,
 	actions,
-	persist: ['params'],
+	// No `persist`: the URL is the only source of truth. Persisted params
+	// (localStorage) overrode the URL on the next load, so the menu link
+	// reopened an old page, status or edit view (4.1a).
 };
 
 const STORE_NAME = 'wpuf/subscriptions-router';

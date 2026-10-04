@@ -18,6 +18,8 @@ const DEFAULT_STATE = {
     taxonomyRestriction: {},
     taxonomyViewRestriction: {},
     currentPage: 1,
+    // Message of the last failed list fetch ('' when the list loaded).
+    listError: '',
 };
 
 export default function reducer(state = DEFAULT_STATE, action) {
@@ -135,6 +137,11 @@ export default function reducer(state = DEFAULT_STATE, action) {
                 ...state,
                 item: newItem,
                 isDirty: true,
+            };
+        case ACTION_TYPES.SET_LIST_ERROR:
+            return {
+                ...state,
+                listError: action.message,
             };
         case ACTION_TYPES.RESET_ERRORS:
             return {

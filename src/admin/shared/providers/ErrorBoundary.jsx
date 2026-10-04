@@ -29,7 +29,7 @@ export default class ErrorBoundary extends Component {
         }
 
         return (
-            <div className="notice notice-error inline" role="alert">
+            <div data-wpuf-ui="" className="notice notice-error inline" role="alert">
                 <p>{ __( 'Something went wrong while loading this part of the screen. Reload the page to try again.', 'wp-user-frontend' ) }</p>
             </div>
         );

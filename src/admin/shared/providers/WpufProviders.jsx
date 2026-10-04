@@ -14,13 +14,22 @@ export const PLUGIN_ID = 'wpuf-admin';
  * @param {Object}  props
  * @param {*}       props.children     Screen tree.
  * @param {boolean} [props.withToaster] Render the Toaster (one per page; default true).
+ * @param {boolean} [props.host]        The tree still has legacy markup (a screen being
+ *                                      migrated): plugin-ui styles then reach only plugin-ui
+ *                                      parts (`[data-slot]`) and wrapper roots
+ *                                      (`[data-wpuf-ui]`), so the legacy markup keeps its
+ *                                      look (design.md D25). Drop it when the screen is done.
  */
-export default function WpufProviders( { children, withToaster = true } ) {
+export default function WpufProviders( { children, withToaster = true, host = false } ) {
     return (
-        <ThemeProvider pluginId={ PLUGIN_ID } tokens={ wpufTokens } darkTokens={ wpufDarkTokens } mode="light">
+        <ThemeProvider pluginId={ PLUGIN_ID } tokens={ wpufTokens } darkTokens={ wpufDarkTokens } mode="light" className={ host ? 'wpuf-pui-host' : '' }>
             <ErrorBoundary>{ children }</ErrorBoundary>
             { /* Where develop showed its toasts: 80px from the top, 32px from the right. */ }
-            { withToaster && <Toaster position="top-right" offset={ { top: 80, right: 32 } } richColors /> }
+            { withToaster && (
+                <div data-wpuf-ui="">
+                    <Toaster position="top-right" offset={ { top: 80, right: 32 } } richColors />
+                </div>
+            ) }
         </ThemeProvider>
     );
 }

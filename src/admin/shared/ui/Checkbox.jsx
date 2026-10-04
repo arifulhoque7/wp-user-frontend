@@ -35,7 +35,7 @@ export default function Checkbox( allProps ) {
     }
 
     return (
-        <label htmlFor={ id } className="inline-flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+        <label data-wpuf-ui="" htmlFor={ id } className="inline-flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
             { control }
             <span>{ label }</span>
         </label>

@@ -1,8 +1,8 @@
 /**
  * plugin-ui part of a React screen's stylesheet (Tailwind CSS 4).
  *
- * A screen entry with `pui: true` in build.mjs appends this to its one
- * stylesheet (no second Tailwind sheet, same handle). It styles what
+ * A screen entry with `pui: true` in build.mjs puts this at the top of its
+ * one stylesheet (no second Tailwind sheet, same handle). It styles what
  * @wedevs/plugin-ui renders, the FlyHR way:
  * - utilities for every class plugin-ui and src/admin/shared use,
  *   `!important` and scoped by build.mjs to `.pui-root` and its descendants,
@@ -75,4 +75,11 @@
     font-weight: inherit;
     line-height: inherit;
     color: inherit;
+}
+
+/* Page background token (design-tokens.md "Page background"): every screen
+   that uses the shared layer gets develop's white page, set once here
+   (develop subscriptions: body.user-frontend_page_wpuf_subscription). */
+body.wpuf-admin-react {
+    background-color: #ffffff;
 }

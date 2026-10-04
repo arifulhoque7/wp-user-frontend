@@ -25,7 +25,7 @@ export default function ProBadge( { utm = 'wpuf-admin', upgradeUrl } ) {
     const href = addQueryArgs( upgradeUrl || UPGRADE_URL, { utm_source: utm, utm_medium: 'pro-badge' } );
 
     return (
-        <a href={ href } target="_blank" rel="noopener noreferrer" className="inline-block align-middle leading-none">
+        <a data-wpuf-ui="" href={ href } target="_blank" rel="noopener noreferrer" className="inline-block align-middle leading-none">
             <img src={ ( boot.assetUrl || '' ) + '/images/pro-badge.svg' } alt={ __( 'Pro', 'wp-user-frontend' ) } width="39" height="22" className="inline-block align-middle w-[39px] h-[22px] max-w-none" />
         </a>
     );

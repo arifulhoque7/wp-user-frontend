@@ -13,7 +13,7 @@ import { __ } from '@wordpress/i18n';
  */
 export default function Skeleton( { lines = 1, className } ) {
     return (
-        <div className="grid gap-3" aria-busy="true" aria-live="polite">
+        <div data-wpuf-ui="" className="grid gap-3" aria-busy="true" aria-live="polite">
             { Array.from( { length: lines } ).map( ( _, index ) => (
                 <PuiSkeleton key={ index } className={ cn( 'h-4 rounded-md bg-gray-200', index === lines - 1 && lines > 1 && 'w-2/3', className ) } />
             ) ) }
@@ -28,7 +28,7 @@ export default function Skeleton( { lines = 1, className } ) {
  */
 export function Loading( { label, height = 'h-svh', className } ) {
     return (
-        <div className={ cn( 'flex items-center justify-center', height, className ) } role="status">
+        <div data-wpuf-ui="" className={ cn( 'flex items-center justify-center', height, className ) } role="status">
             <Spinner className="size-12 text-green-500" />
             <span className="sr-only">{ label || __( 'Loading…', 'wp-user-frontend' ) }</span>
         </div>

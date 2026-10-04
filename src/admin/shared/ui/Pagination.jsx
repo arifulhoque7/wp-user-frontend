@@ -42,8 +42,9 @@ export default function Pagination( { currentPage, onPageChange, variant = 'simp
         const last = Math.min( currentPage * perPage, total );
         /* translators: 1: first item number, 2: last item number, 3: total items */
         const summary = sprintf( __( 'Showing %1$s to %2$s of %3$s results', 'wp-user-frontend' ), first, last, total );
-        const box = 'h-auto rounded-none shadow-none ring-1 ring-inset ring-gray-300 focus:z-20';
-        const edge = cn( box, 'px-2 py-2 text-gray-400 bg-transparent hover:bg-gray-50 aria-disabled:bg-gray-50 aria-disabled:cursor-not-allowed' );
+        // develop subscriptions pagination: inset rings, no borders, content-width pages.
+        const box = 'h-auto size-auto rounded-none border-0 shadow-none ring-1 ring-inset ring-gray-300 focus:z-20';
+        const edge = cn( box, 'px-2 py-2 text-[13px] leading-[1.4] font-normal text-gray-400 bg-transparent hover:bg-gray-50 aria-disabled:bg-gray-50 aria-disabled:cursor-not-allowed' );
         const item = ( key, { label, current, disabled, onClick, extra } ) => (
             <PaginationItem key={ key }>
                 <PaginationLink
@@ -64,7 +65,7 @@ export default function Pagination( { currentPage, onPageChange, variant = 'simp
         );
 
         return (
-            <div className={ cn( 'flex items-center justify-between border-t border-gray-200 bg-white py-3 px-6', className ) }>
+            <div data-wpuf-ui="" className={ cn( 'flex items-center justify-between border-t border-gray-200 bg-white py-3 px-6', className ) }>
                 <p className="m-0 text-sm text-gray-700">{ summary }</p>
                 { total > perPage && (
                     <PuiPagination className="mx-0 w-auto" aria-label={ __( 'Pagination', 'wp-user-frontend' ) }>
