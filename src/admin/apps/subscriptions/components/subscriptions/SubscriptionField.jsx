@@ -6,9 +6,49 @@ import { useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { useSelect, useDispatch } from '@wordpress/data';
 import { applyFilters } from '@wordpress/hooks';
-import ProBadge from './ProBadge';
+import { DateTime, HelpTip, MultiSelect, NumberInput, ProBadge, Select, TextInput, Textarea, Toggle } from '@wpuf/components';
 import ProTooltip from './ProTooltip';
-import MultiSelect from './MultiSelect';
+
+const has = ( object, key ) => !! object && Object.prototype.hasOwnProperty.call( object, key );
+
+/**
+ * develop's read rule (SectionInputField getFieldValue): the stored value, or
+ * '' when the key is missing. Defaults only come from the blank item of a new
+ * subscription, so a stored '', '0' or 0 stays what it is.
+ *
+ * @param {Object} field        Field definition.
+ * @param {Object} subscription Current subscription.
+ *
+ * @return {*} Value.
+ */
+export function readFieldValue( field, subscription ) {
+	if ( ! subscription ) {
+		return '';
+	}
+
+	const meta = subscription.meta_value;
+	let value = '';
+
+	switch ( field.db_type ) {
+		case 'meta':
+			value = has( meta, field.db_key ) ? meta[ field.db_key ] : '';
+			break;
+
+		case 'meta_serialized':
+			value = has( meta, field.db_key ) && has( meta[ field.db_key ], field.serialize_key )
+				? meta[ field.db_key ][ field.serialize_key ]
+				: '';
+			break;
+
+		default:
+			value = has( subscription, field.db_key ) ? subscription[ field.db_key ] : '';
+	}
+
+	return null === value || undefined === value ? '' : value;
+}
+
+// Text controls take strings; numbers from the REST read model stay as typed.
+const asText = ( value ) => ( 'number' === typeof value ? String( value ) : value );
 
 const SubscriptionField = ( { field, fieldId, subscription, onFieldChange } ) => {
 	const wpufSubscriptions = window.wpufSubscriptions || {};
@@ -21,6 +61,10 @@ const SubscriptionField = ( { field, fieldId, subscription, onFieldChange } ) =>
 		},
 		[]
 	);
+
+	// Validation errors (develop: red border + message under the field).
+	const errors = useSelect( ( select ) => select( 'wpuf/subscriptions' ).getErrors() || {}, [] );
+	const error = errors[ fieldId ] || ( field.id && errors[ field.id ] );
 
 	// Get taxonomy restriction values from store for multi-select fields
 	const isViewRestriction = field.db_key === '_sub_view_allowed_term_ids';
@@ -63,29 +107,8 @@ const SubscriptionField = ( { field, fieldId, subscription, onFieldChange } ) =>
 	// Check if Pro feature
 	const isPro = field.is_pro && ! wpufSubscriptions.isProActive;
 
-	// Get field value based on db_type
-	const getFieldValue = () => {
-		if ( ! subscription ) {
-			return field.default || '';
-		}
-
-		switch ( field.db_type ) {
-			case 'meta':
-				return subscription.meta_value?.[ field.db_key ] || field.default || '';
-
-			case 'meta_serialized':
-				if ( subscription.meta_value?.[ field.db_key ] ) {
-					return subscription.meta_value[ field.db_key ][ field.serialize_key ] || field.default || '';
-				}
-				return field.default || '';
-
-			case 'post':
-				return subscription[ field.db_key ] || field.default || '';
-
-			default:
-				return field.default || '';
-		}
-	};
+	// Kept for the `wpuf.subscription.fieldComponent` filter contract.
+	const getFieldValue = () => readFieldValue( field, subscription );
 
 	// Parse expiration time value (e.g., "30 day" -> { value: "30", unit: "day" })
 	const parseExpirationTime = ( timeString ) => {
@@ -117,18 +140,15 @@ const SubscriptionField = ( { field, fieldId, subscription, onFieldChange } ) =>
 	const isSwitcherOn = value === 'on' || value === 'yes' || value === true || value === '1'
 		|| ( field.db_key === 'post_status' && value === 'private' );
 
-	// Store the strings develop stores: 'on' / 'off' ('private' / 'publish' for
-	// post_status). Consumers compare with 'on' (subscription checks, Stripe JS).
-	const toggleSwitcher = () => {
-		const nextOn = ! isSwitcherOn;
-		const stored = field.db_key === 'post_status'
-			? ( nextOn ? 'private' : 'publish' )
-			: ( nextOn ? 'on' : 'off' );
+	// develop stores 'on' / 'off' ('private' / 'publish' for post_status).
+	const switchOn = field.db_key === 'post_status' ? 'private' : 'on';
+	const switchOff = field.db_key === 'post_status' ? 'publish' : 'off';
 
+	const toggleSwitcher = ( stored ) => {
 		onFieldChange( field, stored );
 
 		if ( dispatch ) {
-			dispatch.toggleDependentFields( fieldId, nextOn );
+			dispatch.toggleDependentFields( fieldId, stored === switchOn );
 		}
 	};
 
@@ -148,23 +168,21 @@ const SubscriptionField = ( { field, fieldId, subscription, onFieldChange } ) =>
 		return customField;
 	}
 
+	const invalid = error ? 'border-red-500 focus-visible:border-red-500' : '';
+
 	return (
 		<div className="grid grid-cols-3 gap-4 p-4">
 			{/* Label */}
 			{ field.label && (
 				<div className="flex items-center text-sm leading-6 text-gray-600">
 					<label htmlFor={ field.name } dangerouslySetInnerHTML={ { __html: field.label } } />
-					{ field.tooltip && (
-						<span className="wpuf-tooltip before:bg-gray-700 before:text-zinc-50 after:border-t-gray-700 after:border-x-transparent cursor-pointer ml-2 z-10" data-tip={ field.tooltip }>
-							<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none">
-								<path d="M9.833 12.333H9V9h-.833M9 5.667h.008M16.5 9a7.5 7.5 0 1 1-15 0 7.5 7.5 0 1 1 15 0z" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-							</svg>
+					{ field.tooltip && <span className="ml-2"><HelpTip text={ field.tooltip } /></span> }
+					{ isPro && (
+						<span className="pro-icon-title relative pt-1 group ml-2">
+							<ProBadge link={ false } />
+							<ProTooltip />
 						</span>
 					) }
-					<span className="pro-icon-title relative pt-1 group">
-						<ProBadge isPro={ field.is_pro } />
-						<ProTooltip isPro={ field.is_pro } />
-					</span>
 				</div>
 			) }
 
@@ -184,94 +202,70 @@ const SubscriptionField = ( { field, fieldId, subscription, onFieldChange } ) =>
 					</div>
 				) }
 
-				{/* Input Text */}
 				{ field.type === 'input-text' && (
-					<input
-						type="text"
+					<TextInput
 						id={ field.name }
 						name={ field.name }
-						value={ value }
+						value={ asText( value ) }
 						placeholder={ field.placeholder || '' }
-						onChange={ ( e ) => handleChange( e.target.value ) }
+						onChange={ handleChange }
 						disabled={ isPro }
-						className="placeholder:text-gray-400 w-full rounded-md bg-white py-1 pl-3 pr-10 text-left shadow-xs focus:border-primaryHover! focus:outline-hidden focus:ring-1 focus:ring-primaryHover sm:text-sm shadow-none! border-gray-300!"
+						aria-invalid={ error ? 'true' : undefined }
+						className={ invalid }
 					/>
 				) }
 
-				{/* Input Number */}
 				{ field.type === 'input-number' && (
-					<input
-						type="number"
+					<NumberInput
 						id={ field.name }
 						name={ field.name }
-						value={ value }
+						value={ asText( value ) }
 						placeholder={ field.placeholder || '' }
 						min={ field.min }
 						step={ field.step }
-						onChange={ ( e ) => handleChange( e.target.value ) }
-						onKeyDown={ ( e ) => {
-							const allowedKeys = [ 'Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', '.' ];
-							if ( ! allowedKeys.includes( e.key ) && isNaN( Number( e.key ) ) ) {
-								e.preventDefault();
-							}
-						} }
+						onChange={ handleChange }
 						disabled={ isPro }
-						className="placeholder:text-gray-400 w-full rounded-md bg-white py-1 pl-3 pr-10 text-left shadow-xs focus:border-primaryHover! focus:outline-hidden focus:ring-1 focus:ring-primaryHover sm:text-sm shadow-none! border-gray-300!"
+						aria-invalid={ error ? 'true' : undefined }
+						className={ invalid }
 					/>
 				) }
 
-				{/* Textarea */}
 				{ field.type === 'textarea' && (
-					<textarea
+					<Textarea
 						id={ field.name }
 						name={ field.name }
-						value={ value }
+						value={ asText( value ) }
 						placeholder={ field.placeholder || '' }
-						rows="3"
-						onChange={ ( e ) => handleChange( e.target.value ) }
+						rows={ 3 }
+						onChange={ handleChange }
 						disabled={ isPro }
-						className="placeholder:text-gray-400 w-full rounded-md bg-white py-1 pl-3 pr-10 text-left shadow-xs focus:border-primaryHover! focus:outline-hidden focus:ring-1 focus:ring-primaryHover sm:text-sm shadow-none! border-gray-300!"
+						aria-invalid={ error ? 'true' : undefined }
+						className={ invalid }
 					/>
 				) }
 
-				{/* Switcher */}
 				{ field.type === 'switcher' && (
-					<button
-						type="button"
+					<Toggle
 						id={ field.name }
-						name={ field.name }
-						onClick={ toggleSwitcher }
+						value={ isSwitcherOn ? switchOn : switchOff }
+						checkedValue={ switchOn }
+						uncheckedValue={ switchOff }
+						onChange={ toggleSwitcher }
 						disabled={ isPro }
-						className={ `${ isSwitcherOn ? 'bg-primary' : 'bg-gray-200' } placeholder:text-gray-400 bg-gray-200 relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out` }
-						role="switch"
-						aria-checked={ isSwitcherOn }
-					>
-						<span
-							aria-hidden="true"
-							className={ `${ isSwitcherOn ? 'translate-x-5' : 'translate-x-0' } pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out` }
-						/>
-					</button>
+					/>
 				) }
 
-				{/* Select */}
 				{ field.type === 'select' && field.options && (
-					<select
+					<Select
 						id={ field.name }
-						name={ field.name }
-						value={ value }
-						onChange={ ( e ) => handleChange( e.target.value ) }
+						value={ asText( value ) }
+						options={ field.options }
+						onChange={ handleChange }
 						disabled={ isPro }
-						className="w-full max-w-full! rounded-md bg-white py-1 pl-3 pr-10 text-left shadow-xs focus:border-primaryHover! focus:outline-hidden focus:ring-1 focus:ring-primaryHover sm:text-sm border-gray-300!"
-					>
-						{ Object.entries( field.options ).map( ( [ key, label ] ) => (
-							<option key={ key } value={ key }>
-								{ label }
-							</option>
-						) ) }
-					</select>
+						className={ invalid }
+					/>
 				) }
 
-				{/* Multi-Select (taxonomy terms dropdown with pills) */}
 				{ field.type === 'multi-select' && field.term_fields && (
 					<MultiSelect
 						options={ multiSelectOptions }
@@ -290,29 +284,22 @@ const SubscriptionField = ( { field, fieldId, subscription, onFieldChange } ) =>
 							subscriptionsDispatch.setIsDirty( true );
 						} }
 						placeholder={ field.placeholder || __( 'Select terms...', 'wp-user-frontend' ) }
-						selectedLabel={ __( 'terms', 'wp-user-frontend' ) }
-						exclusiveOptions={ [] }
 						disabled={ isPro }
 					/>
 				) }
 
 				{/* Inline - compound field with multiple inputs */}
+				{/* develop SectionInnerField: each part in a half-width box (py-4 pl-3 pr-4) */}
 				{ field.type === 'inline' && field.fields && (
-					<div className="flex gap-2 items-center">
+					<div className="-ml-3 flex justify-between -mr-3">
 						{ Object.entries( field.fields ).map( ( [ subFieldKey, subField ] ) => {
-							// Get sub-field value
-							let subFieldValue = subField.default || '';
+							// develop: the stored value or ''. Older packs only have the
+							// combined "number period" value (task 1.3).
+							let subFieldValue = readFieldValue( { db_type: 'meta', db_key: subField.db_key }, subscription );
 
-							if ( subscription ) {
-								const stored = subscription.meta_value?.[ subField.db_key ];
-
-								if ( stored !== undefined && stored !== null ) {
-									subFieldValue = stored;
-								} else if ( field.name === 'expiration-time' && subscription.meta_value?._post_expiration_time ) {
-									// Older packs only have the combined "number period" value.
-									const parsed = parseExpirationTime( subscription.meta_value._post_expiration_time );
-									subFieldValue = subField.key_id === 'expiration_value' ? parsed.value : parsed.unit;
-								}
+							if ( '' === subFieldValue && field.name === 'expiration-time' && subscription?.meta_value?._post_expiration_time ) {
+								const parsed = parseExpirationTime( subscription.meta_value._post_expiration_time );
+								subFieldValue = subField.key_id === 'expiration_value' ? parsed.value : parsed.unit;
 							}
 
 							// Each part is stored under its own key (_post_expiration_number /
@@ -321,49 +308,34 @@ const SubscriptionField = ( { field, fieldId, subscription, onFieldChange } ) =>
 								onFieldChange( subField, newValue );
 							};
 
-							// Render input-number sub-field
 							if ( subField.type === 'input-number' ) {
 								return (
-									<input
-										key={ subFieldKey }
-										type="number"
+									<div key={ subFieldKey } className="py-4 pl-3 pr-4 w-1/2">
+									<NumberInput
 										id={ subField.name }
 										name={ subField.name }
-										value={ subFieldValue }
+										value={ asText( subFieldValue ) }
 										placeholder={ subField.placeholder || '' }
 										min={ subField.min }
 										step={ subField.step }
-										onChange={ ( e ) => handleSubFieldChange( e.target.value ) }
-										onKeyDown={ ( e ) => {
-											const allowedKeys = [ 'Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', '.' ];
-											if ( ! allowedKeys.includes( e.key ) && isNaN( Number( e.key ) ) ) {
-												e.preventDefault();
-											}
-										} }
+										onChange={ handleSubFieldChange }
 										disabled={ isPro }
-										className="placeholder:text-gray-400 w-full rounded-md bg-white py-1 pl-3 pr-10 text-left shadow-xs focus:border-primaryHover! focus:outline-hidden focus:ring-1 focus:ring-primaryHover sm:text-sm shadow-none! border-gray-300!"
 									/>
+									</div>
 								);
 							}
 
-							// Render select sub-field
 							if ( subField.type === 'select' && subField.options ) {
 								return (
-									<select
-										key={ subFieldKey }
+									<div key={ subFieldKey } className="py-4 pl-3 pr-4 w-1/2">
+									<Select
 										id={ subField.name }
-										name={ subField.name }
-										value={ subFieldValue }
-										onChange={ ( e ) => handleSubFieldChange( e.target.value ) }
+										value={ asText( subFieldValue ) }
+										options={ subField.options }
+										onChange={ handleSubFieldChange }
 										disabled={ isPro }
-										className="w-full max-w-full! rounded-md bg-white py-1 pl-3 pr-10 text-left shadow-xs focus:border-primaryHover! focus:outline-hidden focus:ring-1 focus:ring-primaryHover sm:text-sm border-gray-300!"
-									>
-										{ Object.entries( subField.options ).map( ( [ key, label ] ) => (
-											<option key={ key } value={ key }>
-												{ label }
-											</option>
-										) ) }
-									</select>
+									/>
+									</div>
 								);
 							}
 
@@ -372,27 +344,28 @@ const SubscriptionField = ( { field, fieldId, subscription, onFieldChange } ) =>
 					</div>
 				) }
 
-				{/* Time-Date */}
+				{/* Publish time: YYYY-MM-DD HH:mm:ss, like the branch save path expects (task 1.21) */}
 				{ field.type === 'time-date' && (
-					<input
-						type="datetime-local"
+					<DateTime
 						id={ field.name }
-						name={ field.name }
-						value={ value ? value.replace( ' ', 'T' ) : '' }
-						onChange={ ( e ) => {
-							// Convert datetime-local format (YYYY-MM-DDTHH:mm) to MySQL format (YYYY-MM-DD HH:mm:ss)
-							const newVal = e.target.value.replace( 'T', ' ' ) + ':00';
-							handleChange( newVal );
-						} }
+						withTime
+						value={ asText( value ) }
+						onChange={ handleChange }
 						disabled={ isPro }
-						className="placeholder:text-gray-400 w-full rounded-md bg-white py-1 pl-3 pr-10 text-left shadow-xs focus:border-primaryHover! focus:outline-hidden focus:ring-1 focus:ring-primaryHover sm:text-sm shadow-none! border-gray-300!"
+						className={ invalid }
 					/>
 				) }
 
-				{/* Description */}
+				{/* develop: description, then the validation message */}
 				{ field.description && (
 					<div className="label">
 						<span className="label-text-alt">{ field.description }</span>
+					</div>
+				) }
+
+				{ error && (
+					<div className="label" role="alert">
+						<span className="label-text-alt text-red-500">{ error.message }</span>
 					</div>
 				) }
 			</div>

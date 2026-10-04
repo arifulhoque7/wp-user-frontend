@@ -14,19 +14,27 @@ export const UPGRADE_URL = 'https://wedevs.com/wp-user-frontend-pro/pricing/';
  * @param {Object} props
  * @param {string} [props.utm]        utm_source (screen key).
  * @param {string} [props.upgradeUrl] Override the upgrade URL.
+ * @param {boolean} [props.link]      false: the image only (develop subscriptions badge,
+ *                                    whose hover tooltip carries the upgrade link).
  */
-export default function ProBadge( { utm = 'wpuf-admin', upgradeUrl } ) {
+export default function ProBadge( { utm = 'wpuf-admin', upgradeUrl, link = true } ) {
     const boot = useBoot();
 
     if ( boot.isPro ) {
         return null;
     }
 
+    const image = <img src={ ( boot.assetUrl || '' ) + '/images/pro-badge.svg' } alt={ __( 'Pro', 'wp-user-frontend' ) } width="39" height="22" className="inline-block align-middle w-[39px] h-[22px] max-w-none" />;
+
+    if ( ! link ) {
+        return <span data-wpuf-ui="" className="inline-block align-middle leading-none">{ image }</span>;
+    }
+
     const href = addQueryArgs( upgradeUrl || UPGRADE_URL, { utm_source: utm, utm_medium: 'pro-badge' } );
 
     return (
         <a data-wpuf-ui="" href={ href } target="_blank" rel="noopener noreferrer" className="inline-block align-middle leading-none">
-            <img src={ ( boot.assetUrl || '' ) + '/images/pro-badge.svg' } alt={ __( 'Pro', 'wp-user-frontend' ) } width="39" height="22" className="inline-block align-middle w-[39px] h-[22px] max-w-none" />
+            { image }
         </a>
     );
 }

@@ -5,6 +5,7 @@
 import { useState, useEffect } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { useDispatch } from '@wordpress/data';
+import { Tabs } from '@wpuf/components';
 import SubscriptionSubsection from './SubscriptionSubsection';
 import { SubscriptionTabContent } from '../../slots';
 
@@ -76,26 +77,15 @@ const SubscriptionDetails = ( { subscription, onFieldChange, currentTab: externa
 
 	return (
 		<>
-			{/* Tab Navigation */}
-			<div className="mt-4 text-sm font-medium text-center text-gray-500 border-b border-gray-200">
-				<ul className="flex flex-wrap -mb-px">
-					{ sections.map( ( section ) => (
-						<li key={ section.id } className="mb-0 me-2">
-							<button
-								type="button"
-								onClick={ () => setCurrentTab( section.id ) }
-								className={ `active:shadow-none focus:shadow-none inline-block p-4 rounded-t-lg hover:text-primary hover:border-b-2 hover:border-primary transition-all ${
-									currentTab === section.id
-										? 'border-b-2 border-primary text-primary'
-										: ''
-								}` }
-							>
-								{ section.title }
-							</button>
-						</li>
-					) ) }
-				</ul>
-			</div>
+			{/* Tab Navigation (develop: underline tabs under the title) */}
+			<Tabs
+				variant="section"
+				className="mt-4"
+				label={ __( 'Subscription sections', 'wp-user-frontend' ) }
+				value={ currentTab }
+				onChange={ setCurrentTab }
+				tabs={ sections.map( ( section ) => ( { id: section.id, label: section.title } ) ) }
+			/>
 
 			{/* Subsections for current tab — Object.values handles PHP arrays that lost their sequential keys */}
 			{ subSections[ currentTab ] &&

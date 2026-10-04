@@ -171,6 +171,27 @@ class SubscriptionStoreTest extends WP_UnitTestCase {
         $this->assertSame( $legacy_hook, $current_hook );
     }
 
+    public function test_empty_posting_restriction_reaches_listeners_on_create_only() {
+        $seen = [];
+        $spy  = function ( $id, $request ) use ( &$seen ) {
+            $subscription = $request->get_param( 'subscription' );
+            $seen[]       = array_key_exists( '_sub_allowed_term_ids', (array) $subscription['meta_value'] );
+        };
+        add_action( 'wpuf_before_update_subscription_pack_meta', $spy, 10, 2 );
+
+        // New pack: the empty list goes to the listeners (pro stores a:0:{} like develop).
+        ( new Subscription_Api() )->create_or_update_item( $this->request( $this->payload() ) );
+        $new_id = $this->last_pack();
+
+        // Existing pack that never stored it: an untouched save keeps it absent.
+        delete_post_meta( $new_id, '_sub_allowed_term_ids' );
+        ( new Subscription_Api() )->edit_item( $this->request( $this->payload( $new_id ) ) );
+
+        remove_action( 'wpuf_before_update_subscription_pack_meta', $spy, 10 );
+
+        $this->assertSame( [ true, false ], $seen );
+    }
+
     public function test_rest_minimal_payload_and_refusals_match() {
         $minimal = [ 'post_title' => 'Bare' ];
 

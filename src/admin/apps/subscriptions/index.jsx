@@ -8,13 +8,12 @@ import { useState, useCallback, useEffect } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { SlotFillProvider } from '@wordpress/components';
 import { doAction } from '@wordpress/hooks';
-import { WpufProviders, PageHeader } from '@wpuf/components';
+import { WpufProviders, PageHeader, UnsavedGuard } from '@wpuf/components';
 import SubscriptionForm from './components/subscriptions/SubscriptionForm';
 import SubscriptionList from './components/subscriptions/SubscriptionList';
 import SidebarMenu from './components/subscriptions/SidebarMenu';
 import ContentHeader from './components/subscriptions/ContentHeader';
 import QuickEdit from './components/subscriptions/QuickEdit';
-import UnsavedChanges from './components/subscriptions/UnsavedChanges';
 import Preferences from './components/subscriptions/Preferences';
 import Notices from './components/subscriptions/Notices';
 
@@ -69,9 +68,16 @@ const SubscriptionsApp = () => {
     }, [fetchCounts]);
 
     // Handle add subscription click
+    // develop shows "Add Subscription" on the form views too; leaving a dirty
+    // form asks first (develop did not).
     const handleAddSubscription = useCallback(() => {
+        if (isDirty) {
+            setPendingStatus('__new');
+            setIsUnsavedPopupOpen(true);
+            return;
+        }
         navigate({ action: 'new', id: null, post_status: null, p: null });
-    }, [navigate]);
+    }, [isDirty, navigate, setIsUnsavedPopupOpen]);
 
     // Handle sidebar status click
     const handleStatusClick = useCallback((newStatus) => {
@@ -87,15 +93,23 @@ const SubscriptionsApp = () => {
     const handleDiscardChanges = useCallback(() => {
         setIsDirty(false);
         setIsUnsavedPopupOpen(false);
-        if (pendingStatus) {
-            navigate({ action: null, id: null, post_status: pendingStatus === 'all' ? null : pendingStatus, p: null });
+        // A sidebar click goes to that status; the form's Cancel goes back to
+        // the list it came from (develop goToList).
+        if ('__new' === pendingStatus) {
+            navigate({ action: 'new', id: null, post_status: null, p: null });
             setPendingStatus(null);
+            return;
         }
-    }, [pendingStatus, navigate, setIsDirty, setIsUnsavedPopupOpen]);
+        const target = pendingStatus || status;
+        navigate({ action: null, id: null, post_status: target === 'all' ? null : target, p: null });
+        setPendingStatus(null);
+    }, [pendingStatus, status, navigate, setIsDirty, setIsUnsavedPopupOpen]);
 
     // Handle continue editing from unsaved popup
     const handleContinueEditing = useCallback(() => {
         setIsUnsavedPopupOpen(false);
+        // Staying: forget where the cancelled navigation was going.
+        setPendingStatus(null);
     }, [setIsUnsavedPopupOpen]);
 
     return (
@@ -104,7 +118,7 @@ const SubscriptionsApp = () => {
             <ContentHeader
                 currentSubscriptionStatus={status}
                 allCount={allCount}
-                onAddSubscription={action !== 'edit' && action !== 'new' ? handleAddSubscription : null}
+                onAddSubscription={handleAddSubscription}
             />
             <div className={`flex pt-[40px] px-[20px] ${isUnsavedPopupOpen ? 'blur-sm' : ''}`}>
                 {/* Left Sidebar */}
@@ -134,13 +148,13 @@ const SubscriptionsApp = () => {
                 </div>
             </div>
 
-            {/* Unsaved changes popup */}
-            {isUnsavedPopupOpen && (
-                <UnsavedChanges
-                    onDiscard={handleDiscardChanges}
-                    onContinue={handleContinueEditing}
-                />
-            )}
+            {/* Unsaved changes: the dialog on sidebar/cancel, the browser prompt on unload */}
+            <UnsavedGuard
+                dirty={isDirty}
+                open={isUnsavedPopupOpen}
+                onDiscard={handleDiscardChanges}
+                onContinue={handleContinueEditing}
+            />
 
             {/* Quick Edit modal */}
             <QuickEdit />

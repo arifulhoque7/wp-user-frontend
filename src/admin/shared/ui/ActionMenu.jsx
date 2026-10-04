@@ -21,16 +21,22 @@ const Dots = ( { vertical } ) => (
  * @param {string}  [props.label]    Button label for screen readers.
  * @param {boolean} [props.vertical] Vertical dots (subscription cards).
  * @param {string}  [props.align]    start|end (default end).
+ * @param {*}       [props.trigger]  Element to open the menu instead of the dots
+ *                                   (e.g. <Button>Update</Button>; it must forward its ref).
  */
-export default function ActionMenu( { items, label, vertical = false, align = 'end', className } ) {
+export default function ActionMenu( { items, label, vertical = false, align = 'end', trigger, className } ) {
     return (
         <DropdownMenu>
-            <DropdownMenuTrigger
-                aria-label={ label || __( 'Actions', 'wp-user-frontend' ) }
-                className={ cn( 'inline-flex items-center justify-center rounded-md p-2 text-gray-400 bg-transparent border-0 cursor-pointer hover:bg-gray-50 hover:text-gray-600 focus-visible:ring-2 focus-visible:ring-primary/30', className ) }
-            >
-                <Dots vertical={ vertical } />
-            </DropdownMenuTrigger>
+            { trigger ? (
+                <DropdownMenuTrigger render={ trigger } />
+            ) : (
+                <DropdownMenuTrigger
+                    aria-label={ label || __( 'Actions', 'wp-user-frontend' ) }
+                    className={ cn( 'inline-flex items-center justify-center rounded-md p-2 text-gray-400 bg-transparent border-0 cursor-pointer hover:bg-gray-50 hover:text-gray-600 focus-visible:ring-2 focus-visible:ring-primary/30', className ) }
+                >
+                    <Dots vertical={ vertical } />
+                </DropdownMenuTrigger>
+            ) }
             <DropdownMenuContent align={ align } className="w-40 p-1 bg-white rounded-md shadow-lg ring-1 ring-black/5 border-0">
                 { items.map( ( item ) => (
                     <DropdownMenuItem

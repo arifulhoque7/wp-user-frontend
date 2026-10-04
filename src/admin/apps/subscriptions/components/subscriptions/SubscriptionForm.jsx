@@ -3,18 +3,52 @@
  * DESCRIPTION: Refactored to use URL-based navigation via router
  */
 import { useState, useEffect } from '@wordpress/element';
+import { useSelect } from '@wordpress/data';
 import { __ } from '@wordpress/i18n';
-import { applyFilters, doAction } from '@wordpress/hooks';
+import { doAction } from '@wordpress/hooks';
+import { Button, ErrorState, Skeleton, notify } from '@wpuf/components';
 import SubscriptionDetails from './SubscriptionDetails';
+import InfoCard from './InfoCard';
 import UpdateButton from './UpdateButton';
 import { SubscriptionFormFooter } from '../../slots';
 import { useSubscriptionData, useSubscriptionActions, useSubscriptionNavigation } from '../../hooks';
 import { fetchSubscription } from '../../api/subscription';
 
-const SubscriptionForm = ({ mode = 'add-new', subscriptionId = null }) => {
-	const [isSaving, setIsSaving] = useState(false);
-	const [error, setError] = useState(null);
-	const [currentTab, setCurrentTab] = useState('subscription_details');
+// Loading: the form's shape (title, tabs, two sections), no layout jump.
+const FormSkeleton = () => (
+	<div className="px-12" aria-busy="true">
+		<div className="w-48"><Skeleton /></div>
+		<div className="mt-6 flex gap-6 border-b border-gray-200 pb-3">
+			{ [ 0, 1, 2 ].map( ( index ) => <div key={ index } className="w-32"><Skeleton /></div> ) }
+		</div>
+		{ [ 0, 1 ].map( ( index ) => (
+			<div key={ index } className="border border-gray-200 rounded-xl mt-4 mb-4 p-4"><Skeleton lines={ 3 } /></div>
+		) ) }
+	</div>
+);
+
+// Tab of the first field with a validation error (develop jumps nowhere; the
+// error would stay hidden on another tab).
+const tabOfField = ( errorKey ) => {
+	const fields = ( window.wpufSubscriptions || {} ).fields || {};
+
+	for ( const tab in fields ) {
+		for ( const sub in fields[ tab ] ) {
+			for ( const key in fields[ tab ][ sub ] ) {
+				if ( key === errorKey || fields[ tab ][ sub ][ key ]?.id === errorKey ) {
+					return { tab, name: fields[ tab ][ sub ][ key ].name };
+				}
+			}
+		}
+	}
+
+	return null;
+};
+
+const SubscriptionForm = ( { mode = 'add-new', subscriptionId = null } ) => {
+	const [ loadError, setLoadError ] = useState( null );
+	const [ loadKey, setLoadKey ] = useState( 0 );
+	const [ currentTab, setCurrentTab ] = useState( 'subscription_details' );
 
 	// Navigation hook
 	const { goToList } = useSubscriptionNavigation();
@@ -30,29 +64,33 @@ const SubscriptionForm = ({ mode = 'add-new', subscriptionId = null }) => {
 		setIsUnsavedPopupOpen,
 		modifyItem,
 		setBlankItem,
+		validateFields,
 		updateItem: storeUpdateItem,
 		populateTaxonomyRestrictionData,
 	} = useSubscriptionActions();
+	const subscriptionsStore = useSelect( ( select ) => select( 'wpuf/subscriptions' ), [] );
 
 	// Fetch subscription data if in edit mode
-	useEffect(() => {
-		if (mode === 'edit' && subscriptionId) {
-			// Fetch single subscription by ID
-			fetchSubscription(subscriptionId)
-				.then((data) => {
-					if (data.success && data.subscription) {
-						setItem(data.subscription);
-						setItemCopy(JSON.parse(JSON.stringify(data.subscription)));
-						populateTaxonomyRestrictionData(data.subscription);
+	useEffect( () => {
+		setLoadError( null );
+
+		if ( mode === 'edit' && subscriptionId ) {
+			setItem( null );
+			fetchSubscription( subscriptionId )
+				.then( ( data ) => {
+					if ( data.success && data.subscription ) {
+						setItem( data.subscription );
+						setItemCopy( JSON.parse( JSON.stringify( data.subscription ) ) );
+						populateTaxonomyRestrictionData( data.subscription );
 						doAction( 'wpuf.subscription.formMounted', data.subscription, mode );
 					} else {
-						setError(data.message || __('Subscription not found', 'wp-user-frontend'));
+						setLoadError( data.message || __( 'Subscription not found', 'wp-user-frontend' ) );
 					}
-				})
-				.catch((err) => {
-					setError(err.message || __('Failed to load subscription', 'wp-user-frontend'));
-				});
-		} else if (mode === 'add-new') {
+				} )
+				.catch( ( err ) => {
+					setLoadError( err.message || __( 'Failed to load subscription', 'wp-user-frontend' ) );
+				} );
+		} else if ( mode === 'add-new' ) {
 			// Initialize blank item for new subscription
 			setBlankItem();
 			doAction( 'wpuf.subscription.formMounted', null, mode );
@@ -61,121 +99,107 @@ const SubscriptionForm = ({ mode = 'add-new', subscriptionId = null }) => {
 		return () => {
 			doAction( 'wpuf.subscription.formUnmounted' );
 		};
-	}, [mode, subscriptionId, setItem, setItemCopy, setBlankItem]);
+	}, [ mode, subscriptionId, loadKey, setItem, setItemCopy, setBlankItem ] );
 
 	// Handle field changes
-	const handleFieldChange = (field, value) => {
-		switch (field.db_type) {
+	const handleFieldChange = ( field, value ) => {
+		switch ( field.db_type ) {
 			case 'post':
-				modifyItem(field.db_key, value);
+				modifyItem( field.db_key, value );
 				break;
 
 			case 'meta':
-				modifyItem(field.db_key, value, null);
+				modifyItem( field.db_key, value, null );
 				break;
 
 			case 'meta_serialized':
-				modifyItem(field.db_key, value, field.serialize_key);
+				modifyItem( field.db_key, value, field.serialize_key );
 				break;
 
 			default:
 				break;
 		}
-	};
 
-	// Handle save (publish)
-	const handlePublish = async () => {
-		setIsSaving(true);
-		setError(null);
-
-		try {
-			// Set post_status to publish
-			modifyItem('post_status', 'publish');
-
-			doAction( 'wpuf.subscription.beforeSave', subscription, mode );
-
-			const result = await storeUpdateItem();
-
-			if (result?.success) {
-				setIsDirty(false);
-				doAction( 'wpuf.subscription.afterSave', result, mode );
-				goToList();
-			} else {
-				setError(result?.message || __('Failed to save subscription', 'wp-user-frontend'));
-			}
-		} catch (err) {
-			setError(err.message);
-		} finally {
-			setIsSaving(false);
+		// develop processInput: the plan name also writes the slug.
+		if ( 'post_title' === field.db_key ) {
+			modifyItem( 'post_name', String( value ).replace( /\s+/g, '-' ).toLowerCase() );
 		}
 	};
 
-	// Handle save as draft
-	const handleSaveDraft = async () => {
-		setIsSaving(true);
-		setError(null);
+	// develop updateSubscription: validate, save, toast; back to the list on success.
+	const save = async ( status ) => {
+		modifyItem( 'post_status', status );
 
-		try {
-			// Set post_status to draft before saving
-			modifyItem('post_status', 'draft');
+		// Dispatched actions return a Promise in @wordpress/data.
+		if ( ! ( await validateFields() ) ) {
+			const errors = subscriptionsStore.getErrors() || {};
+			const first = tabOfField( Object.keys( errors )[ 0 ] );
 
-			doAction( 'wpuf.subscription.beforeSave', subscription, mode );
-
-			const result = await storeUpdateItem();
-
-			if (result?.success) {
-				setIsDirty(false);
-				doAction( 'wpuf.subscription.afterSave', result, mode );
-				goToList();
-			} else {
-				setError(result?.message || __('Failed to save subscription', 'wp-user-frontend'));
+			if ( first ) {
+				setCurrentTab( first.tab );
+				setTimeout( () => document.getElementById( first.name )?.focus(), 50 );
 			}
-		} catch (err) {
-			setError(err.message);
-		} finally {
-			setIsSaving(false);
+			return;
 		}
+
+		doAction( 'wpuf.subscription.beforeSave', subscription, mode );
+
+		let result = null;
+		try {
+			result = await storeUpdateItem();
+		} catch ( err ) {
+			result = { success: false, message: err.message };
+		}
+
+		if ( result?.success ) {
+			notify( result.message, 'success' );
+			setIsDirty( false );
+			doAction( 'wpuf.subscription.afterSave', result, mode );
+			goToList();
+			return;
+		}
+
+		// Edits stay in the form.
+		notify( result?.message || __( 'Failed to save subscription', 'wp-user-frontend' ), 'danger' );
 	};
 
 	// Handle cancel - check for unsaved changes
 	const handleCancel = () => {
-		if (isDirty) {
-			setIsUnsavedPopupOpen(true);
+		if ( isDirty ) {
+			setIsUnsavedPopupOpen( true );
 		} else {
 			goToList();
 		}
 	};
 
-	if (!subscription) {
+	if ( loadError ) {
 		return (
-			<div className="p-8 text-center">
-				<p>{error || __('Loading subscription...', 'wp-user-frontend')}</p>
+			<div className="px-12">
+				<ErrorState message={ loadError } onRetry={ () => setLoadKey( loadKey + 1 ) } />
 			</div>
 		);
 	}
 
+	if ( ! subscription || ( 'edit' === mode && String( subscription.ID ) !== String( subscriptionId ) ) ) {
+		return <FormSkeleton />;
+	}
+
 	return (
 		<div className="px-12">
-			{/* Header */}
 			<h3 className="text-lg font-bold mb-0">
-				{mode === 'edit'
-					? __('Edit Subscription', 'wp-user-frontend')
-					: __('New Subscription', 'wp-user-frontend')}
+				{ mode === 'edit'
+					? __( 'Edit Subscription', 'wp-user-frontend' )
+					: __( 'New Subscription', 'wp-user-frontend' ) }
 			</h3>
 
-			{/* Error message */}
-			{error && (
-				<div className="p-4 mb-4 bg-red-100 border border-red-400 text-red-700 rounded-sm">
-					{error}
-				</div>
-			)}
+			{ 'edit' === mode && <InfoCard subscription={ subscription } /> }
 
 			{/* Subscription details with tabs */}
 			<SubscriptionDetails
-				subscription={subscription}
-				onFieldChange={handleFieldChange}
-				currentTab={currentTab}
-				onTabChange={setCurrentTab}
+				subscription={ subscription }
+				onFieldChange={ handleFieldChange }
+				currentTab={ currentTab }
+				onTabChange={ setCurrentTab }
 			/>
 
 			{/* Extension slot: Pro and third-party plugins can add UI below form fields */}
@@ -183,21 +207,17 @@ const SubscriptionForm = ({ mode = 'add-new', subscriptionId = null }) => {
 				fillProps={ { subscription, mode, onFieldChange: handleFieldChange } }
 			/>
 
-			{/* Action buttons */}
-			<div className="flex flex-row-reverse mt-8 text-end">
+			{/* Action buttons (develop: Update menu on the right, Cancel before it) */}
+			<div className="flex flex-row-reverse gap-[10px] mt-8 text-end">
 				<UpdateButton
-					buttonText={mode === 'edit' ? __('Update', 'wp-user-frontend') : __('Save', 'wp-user-frontend')}
-					isUpdating={isUpdating || isSaving}
-					onPublish={handlePublish}
-					onSaveDraft={handleSaveDraft}
+					buttonText={ mode === 'edit' ? __( 'Update', 'wp-user-frontend' ) : __( 'Save', 'wp-user-frontend' ) }
+					isUpdating={ isUpdating }
+					onPublish={ () => save( 'publish' ) }
+					onSaveDraft={ () => save( 'draft' ) }
 				/>
-				<button
-					type="button"
-					onClick={handleCancel}
-					className="mr-[10px] rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-				>
-					{__('Cancel', 'wp-user-frontend')}
-				</button>
+				<Button variant="secondary" onClick={ handleCancel } disabled={ isUpdating }>
+					{ __( 'Cancel', 'wp-user-frontend' ) }
+				</Button>
 			</div>
 		</div>
 	);

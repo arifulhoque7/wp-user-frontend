@@ -80,6 +80,7 @@ class SubscriptionStore {
      */
     public function save_from_rest( $subscription, WP_REST_Request $request ) {
         $id     = ! empty( $subscription['ID'] ) ? (int) $subscription['ID'] : 0;
+        $is_new = empty( $id );
         $name   = ! empty( $subscription['post_title'] ) ? sanitize_text_field( $subscription['post_title'] ) : '';
         $values = $this->rest_values( $subscription );
 
@@ -121,10 +122,13 @@ class SubscriptionStore {
                 }
             }
 
-            // The pack GET returns an empty posting restriction for every pack; an
-            // empty list that was never stored stays absent on save.
+            // The pack GET returns an empty posting restriction for every pack; on an
+            // existing pack an empty list that was never stored stays absent on save
+            // (untouched save = no change). A new pack stores the empty list like
+            // develop's REST save did (G2, task 4.1b).
             if (
-                isset( $request_subscription['meta_value'] )
+                ! $is_new
+                && isset( $request_subscription['meta_value'] )
                 && array_key_exists( '_sub_allowed_term_ids', (array) $request_subscription['meta_value'] )
                 && empty( $request_subscription['meta_value']['_sub_allowed_term_ids'] )
                 && ! metadata_exists( 'post', $id, '_sub_allowed_term_ids' )

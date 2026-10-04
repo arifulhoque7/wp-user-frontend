@@ -6,6 +6,7 @@
  * No outer margin: spacing comes from the group gap or the container.
  * Disabled / busy buttons do not change on hover (develop daisyUI buttons).
  */
+import { forwardRef } from '@wordpress/element';
 import { Button as PuiButton, Spinner, cn } from '@wedevs/plugin-ui';
 
 const VARIANTS = {
@@ -30,12 +31,14 @@ const ICON_SIZES = { sm: 'size-8 p-0 rounded-md', md: 'size-[38px] p-0 rounded-m
  * @param {boolean} [props.busy]              Show a spinner and block clicks.
  * @param {string}  [props.className]         Extra classes (layout only).
  */
-export default function Button( { variant = 'primary', size = 'md', busy = false, disabled, className, children, ...props } ) {
+// forwardRef: menus and popovers can use a Button as their trigger (ActionMenu `trigger`).
+const Button = forwardRef( function Button( { variant = 'primary', size = 'md', busy = false, disabled, className, children, ...props }, ref ) {
     const look = VARIANTS[ variant ] || VARIANTS.primary;
     const sizing = 'icon' === variant ? ICON_SIZES[ size ] || ICON_SIZES.md : SIZES[ size ] || SIZES.md;
 
     return (
         <PuiButton
+            ref={ ref }
             type="button"
             variant={ look.pui }
             disabled={ disabled || busy }
@@ -47,4 +50,6 @@ export default function Button( { variant = 'primary', size = 'md', busy = false
             { children }
         </PuiButton>
     );
-}
+} );
+
+export default Button;

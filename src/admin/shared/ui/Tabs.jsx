@@ -15,11 +15,12 @@ import { Tabs as PuiTabs, TabsList, TabsTrigger, cn } from '@wedevs/plugin-ui';
  * @param {Array}    props.tabs      [{ id, label, count?, disabled? }]
  * @param {string}   props.value     Active tab id.
  * @param {Function} props.onChange  ( id ) => void
- * @param {string}   [props.variant] underline|segmented
+ * @param {string}   [props.variant] underline|segmented|section (develop subscriptions form: padded tabs over a full-width line)
  * @param {string}   [props.label]   aria-label of the tab list.
  */
 export default function Tabs( { tabs, value, onChange, variant = 'underline', label, className } ) {
     const segmented = 'segmented' === variant;
+    const section = 'section' === variant;
 
     return (
         <PuiTabs value={ value } onValueChange={ ( next ) => onChange( next ) }>
@@ -28,7 +29,9 @@ export default function Tabs( { tabs, value, onChange, variant = 'underline', la
                 aria-label={ label }
                 className={ cn(
                     'h-auto group-data-horizontal/tabs:h-auto justify-start',
-                    segmented ? 'w-max gap-0 rounded-lg bg-gray-100 p-2' : 'w-auto gap-0 p-0 rounded-none bg-transparent',
+                    segmented && 'w-max gap-0 rounded-lg bg-gray-100 p-2',
+                    section && 'w-full gap-0 p-0 rounded-none bg-transparent border-0 border-b border-solid border-gray-200 text-sm font-medium text-center text-gray-500',
+                    ! segmented && ! section && 'w-auto gap-0 p-0 rounded-none bg-transparent',
                     className
                 ) }
             >
@@ -40,9 +43,9 @@ export default function Tabs( { tabs, value, onChange, variant = 'underline', la
                         className={ cn(
                             // Develop spaces tabs with a right margin on each (also the last one).
                             'flex-none h-auto gap-0 cursor-pointer shadow-none',
-                            segmented
-                                ? 'mr-2 rounded-md border-0 px-4 py-2 text-base font-normal text-gray-500 data-active:bg-white data-active:text-gray-800 data-active:drop-shadow-xs enabled:hover:bg-white enabled:hover:text-gray-800'
-                                : 'mr-8 rounded-none border-0 border-b-2 border-transparent px-1 py-4 text-sm font-medium text-gray-500 data-active:border-b-primary data-active:text-primary enabled:hover:border-b-primary enabled:hover:text-primary'
+                            segmented && 'mr-2 rounded-md border-0 px-4 py-2 text-base font-normal text-gray-500 data-active:bg-white data-active:text-gray-800 data-active:drop-shadow-xs enabled:hover:bg-white enabled:hover:text-gray-800',
+                            section && 'me-2 mb-[-1px] rounded-t-lg rounded-b-none border-0 border-solid p-4 text-sm font-medium text-gray-500 data-active:border-b-2 data-active:border-b-primary data-active:text-primary enabled:hover:border-b-2 enabled:hover:border-b-primary enabled:hover:text-primary',
+                            ! segmented && ! section && 'mr-8 rounded-none border-0 border-b-2 border-transparent px-1 py-4 text-sm font-medium text-gray-500 data-active:border-b-primary data-active:text-primary enabled:hover:border-b-primary enabled:hover:text-primary'
                         ) }
                     >
                         { tab.label }
