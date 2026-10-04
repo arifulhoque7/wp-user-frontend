@@ -17,6 +17,8 @@ import {
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { RadioGroup, RadioGroupItem } from '@wedevs/plugin-ui';
+import { Checkbox, TextInput } from '@wpuf/components';
 import SettingHelpText from './SettingHelpText';
 
 /**
@@ -52,7 +54,7 @@ function SortableOptionRow( { id, index, children } ) {
  * Manages the list of options (label/value pairs), selected defaults,
  * show/sync value toggles, and AI generation.
  */
-export default function OptionDataInput( { optionField, field, builderClassNames } ) {
+export default function OptionDataInput( { optionField, field } ) {
     const { updateField } = useDispatch( STORE_NAME );
     const i18n = useSelect( ( select ) => select( STORE_NAME ).getI18n(), [] );
 
@@ -265,24 +267,22 @@ export default function OptionDataInput( { optionField, field, builderClassNames
 
             { /* Show/Sync value toggles */ }
             <div className="mt-2 flex">
-                <label className="block text-sm/6 font-medium text-gray-700">
-                    <input
-                        type="checkbox"
-                        checked={ showValue }
-                        onChange={ ( e ) => setShowValue( e.target.checked ) }
-                        className={ `${ builderClassNames( 'checkbox' ) } mr-2!` }
+                <Checkbox
+                    id={ `wpuf-show-values-${ field.id }` }
+                    data-value="show-values"
+                    value={ showValue }
+                    onChange={ setShowValue }
+                    label={ __( 'Show values', 'wp-user-frontend' ) }
+                />
+                <span className="ml-8">
+                    <Checkbox
+                        id={ `wpuf-sync-values-${ field.id }` }
+                        data-value="sync-values"
+                        value={ syncValue }
+                        onChange={ setSyncValue }
+                        label={ __( 'Sync values', 'wp-user-frontend' ) }
                     />
-                    { __( 'Show values', 'wp-user-frontend' ) }
-                </label>
-                <label className="block text-sm/6 font-medium text-gray-700 ml-8">
-                    <input
-                        type="checkbox"
-                        checked={ syncValue }
-                        onChange={ ( e ) => setSyncValue( e.target.checked ) }
-                        className={ `${ builderClassNames( 'checkbox' ) } mr-2!` }
-                    />
-                    { __( 'Sync values', 'wp-user-frontend' ) }
-                </label>
+                </span>
             </div>
 
             { /* Options table */ }
@@ -333,46 +333,50 @@ export default function OptionDataInput( { optionField, field, builderClassNames
 
                 <DndContext sensors={ sensors } collisionDetection={ closestCenter } onDragEnd={ handleSortEnd }>
                     <SortableContext items={ options.map( ( option ) => String( option.id ) ) } strategy={ verticalListSortingStrategy }>
-                        <table className="option-field-option-chooser">
+                        { /* One radio group for the default choice of a single-choice field
+                             (each row holds one RadioGroupItem); checkboxes stand alone. */ }
+                        <RadioGroup
+                            render={ <table className="option-field-option-chooser" /> }
+                            value={ isMultiple ? undefined : ( 'string' === typeof selected ? selected : '' ) }
+                            onValueChange={ ( next ) => ! isMultiple && handleSelectedChange( next, true ) }
+                        >
                             <tbody>
                                 { options.map( ( option, index ) => (
                                     <SortableOptionRow key={ option.id } id={ option.id } index={ index }>
                                         { ( handleProps ) => ( <>
                                             <td className="flex items-center">
                                                 { isMultiple ? (
-                                                    <input
-                                                        type="checkbox"
-                                                        value={ option.value }
-                                                        checked={ Array.isArray( selected ) && selected.includes( option.value ) }
-                                                        onChange={ ( e ) => handleSelectedChange( option.value, e.target.checked ) }
-                                                        className={ builderClassNames( 'checkbox' ) }
+                                                    <Checkbox
+                                                        data-value={ option.value }
+                                                        aria-label={ option.label }
+                                                        value={ Array.isArray( selected ) && selected.includes( option.value ) }
+                                                        onChange={ ( on ) => handleSelectedChange( option.value, on ) }
                                                     />
                                                 ) : (
-                                                    <input
-                                                        type="radio"
+                                                    <RadioGroupItem
                                                         value={ option.value }
-                                                        checked={ selected === option.value }
-                                                        onChange={ () => handleSelectedChange( option.value, true ) }
-                                                        className={ `mt-0! ${ builderClassNames( 'radio' ) }` }
+                                                        data-value={ option.value }
+                                                        aria-label={ option.label }
+                                                        className="border-gray-300 data-checked:border-primary data-checked:bg-primary text-white cursor-pointer"
                                                     />
                                                 ) }
                                                 <i className="fa fa-bars sort-handler hover:cursor-move! text-gray-400 ml-1" { ...handleProps } />
                                             </td>
                                             <td>
-                                                <input
-                                                    className={ `${ builderClassNames( 'text' ) } w-full!` }
-                                                    type="text"
+                                                <TextInput
+                                                    className="w-full"
                                                     value={ option.label }
-                                                    onChange={ ( e ) => setOptionLabel( index, e.target.value ) }
+                                                    aria-label={ __( 'Label', 'wp-user-frontend' ) }
+                                                    onChange={ ( next ) => setOptionLabel( index, next ) }
                                                 />
                                             </td>
                                             { showValue && (
                                                 <td>
-                                                    <input
-                                                        className={ `${ builderClassNames( 'text' ) } w-full!` }
-                                                        type="text"
+                                                    <TextInput
+                                                        className="w-full"
                                                         value={ option.value }
-                                                        onChange={ ( e ) => setOptionValue( index, e.target.value ) }
+                                                        aria-label={ __( 'Value', 'wp-user-frontend' ) }
+                                                        onChange={ ( next ) => setOptionValue( index, next ) }
                                                     />
                                                 </td>
                                             ) }
@@ -408,7 +412,7 @@ export default function OptionDataInput( { optionField, field, builderClassNames
                                     </SortableOptionRow>
                                 ) ) }
                             </tbody>
-                        </table>
+                        </RadioGroup>
                     </SortableContext>
                 </DndContext>
             </div>
@@ -463,21 +467,20 @@ export default function OptionDataInput( { optionField, field, builderClassNames
                                     </div>
                                     <div className="wpuf-ai-options-list">
                                         { aiGeneratedOptions.map( ( opt, idx ) => (
-                                            <label key={ idx } className="flex items-center py-1 cursor-pointer hover:bg-gray-50 rounded-sm px-2">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={ opt.selected }
-                                                    onChange={ ( e ) => {
+                                            <div key={ idx } className="py-1 hover:bg-gray-50 rounded-sm px-2">
+                                                <Checkbox
+                                                    id={ `wpuf-ai-option-${ field.id }-${ idx }` }
+                                                    value={ !! opt.selected }
+                                                    onChange={ ( on ) => {
                                                         setAiGeneratedOptions( ( prev ) => {
                                                             const next = [ ...prev ];
-                                                            next[ idx ] = { ...next[ idx ], selected: e.target.checked };
+                                                            next[ idx ] = { ...next[ idx ], selected: on };
                                                             return next;
                                                         } );
                                                     } }
-                                                    className={ builderClassNames( 'checkbox' ) }
+                                                    label={ opt.label }
                                                 />
-                                                <span className="text-sm text-gray-700">{ opt.label }</span>
-                                            </label>
+                                            </div>
                                         ) ) }
                                     </div>
                                 </div>

@@ -31,7 +31,7 @@ export default function Radio( { value, options, onChange, name = 'wpuf-radio', 
 
                 return (
                     <label key={ item.value } htmlFor={ id } className="inline-flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                        <RadioGroupItem id={ id } value={ item.value } disabled={ item.disabled } className="border-gray-300 data-checked:border-primary data-checked:bg-primary text-white cursor-pointer" />
+                        <RadioGroupItem id={ id } value={ item.value } data-value={ item.value } disabled={ item.disabled } className="border-gray-300 data-checked:border-primary data-checked:bg-primary text-white cursor-pointer" />
                         <span>{ item.label }</span>
                     </label>
                 );

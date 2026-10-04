@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from '@wordpress/el
 import { useDispatch } from '@wordpress/data';
 import { __ } from '@wordpress/i18n';
 import { STORE_NAME } from '../../../store';
+import { TextInput } from '@wpuf/components';
 import SettingHelpText from './SettingHelpText';
 
 /**
@@ -225,12 +226,12 @@ export default function IconSelectorInput( { optionField, field, value, onChange
                         { activeTab === 'icon' && (
                             <div>
                                 <div className="p-3 border-b border-gray-200">
-                                    <input
+                                    <TextInput
                                         value={ searchTerm }
-                                        onChange={ ( e ) => setSearchTerm( e.target.value ) }
-                                        type="text"
+                                        onChange={ setSearchTerm }
                                         placeholder={ __( 'Search icons... (e.g., user, email, home)', 'wp-user-frontend' ) }
-                                        className="w-full px-4! py-1.5! border border-gray-300 rounded-sm text-sm text-gray-900 placeholder:text-gray-400 shadow-sm focus:shadow-none!"
+                                        aria-label={ __( 'Search icons', 'wp-user-frontend' ) }
+                                        className="w-full"
                                     />
                                     <div className="text-xs text-gray-500 mt-1">
                                         { iconCountLabel }

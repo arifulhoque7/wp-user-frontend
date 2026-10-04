@@ -1,14 +1,12 @@
+import { Radio } from '@wpuf/components';
 import SettingHelpText from './SettingHelpText';
 
 /**
- * Radio button input for field settings.
- * Replaces Vue field-radio component.
+ * Radio group for field settings (Vue field-radio), on the shared Radio
+ * wrapper (4.4c). The stored option value is kept as is; inline options sit
+ * in one row like develop's.
  */
-export default function RadioInput( { optionField, value, onChange, builderClassNames } ) {
-    const options = optionField.options || {};
-    const optionEntries = Object.entries( options );
-    const isInline = !! optionField.inline;
-
+export default function RadioInput( { optionField, field, value, onChange } ) {
     return (
         <div className="panel-field-opt panel-field-opt-radio">
             <div className="flex">
@@ -17,45 +15,14 @@ export default function RadioInput( { optionField, value, onChange, builderClass
                     <SettingHelpText text={ optionField.help_text } />
                 </label>
             </div>
-
-            { isInline ? (
-                <div className="flex">
-                    { optionEntries.map( ( [ key, label ], index ) => (
-                        <div key={ key } className="items-center">
-                            <label
-                                className={ `block text-sm/6 font-medium text-gray-900 mb-0!${ index !== 0 ? ' ml-8' : '' }` }
-                            >
-                                <input
-                                    type="radio"
-                                    value={ key }
-                                    checked={ value === key }
-                                    onChange={ () => onChange( key ) }
-                                    className={ builderClassNames( 'radio' ) }
-                                />
-                                { label }
-                            </label>
-                        </div>
-                    ) ) }
-                </div>
-            ) : (
-                optionEntries.map( ( [ key, label ], index ) => (
-                    <div
-                        key={ key }
-                        className={ `flex items-center${ index < optionEntries.length - 1 ? ' mb-3' : '' }` }
-                    >
-                        <label className="mb-0!">
-                            <input
-                                type="radio"
-                                value={ key }
-                                checked={ value === key }
-                                onChange={ () => onChange( key ) }
-                                className={ builderClassNames( 'radio' ) }
-                            />
-                            { label }
-                        </label>
-                    </div>
-                ) )
-            ) }
+            <Radio
+                name={ `wpuf-${ optionField.name }-${ field ? field.id : 'field' }` }
+                options={ optionField.options || {} }
+                value={ value }
+                onChange={ ( next ) => onChange( next ) }
+                inline={ !! optionField.inline }
+                className={ optionField.inline ? 'gap-x-8' : 'gap-3' }
+            />
         </div>
     );
 }

@@ -35,7 +35,7 @@ test.describe('Parity pro option inputs', () => {
             }
         };
 
-        // Opening each panel (selectize binds, map, tooltips) writes nothing.
+        // Opening each panel (country pickers, map, tooltips) writes nothing.
         for (const template of ['step_start', 'country_list_field', 'address_field', 'pricing_checkbox', 'google_map', 'signature_field']) {
             if (await page.locator(`#form-preview-stage > ul > li.form-field-${template}`).count()) {
                 await openOptions(template);
@@ -50,12 +50,16 @@ test.describe('Parity pro option inputs', () => {
         await stepInputs.nth(1).fill('Back');
 
         // Country list: "Hide these" asks for a country until one is picked; a switch clears the other list.
+        // Pickers are the shared Select / MultiSelect (4.4c; develop: selectize).
         await openOptions('country_list_field');
+        await panel.locator('.default-country [data-slot="select-trigger"]').click();
+        await page.locator('[role="option"]', { hasText: /^Bangladesh$/ }).first().click();
         await panel.getByRole('button', { name: 'Hide these' }).click();
         await expect(panel.getByText('Please select at least one country'), 'empty list alert').toBeVisible();
-        await expect(panel.locator('.selectize-control.multi'), 'country list is a selectize control').toBeVisible();
-        await panel.locator('.selectize-control.multi input').fill('Bangla');
-        await page.locator('.selectize-dropdown .option', { hasText: 'Bangladesh' }).first().click();
+        await panel.locator('.country-list-selector [data-slot="smart-multi-select-trigger"]').click();
+        await page.locator('[data-slot="smart-multi-select-content"] [data-slot="command-input"]').fill('Bangla');
+        await page.locator('[data-slot="smart-multi-select-content"] [data-slot="command-item"]', { hasText: 'Bangladesh' }).first().click();
+        await page.keyboard.press('Escape');
         await expect(panel.getByText('Please select at least one country')).toHaveCount(0);
         await panel.getByRole('button', { name: 'Only show' }).click();
 
@@ -64,7 +68,7 @@ test.describe('Parity pro option inputs', () => {
         const parts = panel.locator('.panel-field-opt-address > div');
         expect(await parts.count(), 'one row per stored address part').toBe(6);
         await parts.nth(4).locator('> div').first().click();
-        await expect(panel.locator('.address-country-default .selectize-control.single.default-country'), 'default country selectize').toBeVisible();
+        await expect(panel.locator('.address-country-default .default-country [data-slot="select-trigger"]'), 'default country select').toBeVisible();
 
         // Pricing options: drag the second row above the first.
         await openOptions('pricing_checkbox');
@@ -81,6 +85,7 @@ test.describe('Parity pro option inputs', () => {
         const byTemplate = (template: string) => fields.find((field) => template === field.template)!;
         expect(byTemplate('step_start').step_start.prev_button_text, 'previous button text stored').toBe('Back');
         const countryList = byTemplate('country_list_field').country_list;
+        expect(countryList.name, 'default country stored as its code').toBe('BD');
         expect(countryList.country_list_visibility_opt_name).toBe('show');
         expect(countryList.country_select_hide_list || [], 'hide list cleared by the switch').toEqual([]);
         expect(Object.values(byTemplate('pricing_checkbox').options), 'reordered pricing options stored').toEqual([before[1], before[0], ...before.slice(2)]);

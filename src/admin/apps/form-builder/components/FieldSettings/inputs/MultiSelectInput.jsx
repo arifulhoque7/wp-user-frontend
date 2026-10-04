@@ -1,4 +1,5 @@
-import { useMemo, useEffect, useRef } from '@wordpress/element';
+import { useMemo } from '@wordpress/element';
+import { MultiSelect } from '@wpuf/components';
 import SettingHelpText from './SettingHelpText';
 
 /**
@@ -6,11 +7,10 @@ import SettingHelpText from './SettingHelpText';
  * Replaces Vue field-multiselect component.
  *
  * Supports dynamic taxonomy term options when field is a taxonomy type.
- * Uses native <select multiple> with selectize-compatible class.
+ * On the shared MultiSelect wrapper (4.4c; develop used selectize): the
+ * stored value is the list of option values (falsy -> []).
  */
 export default function MultiSelectInput( { optionField, field, value, onChange } ) {
-    const selectRef = useRef( null );
-
     // Dynamic options for taxonomy exclude fields
     const dynamicOptions = useMemo( () => {
         if (
@@ -45,38 +45,6 @@ export default function MultiSelectInput( { optionField, field, value, onChange 
         return optionField.options || {};
     }, [ optionField.name, optionField.options, field ] );
 
-    // Initialize selectize if jQuery + selectize are available
-    useEffect( () => {
-        const $select = window.jQuery && selectRef.current
-            ? window.jQuery( selectRef.current )
-            : null;
-
-        if ( ! $select || ! $select.selectize ) {
-            return;
-        }
-
-        // Destroy existing instance
-        if ( $select[ 0 ] && $select[ 0 ].selectize ) {
-            $select[ 0 ].selectize.destroy();
-        }
-
-        $select.selectize( {} ).on( 'change', function () {
-            const newVal = $select.val();
-            onChange( newVal || [] );
-        } );
-
-        return () => {
-            if ( $select[ 0 ] && $select[ 0 ].selectize ) {
-                $select[ 0 ].selectize.destroy();
-            }
-        };
-    }, [ dynamicOptions, onChange ] );
-
-    const handleNativeChange = ( e ) => {
-        const selected = Array.from( e.target.selectedOptions ).map( ( opt ) => opt.value );
-        onChange( selected );
-    };
-
     return (
         <div className="panel-field-opt panel-field-opt-select">
             <div className="flex">
@@ -88,23 +56,12 @@ export default function MultiSelectInput( { optionField, field, value, onChange 
                 ) }
             </div>
 
-            <select
-                ref={ selectRef }
-                className="term-list-selector w-full mt-2 border-primary z-30"
+            <MultiSelect
+                className="term-list-selector w-full mt-2"
+                options={ dynamicOptions }
                 value={ Array.isArray( value ) ? value : [] }
-                onChange={ handleNativeChange }
-                multiple
-            >
-                { Object.entries( dynamicOptions ).map( ( [ key, label ] ) => (
-                    <option
-                        key={ key }
-                        value={ key }
-                        className="checked:bg-primary"
-                    >
-                        { label }
-                    </option>
-                ) ) }
-            </select>
+                onChange={ ( next ) => onChange( next ) }
+            />
         </div>
     );
 }

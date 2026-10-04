@@ -1,10 +1,10 @@
+import { NumberInput } from '@wpuf/components';
 import SettingHelpText from './SettingHelpText';
 
 /**
- * Range slider input for field settings (e.g. column count).
- * Replaces Vue field-range component.
- *
- * Reads min_column / max_column from the field to set range bounds.
+ * Range slider for field settings (e.g. column count; Vue field-range), on
+ * the shared NumberInput range variant (4.4c). Bounds come from the field's
+ * min_column / max_column.
  */
 export default function RangeInput( { optionField, field, value, onChange } ) {
     const minColumn = field.min_column || 1;
@@ -13,16 +13,17 @@ export default function RangeInput( { optionField, field, value, onChange } ) {
     return (
         <div className="panel-field-opt panel-field-opt-text">
             <div className="flex">
-                <label>
+                <label htmlFor={ `wpuf-${ optionField.name }-${ field.id }` }>
                     { optionField.title }
                     <SettingHelpText text={ optionField.help_text } />
                     { optionField.min_column }
                 </label>
             </div>
-            <input
-                type="range"
-                value={ value || minColumn }
-                onChange={ ( e ) => onChange( e.target.value ) }
+            <NumberInput
+                id={ `wpuf-${ optionField.name }-${ field.id }` }
+                variant="range"
+                value={ value || String( minColumn ) }
+                onChange={ ( next ) => onChange( next ) }
                 min={ minColumn }
                 max={ maxColumn }
             />

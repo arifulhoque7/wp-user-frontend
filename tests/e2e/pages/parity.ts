@@ -522,7 +522,13 @@ export class ParitySitePage {
                         await inputs.last().blur();
                     }
                 }
-                await optionRows.last().locator('input[type="radio"], input[type="checkbox"]').first().check({ force: true });
+                // Native inputs on develop; plugin-ui role=radio / role=checkbox on the branch (4.4c).
+                const chooser = optionRows.last().locator('[role="radio"], [role="checkbox"]');
+                if (await chooser.count()) {
+                    await chooser.first().click();
+                } else {
+                    await optionRows.last().locator('input[type="radio"], input[type="checkbox"]').first().check({ force: true });
+                }
                 done.push(`${rowType} | ${label} | options=${optionCount}`);
                 continue;
             }
@@ -538,19 +544,49 @@ export class ParitySitePage {
                 if (!reachable) {
                     continue;
                 }
+                // Recorded by the option's label, as the branch's MultiSelect shows it (4.4c).
                 const picked = await selectized.nth(c).evaluate((el) => {
-                    const widget = (el as unknown as { selectize?: { options: Record<string, unknown>; addItem: (v: string) => void } }).selectize;
+                    const widget = (el as unknown as { selectize?: { options: Record<string, { text?: string }>; addItem: (v: string) => void } }).selectize;
                     const values = Array.from((el as HTMLSelectElement).options).map((o) => o.value).filter(Boolean);
                     const keys = widget ? Object.keys(widget.options) : [];
                     const value = values.length ? values[values.length - 1] : keys[keys.length - 1];
                     if (widget && value) {
                         widget.addItem(value);
                     }
-                    return value || '';
+                    return (widget && value && widget.options[value]?.text) || value || '';
                 });
                 if (picked) {
                     actions.push(`select=${picked}`);
                 }
+            }
+            // Shared Select / MultiSelect wrappers (plugin-ui, branch 4.4c): driven where
+            // develop's selectize lists are, before the row's boxes open more controls.
+            // Select: last option by its text, like develop's custom dropdown below.
+            const puiSelects = row.locator('[data-slot="select-trigger"]:visible:not([disabled]):not([data-disabled])');
+            for (let c = 0; c < await puiSelects.count(); c++) {
+                await puiSelects.nth(c).click();
+                const options = this.page.locator('[role="option"]:visible');
+                const optionCount = await options.count();
+                if (optionCount) {
+                    const text = ((await options.nth(optionCount - 1).textContent()) || '').trim();
+                    await options.nth(optionCount - 1).click();
+                    actions.push(`select=${text}`);
+                }
+            }
+            // Shared MultiSelect wrapper (plugin-ui, branch 4.4c; develop: selectize):
+            // add the last option, recorded by its value like the selectize branch above.
+            const puiMulti = row.locator('[data-slot="smart-multi-select-trigger"]:visible:not(.pointer-events-none)'); // skips disabled lists, as above
+            for (let c = 0; c < await puiMulti.count(); c++) {
+                await puiMulti.nth(c).click();
+                const options = this.page.locator('[data-slot="smart-multi-select-content"] [data-slot="command-group"]').first().locator('[data-slot="command-item"]:visible');
+                const optionCount = await options.count();
+                if (optionCount) {
+                    const option = options.nth(optionCount - 1);
+                    const picked = ((await option.textContent()) || '').trim();
+                    await option.click();
+                    actions.push(`select=${picked}`);
+                }
+                await this.page.keyboard.press('Escape');
             }
             const texts = row.locator('input[type="text"]:visible, input[type="number"]:visible, input[type="url"]:visible, input[type="email"]:visible, textarea:visible').filter({ hasNot: this.page.locator('xpath=self::*[ancestor::div[contains(@class,"selectize-input")]]') });
             for (let t = 0; t < await texts.count(); t++) {
@@ -565,15 +601,23 @@ export class ParitySitePage {
                 await input.blur();
                 actions.push(`fill=${value}`);
             }
-            const radios = row.locator('input[type="radio"]:visible');
+            // Native radios / checkboxes (develop) or the shared wrappers' role=radio /
+            // role=checkbox with data-value (branch, 4.4c); their hidden inputs are skipped.
+            const radios = row.locator('input[type="radio"]:visible:not([aria-hidden="true"]), [role="radio"]:visible');
             if (await radios.count()) {
-                await radios.last().check({ force: true });
-                actions.push(`radio=${await radios.last().getAttribute('value')}`);
+                const radio = radios.last();
+                if ('radio' === (await radio.getAttribute('role'))) {
+                    await radio.click();
+                } else {
+                    await radio.check({ force: true });
+                }
+                actions.push(`radio=${(await radio.getAttribute('value')) ?? (await radio.getAttribute('data-value'))}`);
             }
-            const checks = row.locator('input[type="checkbox"]:visible');
+            const checks = row.locator('input[type="checkbox"]:visible:not([aria-hidden="true"]), [role="checkbox"]:visible');
             for (let c = 0; c < await checks.count(); c++) {
-                await checks.nth(c).click({ force: true });
-                actions.push(`toggle=${await checks.nth(c).getAttribute('value')}`);
+                const check = checks.nth(c);
+                await check.click({ force: true });
+                actions.push(`toggle=${(await check.getAttribute('value')) ?? (await check.getAttribute('data-value'))}`);
             }
             const selects = row.locator('select:visible:not([disabled])');
             for (let c = 0; c < await selects.count(); c++) {

@@ -1,31 +1,22 @@
 import { useCallback } from '@wordpress/element';
+import { Checkbox } from '@wpuf/components';
 import SettingHelpText from './SettingHelpText';
 
 /**
- * Checkbox input for field settings.
- * Replaces Vue field-checkbox component.
- *
- * Single-option checkboxes (is_single_opt) toggle between the first option key
- * and ''. Multi-option checkboxes store a list of keys when the stored value is
- * a list; a single box with any other stored value is on/off, stored as true/false
- * (how the Vue v-model stored `read_only`). The store keeps `read_only` and
- * `required` mutually exclusive.
+ * Checkbox input for field settings (Vue field-checkbox), on the shared
+ * Checkbox wrapper (4.4c). Stored shapes are develop's:
+ * - single-option boxes (is_single_opt) store the option key or '';
+ * - one box whose stored value is not a list is a boolean box (`read_only`),
+ *   stored as true / false (the Vue v-model); 'true' / 'yes' read as on;
+ * - several boxes store the list of ticked keys.
+ * The store keeps `read_only` and `required` mutually exclusive.
  */
-export default function CheckboxInput( { optionField, value, onChange, builderClassNames } ) {
+export default function CheckboxInput( { optionField, field, value, onChange } ) {
     const isSingleOpt = !! optionField.is_single_opt;
     const options = optionField.options || {};
     const optionKeys = Object.keys( options );
+    const idBase = `wpuf-${ optionField.name }-${ field ? field.id : 'field' }`;
 
-    // For single-option checkboxes, compute checked state
-    const isChecked = isSingleOpt
-        ? value === optionKeys[ 0 ]
-        : false;
-
-    const handleSingleOptChange = useCallback( ( e ) => {
-        onChange( e.target.checked ? optionKeys[ 0 ] : '' );
-    }, [ optionKeys, onChange ] );
-
-    // One box whose stored value is not a list is a boolean box (`read_only`).
     const isBooleanBox = optionKeys.length === 1 && ! Array.isArray( value );
     const isBoxChecked = value === true || value === 'true' || value === 'yes';
 
@@ -37,12 +28,11 @@ export default function CheckboxInput( { optionField, value, onChange, builderCl
 
         const current = Array.isArray( value ) ? [ ...value ] : [];
 
-        if ( checked ) {
-            if ( ! current.includes( key ) ) {
-                current.push( key );
-            }
-        } else {
+        if ( checked && ! current.includes( key ) ) {
+            current.push( key );
+        } else if ( ! checked ) {
             const idx = current.indexOf( key );
+
             if ( idx > -1 ) {
                 current.splice( idx, 1 );
             }
@@ -51,62 +41,52 @@ export default function CheckboxInput( { optionField, value, onChange, builderCl
         onChange( current );
     }, [ value, onChange, isBooleanBox ] );
 
-    // Single option checkbox (toggle). Like the Vue template: the title (when
-    // set) above, the option's own text next to the box.
+    const title = optionField.title && (
+        <div className="flex">
+            <label className="wpuf-option-field-title wpuf-font-sm text-gray-700 font-medium">
+                { optionField.title }
+                <SettingHelpText text={ optionField.help_text } />
+            </label>
+        </div>
+    );
+
+    // Single option checkbox (toggle): the title (when set) above, the option's
+    // own text next to the box, like the Vue template.
     if ( isSingleOpt ) {
+        const key = optionKeys[ 0 ];
+
         return (
             <div className="panel-field-opt panel-field-opt-checkbox mb-6">
-                { optionField.title && (
-                    <div className="flex">
-                        <label className="wpuf-option-field-title wpuf-font-sm text-gray-700 font-medium">
-                            { optionField.title }
-                            <SettingHelpText text={ optionField.help_text } />
-                        </label>
-                    </div>
-                ) }
+                { title }
                 <ul>
-                    <li>
-                        <label className="block text-sm/6 font-medium text-gray-900 mb-0!">
-                            <input
-                                type="checkbox"
-                                className={ `${ builderClassNames( 'checkbox' ) } mr-2!` }
-                                value={ optionKeys[ 0 ] }
-                                checked={ isChecked }
-                                onChange={ handleSingleOptChange }
-                            />
-                            { options[ optionKeys[ 0 ] ] }
-                            { ! optionField.title && <SettingHelpText text={ optionField.help_text } /> }
-                        </label>
+                    <li className="flex items-center gap-2">
+                        <Checkbox
+                            id={ `${ idBase }-${ key }` }
+                            data-value={ key }
+                            value={ value === key }
+                            onChange={ ( on ) => onChange( on ? key : '' ) }
+                            label={ options[ key ] }
+                        />
+                        { ! optionField.title && <SettingHelpText text={ optionField.help_text } /> }
                     </li>
                 </ul>
             </div>
         );
     }
 
-    // Multi-option checkboxes
     return (
         <div className="panel-field-opt panel-field-opt-checkbox mb-6">
-            <div className="flex">
-                { optionField.title && (
-                    <label className="wpuf-option-field-title wpuf-font-sm text-gray-700 font-medium">
-                        { optionField.title }
-                        <SettingHelpText text={ optionField.help_text } />
-                    </label>
-                ) }
-            </div>
-            <ul className={ optionField.inline ? 'list-inline' : '' }>
+            { title }
+            <ul className={ optionField.inline ? 'list-inline flex flex-wrap gap-x-6' : 'grid gap-2' }>
                 { optionKeys.map( ( key ) => (
                     <li key={ key }>
-                        <label className="block text-sm/6 font-medium text-gray-900 mb-0!">
-                            <input
-                                type="checkbox"
-                                className={ `${ builderClassNames( 'checkbox' ) } mr-2!` }
-                                value={ key }
-                                checked={ isBooleanBox ? isBoxChecked : Array.isArray( value ) && value.includes( key ) }
-                                onChange={ ( e ) => handleMultiChange( key, e.target.checked ) }
-                            />
-                            { options[ key ] }
-                        </label>
+                        <Checkbox
+                            id={ `${ idBase }-${ key }` }
+                            data-value={ key }
+                            value={ isBooleanBox ? isBoxChecked : Array.isArray( value ) && value.includes( key ) }
+                            onChange={ ( on ) => handleMultiChange( key, on ) }
+                            label={ options[ key ] }
+                        />
                     </li>
                 ) ) }
             </ul>

@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
+import { Checkbox, Radio } from '@wpuf/components';
 import SettingHelpText from './SettingHelpText';
 
 /**
@@ -8,10 +9,10 @@ import SettingHelpText from './SettingHelpText';
  *
  * Value is an object: { selected: 'everyone'|'logged_in'|'subscribed_users', choices: [] }
  *
- * Roles and subscriptions are read from window.wpuf_form_builder
- * (must be added to PHP localize_script in Section 15).
+ * Roles and subscriptions are read from window.wpuf_form_builder.
+ * On the shared Radio / Checkbox wrappers (4.4c).
  */
-export default function VisibilityInput( { optionField, field, value, onChange, builderClassNames } ) {
+export default function VisibilityInput( { optionField, field, value, onChange } ) {
     const options = optionField.options || {};
     const isInline = !! optionField.inline;
 
@@ -53,41 +54,14 @@ export default function VisibilityInput( { optionField, field, value, onChange, 
             </div>
 
             { /* Radio options */ }
-            { isInline ? (
-                <div className="mt-2 flex flex-wrap">
-                    { Object.entries( options ).map( ( [ key, label ] ) => (
-                        <div key={ key } className="items-center mr-9">
-                            <label className="block my-1 mr-2 font-medium text-gray-900">
-                                <input
-                                    type="radio"
-                                    name={ `visibility_${ field.id }` }
-                                    value={ key }
-                                    checked={ selected === key }
-                                    onChange={ () => handleSelectedChange( key ) }
-                                    className={ builderClassNames( 'radio' ) }
-                                />
-                                { label }
-                            </label>
-                        </div>
-                    ) ) }
-                </div>
-            ) : (
-                Object.entries( options ).map( ( [ key, label ] ) => (
-                    <div key={ key } className="flex items-center gap-x-2 m-2">
-                        <label className="block text-sm/6 font-medium text-gray-900">
-                            <input
-                                type="radio"
-                                name={ `visibility_${ field.id }` }
-                                value={ key }
-                                checked={ selected === key }
-                                onChange={ () => handleSelectedChange( key ) }
-                                className="checked:bg-primary! checked:before:bg-transparent!"
-                            />
-                            { label }
-                        </label>
-                    </div>
-                ) )
-            ) }
+            <Radio
+                name={ `visibility_${ field.id }` }
+                options={ options }
+                value={ selected }
+                onChange={ handleSelectedChange }
+                inline={ isInline }
+                className={ isInline ? 'mt-2 gap-x-9 gap-y-2' : 'gap-2 m-2' }
+            />
 
             { /* Role choices when logged_in is selected */ }
             { selected === 'logged_in' && (
@@ -95,16 +69,13 @@ export default function VisibilityInput( { optionField, field, value, onChange, 
                     <ul>
                         { Object.entries( roles ).map( ( [ role, roleName ] ) => (
                             <li key={ role } className="mt-2 flex items-center">
-                                <label className="flex items-center">
-                                    <input
-                                        className={ `${ builderClassNames( 'checkbox' ) } mr-2!` }
-                                        type="checkbox"
-                                        value={ role }
-                                        checked={ choices.includes( role ) }
-                                        onChange={ ( e ) => handleChoiceToggle( role, e.target.checked ) }
-                                    />
-                                    { roleName }
-                                </label>
+                                <Checkbox
+                                    id={ `visibility_${ field.id }_${ role }` }
+                                    data-value={ role }
+                                    value={ choices.includes( role ) }
+                                    onChange={ ( on ) => handleChoiceToggle( role, on ) }
+                                    label={ roleName }
+                                />
                             </li>
                         ) ) }
                     </ul>
@@ -118,16 +89,13 @@ export default function VisibilityInput( { optionField, field, value, onChange, 
                         { subscriptions.length > 0 ? (
                             subscriptions.map( ( pack ) => (
                                 <li key={ pack.id } className="mt-2 flex items-center">
-                                    <label className="flex items-center">
-                                        <input
-                                            className={ `${ builderClassNames( 'checkbox' ) } mr-2!` }
-                                            type="checkbox"
-                                            value={ String( pack.id ) }
-                                            checked={ choices.includes( String( pack.id ) ) }
-                                            onChange={ ( e ) => handleChoiceToggle( String( pack.id ), e.target.checked ) }
-                                        />
-                                        { pack.title }
-                                    </label>
+                                    <Checkbox
+                                        id={ `visibility_${ field.id }_pack_${ pack.id }` }
+                                        data-value={ String( pack.id ) }
+                                        value={ choices.includes( String( pack.id ) ) }
+                                        onChange={ ( on ) => handleChoiceToggle( String( pack.id ), on ) }
+                                        label={ pack.title }
+                                    />
                                 </li>
                             ) )
                         ) : (

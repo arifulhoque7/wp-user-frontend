@@ -1,12 +1,13 @@
+import { TextInput } from '@wpuf/components';
 import SettingHelpText from './SettingHelpText';
 
 /**
- * Text meta input for field settings (e.g. meta key name).
- * Replaces Vue field-text-meta component.
+ * Text meta input for field settings (Vue field-text-meta), on the shared
+ * TextInput wrapper (4.4c).
  *
- * Has is_read_only support for preventing meta key edits on existing fields.
+ * Meta keys are read-only for saved fields (is_read_only or not is_new).
  */
-export default function TextMetaInput( { optionField, field, value, onChange, builderClassNames } ) {
+export default function TextMetaInput( { optionField, field, value, onChange } ) {
     const isReadOnly = !! optionField.is_read_only || ! field.is_new;
 
     return (
@@ -21,17 +22,16 @@ export default function TextMetaInput( { optionField, field, value, onChange, bu
                 <SettingHelpText text={ optionField.help_text } />
             </div>
             <div className="mt-2">
-                <input
+                <TextInput
                     id={ optionField.name }
-                    type="text"
-                    value={ value || '' }
+                    value={ value ?? '' }
                     // Meta keys must be valid identifiers: lowercase, no spaces or
                     // special characters (mirrors the auto-generated key). Prevents
                     // invalid keys like "radio button" that break the field wrapper
                     // CSS class and the input id / label "for" association.
-                    onChange={ ( e ) => onChange( e.target.value.replace( /\W/g, '_' ).toLowerCase() ) }
+                    onChange={ ( next ) => onChange( next.replace( /\W/g, '_' ).toLowerCase() ) }
                     readOnly={ isReadOnly }
-                    className={ builderClassNames( 'text' ) }
+                    className="w-full"
                 />
             </div>
         </div>
