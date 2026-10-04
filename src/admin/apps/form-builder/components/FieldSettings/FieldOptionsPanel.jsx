@@ -4,6 +4,7 @@ import { __ } from '@wordpress/i18n';
 import { STORE_NAME } from '../../store';
 import { filterFieldSettings } from '../../extensions/hooks';
 import SettingInput from './SettingInput';
+import { BUILDER_SLOTS, BuilderSlot } from '../../slots';
 
 function SettingSection( { title, settings, field, defaultOpen, isBasic = false } ) {
     const [ isOpen, setIsOpen ] = useState( defaultOpen );
@@ -109,6 +110,8 @@ export default function FieldOptionsPanel() {
                 field={ editingField }
                 defaultOpen={ false }
             />
+
+            <BuilderSlot name={ BUILDER_SLOTS.FIELD_OPTIONS_AFTER } fillProps={ { field: editingField } } />
         </div>
     );
 }

@@ -116,4 +116,65 @@ test.describe('Parity builder hook bridge', () => {
             parityWp(site, ['option', 'update', 'wpuf_pro_active_modules', modulesBackup, '--format=json']);
         }
     });
+
+    test('PAR0030 : retired Vue hooks still fire (deprecated, admin notice) and every React builder slot takes fills', { tag: ['@Parity', '@Test_PAR0030'] }, async ({ browser }) => {
+        const site = paritySite('branch');
+        const muDir = path.join(site.wpPath, 'wp-content', 'mu-plugins');
+        const fixture = path.join(muDir, 'wpuf-parity-retired-hooks.php');
+        fs.copyFileSync(path.join(parityDir, 'wp', 'third-party-retired-hooks.php'), fixture);
+        parityWp(site, ['option', 'delete', 'wpuf_retired_builder_hooks', 'wpuf_retired_builder_hooks_dismissed', 'wpuf_parity_retired_action_ran']);
+
+        try {
+            const parity = new ParityPage();
+            const formId = parity.doSeedForm(site, 'post-form-cond-logic.json', 'Parity retired hooks');
+            const admin = await ParitySitePage.doOpen(browser, site);
+            const page = admin.page;
+            const errors: string[] = [];
+            page.on('pageerror', (error) => errors.push(String(error)));
+            await admin.doOpenBuilder('wpuf_forms', formId);
+
+            // PHP: the retired hooks ran, the outside callbacks were recorded, Vue markup is not printed.
+            const known = JSON.parse(parityWp(site, ['option', 'get', 'wpuf_retired_builder_hooks', '--format=json']));
+            expect(Object.keys(known).sort(), 'outside callbacks recorded per retired hook').toEqual(['wpuf_builder_field_options', 'wpuf_form_builder_js_root_mixins']);
+            expect(parityWp(site, ['option', 'get', 'wpuf_parity_retired_action_ran']).trim(), 'retired action still fires').toMatch(/^\d+$/);
+            await expect(page.locator('.tp-vue-markup'), 'retired action output discarded').toHaveCount(0);
+            expect(await page.evaluate(() => (window as unknown as { wpuf_mixins: { root: string[] } }).wpuf_mixins.root), 'filtered mixins still reach window.wpuf_mixins').toContain('tp_root_mixin');
+
+            // The admin notice names the hooks (on any admin page) and can be dismissed.
+            await page.goto('/wp-admin/index.php');
+            const notice = page.locator('.notice', { hasText: 'retired with the Vue builder' });
+            await expect(notice).toContainText('wpuf_builder_field_options');
+            await expect(notice).toContainText('wpuf-parity-retired-hooks.php');
+            await notice.getByRole('link', { name: 'Dismiss' }).click();
+            await expect(page.locator('.notice', { hasText: 'retired with the Vue builder' })).toHaveCount(0);
+
+            // React slots: stage (submit area + bottom), field options, option editor, settings panel.
+            await admin.doOpenBuilder('wpuf_forms', formId);
+            await expect(page.locator('[data-slot-name="wpuf-form-builder-canvas-submit-area"]')).toBeVisible();
+            await expect(page.locator('[data-slot-name="wpuf-form-builder-canvas-bottom"]')).toBeAttached();
+            const color = page.locator('#form-preview-stage li[class*="form-field-"]', { hasText: 'Color' }).first();
+            await color.hover();
+            await color.locator(':scope > div:last-child').getByText('Edit', { exact: true }).first().click();
+            await expect(page.locator('[data-slot-name="wpuf-form-builder-field-options-after"]')).toContainText('field=qa_color');
+            await expect(page.locator('[data-slot-name="wpuf-form-builder-option-data-actions"]')).toBeVisible();
+            await expect(page.locator('[data-slot-name="wpuf-form-builder-option-data-after"]')).toBeVisible();
+            await admin.doOpenBuilderSettings([]);
+            await expect(page.locator('[data-slot-name="wpuf-form-builder-settings-general"]').first()).toBeAttached();
+
+            // The event hub forwards to wp.hooks.
+            const echoed = await page.evaluate(() => {
+                const w = window as unknown as { wpuf_form_builder: { event_hub: { $on: (n: string, c: (v: string) => void) => void; $emit: (n: string, v: string) => void } } };
+                let got = '';
+                w.wpuf_form_builder.event_hub.$on('tp-event', (v) => { got = v; });
+                w.wpuf_form_builder.event_hub.$emit('tp-event', 'hello');
+                return got;
+            });
+            expect(echoed, 'event_hub $on / $emit through wp.hooks').toBe('hello');
+            await admin.doClose();
+            expect(errors, 'no page errors').toEqual([]);
+        } finally {
+            fs.rmSync(fixture, { force: true });
+            parityWp(site, ['option', 'delete', 'wpuf_retired_builder_hooks', 'wpuf_retired_builder_hooks_dismissed', 'wpuf_parity_retired_action_ran']);
+        }
+    });
 });

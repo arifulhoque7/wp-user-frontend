@@ -20,6 +20,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { RadioGroup, RadioGroupItem } from '@wedevs/plugin-ui';
 import { Checkbox, TextInput } from '@wpuf/components';
 import SettingHelpText from './SettingHelpText';
+import { BUILDER_SLOTS, BuilderSlot } from '../../../slots';
 
 /**
  * Generate a random ID for option rows.
@@ -306,6 +307,7 @@ export default function OptionDataInput( { optionField, field } ) {
                             </svg>
                         </button>
                     </div>
+                    <BuilderSlot name={ BUILDER_SLOTS.OPTION_DATA_ACTIONS } fillProps={ { field, options, setOptions } } />
                     { /* Bulk Add — pro can replace via filter, free shows teaser */ }
                     { applyFilters( 'wpuf.formBuilder.optionDataBulkAdd', null, options, setOptions, syncValue ) || (
                         <a
@@ -416,6 +418,8 @@ export default function OptionDataInput( { optionField, field } ) {
                     </SortableContext>
                 </DndContext>
             </div>
+
+            <BuilderSlot name={ BUILDER_SLOTS.OPTION_DATA_AFTER } fillProps={ { field, options, setOptions } } />
 
             { /* Clear selection link for radio/select */ }
             { ! isMultiple && selected && (

@@ -1,5 +1,8 @@
 import { createRoot } from '@wordpress/element';
-import { WpufProviders } from '@wpuf/components';
+import { ScreenSlots, WpufProviders } from '@wpuf/components';
+import deprecated from '@wordpress/deprecated';
+import { addAction, doAction, removeAction } from '@wordpress/hooks';
+import { BUILDER_SLOTS, settingsSlotName } from './slots';
 import { dispatch } from '@wordpress/data';
 import { STORE_NAME } from './store';
 import {
@@ -97,6 +100,48 @@ window.wpuf.formatPrice = formatPrice;
 window.wpuf.HelpText = HelpText;
 window.wpuf.SettingHelpText = SettingHelpText;
 window.wpuf.LegacySlot = LegacySlot;
+window.wpuf.builderSlots = { ...BUILDER_SLOTS, settings: settingsSlotName };
+
+/**
+ * Retired Vue globals (4.4g): window.wpuf_mixins stays defined and
+ * wpuf_form_builder.event_hub forwards to wp.hooks actions
+ * `wpuf.formBuilder.event.<name>`; both warn once (@wordpress/deprecated).
+ */
+function installRetiredGlobals() {
+    const builder = window.wpuf_form_builder || {};
+    const eventAction = ( name ) => `wpuf.formBuilder.event.${ name }`;
+    const warnHub = () => deprecated( 'wpuf_form_builder.event_hub', { alternative: 'wp.hooks actions wpuf.formBuilder.event.<name>', plugin: 'WP User Frontend' } );
+
+    builder.event_hub = {
+        $on( name, callback ) {
+            warnHub();
+            addAction( eventAction( name ), 'wpuf/event-hub', callback );
+        },
+        $emit( name, ...args ) {
+            warnHub();
+            doAction( eventAction( name ), ...args );
+        },
+        $off( name ) {
+            warnHub();
+            removeAction( eventAction( name ), 'wpuf/event-hub' );
+        },
+    };
+    window.wpuf_form_builder = builder;
+
+    const mixins = window.wpuf_mixins || {};
+
+    try {
+        Object.defineProperty( window, 'wpuf_mixins', {
+            configurable: true,
+            get() {
+                deprecated( 'window.wpuf_mixins', { alternative: 'window.wpuf.registerFieldPreview / registerFieldSettingInput', plugin: 'WP User Frontend' } );
+                return mixins;
+            },
+        } );
+    } catch ( e ) {
+        window.wpuf_mixins = mixins;
+    }
+}
 
 /**
  * Mount the React app.
@@ -108,6 +153,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
         return;
     }
 
+    installRetiredGlobals();
     initializeStore();
     registerFreeFieldPreviews();
 
@@ -159,7 +205,10 @@ document.addEventListener( 'DOMContentLoaded', () => {
     // as it is; only the shared wrappers get the plugin-ui styles (D25).
     root.render(
         <WpufProviders host>
-            <FormBuilder />
+            { /* Slots + PluginArea scope `wpuf-form-builder` (4.4g, slots.js). */ }
+            <ScreenSlots screen="form-builder">
+                <FormBuilder />
+            </ScreenSlots>
         </WpufProviders>
     );
 } );

@@ -1,5 +1,5 @@
 import { useState, useMemo } from '@wordpress/element';
-import { useSelect } from '@wordpress/data';
+import { useDispatch, useSelect } from '@wordpress/data';
 import { __ } from '@wordpress/i18n';
 import { applyFilters } from '@wordpress/hooks';
 import { STORE_NAME } from '../../store';
@@ -8,6 +8,7 @@ import SettingsSection from './SettingsSection';
 import LegacySlot, { getLegacySlots } from '../../common/LegacySlot';
 import ModulesEmptyState from './ModulesEmptyState';
 import useFormSave from '../../hooks/useFormSave';
+import { BuilderSlot, settingsSlotName } from '../../slots';
 
 /**
  * Main form settings component — mirrors post-form-settings.php Vue template.
@@ -15,6 +16,8 @@ import useFormSave from '../../hooks/useFormSave';
 export default function FormSettings() {
     const data = window.wpuf_form_builder || {};
     const isProActive = useSelect( ( select ) => select( STORE_NAME ).getIsProActive(), [] );
+    const settings = useSelect( ( select ) => select( STORE_NAME ).getSettings(), [] );
+    const { updateFormSetting } = useDispatch( STORE_NAME );
     const { isSaving, saveForm } = useFormSave();
     const settingsTitles = useMemo( () => {
         const titles = data.settings_titles || {};
@@ -90,6 +93,9 @@ export default function FormSettings() {
                         sectionKey={ activeTab }
                         sectionData={ activeSectionData }
                     />
+
+                    { /* Extensions' panel for this tab (4.4g). */ }
+                    <BuilderSlot name={ settingsSlotName( activeTab ) } fillProps={ { tab: activeTab, settings, updateSetting: updateFormSetting } } />
 
                     { ! activeSectionData && activeTab === 'modules' && (
                         <ModulesEmptyState isProActive={ isProActive } />

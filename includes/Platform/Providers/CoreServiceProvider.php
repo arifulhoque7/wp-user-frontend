@@ -11,6 +11,7 @@ namespace WeDevs\Wpuf\Platform\Providers;
 use WeDevs\Wpuf\Admin\BootPayload;
 use WeDevs\Wpuf\Admin\Screens\Registry;
 use WeDevs\Wpuf\Builder\HookBridge;
+use WeDevs\Wpuf\Builder\HookDeprecations;
 use WeDevs\Wpuf\Platform\REST\Manager;
 use WeDevs\Wpuf\Platform\ServiceProvider;
 use WeDevs\Wpuf\Platform\VersionGuard;
@@ -59,6 +60,14 @@ class CoreServiceProvider extends ServiceProvider {
             BootPayload::class,
             function () {
                 return new BootPayload();
+            }
+        );
+
+        // Retired Vue builder hooks: deprecation shims + admin notice (4.4g).
+        $this->share_tagged(
+            HookDeprecations::class,
+            function () {
+                return new HookDeprecations();
             }
         );
 

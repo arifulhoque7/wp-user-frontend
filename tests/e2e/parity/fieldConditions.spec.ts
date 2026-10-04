@@ -58,7 +58,7 @@ async function pickLogic(page: Page, block: Locator, label: string) {
 test.describe('Parity field conditional logic', () => {
     test.skip(!paritySitesConfigured(), 'PARITY_* sites not configured');
 
-    test('PAR0022 : field conditional logic rules edit and store like develop', { tag: ['@Parity', '@Test_PAR0022'] }, async ({ browser }) => {
+    test('PAR0028 : field conditional logic rules edit and store like develop', { tag: ['@Parity', '@Test_PAR0028'] }, async ({ browser }) => {
         const parity = new ParityPage();
         const stored: Partial<Record<'develop' | 'branch', FormDump>> = {};
 
@@ -117,7 +117,7 @@ test.describe('Parity field conditional logic', () => {
         );
     });
 
-    test('PAR0023 : a taxonomy rule stores the first term and its title (develop left the title stale)', { tag: ['@Parity', '@Test_PAR0023'] }, async ({ browser }) => {
+    test('PAR0029 : a taxonomy rule stores the first term and its title (develop left the title stale)', { tag: ['@Parity', '@Test_PAR0029'] }, async ({ browser }) => {
         const parity = new ParityPage();
         const site = paritySite('branch');
         const formId = parity.doSeedForm(site, FIXTURE);

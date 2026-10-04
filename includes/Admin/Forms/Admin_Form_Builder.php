@@ -5,6 +5,7 @@ namespace WeDevs\Wpuf\Admin\Forms;
 use WeDevs\Wpuf\Admin\BootPayload;
 use WeDevs\Wpuf\Free\Pro_Prompt;
 use WeDevs\Wpuf\Builder\HookBridge;
+use WeDevs\Wpuf\Builder\HookDeprecations;
 use WeDevs\Wpuf\Platform\Stores\Stores;
 
 /**
@@ -63,7 +64,8 @@ class Admin_Form_Builder {
             add_action( 'wpuf_admin_form_builder_view', [ $this, 'include_form_builder' ] );
         }
 
-        add_action( 'wpuf_form_builder_template_builder_stage_submit_area', [ $this, 'add_form_submit_area' ] );
+        // The stage submit area hook is retired (Builder\HookDeprecations); develop's
+        // submit preview was hidden, so the React stage has no counterpart.
     }
 
     /**
@@ -271,12 +273,14 @@ class Admin_Form_Builder {
         // Develop printed the single-instance field list as its own global; scripts
         // that read window.wpuf_single_objects keep working.
         wp_localize_script( 'wpuf-form-builder-react', 'wpuf_single_objects', array_values( $single_objects ) );
-        // mixins — kept for Pro hooks compatibility
+        // Retired Vue mixin filters still fire (deprecated when an outside plugin
+        // listens) and window.wpuf_mixins stays defined (4.4g).
+        $retired     = wpuf()->platform()->get( HookDeprecations::class );
         $wpuf_mixins = [
-            'root'          => apply_filters( 'wpuf_form_builder_js_root_mixins', [] ),
-            'builder_stage' => apply_filters( 'wpuf_form_builder_js_builder_stage_mixins', [] ),
-            'form_fields'   => apply_filters( 'wpuf_form_builder_js_form_fields_mixins', [] ),
-            'field_options' => apply_filters( 'wpuf_form_builder_js_field_options_mixins', [] ),
+            'root'          => $retired->filter( 'wpuf_form_builder_js_root_mixins', [] ),
+            'builder_stage' => $retired->filter( 'wpuf_form_builder_js_builder_stage_mixins', [] ),
+            'form_fields'   => $retired->filter( 'wpuf_form_builder_js_form_fields_mixins', [] ),
+            'field_options' => $retired->filter( 'wpuf_form_builder_js_field_options_mixins', [] ),
         ];
         wp_localize_script( 'wpuf-form-builder-react', 'wpuf_mixins', $wpuf_mixins );
     }
@@ -323,9 +327,12 @@ class Admin_Form_Builder {
      * @return void
      */
     public function admin_footer() {
-        // Vue cleanup: x-template includes removed — React renders all components
-        // include WPUF_ROOT . '/assets/js-templates/form-components.php';
-        do_action( 'wpuf_form_builder_add_js_templates' );
+        // Vue cleanup: x-template includes removed (React renders all components).
+        // The retired template hooks still fire once per builder page; their Vue
+        // output is discarded (Builder\HookDeprecations, 4.4g).
+        $retired = wpuf()->platform()->get( HookDeprecations::class );
+        $retired->action( 'wpuf_form_builder_add_js_templates' );
+        $retired->fire_template_actions();
     }
 
     /**

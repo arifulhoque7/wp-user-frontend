@@ -49,6 +49,13 @@ export const HOOKS = Object.freeze( {
 } );
 
 export const SLOTS = Object.freeze( {
+    // Form builder (4.4g, apps/form-builder/slots.js); settings panels use
+    // `wpuf-form-builder-settings-<tab>`.
+    FORM_BUILDER_FIELD_OPTIONS_AFTER: 'wpuf-form-builder-field-options-after',
+    FORM_BUILDER_OPTION_DATA_ACTIONS: 'wpuf-form-builder-option-data-actions',
+    FORM_BUILDER_OPTION_DATA_AFTER: 'wpuf-form-builder-option-data-after',
+    FORM_BUILDER_CANVAS_SUBMIT_AREA: 'wpuf-form-builder-canvas-submit-area',
+    FORM_BUILDER_CANVAS_BOTTOM: 'wpuf-form-builder-canvas-bottom',
     SUBSCRIPTION_FORM_FOOTER: 'WpufSubscriptionFormFooter',
     SUBSCRIPTION_FORM_SIDEBAR: 'WpufSubscriptionFormSidebar',
     SUBSCRIPTION_TAB_CONTENT: 'WpufSubscriptionTabContent',

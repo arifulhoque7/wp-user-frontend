@@ -7,7 +7,7 @@ import { paritySite, paritySitesConfigured } from '../utils/paritySites';
  * deterministic edit on every option row of that field, made through each site's
  * own builder UI, must store the same values on the branch as on develop. The
  * option rows the panel shows are compared too (a missing row = missing UI on the
- * branch). Conditional logic rows are covered by PAR0022 / PAR0023
+ * branch). Conditional logic rows are covered by PAR0028 / PAR0029
  * (parity/fieldConditions.spec.ts, task 4.4d).
  */
 const FIXTURE = 'post-form-all-fields.json';
@@ -52,7 +52,7 @@ test.describe('Parity field fill', () => {
             await test.info().attach('rows.json', { path: parity.doWriteJson(test.info().outputPath('rows.json'), rows) });
             await test.info().attach('stored.json', { path: parity.doWriteJson(test.info().outputPath('stored.json'), stored) });
 
-            // Skipped row types (conditional logic: PAR0022) are left out on both sides.
+            // Skipped row types (conditional logic: PAR0028) are left out on both sides.
             const kept = (list: string[] = []) => parity.withoutAgreedRowDeviations(list.filter((row) => !SKIP_ROWS.some((type) => row.startsWith(`${type} |`))));
             parity.validateRowsEqual({ [template]: kept(rows.develop) }, { [template]: kept(rows.branch) });
             parity.validateFormsEqual(

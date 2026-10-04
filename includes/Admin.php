@@ -35,6 +35,15 @@ class Admin {
         $this->container['tools']                 = new Admin\Admin_Tools();
         $this->container['onboarding']            = new Admin\Onboarding();
 
+        // Notice for plugins that still use the retired Vue builder hooks (4.4g).
+        // On admin_init: the platform providers register after this constructor.
+        add_action(
+            'admin_init',
+            function () {
+                wpuf()->platform()->get( Builder\HookDeprecations::class )->register();
+            }
+        );
+
         // only free users will see the promotion
         if ( ! class_exists( 'WP_User_Frontend_Pro' ) ) {
             $this->container['promotion'] = new Admin\Promotion();

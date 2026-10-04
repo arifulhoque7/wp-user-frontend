@@ -19,7 +19,8 @@ namespace WeDevs\Wpuf\Builder;
  *
  * The Vue-only template hooks (`wpuf_builder_field_options`,
  * `wpuf_field_option_data_actions|_after`, `..._builder_stage_submit_area|_bottom_area`)
- * are not fired: extensions use the PHP hooks above.
+ * are retired: HookDeprecations fires them (deprecated, output discarded) and
+ * the React builder has slots in their place.
  *
  * WPUF's own listeners (free and pro) are React parts now, so they are left out
  * while a hook fires. Output from other listeners is captured, sanitized with a

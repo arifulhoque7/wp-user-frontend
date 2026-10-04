@@ -7,6 +7,7 @@ import { Indicator, dropListProps, indicatorFor } from '../Dnd/DropList';
 import SortableField from './SortableField';
 import EmptyState from './EmptyState';
 import HiddenFieldsList from './HiddenFieldsList';
+import { BUILDER_SLOTS, BuilderSlot } from '../../slots';
 
 /**
  * The stage: the form's top level fields as one drop list of the builder's
@@ -50,7 +51,9 @@ export default function BuilderCanvas() {
                     />
                 ) ) }
             </ul>
+            <BuilderSlot name={ BUILDER_SLOTS.CANVAS_SUBMIT_AREA } fillProps={ { fields: formFields } } />
             <HiddenFieldsList />
+            <BuilderSlot name={ BUILDER_SLOTS.CANVAS_BOTTOM } fillProps={ { fields: formFields } } />
         </div>
     );
 }
