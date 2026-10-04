@@ -17,6 +17,7 @@ import VisibilityInput from './inputs/VisibilityInput';
 import HtmlHelpText from './inputs/HtmlHelpText';
 import IconSelectorInput from './inputs/IconSelectorInput';
 import ProFeatureAlert from './inputs/ProFeatureAlert';
+import FieldConditionalLogic from '../ConditionalLogic/FieldConditionalLogic';
 
 const INPUT_MAP = {
     text: TextInput,
@@ -33,6 +34,8 @@ const INPUT_MAP = {
     html_help_text: HtmlHelpText,
     icon_selector: IconSelectorInput,
     'option-pro-feature-alert': ProFeatureAlert,
+    // Pro declares this setting (Fields_Manager::add_conditional_field); free renders it (4.4d).
+    'conditional-logic': FieldConditionalLogic,
 };
 
 /**

@@ -82,7 +82,8 @@ export class ParityPage {
      * branch does not copy on purpose (owner decisions, ground-truth B29):
      * the top-level `selected` develop writes from the Visibility value on a
      * field that never had one, and develop's rewrite of an untouched
-     * `wpuf_cond` (taken from the branch only when the branch kept the fixture's).
+     * `wpuf_cond` (taken from the branch only when the branch kept the fixture's
+     * rules; blank rule rows: develop's null = the branch's '').
      */
     withoutAgreedDeviations(develop: FormDump, branch: FormDump, fixture: FormDump): FormDump {
         const copy = JSON.parse(JSON.stringify(develop)) as FormDump;
@@ -120,6 +121,36 @@ export class ParityPage {
                 } else {
                     delete dev.wpuf_cond;
                 }
+            }
+            // Develop's conditional-logic panel also rewrites the rule arrays when it
+            // opens (one blank row for a field without rules); the branch writes only
+            // what the user changed (4.4d). A field whose rules were not edited on the
+            // branch (only Yes / No or All / Any) takes the branch's arrays.
+            const devCond = dev.wpuf_cond as Record<string, unknown[] | string> | undefined;
+            const brCond = br.wpuf_cond as Record<string, unknown[] | string> | undefined;
+            const origCond = orig.wpuf_cond as Record<string, unknown[] | string> | undefined;
+            const rulesOf = (cond?: Record<string, unknown>) => {
+                const { condition_status: _status, cond_logic: _logic, ...rules } = cond || {};
+                return JSON.stringify(rules);
+            };
+            if (devCond && brCond && origCond && rulesOf(brCond) === rulesOf(origCond)
+                && devCond.condition_status === brCond.condition_status && devCond.cond_logic === brCond.cond_logic) {
+                dev.wpuf_cond = brCond;
+            } else if (devCond && brCond && Array.isArray(devCond.cond_field)) {
+                // A blank rule row: develop's <select> reports an unselected operator as
+                // undefined (stored null), the branch keeps ''; both mean "no operator".
+                (devCond.cond_field as unknown[]).forEach((name, i) => {
+                    if ('' !== name) {
+                        return;
+                    }
+                    for (const key of ['cond_operator', 'cond_option', 'option_title', 'input_type', 'field_type']) {
+                        const devList = devCond[key] as unknown[] | undefined;
+                        const brList = brCond[key] as unknown[] | undefined;
+                        if (Array.isArray(devList) && Array.isArray(brList) && null === devList[i] && '' === brList[i]) {
+                            devList[i] = '';
+                        }
+                    }
+                });
             }
         });
         return copy;
@@ -282,13 +313,14 @@ export class ParitySitePage {
     /** In the open field settings panel, set Visibility to subscribed users and tick a pack by its title. */
     async doSetSubscriptionVisibility(packTitle: string) {
         const panel = this.page.locator(Selectors.parity.fieldOptionsPanel);
-        await panel.locator('input[type="radio"][value="subscribed_users"]').first().check();
-        await panel.getByLabel(packTitle, { exact: true }).check();
+        // Native inputs on develop; the shared Radio / Checkbox (role + data-value) on the branch (4.4c).
+        await panel.locator('input[type="radio"][value="subscribed_users"]:not([aria-hidden="true"]), [role="radio"][data-value="subscribed_users"]').first().check();
+        await panel.getByRole('checkbox', { name: packTitle, exact: true }).check();
     }
 
     /** In the open field settings panel, tick a checkbox by its label. */
     async doCheckFieldOption(label: string) {
-        await this.page.locator(Selectors.parity.fieldOptionsPanel).getByLabel(label).check();
+        await this.page.locator(Selectors.parity.fieldOptionsPanel).getByRole('checkbox', { name: label }).check();
     }
 
     /** Run a forms-list row action (duplicate, delete) through its admin URL, as the list does. */

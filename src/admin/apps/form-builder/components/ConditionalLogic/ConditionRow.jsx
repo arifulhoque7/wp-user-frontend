@@ -1,4 +1,5 @@
 import { __ } from '@wordpress/i18n';
+import { Select, TextInput } from '@wpuf/components';
 import {
     getOperatorsForType,
     isEmptyOperator,
@@ -9,141 +10,132 @@ import {
 } from './conditionalUtils';
 
 /**
- * Single condition row — field selector, operator selector, value input, remove button.
+ * One condition rule: field, operator and value stacked full width, then the
+ * green + / - buttons (develop's field-conditional-logic row, task 4.4d), on
+ * the shared Select / TextInput wrappers.
+ *
+ * Row edits follow develop's Vue component:
+ * - picking a field resets the value to the field's first option (or ''),
+ *   selects the first operator for its input type and stores the field's
+ *   input / field type; the option title is kept, except for a taxonomy field,
+ *   which gets its first term's name (the frontend compares a tag-style
+ *   taxonomy input with `option_title`; develop left it stale: fix, 4.4d);
+ * - changing the operator keeps the value on screen (the stored value is ''
+ *   for "has any / no value", see buildCondArrays);
+ * - typing a value changes only `option`; picking one also its title.
  *
  * @param {Object}   props
- * @param {Object}   props.condition        - { name, operator, option, option_title, input_type, field_type }
+ * @param {Object}   props.condition       { name, operator, option, option_title, input_type, field_type }
  * @param {number}   props.index
- * @param {Array}    props.availableFields  - fields that support conditional logic
- * @param {Object}   props.wpPostTypes      - post types and their taxonomies (terms for taxonomy fields)
- * @param {Function} props.onChange         - (index, updatedCondition) => void
- * @param {Function} props.onRemove        - (index) => void
- * @param {boolean}  props.canRemove       - whether the remove button is enabled
+ * @param {Array}    props.availableFields Fields a rule can depend on.
+ * @param {Array}    [props.taxonomies]    Hierarchical taxonomy names.
+ * @param {Object}   props.wpPostTypes     `wpuf_form_builder.wp_post_types` (taxonomy terms).
+ * @param {Function} props.onChange        ( index, row ) => void
+ * @param {Function} [props.onAdd]         () => void; shows the + button.
+ * @param {Function} props.onRemove        ( index ) => void
+ * @param {boolean}  [props.canRemove]     false hides the - button (callers without the last-row alert).
  */
 export default function ConditionRow( {
     condition,
     index,
     availableFields,
+    taxonomies = [],
     wpPostTypes,
     onChange,
+    onAdd,
     onRemove,
-    canRemove,
+    canRemove = true,
 } ) {
-    const selectedField = availableFields.find( ( f ) => f.name === condition.name );
-    const inputType = selectedField ? conditionInputType( selectedField ) : ( condition.input_type || '' );
-    const operators = getOperatorsForType( inputType );
-    const showDropdown = isDropdownType( inputType ) && selectedField;
-    const fieldOptions = showDropdown ? getFieldOptions( selectedField, wpPostTypes ) : [];
+    const assetUrl = ( window.wpuf_form_builder || {} ).asset_url || '';
+    const optionsOf = ( name ) => getFieldOptions( availableFields.find( ( item ) => item.name === name ), wpPostTypes, taxonomies );
+    const operators = getOperatorsForType( condition.input_type );
+    const fieldOptions = isDropdownType( condition.input_type ) ? optionsOf( condition.name ) : [];
     const disabled = isEmptyOperator( condition.operator );
 
-    // Like the Vue builder, picking a field selects its first operator and option.
-    function handleFieldChange( e ) {
-        const fieldName = e.target.value;
-        const field = availableFields.find( ( f ) => f.name === fieldName );
-        const newInputType = conditionInputType( field );
-        const newOperators = getOperatorsForType( newInputType );
-        const firstOption = field && isDropdownType( newInputType ) ? getFieldOptions( field, wpPostTypes )[ 0 ] : null;
+    function handleFieldChange( name ) {
+        const field = availableFields.find( ( item ) => item.name === name );
+        const inputType = field ? conditionInputType( field ) : undefined;
+        const first = optionsOf( name )[ 0 ];
+        const isTaxonomy = field && 'taxonomy' === field.template;
 
         onChange( index, {
             ...condition,
-            name: fieldName,
-            input_type: newInputType,
-            field_type: conditionFieldType( field ),
-            operator: newOperators.length > 0 ? newOperators[ 0 ].value : '=',
-            option: firstOption ? firstOption.value : '',
-            option_title: firstOption ? firstOption.label : '',
+            name,
+            input_type: inputType,
+            field_type: field ? conditionFieldType( field ) : undefined,
+            operator: ( getOperatorsForType( inputType )[ 0 ] || {} ).value ?? '',
+            option: first ? first.raw : '',
+            option_title: isTaxonomy && first ? first.label : condition.option_title,
         } );
     }
 
-    function handleOperatorChange( e ) {
-        const operator = e.target.value;
-        onChange( index, {
-            ...condition,
-            operator,
-            option: isEmptyOperator( operator ) ? '' : condition.option,
-        } );
-    }
-
-    function handleOptionChange( e ) {
-        const picked = fieldOptions.find( ( opt ) => opt.value === e.target.value );
+    function handleOptionPick( picked ) {
+        const option = fieldOptions.find( ( item ) => item.value === picked );
 
         onChange( index, {
             ...condition,
-            option: e.target.value,
-            option_title: picked ? picked.label : '',
+            option: option ? option.raw : picked,
+            option_title: option ? option.label : '',
         } );
     }
 
     return (
-        <div className="flex items-center gap-2 mb-2">
-            { /* Field selector */ }
-            <select
-                className="cond-field flex-1 border border-gray-300 rounded-sm px-2 py-1 text-sm"
-                value={ condition.name }
-                onChange={ handleFieldChange }
-            >
-                <option value="">{ __( '- select -', 'wp-user-frontend' ) }</option>
-                { availableFields.map( ( field ) => (
-                    <option
-                        key={ field.name }
-                        value={ field.name }
-                        data-type={ conditionInputType( field ) }
-                    >
-                        { field.label }
-                    </option>
-                ) ) }
-            </select>
-
-            { /* Operator selector */ }
-            <select
-                className="cond-operator flex-1 border border-gray-300 rounded-sm px-2 py-1 text-sm"
-                value={ condition.operator }
-                onChange={ handleOperatorChange }
-            >
-                { operators.map( ( op ) => (
-                    <option key={ op.value } value={ op.value }>
-                        { op.label }
-                    </option>
-                ) ) }
-            </select>
-
-            { /* Value input — dropdown or text based on field type */ }
-            { showDropdown ? (
-                <select
-                    className="cond-option flex-1 border border-gray-300 rounded-sm px-2 py-1 text-sm"
-                    value={ condition.option }
-                    onChange={ handleOptionChange }
-                    disabled={ disabled }
-                >
-                    { fieldOptions.map( ( opt ) => (
-                        <option key={ opt.value } value={ opt.value }>
-                            { opt.label }
-                        </option>
-                    ) ) }
-                </select>
-            ) : (
-                <input
-                    type="text"
-                    className="cond-option flex-1 border border-gray-300 rounded-sm px-2 py-1 text-sm"
-                    value={ condition.option }
-                    onChange={ handleOptionChange }
-                    disabled={ disabled }
-                    placeholder={ disabled ? '' : __( 'Enter value', 'wp-user-frontend' ) }
+        <li className="mb-1.5">
+            <div className="cond-field mb-2">
+                <Select
+                    options={ [
+                        { value: '', label: __( '- Select -', 'wp-user-frontend' ) },
+                        ...availableFields.map( ( item ) => ( { value: item.name, label: item.label } ) ),
+                    ] }
+                    value={ condition.name ?? '' }
+                    onChange={ handleFieldChange }
+                    aria-label={ __( 'Field', 'wp-user-frontend' ) }
                 />
-            ) }
+            </div>
 
-            { /* Remove button */ }
-            <button
-                type="button"
-                className="text-red-500 hover:text-red-700 p-1"
-                onClick={ () => onRemove( index ) }
-                disabled={ ! canRemove }
-                title={ __( 'Remove condition', 'wp-user-frontend' ) }
-            >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
-        </div>
+            <div className="cond-operator mb-2">
+                <Select
+                    options={ operators }
+                    value={ condition.operator }
+                    placeholder=""
+                    onChange={ ( operator ) => onChange( index, { ...condition, operator } ) }
+                    aria-label={ __( 'Operator', 'wp-user-frontend' ) }
+                />
+            </div>
+
+            <div className="cond-option">
+                { isDropdownType( condition.input_type ) ? (
+                    <Select
+                        options={ fieldOptions }
+                        value={ condition.option }
+                        placeholder=""
+                        disabled={ disabled }
+                        onChange={ handleOptionPick }
+                        aria-label={ __( 'Value', 'wp-user-frontend' ) }
+                    />
+                ) : (
+                    <TextInput
+                        className="w-full"
+                        value={ condition.option ?? '' }
+                        disabled={ disabled }
+                        onChange={ ( option ) => onChange( index, { ...condition, option } ) }
+                        aria-label={ __( 'Value', 'wp-user-frontend' ) }
+                    />
+                ) }
+            </div>
+
+            <div className="cond-action-btns flex my-2">
+                { onAdd && (
+                    <button type="button" className="wpuf-repeater-add p-0 border-0 bg-transparent cursor-pointer" onClick={ onAdd } aria-label={ __( 'Add condition', 'wp-user-frontend' ) }>
+                        <img src={ `${ assetUrl }/images/plus-circle-green.svg` } alt="" />
+                    </button>
+                ) }
+                { canRemove && (
+                    <button type="button" className="wpuf-repeater-remove p-0 border-0 bg-transparent cursor-pointer" onClick={ () => onRemove( index ) } aria-label={ __( 'Remove condition', 'wp-user-frontend' ) }>
+                        <img src={ `${ assetUrl }/images/minus-circle-green.svg` } alt="" />
+                    </button>
+                ) }
+            </div>
+        </li>
     );
 }

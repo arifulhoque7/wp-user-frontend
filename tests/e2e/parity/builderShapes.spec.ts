@@ -117,15 +117,19 @@ test.describe('Parity builder shapes', () => {
             packs[name] = parityWp(site, ['post', 'create', '--post_type=wpuf_subscription', '--post_status=publish', '--post_title=PAR0010 pack', '--porcelain']).trim();
             // Packs saved from the UI carry _sort_order; the pack list queries by it.
             parityWp(site, ['post', 'meta', 'update', packs[name], '_sort_order', '1']);
-            const formId = parity.doSeedForm(site, 'post-form-conditions.json');
-            const admin = await ParitySitePage.doOpen(browser, site);
-            await admin.doOpenBuilder('wpuf_forms', formId);
-            expect(await admin.doOpenFieldSettings(3), `${name}: open Nickname settings`).toBe(true);
-            await admin.doSetSubscriptionVisibility('PAR0010 pack');
-            await admin.doSaveBuilder();
-            await admin.doClose();
-            stored[name] = (parity.readForm(site, formId).fields[3].post_content as Record<string, unknown>).wpuf_visibility;
-            parityWp(site, ['post', 'delete', packs[name], '--force']);
+            // The pack goes even when the test fails, so retries never see two packs with this title.
+            try {
+                const formId = parity.doSeedForm(site, 'post-form-conditions.json');
+                const admin = await ParitySitePage.doOpen(browser, site);
+                await admin.doOpenBuilder('wpuf_forms', formId);
+                expect(await admin.doOpenFieldSettings(3), `${name}: open Nickname settings`).toBe(true);
+                await admin.doSetSubscriptionVisibility('PAR0010 pack');
+                await admin.doSaveBuilder();
+                await admin.doClose();
+                stored[name] = (parity.readForm(site, formId).fields[3].post_content as Record<string, unknown>).wpuf_visibility;
+            } finally {
+                parityWp(site, ['post', 'delete', packs[name], '--force']);
+            }
         }
 
         expect(stored.branch, 'branch stores the pack id').toEqual({ selected: 'subscribed_users', choices: [packs.branch] });
