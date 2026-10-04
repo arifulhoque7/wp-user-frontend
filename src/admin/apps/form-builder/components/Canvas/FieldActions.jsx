@@ -6,6 +6,7 @@ import { isFieldSingleInstance, containsField } from '../../utils/fieldUtils';
 import { isFailedToValidate } from '../../utils/globalHelpers';
 import { getRandomId } from '../../utils/globalHelpers';
 import { getFieldValidators } from '../../extensions/registry';
+import { showOops } from '../Dnd/usePaletteDrop';
 
 const ACTION_CLASSES = 'p-2 hover:cursor-pointer hover:text-white flex';
 
@@ -85,12 +86,8 @@ export default function FieldActions( { field, index, container = { type: 'top' 
 
     const handleClone = useCallback( () => {
         if ( isFieldSingleInstance( field.template, singleObjects ) && containsField( formFields, field.template ) ) {
-            if ( typeof window.Swal !== 'undefined' ) {
-                window.Swal.fire( {
-                    title: 'Oops...',
-                    text: __( 'You already have this field in the form', 'wp-user-frontend' ),
-                } );
-            }
+            // The palette's styled alert (owner 2026-10-04; develop showed a plain one here).
+            showOops( __( 'You already have this field in the form', 'wp-user-frontend' ) );
             return;
         }
 
@@ -132,7 +129,7 @@ export default function FieldActions( { field, index, container = { type: 'top' 
                 { ! failedValidation ? (
                     <>
                         { showMove && (
-                            <span className="mt-2.5! flex" { ...dragListeners } { ...dragAttributes }>
+                            <span className="mt-2.5! flex items-start" { ...dragListeners } { ...dragAttributes }>
                                 <i className="fa fa-arrows move pr-2 rounded-l-md hover:cursor-move! border-r border-green-200 text-[17px]" />
                             </span>
                         ) }

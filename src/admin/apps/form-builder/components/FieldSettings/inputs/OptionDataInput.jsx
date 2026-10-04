@@ -357,7 +357,7 @@ export default function OptionDataInput( { optionField, field } ) {
                                                         value={ option.value }
                                                         data-value={ option.value }
                                                         aria-label={ option.label }
-                                                        className="border-gray-300 data-checked:border-primary data-checked:bg-primary text-white cursor-pointer"
+                                                        className="cursor-pointer"
                                                     />
                                                 ) }
                                                 <i className="fa fa-bars sort-handler hover:cursor-move! text-gray-400 ml-1" { ...handleProps } />
