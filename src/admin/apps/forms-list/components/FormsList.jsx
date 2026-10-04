@@ -287,7 +287,7 @@ const FormsList = ( {
             />
         );
     } else if ( forms.length === 0 ) {
-        content = <EmptyState type={ getEmptyStateType() } onAddNew={ openModal } onAIFormBuilder={ aiHandler } />;
+        content = <EmptyState type={ getEmptyStateType() } formType={ formType } onAddNew={ openModal } onAIFormBuilder={ aiHandler } />;
     } else {
         content = (
             <>
