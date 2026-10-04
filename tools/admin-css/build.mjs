@@ -150,6 +150,20 @@ function flatten( css, baseNodes, postNodes, scope ) {
  * and everything inside it (portals included), its preflight stays nested
  * under `.pui-root`. Cascade layers are flattened like the screen part.
  */
+// The WordPress editor (TinyMCE + Quicktags, WpEditor) keeps WordPress's own
+// look inside plugin-ui screens: plugin-ui's preflight, base and form resets
+// skip `.wp-editor-wrap` (zero added specificity; utilities still apply).
+const WP_EDITOR_SKIP = ':where(:not(.wp-editor-wrap, .wp-editor-wrap *))';
+
+function skipWpEditor( selector ) {
+    if ( ! /\.pui-root[\s>~+]/.test( selector ) || selector.includes( WP_EDITOR_SKIP ) ) {
+        return selector;
+    }
+    const at = selector.indexOf( '::' );
+
+    return -1 === at ? selector + WP_EDITOR_SKIP : selector.slice( 0, at ) + WP_EDITOR_SKIP + selector.slice( at );
+}
+
 async function puiPart() {
     const from = join( here, 'src/pui.css' );
     const tree = postcss.parse( await compile( await readFile( from, 'utf8' ), from ) );
@@ -184,7 +198,19 @@ async function puiPart() {
                 } );
             } );
         }
+        if ( 'theme' !== node.params && 'utilities' !== node.params ) {
+            node.walkRules( ( rule ) => {
+                rule.selectors = rule.selectors.map( skipWpEditor );
+            } );
+        }
         node.each( ( child ) => out.push( child.clone() ) );
+    } );
+
+    // Unlayered rules of pui.css (WordPress forms.css resets).
+    out.forEach( ( node ) => {
+        if ( 'rule' === node.type ) {
+            node.selectors = node.selectors.map( skipWpEditor );
+        }
     } );
 
     return out;

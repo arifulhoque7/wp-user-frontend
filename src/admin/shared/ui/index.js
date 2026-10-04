@@ -26,3 +26,4 @@ export { default as notify } from './notify';
 export { default as UnsavedGuard } from './UnsavedGuard';
 export { default as DataTable } from './DataTable';
 export { default as PageHeader } from './PageHeader';
+export { default as WpEditor } from './WpEditor';
