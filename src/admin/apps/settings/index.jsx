@@ -10,7 +10,7 @@ import { useSelect, useDispatch } from '@wordpress/data';
 import { useEffect, useState, useCallback, useRef, createInterpolateElement } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
-import { Button, PageFooter, PageHeader, PageShell, Tabs, WpufProviders } from '@wpuf/components';
+import { Button, PageFooter, PageHeader, Tabs, WpufProviders } from '@wpuf/components';
 import SettingsNav from './components/settings/SettingsNav';
 import SettingsSection, { PROVIDER_SECTIONS } from './components/settings/SettingsSection';
 import { stripTags } from './components/settings/utils';
@@ -51,6 +51,8 @@ const SettingsApp = () => {
     const classicOnly = Array.isArray( boot.classic_only ) ? boot.classic_only : [];
     const [ activeSub, setActiveSub ] = useState( null );
     const [ footerLeft, setFooterLeft ] = useState( 160 );
+    const shellRef = useRef( null );
+    const [ shellMinHeight, setShellMinHeight ] = useState( 0 );
     const [ justSaved, setJustSaved ] = useState( false );
     const savedTimer = useRef( null );
 
@@ -80,6 +82,17 @@ const SettingsApp = () => {
             const menu = document.getElementById( 'adminmenuwrap' );
             const w = menu ? menu.offsetWidth : 160;
             setFooterLeft( window.innerWidth <= 782 ? 0 : w );
+
+            // The screen fills the page down to its end, so the logo footer sits
+            // right above the Save bar on short tabs. The page is as tall as the
+            // window or, when that is longer, the admin menu; notices above the
+            // screen take their part of it.
+            if ( shellRef.current ) {
+                const bar = document.getElementById( 'wpadminbar' );
+                const pageHeight = Math.max( window.innerHeight, ( menu ? menu.offsetHeight : 0 ) + ( bar ? bar.offsetHeight : 0 ) );
+                const top = shellRef.current.getBoundingClientRect().top + window.scrollY;
+                setShellMinHeight( Math.max( 0, Math.floor( pageHeight - top ) ) );
+            }
         };
         update();
         window.addEventListener( 'resize', update );
@@ -220,7 +233,7 @@ const SettingsApp = () => {
     } );
 
     return (
-        <PageShell className="wpuf-settings-react">
+        <div ref={ shellRef } className="wpuf-settings-react flex flex-col" style={ { minHeight: shellMinHeight ? `${ shellMinHeight }px` : 'calc(100vh - 32px)' } }>
             <PageHeader
                 utm="wpuf-settings"
                 supportUrl={ boot.support_url || undefined }
@@ -371,13 +384,18 @@ const SettingsApp = () => {
             ) }
 
             { /* WordPress's footer is hidden on shared-layer screens (D26): the switch
-                link lives here (D12). The margin clears the fixed Save bar. */ }
-            <PageFooter className="mb-[74px]">
-                { boot.switch_ui_url && createInterpolateElement(
-                    __( 'Prefer the old screen? Switch to the <a>Classic view</a>.', 'wp-user-frontend' ),
-                    { a: <a href={ boot.switch_ui_url } data-settings-switch="footer" className="text-gray-600 underline hover:text-gray-900" /> } // eslint-disable-line jsx-a11y/anchor-has-content
-                ) }
-            </PageFooter>
+                link lives here (D12), at the bottom of the window on short tabs; the
+                margin clears the fixed Save bar. */ }
+            { /* This wrapper carries the layout classes itself: on a host screen
+                the shared footer wrapper's own classes are not styled. */ }
+            <div className="mt-auto mb-[74px]">
+                <PageFooter>
+                    { boot.switch_ui_url && createInterpolateElement(
+                        __( 'Prefer the old screen? Switch to the <a>Classic view</a>.', 'wp-user-frontend' ),
+                        { a: <a href={ boot.switch_ui_url } data-settings-switch="footer" className="text-gray-600 underline hover:text-gray-900" /> } // eslint-disable-line jsx-a11y/anchor-has-content
+                    ) }
+                </PageFooter>
+            </div>
 
             { ! isLoading && (
                 <div
@@ -420,7 +438,7 @@ const SettingsApp = () => {
                     onContinue={ () => setPendingTab( null ) }
                 />
             ) }
-        </PageShell>
+        </div>
     );
 };
 

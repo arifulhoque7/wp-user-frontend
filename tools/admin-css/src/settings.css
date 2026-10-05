@@ -45,13 +45,6 @@
     display: none !important;
 }
 
-/* Keep the WordPress default admin background (#f0f0f1) outside the settings
-   card — only fill the viewport height so there's no short-content gap. The
-   card itself supplies its own white background. */
-#wpbody-content {
-    min-height: 100vh;
-}
-
 /* Hide the native number-input spinner arrows on the tax-rate field so the
    trailing "%" suffix doesn't collide with them. */
 #wpuf-settings-root .wpuf-no-spinner::-webkit-inner-spin-button,
