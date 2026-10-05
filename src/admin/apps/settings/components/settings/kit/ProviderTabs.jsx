@@ -129,6 +129,7 @@ export default function ProviderTabs( { providers: allProviders, fields, renderF
                         <button
                             type="button"
                             key={ p.key }
+                            data-settings-card={ p.key }
                             onClick={ () => setActive( p.key ) }
                             className={ `relative flex h-[104px] w-[160px] flex-col items-center justify-center gap-2 rounded-lg border px-5 py-4 text-xs font-medium transition ${
                                 isViewed

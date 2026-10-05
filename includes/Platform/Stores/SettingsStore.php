@@ -174,7 +174,11 @@ class SettingsStore {
                 continue;
             }
 
-            $sanitized[ $field['name'] ] = $this->sanitize_value( $field['default'], $field );
+            // A posted form value is a string: a numeric default (`7`) was
+            // stored as `"7"` by the legacy screen.
+            $default = is_int( $field['default'] ) || is_float( $field['default'] ) ? (string) $field['default'] : $field['default'];
+
+            $sanitized[ $field['name'] ] = $this->sanitize_value( $default, $field );
         }
 
         update_option( $section_id, $sanitized );

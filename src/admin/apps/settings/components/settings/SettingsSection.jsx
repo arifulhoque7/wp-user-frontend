@@ -195,7 +195,7 @@ export default function SettingsSection( { sectionId, tabTitle } ) {
     const showTitle = title && title.toLowerCase() !== ( tabTitle || '' ).toLowerCase();
 
     return (
-        <section className="mb-10">
+        <section className="mb-10" data-settings-section={ sectionId }>
             { showTitle ? (
                 <>
                     <h3 className="mb-1 text-lg font-semibold text-gray-900">

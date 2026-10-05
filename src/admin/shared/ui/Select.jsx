@@ -28,7 +28,13 @@ export default function Select( { value, options, onChange, placeholder, disable
             <SmartSelect
                 options={ items }
                 value={ shown ?? '' }
-                onValueChange={ ( next ) => onChange?.( next ) }
+                // SmartSelect clears the value when the selected option is picked
+                // again; a select keeps its value (unless '' is an option).
+                onValueChange={ ( next ) => {
+                    if ( '' !== next || items.some( ( item ) => '' === item.value ) ) {
+                        onChange?.( next );
+                    }
+                } }
                 disabled={ disabled }
                 placeholder={ placeholder ?? __( '- Select -', 'wp-user-frontend' ) }
                 searchPlaceholder={ __( 'Search', 'wp-user-frontend' ) }

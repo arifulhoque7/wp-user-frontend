@@ -169,6 +169,27 @@ class SettingsStoreTest extends WP_UnitTestCase {
         $this->assertSame( $legacy_options, $current_options );
     }
 
+    /**
+     * The legacy form posted strings, so a numeric field default (Pro's
+     * `pre_sub_notification_date` => 7) was first stored as "7" (4.6b, SET0010).
+     */
+    public function test_numeric_default_is_stored_as_the_posted_string() {
+        $store  = Stores::settings();
+        $fields = [
+            [ 'name' => 'edited', 'type' => 'text', 'default' => '' ],
+            [ 'name' => 'days', 'type' => 'number', 'default' => 7 ],
+            [ 'name' => 'ratio', 'type' => 'text', 'default' => 1.5 ],
+        ];
+
+        delete_option( 'wpuf_test_numeric_default' );
+        $stored = $store->save_section( 'wpuf_test_numeric_default', [ 'edited' => 'x' ], $fields );
+        delete_option( 'wpuf_test_numeric_default' );
+
+        $this->assertSame( '7', $stored['days'] );
+        $this->assertSame( '1.5', $stored['ratio'] );
+        $this->assertSame( 'x', $stored['edited'] );
+    }
+
     public function test_empty_lists_masked_secrets_and_bad_input_match() {
         $store   = Stores::settings();
         $payload = [];

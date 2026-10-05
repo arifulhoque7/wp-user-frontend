@@ -116,6 +116,8 @@ export default function RadioCardsField( { field, name, value, onChange, single 
                         <button
                             type="button"
                             key={ key }
+                            data-value={ key }
+                            aria-pressed={ isOn }
                             onClick={ () => toggle( key ) }
                             className={ `relative flex min-w-[150px] flex-col items-center justify-center gap-2 rounded-lg border px-5 py-4 text-sm font-medium transition ${
                                 isOn

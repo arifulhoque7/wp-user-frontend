@@ -114,6 +114,7 @@ export default function PaymentGateways( { fields, renderField, gatewayValue, on
                             <button
                                 type="button"
                                 key={ gid }
+                                data-settings-card={ gid }
                                 onClick={ () => setViewed( gid ) }
                                 className={ `relative flex min-w-[150px] flex-col items-center justify-center gap-2 rounded-lg border px-5 py-4 text-sm font-medium transition ${
                                     isViewed

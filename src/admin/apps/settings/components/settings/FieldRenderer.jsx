@@ -232,7 +232,7 @@ export default function FieldRenderer( { sectionId, field, value, onChange, forc
     );
 
     return (
-        <div className="mt-6 wpuf-input-container">
+        <div className="mt-6 wpuf-input-container" data-setting={ field.name }>
             { isProInactive ? <ProPreviewWrapper>{ control }</ProPreviewWrapper> : control }
             { normalized.__descHtml && (
                 <RawHTML className="mt-1 text-sm text-gray-500">{ normalized.__descHtml }</RawHTML>

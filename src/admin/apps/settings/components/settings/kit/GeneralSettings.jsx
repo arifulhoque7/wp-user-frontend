@@ -50,6 +50,7 @@ const Check = () => (
 const OptionCard = ( { logo, label, viewed, checked, onView, onToggle, checkTitle, pro } ) => (
     <button
         type="button"
+        data-settings-card={ label }
         onClick={ onView }
         title={ label }
         className={ `relative flex h-[80px] w-[160px] items-center justify-center rounded-lg border-2 bg-white transition ${
