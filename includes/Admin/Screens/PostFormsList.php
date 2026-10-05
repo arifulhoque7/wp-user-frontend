@@ -9,6 +9,7 @@
 namespace WeDevs\Wpuf\Admin\Screens;
 
 use WeDevs\Wpuf\Admin\BootPayload;
+use WeDevs\Wpuf\Admin\Forms\Template_Picker;
 
 /**
  * User Frontend > Post Forms: the React forms list, or the form builder for
@@ -111,23 +112,21 @@ class PostFormsList extends Screen {
                         'ai_settings_url'        => admin_url( 'admin.php?page=wpuf-settings#wpuf_ai' ),
                     ]
                 );
+                // The template picker of the React forms list ("Add New").
+                wp_localize_script(
+                    'wpuf-forms-list-react', 'wpuf_form_templates',
+                    Template_Picker::data(
+                        [
+                            'form_type'      => 'post',
+                            'registry'       => wpuf_get_post_form_templates(),
+                            'pro_templates'  => wpuf_get_pro_form_previews(),
+                            'action_name'    => 'post_form_template',
+                            'blank_form_url' => admin_url( 'admin.php?page=wpuf-post-forms&action=add-new' ),
+                        ]
+                    )
+                );
                 $this->print_notices();
                 require_once WPUF_INCLUDES . '/Admin/views/post-forms-list-table-view.php';
-
-                $registry       = wpuf_get_post_form_templates();
-                $pro_templates  = wpuf_get_pro_form_previews();
-                $blank_form_url = admin_url( 'admin.php?page=wpuf-post-forms&action=add-new' );
-                $action_name    = 'post_form_template';
-                $footer_help    = sprintf(
-                    // translators: %s: mailto link
-                    __( 'Want a new integration? <a href="%s" target="_blank">Let us know</a>.', 'wp-user-frontend' ), 'mailto:support@wedevs.com?subject=WPUF Custom Post Template Integration Request'
-                );
-
-                if ( ! $registry ) {
-                    break;
-                }
-
-                include WPUF_ROOT . '/includes/Admin/template-parts/modal-v4.2.php';
 
                 break;
         }

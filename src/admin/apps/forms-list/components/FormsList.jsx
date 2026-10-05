@@ -18,6 +18,7 @@ import TableSkeleton from './TableSkeleton';
 import EmptyState from './EmptyState';
 import CreateButtons from './CreateButtons';
 import AIConfigModal from './AIConfigModal';
+import TemplatePicker from './TemplatePicker';
 
 const FormsList = ( {
     postType = 'wpuf_forms',
@@ -46,6 +47,9 @@ const FormsList = ( {
     const [ selectedForms, setSelectedForms ] = useState( [] );
     const [ perPage, setPerPage ] = useState( PER_PAGE );
     const [ showAIConfigModal, setShowAIConfigModal ] = useState( false );
+    const [ showTemplates, setShowTemplates ] = useState( false );
+    // Admin\Forms\Template_Picker; missing with an older Pro (it prints the PHP modal).
+    const templateData = window.wpuf_form_templates || null;
 
     const debounceTimerRef = useRef( null );
 
@@ -182,9 +186,14 @@ const FormsList = ( {
         window.location.href = `${ window.wpuf_admin_script.admin_url }admin.php?${ params.toString() }`;
     }, [ selectedForms, pageSlug, searchTerm, currentTab, pagination, confirm ] );
 
-    // Open the templates modal (PHP template part, legacy jQuery).
+    // Open the template picker (the PHP modal of an older Pro as fallback).
     const openModal = useCallback( ( event ) => {
         event?.preventDefault();
+
+        if ( templateData ) {
+            setShowTemplates( true );
+            return;
+        }
 
         const $ = window.jQuery;
         const $modal = $ ? $( '.wpuf-form-template-modal' ) : null;
@@ -204,7 +213,7 @@ const FormsList = ( {
         $( 'body' ).addClass( 'wpuf-modal-open' );
         $( 'body' ).css( 'overflow', 'hidden' );
         $( '#wpbody-content .wrap' ).hide();
-    }, [ newFormUrl ] );
+    }, [ newFormUrl, templateData ] );
 
     // AI Form Builder handler
     const openAIFormBuilder = useCallback( ( event ) => {
@@ -273,6 +282,13 @@ const FormsList = ( {
     };
 
     const aiHandler = aiFormBuilderAvailable ? openAIFormBuilder : null;
+
+    const closeTemplates = useCallback( () => setShowTemplates( false ), [] );
+    // The AI card: the picker closes first, so the "not configured" dialog is on top.
+    const pickAI = useCallback( ( event ) => {
+        setShowTemplates( false );
+        openAIFormBuilder( event );
+    }, [ openAIFormBuilder ] );
 
     let content;
 
@@ -390,6 +406,15 @@ const FormsList = ( {
 
                 { content }
             </div>
+
+            { templateData && (
+                <TemplatePicker
+                    open={ showTemplates }
+                    onClose={ closeTemplates }
+                    data={ templateData }
+                    onAI={ aiHandler ? pickAI : null }
+                />
+            ) }
 
             <AIConfigModal
                 isOpen={ showAIConfigModal }
