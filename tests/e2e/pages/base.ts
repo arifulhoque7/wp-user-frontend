@@ -304,7 +304,13 @@ export class Base {
             const element = this.page.locator(locator);
             await element.waitFor();
             expect(element.isVisible).toBeTruthy();
-            await this.page.selectOption(locator, { label: label });
+            // React screens use a plugin-ui combobox, not a native <select>.
+            if ((await element.first().getAttribute('role')) === 'combobox') {
+                await element.first().click();
+                await this.page.locator('[role="option"]', { hasText: label }).filter({ visible: true }).first().click();
+            } else {
+                await this.page.selectOption(locator, { label: label });
+            }
             await this.waitForLoading();
             console.log('\x1b[33m%s\x1b[0m', `✅ Selected ${locator} with ${label}`);
         } catch (error) {
@@ -320,7 +326,13 @@ export class Base {
             const element = this.page.locator(locator);
             await element.waitFor();
             expect(element.isVisible).toBeTruthy();
-            await this.page.selectOption(locator, { value: value });
+            // React screens use a plugin-ui combobox, not a native <select>.
+            if ((await element.first().getAttribute('role')) === 'combobox') {
+                await element.first().click();
+                await this.page.locator(`xpath=//*[@role="option"][@data-value="${value}"] >> visible=true`).first().click();
+            } else {
+                await this.page.selectOption(locator, { value: value });
+            }
             await this.waitForLoading();
             console.log('\x1b[33m%s\x1b[0m', `✅ Selected ${locator} with ${value}`);
         } catch (error) {

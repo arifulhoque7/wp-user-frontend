@@ -108,3 +108,78 @@ Two areas need external services configured or they fail regardless of code:
 
 Both are QA-environment config, not WPUF bugs. Failures here mean "configure the service,"
 not "fix the code."
+
+## React screens: locator patterns
+
+The builders, forms lists, subscriptions and settings screens are React on
+plugin-ui (base-ui). Native inputs became ARIA widgets; locate them this way
+(all in `pages/selectors.ts`, never inline in specs):
+
+| Control | Locator |
+|---|---|
+| Select (plugin-ui) | `//*[@role="combobox"][@id="X"]` or `label/following::*[@role="combobox"][1]`; pick with `base.ts::selectOptionWithValue/Label` (combobox-aware: opens it, clicks `[@role="option"][@data-value="v"]`) |
+| Switch / toggle | `//label[normalize-space()="Label"]/following::*[@role="switch"][1]` (ids are generated, `base-ui-:r12:`), or `input#id/preceding-sibling::*[@role="switch"][1]` where a hidden input keeps the id |
+| Radio | `//*[@role="radio"][following-sibling::input[1][@value="v"]]` or `role=radio[name="Label"s]` (exact) |
+| Checkbox | `[@role="checkbox"]`; `.check()` works on it |
+| Multi-select | `[@role="combobox"]`, options `[@role="option"][normalize-space()="Name"]` (no data-value) |
+| Menus (card "⋯", Save/Publish) | trigger `button[@aria-label="Actions"]` or the button; items `[@role="menuitem"]`. Menus open on **click** (develop opened some on hover) |
+| Tabs with counts | `role=button[name="All Subscriptions 1"s]` (count is its own element; no count when 0) |
+| Confirm dialogs | scope to `//*[@role="alertdialog" or @role="dialog"]//button[...]` (the "Trash" tab is also a button) |
+| Builder canvas labels | `//label[@for="x" or @for="wpuf-x"]` |
+| Forms list rows | `//tr[.//td//a[normalize-space()="Name"]]` |
+
+Traps:
+- **Union XPath picks the first match in document order**, not the first branch:
+  a fallback like `(//label[text()="Country List"]/following::input)[2]` can hit
+  the canvas preview before the options panel. Anchor to the panel container
+  (`panel-field-opt-*`) or drop the fallback.
+- **Strict mode**: text such as "Enable time input" exists on a wrapper div,
+  the label and a span. Target the `label` only.
+- **React unmounts switched-off sections** (develop only hid them), so
+  index-based locators like `(//span[@data-clipboard-text="x"])[2]` break.
+  Anchor to the section heading instead.
+- Single-use palette fields (Username, First Name...) answer a second add with
+  an "Oops... already have this field" alert; close it (`alreadyAddedOk`).
+- Save toast text is "Saved form data" (as develop).
+
+## Reruns and local runs: what breaks and why
+
+- **Partial runs (`--grep`) must include the tests that create state**: a spec's
+  first test logs in and creates the form (FOS0001, PFS0001, PF0001, RFS0001).
+  Some tests continue on the page the previous one left (FOS0084 needs FOS0083
+  open; FOS0083 needs FOS0082's second form; PFS0069+ needs PFS0063-66 that set
+  the notification subject). A "not found" right at the start of a test is
+  usually this, not a selector problem.
+  `postFormSettingsTest`: PFS0001 creates "PF Settings" and makes it the account
+  page's default form by name; with older "PF Settings" copies on the site the
+  account page can keep an old one. Delete old copies before rerunning.
+  PFS0094 expects the admin to still get the form with role-based "Subscriber":
+  Administrator is an always-selected role on the React builder (develop dropped
+  it and locked admins out, a develop bug fixed on this branch).
+  `regFormTestPro`: RF0004 logs the admin out before RF0005 registers a visitor
+  (else "You are already logged in!"), and RF0002 re-adds non-single fields on
+  every rerun; rerun from RF0004 without RF0002.
+  `regFormSettingsTestPro` chains settings through the whole spec (approval from
+  RFS0011, user notification from RFS0036, welcome mail from RFS0043): run it in full.
+- **The site keeps data between runs.** Reruns create duplicates (two products
+  with one title → strict-mode error; extra subscription packs → wrong counts;
+  fields already on the "Registration" form → Oops alert). Clean before rerunning:
+  `npx @wordpress/env run cli wp post delete $(npx @wordpress/env run cli wp post list --post_type=<type> --post_status=any --format=ids) --force`
+  (`cli` = 8888, `tests-cli` = 8889).
+- **Specs change global settings for later specs**: the settings spec can switch
+  off `wpuf_profile[autologin_after_registration]` (RFS0002 then lands on the
+  login screen); the onboarding "what you need" step can switch off Pro modules
+  (email-templates → SR0029). In a full sharded run the order is alphabetical;
+  after ad-hoc runs restore the option / module first.
+- A test failing in a few **milliseconds** with "Target page, context or browser
+  has been closed" means the browser window was closed; just rerun. Same for a
+  one-off `page.goto: net::ERR_ABORTED` (navigation interrupted, seen on PFS0040).
+- **Never run two Playwright processes on the same output dir** (they delete each
+  other's artifacts: `ENOENT ... .playwright-artifacts`). Give parallel runs their
+  own `TEST_PARALLEL_INDEX` + `SHARD_INDEX` (and base URL); run parity alone.
+- With the `list` reporter the **error text prints at the end of the run**; for a
+  failure mid-run read `test-results/**/error-context.md` (page snapshot),
+  `test-failed-1.png`, or the `trace.zip` (actions + errors).
+- A test that "hangs" for its full timeout is usually a locator that never
+  resolves (`page.textContent()` and `locator.waitFor()` wait without limit);
+  check the last action in the trace.

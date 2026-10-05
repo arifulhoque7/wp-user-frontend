@@ -191,19 +191,15 @@ export class RegFormPage extends Base {
             await this.validateAndClick(Selectors.registrationForms.addFields.clickForm(newRegFormName));
             await this.validateAndClick(Selectors.registrationForms.addFields.clickFormEditor);
 
-            await this.validateAndClick(Selectors.registrationForms.addFields.useField('Username'));
-            await this.validateAndClick(Selectors.registrationForms.addFields.useField('First Name'));
-            await this.validateAndClick(Selectors.registrationForms.addFields.useField('Last Name'));
-            await this.validateAndClick(Selectors.registrationForms.addFields.useField('Display Name'));
-            await this.validateAndClick(Selectors.registrationForms.addFields.useField('Nickname Name'));
-            await this.validateAndClick(Selectors.registrationForms.addFields.useField('Website'));
-            await this.validateAndClick(Selectors.registrationForms.addFields.useField('Biographical Info'));
-            await this.validateAndClick(Selectors.registrationForms.addFields.useField('Avatar'));
-            await this.validateAndClick(Selectors.registrationForms.addFields.useField('Profile Photo'));
-            await this.validateAndClick(Selectors.registrationForms.addFields.useField('X (Twitter)'));
-            await this.validateAndClick(Selectors.registrationForms.addFields.useField('Facebook'));
-            await this.validateAndClick(Selectors.registrationForms.addFields.useField('LinkedIn'));
-            await this.validateAndClick(Selectors.registrationForms.addFields.useField('Instagram'));
+            // Single-use fields already on the form (a rerun) answer with an
+            // "Oops... already have this field" alert: close it and go on.
+            for (const field of [ 'Username', 'First Name', 'Last Name', 'Display Name', 'Nickname Name', 'Website', 'Biographical Info', 'Avatar', 'Profile Photo', 'X (Twitter)', 'Facebook', 'LinkedIn', 'Instagram' ]) {
+                await this.validateAndClick(Selectors.registrationForms.addFields.useField(field));
+                const oops = this.page.locator(Selectors.registrationForms.addFields.alreadyAddedOk);
+                if (await oops.waitFor({ state: 'visible', timeout: 1500 }).then(() => true, () => false)) {
+                    await oops.click();
+                }
+            }
             await this.validateAndClick(Selectors.regFormSettings.saveButton);
             flag = await this.waitForFormSaved(Selectors.regFormSettings.formSaved, Selectors.regFormSettings.saveButton);
         }

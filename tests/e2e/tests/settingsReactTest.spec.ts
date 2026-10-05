@@ -1,6 +1,7 @@
 import { Browser, BrowserContext, Page, test, expect, chromium } from "@playwright/test";
 import { faker } from '@faker-js/faker';
 import { SettingsReactPage } from '../pages/settingsReact';
+import { Selectors } from '../pages/selectors';
 import { BasicLoginPage } from '../pages/basicLogin';
 import { Users } from '../utils/testData';
 import { configureSpecFailFast } from '../utils/specFailFast';
@@ -65,7 +66,7 @@ test.describe('React Settings Screen Tests', () => {
     test('@Test_SR0002 : All top-level tabs present', async () => {
         await settings.goto();
         for (const tab of ['General', 'Frontend Posting', 'Login & Registration', 'Email', 'Advanced']) {
-            await expect(page.locator('#wpuf-settings-root nav.wpuf-space-y-1 button', { hasText: tab })).toBeVisible();
+            await expect(page.locator(Selectors.settingsReact.nav).first().locator('button', { hasText: tab }).first()).toBeVisible();
         }
     });
 
@@ -93,12 +94,14 @@ test.describe('React Settings Screen Tests', () => {
     test('@Test_SR0006 : Tab + sub-tab persist in URL on refresh', async () => {
         await settings.goto();
         await settings.openTab('Login & Registration');
-        await settings.openSubTab('My Account');
+        // A non-default sub-tab: the plugin-ui tabs report a change only when the
+        // value changes, so the first (already active) one adds no `sub=`.
+        await settings.openSubTab('Login / Registration');
         expect(page.url()).toContain('tab=login_registration');
-        expect(page.url()).toContain('sub=wpuf_my_account');
+        expect(page.url()).toContain('sub=wpuf_profile');
         await page.reload();
         await expect(settings.root).toBeVisible();
-        expect(page.url()).toContain('sub=wpuf_my_account');
+        expect(page.url()).toContain('sub=wpuf_profile');
     });
 
     test('@Test_SR0007 : Invalid ?sub= does not blank the panel', async () => {
@@ -275,14 +278,14 @@ test.describe('React Settings Screen — Pro Tests', () => {
 
     test('@Test_SR0027 : SMS provider cards', async () => {
         await settings.goto();
-        await gateOnPro( page.locator('#wpuf-settings-root nav.wpuf-space-y-1').getByText('SMS', { exact: false }), 'SMS module inactive' );
+        await gateOnPro( page.locator(Selectors.settingsReact.nav).first().getByText('SMS', { exact: false }), 'SMS module inactive' );
         await settings.openTab('SMS');
         await expect(page.getByText('Twilio', { exact: false }).first()).toBeVisible();
     });
 
     test('@Test_SR0028 : AI Settings provider cards + model', async () => {
         await settings.goto();
-        await gateOnPro( page.locator('#wpuf-settings-root nav.wpuf-space-y-1').getByText('Integrations', { exact: false }), 'Integrations/AI inactive' );
+        await gateOnPro( page.locator(Selectors.settingsReact.nav).first().getByText('Integrations', { exact: false }), 'Integrations/AI inactive' );
         await settings.openTab('Integrations');
         await expect(page.getByText('OpenAI', { exact: false }).first()).toBeVisible();
         await expect(page.getByText('AI Model', { exact: false }).first()).toBeVisible();
@@ -292,7 +295,8 @@ test.describe('React Settings Screen — Pro Tests', () => {
         await settings.goto();
         await settings.openTab('Email');
         // Pro email-templates feature: per-status registration notifications.
-        await gateOnPro( page.getByText('Approved User Email', { exact: false }), 'Pro email templates inactive' );
+        // "Approved User Email" is Pro core; "Template Settings" needs the email-templates module.
+        await gateOnPro( page.getByText('Template Settings', { exact: false }), 'Pro email templates module inactive' );
         await expect(page.getByText('Approved User Email', { exact: false }).first()).toBeVisible();
         await expect(page.getByText('Template Settings', { exact: false }).first()).toBeVisible();
     });
@@ -327,6 +331,6 @@ test.describe('React Settings Screen — Pro Tests', () => {
         await page.locator('#wpuf-settings-root').getByText('Login Form Colors', { exact: false }).first().click();
         await expect(page.getByText('Form Background Color', { exact: false }).first()).toBeVisible();
         await expect(page.getByText('Button Text Color', { exact: false }).first()).toBeVisible();
-        await expect(page.locator('#wpuf-settings-root input[type="color"]').first()).toBeVisible();
+        await expect(page.locator(Selectors.settingsReact.colorPicker).first()).toBeVisible();
     });
 });

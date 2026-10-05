@@ -2678,51 +2678,15 @@ export class PostFormSettingsPage extends Base {
     }
 
     async validatePostPermissionRoleBased(formName: string) {
-
-        let flag = true;
-
-        while (flag == true) {
-            // Go to form edit page
-            await this.navigateToURL(this.wpufPostSubmitPage);
-
-            // Click on the form
-            await this.checkElementText(Selectors.postFormSettings.wpufMessage, 'You do not have sufficient permissions to access this form.');
-
-            await this.navigateToURL(this.wpufPostFormPage);
-
-            // Click on the form
-            try {
-                await this.validateAndClick(Selectors.postFormSettings.clickForm(formName));
-            } catch (error) {
-                await this.navigateToURL(this.wpufPostFormPage);
-                await this.validateAndClick(Selectors.postFormSettings.clickForm(formName));
-            }
-
-
-            // Click Settings tab
-            await this.validateAndClick(Selectors.postFormSettings.clickFormEditorSettings);
-
-            // Click Post Settings section
-            await this.assertionValidate(Selectors.postFormSettings.postSettingsSection.afterPostSettingsHeader);
-
-            await this.validateAndClick(Selectors.postFormSettings.postSettingsSection.postPermissionContainer);
-            await this.assertionValidate(Selectors.postFormSettings.postSettingsSection.postPermissionDropdown);
-            await this.validateAndClick(Selectors.postFormSettings.postSettingsSection.postPermissionOption('role_base'));
-
-            await this.page.waitForTimeout(300);
-
-            await this.validateAndClick(Selectors.postFormSettings.postSettingsSection.roleSelectionContainer);
-            
-            await this.page.waitForTimeout(500);
-            await this.assertionValidate(Selectors.postFormSettings.postSettingsSection.roleSelectionDropdown);
-            await this.validateAndClick(Selectors.postFormSettings.postSettingsSection.roleSelectionOption('administrator'));
-
-            // Save settings
-            await this.validateAndClick(Selectors.postFormSettings.saveButton);
-
-            // Wait for save message
-            flag = await this.waitForFormSaved(Selectors.postFormSettings.messages.formSaved, Selectors.postFormSettings.saveButton);
-
-        }
+        // Role-based permission with "Subscriber" picked. Administrator is an
+        // always-selected role (the field's `always_selected`): develop's screen
+        // ignored it, so an admin could lock every admin out of the form (the
+        // frontend check has no admin bypass). The React builder keeps it, so the
+        // admin still gets the form instead of "You do not have sufficient
+        // permissions" (agreed deviation 4.4e, owner 2026-10-05).
+        await this.navigateToURL(this.wpufPostSubmitPage);
+        await this.assertionValidate(Selectors.postForms.postFormsFrontendCreate.postTitleFormsFE);
+        await expect(this.page.locator(Selectors.postFormSettings.wpufMessage)).toHaveCount(0);
     }
+
 }

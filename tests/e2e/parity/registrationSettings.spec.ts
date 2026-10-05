@@ -169,7 +169,8 @@ test.describe('Parity registration settings', () => {
                 // typed paragraph break became a space (develop bug). The branch keeps it
                 // (wpautop, as switching back to Visual shows it). Agreed deviation, 4.5a.
                 expect(body(stored.develop), 'develop collapses the paragraphs').toBe('<p>Hi <strong>{username}</strong>, PAR0034 {activation_link}</p>');
-                expect(body(stored.branch), 'branch keeps them').toBe('<p>Hi <strong>{username}</strong>,</p>\n<p>PAR0034 {activation_link}</p>');
+                // Line breaks as a form post stores them (CRLF, owner decision 2026-10-05).
+                expect(body(stored.branch), 'branch keeps them').toBe('<p>Hi <strong>{username}</strong>,</p>\r\n<p>PAR0034 {activation_link}</p>');
                 return;
             }
             expect(body(stored.branch), 'verification_body').toBe(body(stored.develop));

@@ -81,7 +81,7 @@ export class MailPoetPage extends Base {
             await this.page.evaluate(
                 ({ sel, label }) => {
                     const el = document.querySelector(sel) as HTMLSelectElement | null;
-                    if (!el) return;
+                    if (!el || !el.options) return;
                     const opt = Array.from(el.options).find(o => o.text.trim() === label);
                     if (opt) {
                         el.value = opt.value;
@@ -90,6 +90,13 @@ export class MailPoetPage extends Base {
                 },
                 { sel: Selectors.regFormSettings.mailPoet.listSelect, label: listName }
             );
+
+            // React settings: the list is a dropdown (combobox), not a native <select>.
+            const listCombo = this.page.locator(`[role="combobox"]${Selectors.regFormSettings.mailPoet.listSelect}`);
+            if (await listCombo.count() > 0) {
+                await listCombo.first().click();
+                await this.page.locator('[role="option"]', { hasText: listName }).first().click();
+            }
 
             await this.validateAndClick(Selectors.regFormSettings.saveButton);
             flag = await this.waitForFormSaved(Selectors.regFormSettings.formSaved, Selectors.regFormSettings.saveButton);

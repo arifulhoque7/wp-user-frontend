@@ -909,21 +909,36 @@ export class FieldOptionSettingsPage extends Base {
 
     async configureHiddenCountry(countries: Array<string>) {
         await this.validateAndClick(Selectors.fieldOptionsSettings.fieldOptionsPanel.countryOptions.hideThese);
-        await this.validateAndClick(Selectors.fieldOptionsSettings.fieldOptionsPanel.countryOptions.selectHiddenCountry);
-        await this.page.waitForTimeout(1000);
-        await this.validateAndClick(Selectors.fieldOptionsSettings.fieldOptionsPanel.countryOptions.selectHiddenCountry);
+        await this.openCountryPicker(Selectors.fieldOptionsSettings.fieldOptionsPanel.countryOptions.selectHiddenCountry);
         for (const country of countries) {
+            // The React multi-select may close after a pick: reopen it when needed.
+            if (!(await this.page.locator(Selectors.fieldOptionsSettings.fieldOptionsPanel.countryOptions.selectCountry(country)).isVisible())) {
+                await this.validateAndClick(Selectors.fieldOptionsSettings.fieldOptionsPanel.countryOptions.selectHiddenCountry);
+            }
             await this.validateAndClick(Selectors.fieldOptionsSettings.fieldOptionsPanel.countryOptions.selectCountry(country));
         }
     }
 
     async configureOnlyShowCountry(countries: Array<string>) {
         await this.validateAndClick(Selectors.fieldOptionsSettings.fieldOptionsPanel.countryOptions.showThese);
-        await this.validateAndClick(Selectors.fieldOptionsSettings.fieldOptionsPanel.countryOptions.selectOnlyShowCountry);
-        await this.page.waitForTimeout(1000);
-        await this.validateAndClick(Selectors.fieldOptionsSettings.fieldOptionsPanel.countryOptions.selectOnlyShowCountry);
+        await this.openCountryPicker(Selectors.fieldOptionsSettings.fieldOptionsPanel.countryOptions.selectOnlyShowCountry);
         for (const country of countries) {
+            // The React multi-select may close after a pick: reopen it when needed.
+            if (!(await this.page.locator(Selectors.fieldOptionsSettings.fieldOptionsPanel.countryOptions.selectCountry(country)).isVisible())) {
+                await this.validateAndClick(Selectors.fieldOptionsSettings.fieldOptionsPanel.countryOptions.selectOnlyShowCountry);
+            }
             await this.validateAndClick(Selectors.fieldOptionsSettings.fieldOptionsPanel.countryOptions.selectCountry(country));
+        }
+    }
+
+    // Open the country picker. The legacy selectize box needed a second click to
+    // open; the React multi-select would close on it, so click again only while closed.
+    async openCountryPicker(locator: string) {
+        await this.validateAndClick(locator);
+        await this.page.waitForTimeout(1000);
+        const open = await this.page.locator('xpath=//*[@role="option"] | //div[contains(@class,"selectize-dropdown-content")]//div[contains(@class,"option")] >> visible=true').count();
+        if (open === 0) {
+            await this.validateAndClick(locator);
         }
     }
 

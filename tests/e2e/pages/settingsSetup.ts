@@ -13,6 +13,13 @@ export class SettingsSetupPage extends Base {
 
     }
 
+    // These steps drive the classic settings screen. The React screen is the
+    // default now (covered by settingsReactTest); the classic one stays
+    // reachable with this per-request switch.
+    get wpufLegacySettingsPage(): string {
+        return this.wpufSettingsPage + '&wpuf_settings_ui=legacy';
+    }
+
 
 
     /**************************************************/
@@ -29,8 +36,47 @@ export class SettingsSetupPage extends Base {
             await this.validateAndClick(Selectors.settingsSetup.wpufSetup.clickWPUFSetupLetsGo);
             await this.validateAndClick(Selectors.settingsSetup.wpufSetup.clickWPUFSetupContinue);
             await this.validateAndClick(Selectors.settingsSetup.wpufSetup.clickWPUFSetupEnd);
+            return;
         }
 
+        // The old setup wizard is retired: its URL opens the onboarding wizard,
+        // which installs the pages and the sample forms the suite relies on.
+        await this.completeOnboarding();
+    }
+
+    // Walk the onboarding wizard: every feature, pages installed, no extra plugins.
+    async completeOnboarding() {
+        const wizard = /page=wpuf-onboarding/;
+        if (!wizard.test(this.page.url())) {
+            await this.navigateToURL(Urls.baseUrl + '/wp-admin/index.php?page=wpuf-onboarding');
+        }
+
+        const save = this.page.locator(Selectors.onboarding.chrome.continueButton);
+        const template = this.page.locator('//select[@name="post_form_template"]');
+        const otherPlugins = this.page.locator('//input[@name="plugins[]"]');
+        const installPages = this.page.locator(Selectors.onboarding.common.installPages);
+
+        // Six steps; the loop ends when the wizard is left.
+        for (let step = 0; step < 10 && wizard.test(this.page.url()); step++) {
+            if (await otherPlugins.count() > 0) {
+                // Other weDevs plugins are not part of this suite.
+                await this.page.locator(Selectors.onboarding.chrome.skipLink).first().click();
+                await this.page.waitForLoadState('domcontentloaded');
+                continue;
+            }
+            if (await template.count() > 0) {
+                // No template: the page installer then builds the "Sample Form" the suite uses.
+                await template.first().selectOption('skip');
+            }
+            if (await installPages.count() > 0 && !(await installPages.first().isChecked())) {
+                await installPages.first().check();
+            }
+            if (await save.count() === 0) {
+                break;
+            }
+            await save.first().click();
+            await this.page.waitForLoadState('domcontentloaded');
+        }
     }
 
 
@@ -397,16 +443,8 @@ export class SettingsSetupPage extends Base {
         // Go to post forms page
         await this.navigateToURL(this.wpufPostFormPage);
 
-        // Wait for form list to load and click on the form
-        try {
-            //Change Settings
-            await this.validateAndClick(Selectors.settingsSetup.wpufSettingsPage.settingsTab);
-        } catch (error) {
-            await this.navigateToURL(this.wpufPostFormPage);
-            //Change Settings
-            await this.validateAndClick(Selectors.settingsSetup.wpufSettingsPage.settingsTab);
-        }
-        await this.page.reload();
+        // Open the classic settings screen
+        await this.navigateToURL(this.wpufLegacySettingsPage);
         //Validate Login/Registration
         await this.assertionValidate(Selectors.settingsSetup.wpufSettingsPage.settingsTabProfile1);
         //Click Login/Registration
@@ -436,10 +474,8 @@ export class SettingsSetupPage extends Base {
     }
 
     async changeSettingsSetEditProfilePageDefault(label: string) {
-        await this.navigateToURL(this.wpufRegFormPage);
-        await this.page.reload();
-
-        await this.validateAndClick(Selectors.settingsSetup.wpufSettingsPage.settingsTab);
+        // Open the classic settings screen
+        await this.navigateToURL(this.wpufLegacySettingsPage);
 
 
         await this.validateAndClick(Selectors.settingsSetup.wpufSettingsPage.settingsTabAccount);
@@ -454,22 +490,8 @@ export class SettingsSetupPage extends Base {
 
     //Change Settings - Login Page
     async changeSettingsSetDefaultPostForm(postFormPresetFrontEndTitle: string) {
-        // Go to post forms page
-        await this.navigateToURL(this.wpufPostFormPage);
-
-        // Wait for form list to load and click on the form
-        try {
-            //Change Settings
-            await this.validateAndClick(Selectors.settingsSetup.wpufSettingsPage.settingsTab);
-        } catch (error) {
-            await this.navigateToURL(this.wpufPostFormPage);
-            //Change Settings
-            await this.validateAndClick(Selectors.settingsSetup.wpufSettingsPage.settingsTab);
-        }
-
-        //Change Settings
-        await this.validateAndClick(Selectors.settingsSetup.wpufSettingsPage.settingsTab);
-        await this.page.reload();
+        // Open the classic settings screen
+        await this.navigateToURL(this.wpufLegacySettingsPage);
         //Click Frontend Posting
         await this.validateAndClick(Selectors.settingsSetup.wpufSettingsPage.settingsFrontendPosting);
         //Set Default Post Form 
@@ -489,22 +511,8 @@ export class SettingsSetupPage extends Base {
 
     //Change Settings - Registration Page
     async changeSettingsSetRegistrationPage(registrationFormPageTitle: string) {
-        // Go to post forms page
-        await this.navigateToURL(this.wpufPostFormPage);
-
-        // Wait for form list to load and click on the form
-        try {
-            //Change Settings
-            await this.validateAndClick(Selectors.settingsSetup.wpufSettingsPage.settingsTab);
-        } catch (error) {
-            await this.navigateToURL(this.wpufPostFormPage);
-            //Change Settings
-            await this.validateAndClick(Selectors.settingsSetup.wpufSettingsPage.settingsTab);
-        }
-
-        //Change Settings
-        await this.validateAndClick(Selectors.settingsSetup.wpufSettingsPage.settingsTab);
-        await this.page.reload();
+        // Open the classic settings screen
+        await this.navigateToURL(this.wpufLegacySettingsPage);
         //Validate Login/Registration
         await this.assertionValidate(Selectors.settingsSetup.wpufSettingsPage.settingsTabProfile1);
         //Click Login/Registration
@@ -652,7 +660,7 @@ export class SettingsSetupPage extends Base {
 
     async addGoogleMapAPIKey(googleMapAPIKey: string) {
         //Go to Settings - General page
-        await this.navigateToURL(this.wpufSettingsPage);
+        await this.navigateToURL(this.wpufLegacySettingsPage);
 
         await this.page.reload();
 
@@ -665,7 +673,7 @@ export class SettingsSetupPage extends Base {
 
     async addReCaptchaKeys(recaptchaSiteKey: string, recaptchaSecretKey: string) {
         //Go to Settings - General page
-        await this.navigateToURL(this.wpufSettingsPage);
+        await this.navigateToURL(this.wpufLegacySettingsPage);
 
         await this.page.reload();
 
@@ -679,7 +687,7 @@ export class SettingsSetupPage extends Base {
 
     async addCloudflareTurnstileKeys(turnstileSiteKey: string, turnstileSecretKey: string) {
         //Go to Settings - General page
-        await this.navigateToURL(this.wpufSettingsPage);
+        await this.navigateToURL(this.wpufLegacySettingsPage);
 
         await this.page.reload();
 
@@ -699,23 +707,33 @@ export class SettingsSetupPage extends Base {
         //await this.validateAndClick(Selectors.settingsSetup.wpufSettingsPage.settingsTabProfileSave);
     }
 
+    // Clicking the gateway label toggles it, so only click when it is off:
+    // the onboarding wizard may already have turned a gateway on.
+    async turnOnGateway(gateway: string, label: string) {
+        const box = this.page.locator(`//input[@id="wpuf-wpuf_payment[active_gateways][${gateway}]"]`);
+        if (await box.count() > 0 && await box.first().isChecked()) {
+            return;
+        }
+        await this.validateAndClick(label);
+    }
+
     async enablePaymentGatewayBank() {
         //Go to Settings - General page
-        await this.navigateToURL(this.wpufSettingsPage);
+        await this.navigateToURL(this.wpufLegacySettingsPage);
         await this.page.reload();
         await this.validateAndClick(Selectors.settingsSetup.payment.clickPaymentTab);
         await this.validateAndClick(Selectors.settingsSetup.payment.clickPaymentGatewayBank);
-        await this.validateAndClick(Selectors.settingsSetup.payment.enablePaymentGatewayBank);
+        await this.turnOnGateway('bank', Selectors.settingsSetup.payment.enablePaymentGatewayBank);
         await this.validateAndClick(Selectors.settingsSetup.payment.settingsTabPaymentSave);
     }
 
     async enablePaymentGatewayStripe() {
         //Go to Settings - General page
-        await this.navigateToURL(this.wpufSettingsPage);
+        await this.navigateToURL(this.wpufLegacySettingsPage);
         await this.page.reload();
         await this.validateAndClick(Selectors.settingsSetup.payment.clickPaymentTab);
         await this.validateAndClick(Selectors.settingsSetup.payment.clickPaymentGatewayStripe);
-        await this.validateAndClick(Selectors.settingsSetup.payment.enablePaymentGatewayStripe);
+        await this.turnOnGateway('stripe', Selectors.settingsSetup.payment.enablePaymentGatewayStripe);
         await this.validateAndFillStrings(Selectors.settingsSetup.payment.fillStripePublishableKey, process.env.STRIPE_PUBLISHABLE_KEY || '');
         await this.validateAndFillStrings(Selectors.settingsSetup.payment.fillStripeSecretKey, process.env.STRIPE_SECRET_KEY || '');
         await this.validateAndFillStrings(Selectors.settingsSetup.payment.fillStripeSigningKey, process.env.STRIPE_SIGNING_KEY || '');
@@ -724,11 +742,11 @@ export class SettingsSetupPage extends Base {
 
     async enablePaymentGatewayPaypal() {
         //Go to Settings - General page
-        await this.navigateToURL(this.wpufSettingsPage);
+        await this.navigateToURL(this.wpufLegacySettingsPage);
         await this.page.reload();
         await this.validateAndClick(Selectors.settingsSetup.payment.clickPaymentTab);
         await this.validateAndClick(Selectors.settingsSetup.payment.clickPaymentGatewayPaypal);
-        await this.validateAndClick(Selectors.settingsSetup.payment.enablePaymentGatewayPaypal);
+        await this.turnOnGateway('paypal', Selectors.settingsSetup.payment.enablePaymentGatewayPaypal);
         await this.validateAndFillStrings(Selectors.settingsSetup.payment.fillPaypalEmail, process.env.PAYPAL_EMAIL || '');
         await this.validateAndFillStrings(Selectors.settingsSetup.payment.fillPaypalClientId, process.env.PAYPAL_CLIENT_ID || '');
         await this.validateAndFillStrings(Selectors.settingsSetup.payment.fillPaypalClientSecret, process.env.PAYPAL_CLIENT_SECRET || '');
@@ -774,7 +792,7 @@ export class SettingsSetupPage extends Base {
 
     async enableGoogleAI() {
         //Go to Settings - AI page
-        await this.navigateToURL(this.wpufSettingsPage);
+        await this.navigateToURL(this.wpufLegacySettingsPage);
         await this.page.reload();
         await this.validateAndClick(Selectors.settingsSetup.AI.clickAITab);
         await this.validateAndClick(Selectors.settingsSetup.AI.googleButton);
@@ -784,7 +802,7 @@ export class SettingsSetupPage extends Base {
 
     async enableOpenAI() {
         //Go to Settings - AI page
-        await this.navigateToURL(this.wpufSettingsPage);
+        await this.navigateToURL(this.wpufLegacySettingsPage);
         await this.page.reload();
         await this.validateAndClick(Selectors.settingsSetup.AI.clickAITab);
         await this.validateAndClick(Selectors.settingsSetup.AI.openAIButton);
@@ -794,7 +812,7 @@ export class SettingsSetupPage extends Base {
 
     async enableAnthropicAI() {
         //Go to Settings - AI page
-        await this.navigateToURL(this.wpufSettingsPage);
+        await this.navigateToURL(this.wpufLegacySettingsPage);
         await this.page.reload();
         await this.validateAndClick(Selectors.settingsSetup.AI.clickAITab);
         await this.validateAndClick(Selectors.settingsSetup.AI.anthropicButton);
@@ -831,7 +849,7 @@ export class SettingsSetupPage extends Base {
     // Reload WPUF > Settings > Payments and assert payments + the bank/stripe/paypal
     // gateways enabled during setup persisted (incl. PayPal sandbox/test mode).
     async validatePaymentGatewayPersistence() {
-        await this.navigateToURL(this.wpufSettingsPage);
+        await this.navigateToURL(this.wpufLegacySettingsPage);
         await this.page.reload();
         await this.validateAndClick(Selectors.settingsSetup.payment.clickPaymentTab);
         const p = Selectors.settingsSetup.persistence;
@@ -846,7 +864,7 @@ export class SettingsSetupPage extends Base {
     // Reload WPUF > Settings > AI and assert the active provider selection persisted.
     // @param provider one of 'openai' | 'google' | 'anthropic'
     async validateAIProviderPersistence(provider: string) {
-        await this.navigateToURL(this.wpufSettingsPage);
+        await this.navigateToURL(this.wpufLegacySettingsPage);
         await this.page.reload();
         await this.validateAndClick(Selectors.settingsSetup.AI.clickAITab);
         await expect(this.page.locator(Selectors.settingsSetup.persistence.aiProviderRadio(provider)))
@@ -861,7 +879,7 @@ export class SettingsSetupPage extends Base {
     // (set in LS0020) persisted.
     async validateGeneralSettingsPersistenceRoundTrip() {
         const sentinel = 'wpuf-qa-gmap-persist-check';
-        await this.navigateToURL(this.wpufSettingsPage);
+        await this.navigateToURL(this.wpufLegacySettingsPage);
         await this.page.reload();
         await this.validateAndClick(Selectors.settingsSetup.keys.clickSettingsTabGeneral);
 

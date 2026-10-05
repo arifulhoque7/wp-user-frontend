@@ -258,6 +258,13 @@ async function editLegacy(page: Page, section: string, items: Plan[]): Promise<s
                     node.checked = 'checkbox' === edit.type ? true : list.includes(node.value);
                 } else if ('radio' === node.type) {
                     node.checked = list.includes(node.value);
+                } else if ('wysiwyg' === edit.type && (window as unknown as { tinymce?: { get: (i: string) => unknown } }).tinymce?.get(node.id)) {
+                    // As a user in the Visual tab: the editor's save (run by a real form
+                    // submit, skipped by HTMLFormElement.submit()) writes the textarea,
+                    // wpautop paragraphs removed.
+                    const mce = (window as unknown as { tinymce: { get: (i: string) => { setContent: (c: string) => void; save: () => void } } }).tinymce.get(node.id);
+                    mce.setContent(list[0]);
+                    mce.save();
                 } else {
                     node.value = list[0];
                 }

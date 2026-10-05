@@ -153,11 +153,20 @@ export class SubscriptionPage extends Base {
         
     }
 
+    // develop opened the Publish / Save as Draft menu on hover; the React menu
+    // opens on click. Click the button only while the menu item is not shown.
+    async openSaveMenu(buttonLocator: string, itemLocator: string) {
+        if (!(await this.page.locator(itemLocator).isVisible())) {
+            await this.validateAndClick(buttonLocator);
+        }
+    }
+
     async publishPack() {
         // Publish Pack
         await this.page.locator(Selectors.subscription.newPackPage.savePackButton).hover();
         await this.waitForLoading();
         await this.page.waitForTimeout(500);
+        await this.openSaveMenu(Selectors.subscription.newPackPage.savePackButton, Selectors.subscription.newPackPage.publishPackButton);
         await this.validateAndClick(Selectors.subscription.newPackPage.publishPackButton);
         SubscriptionPacks.packCounts.publishedPackCount++;
 
@@ -168,6 +177,7 @@ export class SubscriptionPage extends Base {
         await this.page.locator(Selectors.subscription.newPackPage.updatePackButton).hover();
         await this.waitForLoading();
         await this.page.waitForTimeout(500);
+        await this.openSaveMenu(Selectors.subscription.newPackPage.updatePackButton, Selectors.subscription.newPackPage.publishPackButton);
         await this.validateAndClick(Selectors.subscription.newPackPage.publishPackButton);
     }
 
@@ -175,6 +185,7 @@ export class SubscriptionPage extends Base {
         // Publish Pack
         await this.page.locator(Selectors.subscription.newPackPage.updatePackButton).hover();
         await this.waitForLoading();
+        await this.openSaveMenu(Selectors.subscription.newPackPage.updatePackButton, Selectors.subscription.newPackPage.draftPackButton);
         await this.validateAndClick(Selectors.subscription.newPackPage.draftPackButton);
         SubscriptionPacks.packCounts.draftPackCount++;
     }

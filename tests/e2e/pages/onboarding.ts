@@ -16,7 +16,9 @@ export class OnboardingPage extends Base {
 
     readonly wizardUrl = `${Urls.baseUrl}/wp-admin/index.php?page=wpuf-onboarding`;
     readonly toolsUrl = `${Urls.baseUrl}/wp-admin/admin.php?page=wpuf_tools&tab=tools`;
-    readonly settingsUrl = `${Urls.baseUrl}/wp-admin/admin.php?page=wpuf-settings`;
+    // Read-backs use the classic settings screen (its field ids); the React
+    // screen is the default and has its own spec.
+    readonly settingsUrl = `${Urls.baseUrl}/wp-admin/admin.php?page=wpuf-settings&wpuf_settings_ui=legacy`;
     readonly adminHomeUrl = `${Urls.baseUrl}/wp-admin/index.php`;
 
     constructor(page: Page) {
@@ -93,6 +95,7 @@ export class OnboardingPage extends Base {
 
     async continueStep() {
         await this.validateAndClick(Selectors.onboarding.chrome.continueButton);
+
         await this.waitForLoading();
     }
 
@@ -128,6 +131,13 @@ export class OnboardingPage extends Base {
 
             if ( await box.isChecked() !== shouldBeOn ) {
                 await box.setChecked( shouldBeOn );
+
+                // Unticking a User Directory that is running asks first (owner
+                // decision, 4.7): confirm, or the step keeps it on.
+                const confirmOff = this.page.locator( '//button[@data-confirm-off-yes]' );
+                if ( ! shouldBeOn && await confirmOff.isVisible().catch( () => false ) ) {
+                    await confirmOff.click();
+                }
             }
         }
     }

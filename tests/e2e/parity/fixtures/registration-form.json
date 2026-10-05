@@ -8,6 +8,7 @@
             "admin_notification": "on",
             "notification_type": "welcome_email",
             "role": "subscriber",
+            "wpuf_user_status": "approved",
             "redirect_to": "same",
             "message": "Registration successful",
             "update_message": "Profile updated successfully",
