@@ -96,8 +96,14 @@ class SettingsStoreTest extends WP_UnitTestCase {
         $payload = [ 'not_a_section' => [ 'x' => 'y' ] ];
 
         foreach ( Stores::settings()->fields() as $section_id => $fields ) {
+            // Pro previews are display only since 4.7 (the reference copy stored
+            // them): left out here, covered by test_pro_previews_are_not_stored().
+            if ( $this->is_preview_section( $section_id ) ) {
+                continue;
+            }
+
             foreach ( (array) $fields as $field ) {
-                if ( ! empty( $field['name'] ) ) {
+                if ( ! empty( $field['name'] ) && ! Stores::settings()->is_pro_preview( $field ) ) {
                     $payload[ $section_id ][ $field['name'] ] = $this->value_for( $field );
                 }
             }
@@ -106,6 +112,12 @@ class SettingsStoreTest extends WP_UnitTestCase {
         }
 
         return $payload;
+    }
+
+    private function is_preview_section( $section_id ) {
+        $section = current( wp_list_filter( Stores::settings()->sections(), [ 'id' => $section_id ] ) );
+
+        return is_array( $section ) && Stores::settings()->is_pro_preview( $section, 'title' );
     }
 
     private function request( $settings, $extra = null ) {
@@ -190,13 +202,39 @@ class SettingsStoreTest extends WP_UnitTestCase {
         $this->assertSame( 'x', $stored['edited'] );
     }
 
+    /**
+     * Without Pro, a Pro preview field or section is display only: develop's
+     * legacy screen never posted it, so a save stores nothing for it (4.7,
+     * free-only pass).
+     */
+    public function test_pro_previews_are_not_stored() {
+        $store  = Stores::settings();
+        $fields = [
+            [ 'name' => 'real', 'type' => 'text' ],
+            [ 'name' => 'flagged', 'type' => 'text', 'is_pro_preview' => true ],
+            [ 'name' => 'badged', 'type' => 'text', 'label' => 'Key <span class="pro-icon"></span>' ],
+        ];
+
+        delete_option( 'wpuf_test_preview' );
+        $stored = $store->save_section( 'wpuf_test_preview', [ 'real' => 'a', 'flagged' => 'b', 'badged' => 'c' ], $fields );
+        delete_option( 'wpuf_test_preview' );
+
+        $this->assertSame( [ 'real' => 'a' ], $stored );
+        $this->assertTrue( $store->is_pro_preview( [ 'title' => 'SMS <img class="pro-badge">' ], 'title' ) );
+        $this->assertFalse( $store->is_pro_preview( [ 'title' => 'General' ], 'title' ) );
+    }
+
     public function test_empty_lists_masked_secrets_and_bad_input_match() {
         $store   = Stores::settings();
         $payload = [];
 
         foreach ( $store->fields() as $section_id => $fields ) {
+            if ( $this->is_preview_section( $section_id ) ) {
+                continue;
+            }
+
             foreach ( (array) $fields as $field ) {
-                if ( empty( $field['name'] ) ) {
+                if ( empty( $field['name'] ) || $store->is_pro_preview( $field ) ) {
                     continue;
                 }
 

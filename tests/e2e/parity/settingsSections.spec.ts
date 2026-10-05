@@ -342,6 +342,11 @@ test.describe('Parity settings sections', () => {
                         skipped[field.name] = 'not shown on the React screen (dependency)';
                         continue;
                     }
+                    // Without Pro, a Pro field is a disabled preview on both screens.
+                    if (await row.locator('fieldset[disabled]').count()) {
+                        skipped[field.name] = 'Pro preview (display only)';
+                        continue;
+                    }
                     const problem = await editReact(page, row, item);
                     if (problem) {
                         skipped[field.name] = `react: ${problem}`;

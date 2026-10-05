@@ -107,6 +107,13 @@ class SettingsStore {
                 continue;
             }
 
+            // A whole section can be a Pro preview (SMS, social login without Pro).
+            $section = current( wp_list_filter( $this->sections(), [ 'id' => $section_id ] ) );
+
+            if ( is_array( $section ) && $this->is_pro_preview( $section, 'title' ) ) {
+                continue;
+            }
+
             $saved[ $section_id ] = $this->save_section( $section_id, $section_values, $this->section_fields( $section_id, $schema ) );
         }
 
@@ -150,6 +157,12 @@ class SettingsStore {
 
             // Only persist fields that are actually registered for this section.
             if ( null === $field ) {
+                continue;
+            }
+
+            // A Pro preview (shown without Pro) is display only: the legacy
+            // screen never posted it, so nothing is stored for it.
+            if ( $this->is_pro_preview( $field ) ) {
                 continue;
             }
 
@@ -419,6 +432,30 @@ class SettingsStore {
 
                 return sanitize_text_field( $value );
         }
+    }
+
+    /**
+     * Whether a field (or section) is a Pro preview: registered by the free
+     * plugin with `is_pro_preview`, or, without Pro, carrying the Pro badge in
+     * its label (older registrations). Pro registers the working version
+     * without either.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param array  $item      Field or section definition
+     * @param string $label_key Key holding the label ('label' for fields, 'title' for sections)
+     *
+     * @return bool
+     */
+    public function is_pro_preview( $item, $label_key = 'label' ) {
+        if ( ! empty( $item['is_pro_preview'] ) ) {
+            return true;
+        }
+
+        return ! wpuf_is_pro_active()
+            && ! empty( $item[ $label_key ] )
+            && is_string( $item[ $label_key ] )
+            && (bool) preg_match( '/pro-icon|pro-badge|pro_badge/i', $item[ $label_key ] );
     }
 
     /**

@@ -1,6 +1,6 @@
 import { test } from '@playwright/test';
 import { ParityPage, ParitySitePage, type FormDump } from '../pages/parity';
-import { paritySite, paritySitesConfigured } from '../utils/paritySites';
+import { paritySite, paritySitesConfigured, parityProActive } from '../utils/paritySites';
 
 /**
  * G2 for builder field options (task 0.4c-2), one test per field type: the same
@@ -16,6 +16,8 @@ const FIXTURE = 'post-form-all-fields.json';
 // task 0.4c-3; add `template: 'reason'` here to skip one).
 const HARNESS_GAPS: Record<string, string> = {};
 const SKIP_ROWS = ['panel-field-opt-conditional-logic'];
+
+const PRO_ACTIVE = paritySitesConfigured() ? parityProActive() : true;
 
 const templates = new ParityPage().readFixture(FIXTURE).fields
     .map((field) => (field.post_content as { template: string }).template);
@@ -51,6 +53,14 @@ test.describe('Parity field fill', () => {
 
             await test.info().attach('rows.json', { path: parity.doWriteJson(test.info().outputPath('rows.json'), rows) });
             await test.info().attach('stored.json', { path: parity.doWriteJson(test.info().outputPath('stored.json'), stored) });
+
+            // Free-only run: develop's save drops every stored form setting it does not
+            // render without Pro (expiration, AI review, pricing...) and adds its shown
+            // defaults; the branch keeps the stored settings (Q6). This test edits field
+            // options only, so the form settings are left out of the comparison.
+            if (!PRO_ACTIVE) {
+                (stored.develop!.meta as Record<string, unknown>).wpuf_form_settings = (stored.branch!.meta as Record<string, unknown>).wpuf_form_settings;
+            }
 
             // Skipped row types (conditional logic: PAR0028) are left out on both sides.
             const kept = (list: string[] = []) => parity.withoutAgreedRowDeviations(list.filter((row) => !SKIP_ROWS.some((type) => row.startsWith(`${type} |`))));

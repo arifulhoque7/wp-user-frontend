@@ -56,3 +56,17 @@ export function parityWp(site: ParitySite, args: string[]): string {
         stdio: ['pipe', 'pipe', 'pipe'],
     });
 }
+
+/**
+ * Whether WPUF Pro is active on the branch site. The parity suite is written
+ * with Pro on; a free-only run (Pro deactivated on both sites) folds or skips
+ * what only exists with Pro.
+ */
+export function parityProActive(): boolean {
+    try {
+        execFileSync('wp', [`--path=${paritySite('branch').wpPath}`, 'plugin', 'is-active', 'wpuf-pro'], { stdio: ['pipe', 'pipe', 'pipe'] });
+        return true;
+    } catch {
+        return false;
+    }
+}

@@ -20,7 +20,9 @@ export default function ProPreviewWrapper( { children } ) {
                 { __( 'Upgrade to PRO', 'wp-user-frontend' ) }
             </a>
             <div className="absolute inset-0 z-20 rounded-sm bg-emerald-50 opacity-0 group-hover/pro-item:opacity-60 transition-all" />
-            <div className="pointer-events-none">{ children }</div>
+            { /* Display only: not clickable, not reachable by keyboard (inert), and
+                native controls disabled; the server ignores Pro previews too. */ }
+            <fieldset disabled inert="" className="pointer-events-none m-0 min-w-0 border-0 p-0">{ children }</fieldset>
         </div>
     );
 }

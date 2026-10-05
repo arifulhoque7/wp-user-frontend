@@ -195,15 +195,21 @@ export default function FieldRenderer( { sectionId, field, value, onChange, forc
      */
     Component = applyFilters( `wpuf.settings.field.${ type }`, Component, field, sectionId ) || Component;
 
+    const isProInactive = isPro && ! ( window.wpuf_settings || {} ).is_pro;
+
     // Adapt the kit's onChange( name, value ) to the section-scoped store setter.
-    const handleChange = ( name, val ) => onChange( sectionId, name, val );
+    // A Pro preview is display only: its changes go nowhere.
+    const handleChange = ( name, val ) => {
+        if ( ! isProInactive ) {
+            onChange( sectionId, name, val );
+        }
+    };
 
     const extraProps = isAiProvider
         ? { single: true }
         : type === 'radio_inline'
             ? { inline: true }
             : {};
-    const isProInactive = isPro && ! ( window.wpuf_settings || {} ).is_pro;
 
     // Render the Pro badge INLINE right after the label text. The kit renders
     // `{field.label}` as a child, so passing a node (text + badge) places the

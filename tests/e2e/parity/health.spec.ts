@@ -83,9 +83,11 @@ test.describe('Branch admin health', () => {
         await admin.page.goto('/wp-admin/admin.php?page=wpuf_subscription');
         await admin.page.waitForFunction(() => !!(window as unknown as { wp?: { data?: { select: (s: string) => unknown } } }).wp?.data?.select('wpuf/subscriptions-notice'));
         await admin.page.evaluate(() => (window as unknown as { wp: { data: { dispatch: (s: string) => { addNotice: (n: object) => void } } } }).wp.data.dispatch('wpuf/subscriptions-notice').addNotice({ type: 'success', message: 'HLT0005 notice' }));
-        const toast = admin.page.locator('#toast-success');
-        await expect(toast).toContainText('HLT0005 notice');
-        await expect(toast).toBeHidden({ timeout: 6000 });
+        // Shared toasts since 4.1 (sonner), where develop's notice list was.
+        const toast = admin.page.locator('[data-sonner-toast]', { hasText: 'HLT0005 notice' });
+        await expect(toast).toBeVisible();
+        await expect(toast).toBeHidden({ timeout: 10000 });
+        expect(await admin.page.evaluate(() => (window as unknown as { wp: { data: { select: (s: string) => { getNotices: () => unknown[] } } } }).wp.data.select('wpuf/subscriptions-notice').getNotices().length), 'notice removed from the store').toBe(0);
         await admin.doClose();
     });
 });
