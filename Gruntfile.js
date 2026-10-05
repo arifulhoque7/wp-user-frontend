@@ -36,8 +36,7 @@ module.exports = function( grunt) {
 
             admin: {
                 files: {
-                    // Still compiled: the React builder reuses these legacy builder classes
-                    '<%= dirs.css %>/wpuf-form-builder.css': ['admin/form-builder/assets/less/form-builder.less'],
+                    // wpuf-form-builder.css is plain CSS now (tools/admin-css/src/legacy/, task 5.1b).
                     '<%= dirs.css %>/admin.css': ['<%= dirs.less %>/admin.less'],
                     '<%= dirs.css %>/registration-forms.css': ['<%= dirs.less %>/registration-forms.less']
                 }

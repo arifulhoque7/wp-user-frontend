@@ -281,7 +281,8 @@ export class ParitySitePage {
         const onResponse = (response: import('@playwright/test').Response) => {
             const type = response.headers()['content-type'] || '';
             const kind = response.request().resourceType();
-            if (['script', 'stylesheet'].includes(kind) && !/javascript|css/.test(type) && response.url().startsWith(this.site.url)) {
+            // 304 (unchanged, served from the browser cache) carries no content type.
+            if (304 !== response.status() && ['script', 'stylesheet'].includes(kind) && !/javascript|css/.test(type) && response.url().startsWith(this.site.url)) {
                 badAssets.push(`${response.status()} ${response.url()}`);
             }
         };
