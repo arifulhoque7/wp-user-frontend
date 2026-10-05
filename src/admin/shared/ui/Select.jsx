@@ -3,7 +3,7 @@
  * placeholder ("- Select -" by default); the stored value is never rewritten
  * by rendering. onChange gets the option value (string).
  */
-import { Select as PuiSelect, SelectContent, SelectItem, SelectTrigger, SelectValue, cn } from '@wedevs/plugin-ui';
+import { Select as PuiSelect, SelectContent, SelectItem, SelectTrigger, SelectValue, SmartSelect, cn } from '@wedevs/plugin-ui';
 import { __ } from '@wordpress/i18n';
 
 import { normalizeOptions, selectShownValue } from './values';
@@ -16,11 +16,27 @@ import { normalizeOptions, selectShownValue } from './values';
  * @param {string}       [props.placeholder] Shown when no option matches.
  * @param {boolean}      [props.disabled]    Disabled.
  * @param {string}       [props.id]          Trigger id (for <label for>).
+ * @param {boolean}      [props.searchable]  Search box above the options (long lists: pages, currencies).
  */
-export default function Select( { value, options, onChange, placeholder, disabled, id, className, ...props } ) {
+export default function Select( { value, options, onChange, placeholder, disabled, id, className, searchable = false, ...props } ) {
     const items = normalizeOptions( options );
     const shown = selectShownValue( value, items );
     const labelOf = ( val ) => items.find( ( item ) => item.value === val )?.label ?? '';
+
+    if ( searchable ) {
+        return (
+            <SmartSelect
+                options={ items }
+                value={ shown ?? '' }
+                onValueChange={ ( next ) => onChange?.( next ) }
+                disabled={ disabled }
+                placeholder={ placeholder ?? __( '- Select -', 'wp-user-frontend' ) }
+                searchPlaceholder={ __( 'Search', 'wp-user-frontend' ) }
+                emptyMessage={ __( 'No matching options', 'wp-user-frontend' ) }
+                className={ cn( 'w-full h-[38px] ps-3 pe-3 text-sm font-normal text-gray-900 bg-white border border-gray-300 rounded-md shadow-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30', className ) }
+            />
+        );
+    }
 
     return (
         <PuiSelect value={ shown } onValueChange={ ( next ) => onChange?.( next ) } disabled={ disabled } { ...props }>

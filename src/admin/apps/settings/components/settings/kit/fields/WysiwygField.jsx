@@ -1,27 +1,24 @@
+import { WpEditor } from '@wpuf/components';
+import SettingLabel from './SettingLabel';
 import HelpTextIcon from './HelpTextIcon';
-import TextEditor from '../TextEditor';
 
 /**
- * Rich text (wysiwyg) field — wraps the WordPress TinyMCE editor so wysiwyg
- * settings (guest mail body, gateway instructions, …) get a real editor, like
- * the legacy screen, instead of a plain textarea.
+ * Rich text (wysiwyg) setting on the shared WpEditor (4.6a): the WordPress
+ * TinyMCE editor as on the legacy screen (guest mail body, gateway
+ * instructions). Stores the editor HTML.
  *
- * Email body fields carry their available dynamic merge tags in `desc` as HTML
- * (e.g. `You may use: <code>{username}</code> …`). The legacy screen showed that
- * below the editor, so we render the raw `desc` HTML there — not a stripped
- * tooltip — to keep the dynamic-value hints visible and in sync.
+ * Email body fields carry their merge tags in `desc` as HTML (`You may use:
+ * <code>{username}</code>`); the legacy screen showed that below the editor,
+ * so it prints there instead of a stripped tooltip.
  */
 export default function WysiwygField( { field, name, value, onChange } ) {
     return (
         <>
-            <div className="flex items-center">
-                { field.label && (
-                    <label className="text-sm text-gray-700 my-2">{ field.label }</label>
-                ) }
+            <SettingLabel field={ { label: field.label } }>
                 { ! field.desc && field.help_text && <HelpTextIcon text={ field.help_text } /> }
-            </div>
+            </SettingLabel>
             <div className="mt-1 wpuf-wysiwyg-wrap">
-                <TextEditor
+                <WpEditor
                     id={ name }
                     value={ value || field.default || '' }
                     onChange={ ( content ) => onChange( name, content ) }

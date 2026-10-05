@@ -10,7 +10,7 @@ import { useSelect, useDispatch } from '@wordpress/data';
 import { useEffect, useState, useCallback, useRef } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
-import Header from './components/settings/Header';
+import { Button, PageHeader, PageShell, Tabs, WpufProviders } from '@wpuf/components';
 import SettingsNav from './components/settings/SettingsNav';
 import SettingsSection, { PROVIDER_SECTIONS } from './components/settings/SettingsSection';
 import { stripTags } from './components/settings/utils';
@@ -45,6 +45,7 @@ const SettingsApp = () => {
 
     const { setActiveTab, setSearch, save, discard, loadSettings, setError } = useDispatch( STORE_NAME );
 
+    const boot = window.wpuf_settings || {};
     const [ pendingTab, setPendingTab ] = useState( null );
     const [ activeSub, setActiveSub ] = useState( null );
     const [ footerLeft, setFooterLeft ] = useState( 160 );
@@ -217,11 +218,23 @@ const SettingsApp = () => {
     } );
 
     return (
-        <div className="wpuf-settings-react min-h-screen">
-            <Header utm="wpuf-settings" />
+        <PageShell className="wpuf-settings-react">
+            <PageHeader
+                utm="wpuf-settings"
+                supportUrl={ boot.support_url || undefined }
+                extra={ boot.switch_ui_url ? (
+                    <a
+                        href={ boot.switch_ui_url }
+                        title={ __( 'Switch back to the classic settings screen', 'wp-user-frontend' ) }
+                        className="border border-solid border-gray-100 mr-4 text-center rounded-md px-3 py-2 text-sm font-medium text-gray-600 no-underline shadow-xs hover:bg-slate-100 hover:text-gray-600"
+                    >
+                        { __( 'Classic view', 'wp-user-frontend' ) }
+                    </a>
+                ) : null }
+            />
 
             { isLoading ? (
-                <div className="px-[32px] pt-[32px] pb-[100px]">
+                <div className="px-3 pt-8 pb-[100px]">
                     <div className="flex animate-pulse gap-8 rounded-lg border border-gray-200 bg-white p-8 shadow-xs">
                         {/* Left nav skeleton */}
                         <div className="w-[280px] shrink-0 [&>:not([hidden])~:not([hidden])]:mt-3 [&>:not([hidden])~:not([hidden])]:mb-0">
@@ -246,7 +259,7 @@ const SettingsApp = () => {
                     </div>
                 </div>
             ) : (
-            <div className="px-[32px] pt-[32px] pb-[100px]">
+            <div className="px-3 pt-8 pb-[100px]">
             { error ? (
                 <MessageModal
                     title={ __( 'Couldn’t save settings', 'wp-user-frontend' ) }
@@ -283,22 +296,14 @@ const SettingsApp = () => {
                     ) : null }
 
                     { ! searching && currentTab && currentTab.subtabs && currentTab.sections.length > 1 ? (
-                        <div className="mb-8 inline-flex rounded-lg bg-gray-100 p-2">
-                            { currentTab.sections.map( ( sid ) => {
-                                const active = ( activeSub || currentTab.sections[ 0 ] ) === sid;
-                                return (
-                                    <button
-                                        type="button"
-                                        key={ sid }
-                                        onClick={ () => setActiveSub( sid ) }
-                                        className={ `rounded-md px-4 py-2 text-base font-medium transition ${
-                                            active ? 'bg-white text-gray-900 shadow-xs' : 'text-gray-500 hover:text-gray-700'
-                                        }` }
-                                    >
-                                        { sectionTitle( sid ) }
-                                    </button>
-                                );
-                            } ) }
+                        <div className="mb-8" data-settings-subtabs="">
+                            <Tabs
+                                variant="segmented"
+                                label={ currentTab.title }
+                                tabs={ currentTab.sections.map( ( sid ) => ( { id: sid, label: sectionTitle( sid ) } ) ) }
+                                value={ activeSub || currentTab.sections[ 0 ] }
+                                onChange={ setActiveSub }
+                            />
                         </div>
                     ) : null }
 
@@ -334,14 +339,14 @@ const SettingsApp = () => {
                     className="wpuf-settings-footer z-40 flex items-center justify-between border-t border-gray-200 bg-white px-[32px] py-4 shadow-[0_-1px_3px_rgba(0,0,0,0.06)]"
                     style={ { left: `${ footerLeft }px` } }
                 >
-                    <button
-                        type="button"
+                    <Button
+                        variant="secondary"
+                        className="h-[42px] px-6 font-medium"
                         disabled={ ! isDirty || isSaving }
                         onClick={ () => discard() }
-                        className="rounded-md border border-gray-300! bg-white px-6 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
                     >
                         { __( 'Cancel', 'wp-user-frontend' ) }
-                    </button>
+                    </Button>
                     <div className="flex items-center gap-3">
                         { justSaved ? (
                             <span className="flex items-center gap-1 text-xs font-medium text-emerald-600">
@@ -353,14 +358,13 @@ const SettingsApp = () => {
                                 { __( 'Unsaved changes', 'wp-user-frontend' ) }
                             </span>
                         ) : null }
-                        <button
-                            type="button"
+                        <Button
+                            className="h-[42px] px-8 font-medium"
                             disabled={ isSaving || ! isDirty }
                             onClick={ handleSave }
-                            className="rounded-md bg-primary px-8 py-2.5 text-sm font-medium text-white! hover:bg-primaryHover disabled:opacity-50"
                         >
                             { isSaving ? __( 'Saving…', 'wp-user-frontend' ) : __( 'Save', 'wp-user-frontend' ) }
-                        </button>
+                        </Button>
                     </div>
                 </div>
             ) }
@@ -371,7 +375,7 @@ const SettingsApp = () => {
                     onContinue={ () => setPendingTab( null ) }
                 />
             ) }
-        </div>
+        </PageShell>
     );
 };
 
@@ -379,5 +383,9 @@ const container = document.getElementById( 'wpuf-settings-root' );
 
 if ( container ) {
     const root = createRoot( container );
-    root.render( <SettingsApp /> );
+    root.render(
+        <WpufProviders host>
+            <SettingsApp />
+        </WpufProviders>
+    );
 }

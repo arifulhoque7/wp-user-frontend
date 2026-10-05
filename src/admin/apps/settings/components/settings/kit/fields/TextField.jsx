@@ -1,40 +1,21 @@
-import { useCallback } from '@wordpress/element';
-import { SETTING_CLASS_NAMES } from '../SettingsField';
-import HelpTextIcon from './HelpTextIcon';
+import { TextInput } from '@wpuf/components';
+import { CONTROL_SIZE } from '../controlSize';
+import SettingLabel, { LongHelp } from './SettingLabel';
 
 /**
- * Text input field for form settings.
- * Matches Vue wpuf_render_settings_field() for type="text".
+ * Text setting (legacy text / email / url / password and text-like callbacks)
+ * on the shared TextInput (4.6a). Shows the stored value, else the default;
+ * stores the string as typed.
  */
 export default function TextField( { field, name, value, onChange } ) {
-    const handleChange = useCallback( ( e ) => {
-        onChange( name, e.target.value );
-    }, [ name, onChange ] );
-
     return (
         <>
-            <div className="flex items-center">
-                { field.label && (
-                    <label htmlFor={ name } className="text-sm text-gray-700 my-2">
-                        { field.label }
-                    </label>
-                ) }
-                { field.help_text && <HelpTextIcon text={ field.help_text } /> }
-                { field.link && (
-                    <a href={ field.link } target="_blank" rel="noopener noreferrer" title="Learn More" className="focus:shadow-none">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" className="size-5 ml-1 stroke-gray-50 hover:stroke-gray-200">
-                            <path d="M12.232 4.232a2.5 2.5 0 0 1 3.536 3.536l-1.225 1.224a.75.75 0 0 0 1.061 1.06l1.224-1.224a4 4 0 0 0-5.656-5.656l-3 3a4 4 0 0 0 .225 5.865.75.75 0 0 0 .977-1.138 2.5 2.5 0 0 1-.142-3.667l3-3Z" />
-                            <path d="M11.603 7.963a.75.75 0 0 0-.977 1.138 2.5 2.5 0 0 1 .142 3.667l-3 3a2.5 2.5 0 0 1-3.536-3.536l1.225-1.224a.75.75 0 0 0-1.061-1.06l-1.224 1.224a4 4 0 1 0 5.656 5.656l3-3a4 4 0 0 0-.225-5.865Z" />
-                        </svg>
-                    </a>
-                ) }
-            </div>
-            <input
-                type="text"
+            <SettingLabel field={ field } htmlFor={ name } />
+            <TextInput
                 id={ name }
+                className={ CONTROL_SIZE }
                 value={ value || field.default || '' }
-                onChange={ handleChange }
-                className={ SETTING_CLASS_NAMES.text }
+                onChange={ ( next ) => onChange( name, next ) }
                 placeholder={ field.placeholder || '' }
             />
             { field.notice && (
@@ -42,12 +23,7 @@ export default function TextField( { field, name, value, onChange } ) {
                     <p className="m-0">{ field.notice.text }</p>
                 </div>
             ) }
-            { field.long_help && (
-                <div
-                    className="text-sm mt-4 wpuf-long-help"
-                    dangerouslySetInnerHTML={ { __html: field.long_help } }
-                />
-            ) }
+            <LongHelp html={ field.long_help } />
         </>
     );
 }

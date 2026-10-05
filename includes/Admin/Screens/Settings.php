@@ -161,7 +161,7 @@ class Settings extends Screen {
         }
         $this->print_notices();
         ?>
-        <div id="wpuf-settings-root" class="ml-[-20px]! min-h-screen wpuf-w-[calc(100%+20px)]">
+        <div id="wpuf-settings-root" class="px-[20px]">
             <noscript>
                 <strong>
                     <?php esc_html_e( 'This page requires JavaScript. Please enable it to manage settings.', 'wp-user-frontend' ); ?>

@@ -9,11 +9,9 @@
 import TextField from './kit/fields/TextField';
 import NumberField from './kit/fields/NumberField';
 import TextareaField from './kit/fields/TextareaField';
-import SelectField from './kit/fields/SelectField';
 import SelectDropdown from './kit/fields/SelectDropdown';
 import CheckboxField from './kit/fields/CheckboxField';
 import ToggleField from './kit/fields/ToggleField';
-import MultiSelectField from './kit/fields/MultiSelectField';
 import ColorPickerField from './kit/fields/ColorPickerField';
 import PicRadioField from './kit/fields/PicRadioField';
 import RadioField from './kit/fields/RadioField';
@@ -29,6 +27,7 @@ import ProBadge from './kit/ProBadge';
 import ProPreviewWrapper from './kit/ProPreviewWrapper';
 import ProNote from './kit/fields/ProNote';
 import { RawHTML } from '@wordpress/element';
+import { applyFilters } from '@wordpress/hooks';
 import { stripTags } from './utils';
 
 /**
@@ -48,7 +47,8 @@ const normalizeField = ( field ) => {
     // source of truth; fall back to the legacy pro-icon label marker.
     const isPro = !! field.is_pro_preview || /pro-icon|pro-badge|pro_badge/i.test( rawLabel );
 
-    const descHasMarkup = /<[a-z][^>]*>/i.test( field.desc || '' ) && field.type !== 'html';
+    // The wysiwyg field prints its own `desc` (merge tags) under the editor.
+    const descHasMarkup = /<[a-z][^>]*>/i.test( field.desc || '' ) && field.type !== 'html' && field.type !== 'wysiwyg';
 
     return {
         ...field,
@@ -183,6 +183,17 @@ export default function FieldRenderer( { sectionId, field, value, onChange, forc
     } else {
         Component = ( field.callback && pickByCallback( field.callback ) ) || pickComponent( type );
     }
+
+    /**
+     * Filters the component that renders a settings field of a type
+     * (`wpuf.settings.field.<type>`, design.md D13). The component gets
+     * `{ field, name, sectionId, value, onChange( name, value ) }`.
+     *
+     * @param {Function} Component Field component.
+     * @param {Object}   field     Field definition (from wpuf_settings_fields()).
+     * @param {string}   sectionId Settings section id.
+     */
+    Component = applyFilters( `wpuf.settings.field.${ type }`, Component, field, sectionId ) || Component;
 
     // Adapt the kit's onChange( name, value ) to the section-scoped store setter.
     const handleChange = ( name, val ) => onChange( sectionId, name, val );

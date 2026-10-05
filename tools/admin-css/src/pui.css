@@ -89,6 +89,14 @@
     background-color: transparent;
 }
 
+/* plugin-ui's searchable selects size their list to the trigger
+   (`!w-(--anchor-width)`), but every utility here is !important, so the
+   popover's own `w-72`, printed later, won: the list was 288px under a
+   full-width trigger. */
+.pui-root [data-slot$="-content"][class*="!w-(--anchor-width)"] {
+    width: var(--anchor-width) !important;
+}
+
 /* Links on the React screens: WordPress draws a blue ring on `a:focus`
    (admin color). No ring on a mouse click; keyboard focus gets the primary
    green outline (owner 2026-10-04: "no blue, only green"). */

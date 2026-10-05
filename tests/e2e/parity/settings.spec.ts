@@ -146,4 +146,106 @@ test.describe('Branch settings save', () => {
             write('branch', original.branch);
         }
     });
+
+    test('SET0008 : each control type edited on the React screen stores what the legacy screen stores on develop (4.6a, G2b)', { tag: ['@Parity', '@Test_SET0008'] }, async ({ browser }) => {
+        test.setTimeout(240_000);
+        const OPTIONS = ['wpuf_general', 'wpuf_dashboard', 'wpuf_payment'];
+        // section => field => value (checkbox: 'on'; multi select: list).
+        const EDITS: Record<string, Record<string, string | string[]>> = {
+            wpuf_general: { load_script: 'on', custom_css: 'a { color: red; }', admin_access: 'manage_options', show_admin_bar: ['administrator', 'editor', 'author'] },
+            wpuf_dashboard: { per_page: '7' },
+            wpuf_payment: { enable_payment: 'on', currency: 'BDT', wpuf_price_num_decimals: '3' },
+        };
+        const sites = { develop: paritySite('develop'), branch: paritySite('branch') };
+        const read = (site: typeof sites.develop) => JSON.parse(parityWp(site, ['eval', `$o = []; foreach ( ${JSON.stringify(OPTIONS).replace('[', '[ ').replace(']', ' ]')} as $n ) { $o[ $n ] = get_option( $n, null ); } echo wp_json_encode( $o );`])) as Record<string, unknown>;
+        const before = { develop: read(sites.develop), branch: read(sites.branch) };
+        const restore = (name: 'develop' | 'branch') => {
+            for (const option of OPTIONS) {
+                const old = before[name][option];
+                parityWp(sites[name], null === old ? ['option', 'delete', option] : ['option', 'update', option, JSON.stringify(old), '--format=json']);
+            }
+        };
+
+        try {
+            // Develop: the legacy screen, one options.php form per section.
+            const legacy = await ParitySitePage.doOpen(browser, sites.develop);
+            for (const [section, fields] of Object.entries(EDITS)) {
+                await legacy.page.goto('/wp-admin/admin.php?page=wpuf-settings');
+                await legacy.page.evaluate(([sec, values]) => {
+                    for (const [field, value] of Object.entries(values as Record<string, string | string[]>)) {
+                        const nodes = Array.from(document.querySelectorAll(`[name="${sec}[${field}]"], [name="${sec}[${field}][]"]`)) as HTMLInputElement[];
+                        for (const node of nodes) {
+                            if (node instanceof HTMLSelectElement) {
+                                Array.from(node.options).forEach((option) => {
+                                    option.selected = Array.isArray(value) ? value.includes(option.value) : option.value === value;
+                                });
+                            } else if ('checkbox' === node.type) {
+                                node.checked = Array.isArray(value) ? value.includes(node.value) : 'on' === value;
+                            } else if ('hidden' !== node.type) {
+                                node.value = value as string;
+                            }
+                        }
+                        if (!nodes.length) {
+                            throw new Error(`legacy field not found: ${sec}[${field}]`);
+                        }
+                    }
+                }, [section, fields] as const);
+                const form = legacy.page.locator(`form:has([name^="${section}["])`).first();
+                await Promise.all([legacy.page.waitForNavigation(), form.evaluate((el) => HTMLFormElement.prototype.submit.call(el))]);
+            }
+            await legacy.doClose();
+
+            // Branch: the React screen through its controls.
+            const admin = await ParitySitePage.doOpen(browser, sites.branch);
+            const page = admin.page;
+            const root = page.locator('#wpuf-settings-root');
+            const row = (label: string) => root.locator('.wpuf-input-container').filter({ has: page.locator('label', { hasText: new RegExp(`^\\s*${label}\\s*$`) }) }).first();
+            const save = async () => {
+                const saved = page.waitForResponse((response) => response.url().includes('wpuf/v1/settings') && 'POST' === response.request().method());
+                await root.getByRole('button', { name: 'Save', exact: true }).click();
+                await saved;
+            };
+            const openTab = async (name: string) => {
+                await root.locator('nav button', { hasText: new RegExp(`^\\s*${name}\\s*$`) }).click();
+                await page.waitForTimeout(400);
+            };
+            await page.goto('/wp-admin/admin.php?page=wpuf-settings');
+            await root.locator('nav button').first().waitFor();
+
+            await root.locator('label[for="load_script"]').click();
+            await root.locator('#custom_css').fill('a { color: red; }');
+            await root.locator('#admin_access').click();
+            await page.locator('[data-slot="select-item"]:visible', { hasText: /^\s*Admin Only\s*$/ }).click();
+            // Show Admin Bar shows its default four roles: drop Contributor.
+            await row('Show Admin Bar').locator('[data-slot="smart-multi-select-trigger"]').click();
+            await page.locator('[data-slot="command-item"]:visible', { hasText: /^\s*Contributor\s*$/ }).click();
+            await page.keyboard.press('Escape');
+            await save();
+
+            await openTab('Frontend Posting');
+            await root.locator('#per_page').fill('7');
+            await save();
+
+            await openTab('Payments');
+            await root.locator('label[for="enable_payment"]').click();
+            await row('Currency').getByRole('combobox').click();
+            await page.keyboard.type('Bangladeshi');
+            await page.locator('[data-slot="command-item"]:visible').first().click();
+            await root.locator('#wpuf_price_num_decimals').fill('3');
+            await save();
+            await admin.doClose();
+
+            const after = { develop: read(sites.develop), branch: read(sites.branch) };
+            for (const [section, fields] of Object.entries(EDITS)) {
+                const dev = after.develop[section] as Record<string, unknown>;
+                const br = after.branch[section] as Record<string, unknown>;
+                for (const field of Object.keys(fields)) {
+                    expect.soft(br[field], `${section}.${field} stored like develop's legacy screen`).toEqual(dev[field]);
+                }
+            }
+        } finally {
+            restore('develop');
+            restore('branch');
+        }
+    });
 });

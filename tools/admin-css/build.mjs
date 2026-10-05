@@ -37,6 +37,8 @@ const ENTRIES = {
         scope: '.wpuf-admin-react',
         output: 'assets/css/settings-react.css',
         rtl: false,
+        // Settings on the shared wrappers since 4.6a (plugin-ui part).
+        pui: true,
     },
     subscriptions: {
         input: 'src/subscriptions.css',

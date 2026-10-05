@@ -1,25 +1,22 @@
-import { useCallback } from '@wordpress/element';
+import { Checkbox } from '@wpuf/components';
 import HelpTextIcon from './HelpTextIcon';
 
+const isOn = ( value ) => true === value || 'yes' === value || 'on' === value;
+
 /**
- * Checkbox field — matches Vue wpuf_render_settings_field() for type="checkbox".
- * Vue renders: checkbox input BEFORE label, both in a flex row.
+ * Checkbox setting on the shared Checkbox (4.6a): box before the label,
+ * stores 'on' / 'off' (legacy shape).
  */
 export default function CheckboxField( { field, name, value, onChange } ) {
-    const isChecked = value === 'yes' || value === true || value === 'on';
-
-    const handleChange = useCallback( ( e ) => {
-        onChange( name, e.target.checked ? 'on' : 'off' );
-    }, [ name, onChange ] );
-
     return (
         <div className="flex items-center">
-            <input
-                type="checkbox"
+            <Checkbox
                 id={ name }
-                checked={ isChecked }
-                onChange={ handleChange }
-                className="mr-2! h-4 w-4 rounded-sm border-gray-300! checked:border-primary! checked:bg-primary! focus:ring-transparent!"
+                className="mr-2"
+                value={ isOn( value ) ? 'on' : 'off' }
+                checkedValue="on"
+                uncheckedValue="off"
+                onChange={ ( next ) => onChange( name, next ) }
             />
             { field.label && (
                 <label htmlFor={ name } className="text-sm text-gray-700 my-2">

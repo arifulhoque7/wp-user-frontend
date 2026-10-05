@@ -24,6 +24,9 @@ export const HOOKS = Object.freeze( {
     FORM_BUILDER_SETTINGS_FIELDS: 'wpuf.formBuilder.settingsFields',
     FORM_BUILDER_SETTINGS_ITEMS: 'wpuf.formBuilder.settingsItems',
     FORM_BUILDER_OPTION_DATA_BULK_ADD: 'wpuf.formBuilder.optionDataBulkAdd',
+    FORM_BUILDER_INTEGRATION_CONDITIONS: 'wpuf.formBuilder.integrationConditions',
+    // Settings screen: component per field type, `wpuf.settings.field.<type>`.
+    SETTINGS_FIELD: 'wpuf.settings.field',
 
     // Forms list.
     FORMS_LIST_INIT: 'wpuf.formsList.init',
