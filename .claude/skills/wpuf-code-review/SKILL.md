@@ -25,6 +25,17 @@ Before reviewing code, perform these steps:
 
 4.  **Diff awareness**: When reviewing a diff, distinguish pre-existing issues from newly introduced ones. Flag pre-existing issues separately (e.g., "Pre-existing pattern propagated to new files").
 
+## Admin platform revamp checks (branch `feature/react-admin-revamp`)
+Flag as critical on that branch:
+- A WPUF PHP or JS hook that fired on develop and no longer fires on the changed screen, or fires with different args/order.
+- Any change to stored shapes: an untouched save that alters data, `||` coercion of stored values, `'1'`/boolean where develop stores `'on'/'off'`, `[]` where develop leaves a key absent.
+- Edits inside `wpuf-pro/modules/*` or `modules/user-directory` (out of scope; fix core).
+- A button on an in-scope screen not rendered by the shared `Button` wrapper, or local margin/padding on buttons.
+- plugin-ui imported directly in a screen instead of through `shared/ui`.
+- A filter pro listens to that free never applies.
+- Docs committed (docs stay local on this branch).
+Evidence to ask for: parity project result for the screen, runtime contract diff, existing e2e specs green.
+
 ## Critical Violations to Flag
 
 ### Backend PHP

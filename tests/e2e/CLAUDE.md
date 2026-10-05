@@ -18,12 +18,12 @@ Read before adding or modifying end-to-end tests.
 
 ```bash
 cd tests/e2e
-npm i
+pnpm install --frozen-lockfile
 npx playwright install chromium
 
-npm run test:setup       # run setup suite first (alphaSetupTest)
-npm run test:parallel    # run the 3 native shards sequentially
-npm run test:sharded     # setup + shards in sequence
+pnpm run test:setup       # run setup suite first (alphaSetupTest)
+pnpm run test:parallel    # run the 3 native shards sequentially
+pnpm run test:sharded     # setup + shards in sequence
 ```
 
 CI variants append `:ci` (`test:setup:ci`, `test:parallel:ci`, `test:sharded:ci`) and drop `--headed`.
@@ -37,9 +37,10 @@ configs are gone — phases are now **projects** selected with `--project`:
 - `--project=setup` → `alphaSetupTest.spec.ts` (run first, once)
 - `--project=e2e` → the stateful UI suite, split via native `--shard=i/n`
 - `--project=api` → REST layer (`tests/api/`, no browser)
+- `--project=parity` → develop vs branch comparison (`parity/`, needs `PARITY_*` in `.env`, see `utils/paritySites.ts`); local gate, not in CI shards
 
 `workers: 1` + `fullyParallel: false`, so no two stateful specs hit the shared site
-at once. `npm run test:parallel` invokes `--project=e2e` three times
+at once. `pnpm run test:parallel` invokes `--project=e2e` three times
 (`--shard=1/3`, `2/3`, `3/3`) **sequentially** against the single wp-env.
 
 - We deliberately do **not** wire `dependencies: ['setup']` — under `--shard` a setup

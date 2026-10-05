@@ -21,6 +21,9 @@ The `.claude/skills/` directory has procedural HOW-TOs. **Invoke the matching sk
 | Architecture (directory layout, init flow, services, REST, payments, fields) | [`docs/architecture.md`](docs/architecture.md) | New to the codebase, or touching a subsystem you don't know |
 | Coding standards & patterns | [`docs/conventions.md`](docs/conventions.md) | Before writing non-trivial code |
 | Build & test commands | [`docs/build-and-test.md`](docs/build-and-test.md) | Before running lint/build/tests |
+| Hooks (PHP rules, generated index, JS hooks, Vue -> React migration) | [`docs/hooks/`](docs/hooks/php.md) | Before adding, moving or retiring a hook |
+| Slots on admin React screens | [`docs/slots/README.md`](docs/slots/README.md) | Before injecting UI into an admin React screen |
+| Settings React | [`docs/settings-react.md`](docs/settings-react.md) | Before adding or changing a setting |
 
 Per-directory `CLAUDE.md` files auto-load when Claude works in that path:
 - [`includes/Fields/CLAUDE.md`](includes/Fields/CLAUDE.md) — form field contract & conventions
@@ -32,6 +35,10 @@ Per-directory `CLAUDE.md` files auto-load when Claude works in that path:
 - **Legacy code stays.** jQuery form builder, LESS, Grunt, and the `class/` directory coexist with modern Vue/Tailwind/Vite intentionally. Don't rewrite legacy code without explicit permission.
 - **Free/Pro split matters.** Never assume Pro features exist. Detect with `class_exists('WP_User_Frontend_Pro')`.
 - **Scope discipline.** No drive-by refactors. Note unrelated issues separately instead of fixing them inline.
+
+## Admin platform revamp (branch `feature/react-admin-revamp`)
+
+Builders, forms lists, subscriptions, settings and onboarding move to a FlyHR-style platform (`includes/Platform/`, `src/admin/`, `@wedevs/plugin-ui` with the old Vue look, Dokan-style hooks). Read [`docs/architecture.md`](docs/architecture.md) first. Rules: stored data frozen (untouched save changes nothing), WPUF keeps firing every hook it owns, Pro modules and User Directory are not edited, every in-scope button is the shared `Button` wrapper, pnpm on that branch, docs stay local (not committed). Plan and evidence: `openspec/changes/revamp-admin-react-flyhr/` in the dev site.
 
 ## Quick Reference
 

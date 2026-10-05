@@ -16,6 +16,15 @@ This skill provides guidance for developing WP User Frontend backend PHP code ac
 -   Adding hooks, filters, or REST endpoints
 -   Working with the container or subsystem bootstrap
 
+## Admin platform revamp (branch `feature/react-admin-revamp`)
+Read `docs/architecture.md` and `docs/hooks/php.md` first.
+- New platform code goes in `includes/Platform/` (container + providers, `Hookable::register_hooks()`, `RestRoute` controllers on the shared `RestController`, stores over existing storage). New REST routes only under `wpuf/v1/admin/*`; existing routes and AJAX actions keep working and call the same stores.
+- Storage is frozen: no new keys, no reshaped values, untouched save changes nothing.
+- WPUF keeps firing every hook it owns: a React screen still calls the PHP hooks the old screen called, same point, same args. Retire only via `apply_filters_deprecated` / `do_action_deprecated` + admin notice + migration doc.
+- Never edit Pro modules or User Directory to fix a revamp regression; fix core.
+- Pro hooks run after free (`wpuf_platform_loaded`), never by folder order.
+- Verify: PHPCS 0 on touched files, `tests/contracts/diff.php` no new loss, parity data check for any save path.
+
 ## Namespace & File Structure
 
 -   **Root namespace:** `WeDevs\Wpuf\`

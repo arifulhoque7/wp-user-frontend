@@ -6,7 +6,7 @@ Read before writing or reviewing code.
 ## Coding Standards
 - **PHP**: WordPress Coding Standards (WPCS) via PHPCS. Run `composer phpcs` before committing.
 - **JS**: JSHint (legacy), Prettier for formatting.
-- **CSS**: Tailwind CSS 3 with DaisyUI.
+- **CSS**: frontend, Vue apps and legacy: Tailwind CSS 3 with DaisyUI (`wpuf-` prefix). React admin screens (builders, forms lists, subscriptions, settings): Tailwind 4, plain classes (no prefix), built by `tools/admin-css` (`pnpm run build:admin-css`).
 - **PHP Namespace**: `WeDevs\Wpuf\` for `includes/`, `WeDevs\Wpuf\Lib\` for `Lib/`.
 
 ## Key Patterns
@@ -17,6 +17,13 @@ Read before writing or reviewing code.
 - **Free/Pro split** — `includes/Free/Free_Loader.php` loads free-only features; Pro version detected via `WP_User_Frontend_Pro` class.
 - **Form field contract** — all form fields implement `Field_Contract` for consistent rendering.
 - **Legacy + modern coexistence** — jQuery form builder alongside Vue 3 components, LESS alongside Tailwind, Grunt alongside Vite. Do not rewrite legacy code without explicit permission.
+
+## Admin platform rules (branch `feature/react-admin-revamp`, see `docs/architecture.md`)
+- Stored data shapes are frozen; an untouched save changes nothing.
+- WPUF keeps firing every hook it owns on React screens (`docs/hooks/php.md`); retire a hook only through deprecation shims.
+- Pro modules and User Directory are not edited; core provides what they use.
+- Admin UI uses `@wedevs/plugin-ui` through WPUF wrappers with the old Vue look; every button is the shared `Button` wrapper (one variant/size table, no local button styles).
+- Docs (`docs/`, `CLAUDE.md`, skills) for this work stay local and are not committed.
 
 ## Scope Discipline
 - Do not reformat or restructure code as a side effect of a feature change.

@@ -1,11 +1,11 @@
-# WPUF Settings — How it works & how to add a setting
+# WPUF Settings: how it works & how to add a setting
 
 The settings screen (`WPUF > Settings`) is a **React app** served entirely over
 the REST API. The legacy `WeDevs_Settings_API` screen still exists as a
 **fallback** (see _Legacy fallback_ below). Both read and write the **same
 options and keys**, so they stay in sync.
 
-> **Golden rule — storage parity.** Never rename, reshape, or drop an existing
+> **Golden rule: storage parity.** Never rename, reshape, or drop an existing
 > option key or value shape. Existing users' data must round-trip byte-identical
 > on a no-op save. Add a setting by adding a schema field; do not invent new
 > storage for something that already has a key.
@@ -14,18 +14,18 @@ options and keys**, so they stay in sync.
 
 ## Architecture (one source of truth)
 
-1. **Schema (PHP)** — `wpuf_settings_sections()` / `wpuf_settings_fields()` in
+1. **Schema (PHP)**: `wpuf_settings_sections()` / `wpuf_settings_fields()` in
    `includes/functions/settings-options.php`, extended by Pro/modules through the
    `wpuf_settings_sections` / `wpuf_settings_fields` filters. This is the single
    source of truth for what settings exist.
-2. **REST** — `includes/Api/Settings.php` (`wpuf/v1/settings`): `GET` returns the
+2. **REST**: `includes/Api/Settings.php` (`wpuf/v1/settings`): `GET` returns the
    filtered schema + values; `POST` saves each section back to its option with
    the field's sanitize. Gated by `current_user_can( wpuf_admin_role() )`.
-3. **React** — `src/js/settings.jsx` + `src/js/components/settings/*` render
+3. **React**: `src/admin/apps/settings/index.jsx` + `src/admin/apps/settings/components/settings/*` render
    whatever the schema produces, dispatched by field `type` in `FieldRenderer.jsx`.
 
 Because rendering is schema-driven, **a field registered via the filter appears
-in both screens automatically** — no JS change needed for the common cases.
+in both screens automatically**; no JS change needed for the common cases.
 
 ---
 
@@ -43,7 +43,7 @@ $fields['wpuf_general'][] = [
 ];
 ```
 
-That's it — it renders in React **and** the legacy screen, and saves to
+That's it: it renders in React **and** the legacy screen, and saves to
 `wpuf_general['my_option']`.
 
 ### Supported `type`s (work in both screens)
@@ -56,7 +56,7 @@ That's it — it renders in React **and** the legacy screen, and saves to
 > If you use them, also provide a `callback` (the legacy renders the callback;
 > React routes by type/name). A WP_DEBUG guard
 > (`wpuf_settings_legacy_compat_check`) logs a warning for any field the legacy
-> screen can't render — watch your debug log.
+> screen can't render; watch your debug log.
 
 ### Conditional fields
 
@@ -75,7 +75,7 @@ React evaluates these reactively (`SettingsSection.jsx` → `dependencyMet`).
 
 ---
 
-## The 10% — special renderers
+## The 10%: special renderers
 
 A few fields need a custom React component because their storage is nested or
 lives in their own option. These are routed in `FieldRenderer.jsx` /
@@ -124,6 +124,42 @@ If the React screen ever misbehaves, switch to the classic screen:
   `wpuf_use_legacy_settings` filter.
 
 Both screens share storage, so switching never loses data.
+
+Planned (admin platform, D12): the mode becomes **per user** (user meta), with
+the site option as the default; precedence stays query arg > constant > option.
+
+---
+
+## How the React screen saves (matches the legacy screen)
+
+- The screen posts **only the fields the user changed** (`stores-react/settings/diff.js`)
+  and only the `extra` keys that changed. Untouched values and own-option settings
+  (tax, AI keys, role templates, profile roles) are never rewritten.
+- Stored shapes as the legacy form posted them: multicheck `{ key: key }` or `''` when
+  none is checked; an empty `wpuf_settings_multiselect` leaves the key out (readers fall
+  back to the default); the JSON body is not unslashed.
+- Fallback sanitize when a field has no `sanitize_callback`: text `sanitize_text_field`,
+  textarea `wp_kses_post` (messages keep their HTML; `custom_css` uses
+  `wp_strip_all_tags` so `>` survives), wysiwyg/html `wp_kses_post`, url `esc_url_raw`.
+- Secrets (`wpuf_settings_password_preview` fields, AI keys) leave the server masked; the
+  mask coming back keeps the stored value.
+- A `color` field may carry `preview` (map) + `preview_by` (another field name): the
+  picker shows `preview[ value of preview_by ]` when nothing is stored. Display only.
+  Pro login colors use it to follow the chosen layout; their `std` stays `''`.
+
+- `desc` reaches React filtered by `wp_kses_post`; plain text shows as a tooltip, markup
+  (links) prints under the field. `html` rows show label + desc.
+- The first save of a section stores every missing field default (legacy `std`), except
+  html/hidden, secrets, multiselects, callback-rendered and Pro-preview fields.
+
+## Legacy hooks on the React screen
+
+- `wsa_form_top_{section}` and `wsa_form_bottom_{section}` fire for every section on each
+  settings load (REST `GET /wpuf/v1/settings`), with the section array as before. Their
+  output is shown at the top and bottom of the section after `wp_kses_post`, so form inputs
+  printed there are not posted by the React save.
+- `wpuf_settings_user_roles` (profile roles table) and `wpuf_get_tax_rates` (pro tax block)
+  apply as on the legacy screen.
 
 ---
 

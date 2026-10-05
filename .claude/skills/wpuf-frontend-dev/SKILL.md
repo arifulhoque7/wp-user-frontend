@@ -7,6 +7,20 @@ description: Add or modify WPUF frontend code (jQuery, vanilla JS, Vue legacy, T
 
 This skill provides guidance for developing WP User Frontend frontend code.
 
+## Admin platform revamp (branch `feature/react-admin-revamp`)
+Applies to the builders, forms lists, subscriptions, settings and onboarding only. Read `docs/architecture.md` first.
+- Components: `@wedevs/plugin-ui` through WPUF wrappers in `src/admin/shared/ui/` (target); never import plugin-ui directly in a screen. Look = old develop Vue design (primary `#059669`, hover `#10b981`).
+- Buttons: always the shared `Button` (variants primary, secondary, link, destructive, icon; sizes sm, md). No local button classes, no outer margin; groups use the 12px gap.
+- Stored values: never coerce with `||` (B20): `''`, `0`, `false` are real values. Write develop's shapes (toggles `'on'/'off'`, absent-when-unchecked where develop does).
+- Rich text stays TinyMCE via `wp.editor` (shared `WpEditor`).
+- A screen still being migrated renders `<WpufProviders host>` (design D25): plugin-ui CSS then reaches only `[data-slot]` parts and wrapper roots marked `data-wpuf-ui=""`, so legacy markup keeps its look. Every new wrapper whose root is not a plugin-ui component sets `data-wpuf-ui=""`. Keep `host` while the screen renders its own layout markup (headings, tables, grids).
+- Page look (design D26, FlyHR): every shared-layer screen = `<PageShell>` with `PageHeader` (white strip; pass `helpUrl`/`helpLabel` for the screen's docs, no "Learn more" footer bands), content in white cards on the gray page, `PageFooter` last. The gray page / no gutter / hidden `#wpfooter` come from `tools/admin-css/src/pui.css`; don't set page backgrounds per screen (only override a PHP root's white class). Lists use the FlyHR list card (Tabs `toolbar`, selection bar, plain table, Pagination `footer`).
+- A class that a shared wrapper also uses compiles `!important` in the plugin-ui part: inside islands/portals it beats a screen-only class on the same element (e.g. `m-0` kills `mb-16`); don't mix them.
+- Owner UI rules (2026-10-04, openspec design-tokens.md "Owner corrections"): no blue focus anywhere (WordPress `input:focus` / `a:focus` rings; reset in `tools/admin-css/src/pui.css`, green keyboard outline only); radios and checkboxes keep plugin-ui's default checked look (no `data-checked:*` overrides, FlyHR style); builder alerts use `showOops()` / `SwalModal.js` (styled), never a bare `Swal.fire`; canvas markup changes are measured against develop in top-level and column/repeat bars (PAR0019); every task ends with mouse + keyboard screenshots of the touched states.
+- Hooks: existing `wpuf.*` JS names are frozen; new names in `shared/filters.ts`; slots in `docs/slots/`. Free must apply every filter pro listens to.
+- Build on that branch: pnpm (`pnpm install --frozen-lockfile && pnpm build`); User Directory keeps npm and is not touched.
+- Every change: parity project (`tests/e2e --project=parity`) for the touched screen, existing e2e specs, runtime contract diff.
+
 ## Framework Policy
 
 **New UI must use vanilla JS or jQuery.** Vue is legacy — only touch existing Vue code for bug fixes. Do not create new Vue components or entry points.
@@ -113,6 +127,18 @@ jQuery is still heavily used for:
 These are **not** built via Vite/Webpack — they live directly in `assets/js/`.
 
 ## Tailwind CSS
+
+### React admin screens (branch `feature/react-admin-revamp`): Tailwind 4, NO prefix
+
+Builders, forms lists, subscriptions and settings (free `src/admin/apps/{form-builder,forms-list,subscriptions,settings}` since 3.5, shared layer `src/admin/shared`; Pro `admin/form-builder/src`, `admin/forms-list/src`) use **plain Tailwind 4 classes** (`flex`, `text-sm`, `shadow-xs`), never `wpuf-` and never `wpuf:`.
+
+-   Built by `tools/admin-css` (own tailwindcss@4): `pnpm run build:admin-css` (free), `npm run build:admin-css` (Pro). One entry: `node tools/admin-css/build.mjs <settings|subscriptions|forms>`.
+-   Utilities are scoped `:where(.wpuf-admin-react) .x`; the body class comes from `Screen::body_class()` / `Assets::react_forms_body_class()`.
+-   Base + components (daisyUI, `wpuf-` component classes) are frozen Tailwind 3 output in `tools/admin-css/src/base-v3/` (regenerate with `gen-v3-base.cjs`, needs the root tailwindcss@3). Keep component class names (`wpuf-btn`, ...) as they are.
+-   A class that never had CSS in Tailwind 3 must not start working: block it with `@source not inline(...)` in `src/<screen>.css`.
+-   Pro's utilities sheet prints before Free's `forms-react.css` (Free wins shared names).
+
+Everything below (prefix `wpuf-`, Tailwind 3) is for the frontend, the Vue apps and legacy CSS.
 
 Config: `tailwind.config.js`
 
