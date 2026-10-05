@@ -38,15 +38,13 @@ Applies to the builders, forms lists, subscriptions, settings and onboarding onl
 
 ## Build System
 
-### Vite (Primary — Vue Components)
+### Vite (remaining Vue apps)
 
-5 entry points defined in `vite.config.mjs`:
+3 entry points defined in `vite.config.mjs` (the admin subscriptions and forms list are React apps now, built with wp-scripts; Pro has no Vite):
 
 | Entry | Source | Output |
 |---|---|---|
-| `subscriptions` | `./assets/js/subscriptions.js` | `assets/js/subscriptions.min.js` |
 | `frontend-subscriptions` | `./assets/js/frontend-subscriptions.js` | `assets/js/frontend-subscriptions.min.js` |
-| `forms-list` | `./assets/js/forms-list.js` | `assets/js/forms-list.min.js` |
 | `account` | `./assets/js/account.js` | `assets/js/account.min.js` |
 | `ai-form-builder` | `./assets/js/ai-form-builder.js` | `assets/js/ai-form-builder.min.js` |
 
@@ -210,10 +208,16 @@ Scripts and styles are registered in `includes/Assets.php`. When adding new asse
 
 ## Key Reference Files
 
--   `vite.config.mjs` — Vite configuration (5 entry points)
+-   `vite.config.mjs` — Vite configuration (3 entry points)
 -   `tailwind.config.js` — Tailwind with `wpuf-` prefix and scoped preflight
 -   `postcss.config.js` — PostCSS configuration
 -   `Gruntfile.js` — Legacy tasks (Less, i18n, release)
 -   `package.json` — All build scripts and dependencies
 -   `includes/Assets.php` — Script/style registration
 -   `includes/Admin.php` — Admin script enqueuing
+
+## Form template picker (forms lists)
+
+-   "Add New" on the post and registration forms lists opens `src/admin/apps/forms-list/components/TemplatePicker.jsx`; its data comes from `WeDevs\Wpuf\Admin\Forms\Template_Picker::data()` (global `wpuf_form_templates`).
+-   A template's `image` is a screenshot of the form it creates (`assets/images/templates/*.webp`, 800px wide). New templates need one: create the form, capture the frontend form element, convert to webp.
+-   `/assets/*` is gitignored: add new images with `git add -f`.
