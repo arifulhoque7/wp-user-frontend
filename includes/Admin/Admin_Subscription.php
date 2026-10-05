@@ -39,11 +39,6 @@ class Admin_Subscription {
         add_action( 'wpuf_load_subscription_page', [ $this, 'enqueue_admin_scripts' ] );
         add_action( 'wpuf_load_subscription_page', [ $this, 'modify_admin_footer_text' ] );
 
-        // React subscriptions page - always enqueue React version
-        add_action( 'wpuf_load_subscriptions_react_page', [ $this, 'remove_notices' ] );
-        add_action( 'wpuf_load_subscriptions_react_page', [ $this, 'enqueue_react_scripts' ] );
-        add_action( 'wpuf_load_subscriptions_react_page', [ $this, 'modify_admin_footer_text' ] );
-
         add_action( 'admin_init', [ $this, 'set_default_sort_order_for_existing_subscriptions' ] );
     }
 
@@ -152,19 +147,6 @@ class Admin_Subscription {
 
         // The pre-React handle stays enqueued as an alias of the React script.
         wp_enqueue_script( 'wpuf-admin-subscriptions' );
-    }
-
-    /**
-     * Enqueue scripts for React subscriptions page
-     *
-     * Same assets as the subscription page; kept for callers of this method.
-     *
-     * @since 4.0.0
-     *
-     * @return void
-     */
-    public function enqueue_react_scripts() {
-        $this->enqueue_admin_scripts();
     }
 
     /**
