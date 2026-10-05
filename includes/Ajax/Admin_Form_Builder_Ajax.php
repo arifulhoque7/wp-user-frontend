@@ -4,6 +4,7 @@ namespace WeDevs\Wpuf\Ajax;
 
 use WeDevs\Wpuf\Admin\Forms\Admin_Form_Builder;
 use WeDevs\Wpuf\Builder\HookBridge;
+use WeDevs\Wpuf\Platform\Stores\Normalizers;
 
 /**
  * Ajax handlers
@@ -70,7 +71,8 @@ class Admin_Form_Builder_Ajax {
         $integrations = null;
 
         if ( isset( $post_data['settings'] ) ) {
-            $settings = json_decode( $post_data['settings'], true );
+            // Develop posted these as a form: keep its CRLF line breaks.
+            $settings = Normalizers::form_post_newlines( json_decode( $post_data['settings'], true ), get_post_meta( absint( $form_data['wpuf_form_id'] ), $form_settings_key, true ) );
         } else {
             $settings = isset( $form_data['wpuf_settings'] ) ? $form_data['wpuf_settings'] : [];
         }
@@ -92,11 +94,21 @@ class Admin_Form_Builder_Ajax {
         }
 
         if ( isset( $post_data['integrations'] ) ) {
-            $integrations = json_decode( $post_data['integrations'], true );
+            $integrations = Normalizers::form_post_newlines( json_decode( $post_data['integrations'], true ), get_post_meta( absint( $form_data['wpuf_form_id'] ), 'integrations', true ) );
         }
 
         $form_fields   = json_decode( $form_fields, true );
         $notifications = json_decode( $notifications, true );
+
+        // Values develop's form post always stored (Pro): the registration new
+        // user status, and the multi-step bar type (its select's first option).
+        if ( class_exists( 'WP_User_Frontend_Pro' ) ) {
+            if ( 'wpuf_profile' === get_post_type( absint( $form_data['wpuf_form_id'] ) ) ) {
+                $settings = Normalizers::registration_user_status( $settings );
+            }
+
+            $settings = Normalizers::multistep_progressbar_type( $settings );
+        }
 
         // Server-side validation for fallback PPP cost
         if ( $this->validate_fallback_ppp_cost_required( $settings ) ) {

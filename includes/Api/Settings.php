@@ -2,6 +2,7 @@
 
 namespace WeDevs\Wpuf\Api;
 
+use WeDevs\Wpuf\Platform\Stores\Normalizers;
 use WeDevs\Wpuf\Platform\Stores\Stores;
 use WP_REST_Controller;
 use WP_REST_Request;
@@ -209,6 +210,15 @@ class Settings extends WP_REST_Controller {
                 400
             );
         }
+
+        // The legacy screen posted a form: keep its CRLF line breaks.
+        $stored = [];
+
+        foreach ( array_keys( $incoming ) as $section_id ) {
+            $stored[ $section_id ] = get_option( sanitize_key( $section_id ), [] );
+        }
+
+        $incoming = Normalizers::form_post_newlines( $incoming, $stored );
 
         // The settings store applies the legacy sanitize callbacks, writes the
         // section options and fires wpuf_settings_saved (task 2.4c).

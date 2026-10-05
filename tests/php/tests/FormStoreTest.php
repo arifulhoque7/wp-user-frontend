@@ -227,4 +227,47 @@ class FormStoreTest extends WP_UnitTestCase {
         $this->assertSame( $settings, Normalizers::form_settings( $settings, true ) );
         $this->assertSame( 'raw', Normalizers::form_settings( 'raw', false ) );
     }
+
+    public function test_registration_user_status_is_filled_like_develops_hidden_input() {
+        $this->assertSame( [ 'role' => 'subscriber', 'wpuf_user_status' => 'approved' ], Normalizers::registration_user_status( [ 'role' => 'subscriber' ] ) );
+        $this->assertSame( [ 'user_status' => 'on', 'wpuf_user_status' => 'pending' ], Normalizers::registration_user_status( [ 'user_status' => 'on' ] ) );
+        $this->assertSame( [ 'user_status' => 'off', 'wpuf_user_status' => 'approved' ], Normalizers::registration_user_status( [ 'user_status' => 'off' ] ) );
+        // A stored value stays as it is (templates store 'pending').
+        $this->assertSame( [ 'wpuf_user_status' => 'pending' ], Normalizers::registration_user_status( [ 'wpuf_user_status' => 'pending' ] ) );
+    }
+
+    public function test_multistep_progressbar_type_is_filled_like_develops_select() {
+        $this->assertSame( [ 'enable_multistep' => 'on', 'multistep_progressbar_type' => 'progressive' ], Normalizers::multistep_progressbar_type( [ 'enable_multistep' => 'on' ] ) );
+        // A picked value stays; multi-step off adds nothing.
+        $this->assertSame( [ 'enable_multistep' => 'on', 'multistep_progressbar_type' => 'step_by_step' ], Normalizers::multistep_progressbar_type( [ 'enable_multistep' => 'on', 'multistep_progressbar_type' => 'step_by_step' ] ) );
+        $this->assertSame( [ 'enable_multistep' => 'off' ], Normalizers::multistep_progressbar_type( [ 'enable_multistep' => 'off' ] ) );
+        $this->assertSame( [], Normalizers::multistep_progressbar_type( [] ) );
+    }
+
+    public function test_form_post_newlines_match_a_browser_form_post() {
+        $value = [
+            'new_body'     => "Hi\n\nThere\r\nEnd\rX",
+            'single'       => 'no breaks',
+            'on'           => true,
+            'nested'       => [ 'body' => "a\nb" ],
+            'already_crlf' => "a\r\nb",
+        ];
+
+        $this->assertSame(
+            [
+                'new_body'     => "Hi\r\n\r\nThere\r\nEnd\r\nX",
+                'single'       => 'no breaks',
+                'on'           => true,
+                'nested'       => [ 'body' => "a\r\nb" ],
+                'already_crlf' => "a\r\nb",
+            ],
+            Normalizers::form_post_newlines( $value )
+        );
+        $this->assertNull( Normalizers::form_post_newlines( null ) );
+
+        // Untouched text keeps the stored bytes (untouched save changes nothing).
+        $stored = [ 'body' => "a\nb", 'nested' => [ 'x' => "c\nd" ] ];
+        $this->assertSame( $stored, Normalizers::form_post_newlines( [ 'body' => "a\nb", 'nested' => [ 'x' => "c\nd" ] ], $stored ) );
+        $this->assertSame( [ 'body' => "a\r\nb\r\nz" ], Normalizers::form_post_newlines( [ 'body' => "a\nb\nz" ], $stored ) );
+    }
 }
