@@ -33,7 +33,15 @@ const REMOTE_ASSET = /https?:\/\/upload\.wikimedia\.org\/[^"'`\\)\s]+/g;
 // `@import` value. The prefixes keep plain links (not file loads) out.
 const LEFTOVER = /(?:src\s*[:=]\s*|url\(\s*|@import\s+)["'`]?(https?:\/\/[^"'`)\s]+\.(?:png|jpe?g|gif|svg|webp|avif|css|js|woff2?|ttf|otf|eot))/gi;
 
+// plugin-ui translates its own strings in the WordPress core text domain
+// ("default"), where most of them do not exist, so they stayed English on a
+// translated site. They move to the plugin's text domain: wp.org reads the
+// strings from the shipped bundle and `wp_set_script_translations()` loads them.
+const CORE_DOMAIN = /(\b_(?:_|x|n|nx)\)\((?:"(?:[^"\\]|\\.)*",)+(?:[^"(),]+,)?)"default"\)/g;
+const TEXT_DOMAIN = 'wp-user-frontend';
+
 let total = 0;
+let moved = 0;
 const errors = [];
 const files = built.filter( ( file ) => /\.(js|css)$/.test( file ) && existsSync( join( root, file ) ) );
 
@@ -41,12 +49,22 @@ for ( const file of files ) {
     const path = join( root, file );
     const before = readFileSync( path, 'utf8' );
     const hits = file.endsWith( '.js' ) ? before.match( REMOTE_ASSET ) : null;
-    const after = hits ? before.replace( REMOTE_ASSET, BLANK ) : before;
+    let after = hits ? before.replace( REMOTE_ASSET, BLANK ) : before;
+    const strings = file.endsWith( '.js' ) ? after.match( CORE_DOMAIN ) : null;
+
+    if ( strings ) {
+        after = after.replace( CORE_DOMAIN, `$1"${ TEXT_DOMAIN }")` );
+        moved += strings.length;
+        console.log( `  ${ file }: ${ strings.length } string(s) moved to the ${ TEXT_DOMAIN } text domain` );
+    }
 
     if ( hits ) {
         total += hits.length;
-        writeFileSync( path, after );
         console.log( `  ${ file }: neutralised ${ hits.length } remote asset URL(s)` );
+    }
+
+    if ( after !== before ) {
+        writeFileSync( path, after );
     }
 
     for ( const match of after.matchAll( LEFTOVER ) ) {
@@ -62,4 +80,4 @@ if ( errors.length ) {
     process.exit( 1 );
 }
 
-console.log( `sanitize-dist: ${ total } remote asset URL(s) neutralised across ${ files.length } generated file(s).` );
+console.log( `sanitize-dist: ${ total } remote asset URL(s) neutralised, ${ moved } string(s) moved to the plugin text domain, across ${ files.length } generated file(s).` );
