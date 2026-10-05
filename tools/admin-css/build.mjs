@@ -36,7 +36,8 @@ const ENTRIES = {
         post: 'src/base-v3/settings.post.css',
         scope: '.wpuf-admin-react',
         output: 'assets/css/settings-react.css',
-        rtl: false,
+        // settings-react-rtl.css for RTL sites, like the other screens.
+        rtl: true,
         // Settings on the shared wrappers since 4.6a (plugin-ui part).
         pui: true,
     },

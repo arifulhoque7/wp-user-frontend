@@ -400,7 +400,7 @@ const SettingsApp = () => {
             { ! isLoading && (
                 <div
                     className="wpuf-settings-footer z-40 flex items-center justify-between border-t border-gray-200 bg-white px-[32px] py-4 shadow-[0_-1px_3px_rgba(0,0,0,0.06)]"
-                    style={ { left: `${ footerLeft }px` } }
+                    style={ { insetInlineStart: `${ footerLeft }px` } }
                 >
                     <Button
                         variant="secondary"

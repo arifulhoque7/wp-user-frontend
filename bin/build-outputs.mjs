@@ -27,6 +27,7 @@ export const built = [
     'assets/css/frontend-subscriptions.min.css',
     'assets/css/registration-forms.css',
     'assets/css/settings-react.css',
+    'assets/css/settings-react-rtl.css',
     'assets/css/subscriptions.css',
     'assets/css/subscriptions-rtl.css',
     'assets/css/wpuf-form-builder.css',

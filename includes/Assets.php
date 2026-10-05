@@ -233,6 +233,8 @@ class Assets {
             ],
             'settings-react'      => [
                 'src' => WPUF_ASSET_URI . '/css/settings-react.css',
+                // settings-react-rtl.css (built by tools/admin-css) on RTL sites.
+                'rtl' => true,
             ],
             'subscriptions-react' => [
                 'src'     => WPUF_ASSET_URI . '/css/subscriptions.css',
