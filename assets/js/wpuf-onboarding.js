@@ -34,6 +34,61 @@
     bindCardToggles( '.wpuf-onboarding-card input[name="features[]"]' );
     bindCardToggles( '.wpuf-onboarding-card input[name="plugins[]"]' );
 
+    // Step: what you need. Switching off a feature that is in use (the user
+    // directory) asks first; the server ignores the untick without the answer.
+    ( function () {
+        var input = document.querySelector( 'input[name="features[]"][data-confirm-off]' );
+
+        if ( ! input ) {
+            return;
+        }
+
+        var box       = document.getElementById( input.getAttribute( 'data-confirm-off' ) );
+        var confirmed = document.getElementById( 'wpuf-onboarding-directory-confirmed' );
+
+        if ( ! box || ! confirmed ) {
+            return;
+        }
+
+        function setCard() {
+            var card = input.closest( '.wpuf-onboarding-card' );
+
+            if ( card ) {
+                card.classList.toggle( 'is-selected', input.checked );
+            }
+        }
+
+        input.addEventListener( 'change', function () {
+            confirmed.value = '';
+            box.hidden      = input.checked;
+
+            if ( ! input.checked ) {
+                box.querySelector( '[data-confirm-keep]' ).focus();
+            }
+        } );
+
+        box.querySelector( '[data-confirm-keep]' ).addEventListener( 'click', function () {
+            input.checked   = true;
+            confirmed.value = '';
+            box.hidden      = true;
+            setCard();
+            input.focus();
+        } );
+
+        box.querySelector( '[data-confirm-off-yes]' ).addEventListener( 'click', function () {
+            confirmed.value = '1';
+            box.hidden      = true;
+            input.focus();
+        } );
+
+        // Leaving the step with the question open counts as "keep it on".
+        input.form.addEventListener( 'submit', function () {
+            if ( ! input.checked && '1' !== confirmed.value ) {
+                input.checked = true;
+            }
+        } );
+    } )();
+
     // Step: post form. Describe whichever template is selected.
     ( function () {
         var select = document.getElementById( 'wpuf-onboarding-template' );

@@ -975,6 +975,24 @@
     color: #374151;
 }
 
+/* Keyboard focus on buttons and links: our green ring, never the browser's
+   blue one; nothing on a mouse click. */
+.wpuf-onboarding-btn-primary:focus,
+.wpuf-onboarding-btn-white:focus,
+body.wpuf-onboarding-body a:focus,
+body.wpuf-onboarding-body summary:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.wpuf-onboarding-btn-primary:focus-visible,
+.wpuf-onboarding-btn-white:focus-visible,
+body.wpuf-onboarding-body a:focus-visible,
+body.wpuf-onboarding-body summary:focus-visible {
+    outline: 2px solid #059669;
+    outline-offset: 2px;
+}
+
 #wpuf-onboarding-confetti {
     position: fixed;
     top: 0;
@@ -1050,4 +1068,35 @@
     .wpuf-onboarding-grid.is-thirds {
         grid-template-columns: minmax(0, 1fr);
     }
+}
+
+/* Confirm box of the features step (switching off a feature that is in use). */
+.wpuf-onboarding-confirm {
+    margin-top: 16px;
+    padding: 16px;
+    border: 1px solid #fcd34d;
+    border-left-width: 4px;
+    border-radius: 6px;
+    background: #fffbeb;
+    color: #92400e;
+}
+
+.wpuf-onboarding-confirm[hidden] {
+    display: none;
+}
+
+.wpuf-onboarding-confirm p {
+    margin: 0 0 12px;
+    font-size: 14px;
+    line-height: 20px;
+}
+
+.wpuf-onboarding-confirm strong {
+    display: block;
+    margin-bottom: 4px;
+}
+
+.wpuf-onboarding-confirm-actions {
+    display: flex;
+    gap: 12px;
 }

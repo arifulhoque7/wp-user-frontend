@@ -159,6 +159,8 @@ class Onboarding {
             $parent = wpuf()->admin->menu->parent_slug;
         }
 
+        $saved = $this->get_features();
+
         foreach ( $this->get_feature_menus() as $feature => $slugs ) {
             if ( in_array( $feature, $saved, true ) || ! is_array( $slugs ) ) {
                 continue;
@@ -374,6 +376,13 @@ class Onboarding {
 
         if ( ! is_array( $saved ) ) {
             return array_keys( $this->get_feature_definitions() );
+        }
+
+        // A directory that is running counts as picked, wherever it was switched
+        // on (Modules screen, an earlier run): the wizard shows it ticked and
+        // never switches it off without being told to.
+        if ( ! in_array( 'user_directory', $saved, true ) && $this->is_directory_active() ) {
+            $saved[] = 'user_directory';
         }
 
         return $saved;
@@ -890,6 +899,13 @@ class Onboarding {
         $picked = isset( $_POST['features'] ) ? array_map( 'sanitize_key', wp_unslash( (array) $_POST['features'] ) ) : [];
 
         $picked = array_values( array_intersect( $allowed, $picked ) );
+
+        // Switching off a directory that is in use takes the front end pages of
+        // the site with it, so it needs the admin's explicit yes (the confirm
+        // box of the step). Without it the directory stays on and stays picked.
+        if ( ! in_array( 'user_directory', $picked, true ) && $this->is_directory_active() && ! $this->posted( 'confirm_directory_off' ) ) {
+            $picked = array_values( array_intersect( $allowed, array_merge( $picked, [ 'user_directory' ] ) ) );
+        }
 
         update_option( self::FEATURES_OPTION, $picked );
 
