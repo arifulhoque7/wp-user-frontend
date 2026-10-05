@@ -197,7 +197,7 @@ export default function useFormSave() {
                     markClean();
                 }, 500 );
 
-                showToast( __( 'Form data saved.', 'wp-user-frontend' ) );
+                showToast( __( 'Saved form data', 'wp-user-frontend' ) );
                 fireAfterSave();
             },
 

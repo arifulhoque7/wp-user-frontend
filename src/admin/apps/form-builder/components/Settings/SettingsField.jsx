@@ -18,6 +18,7 @@ import CardRadioField from './fields/CardRadioField';
 import InlineFieldsGroup from './fields/InlineFieldsGroup';
 import SubmitConditionalLogic from '../ConditionalLogic/SubmitConditionalLogic';
 import IntegrationConditionalLogic from '../ConditionalLogic/IntegrationConditionalLogic';
+import copyMailTag from '../../utils/copyMailTag';
 import TaxonomyDefaults from './fields/TaxonomyDefaults';
 
 const FIELD_MAP = {
@@ -182,7 +183,7 @@ function SettingsFieldControl( { fieldKey, field, name, value, onChange, setting
                 onChange={ onChange }
             />
             { field.long_help && (
-                <RawHTML className="text-sm mt-4 wpuf-long-help">{ field.long_help }</RawHTML>
+                <RawHTML className="text-sm mt-4 wpuf-long-help" onClick={ copyMailTag }>{ field.long_help }</RawHTML>
             ) }
         </div>
     );
