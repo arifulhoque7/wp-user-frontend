@@ -5,10 +5,11 @@ import SettingHelpText from './SettingHelpText';
  * Text meta input for field settings (Vue field-text-meta), on the shared
  * TextInput wrapper (4.4c).
  *
- * Meta keys are read-only for saved fields (is_read_only or not is_new).
+ * Read-only only when the option declares it (`is_read_only`), as develop:
+ * a saved field's meta key can be renamed (owner 2026-10-05).
  */
-export default function TextMetaInput( { optionField, field, value, onChange } ) {
-    const isReadOnly = !! optionField.is_read_only || ! field.is_new;
+export default function TextMetaInput( { optionField, value, onChange } ) {
+    const isReadOnly = !! optionField.is_read_only;
 
     return (
         <div className="panel-field-opt panel-field-opt-text panel-field-opt-text-meta">
