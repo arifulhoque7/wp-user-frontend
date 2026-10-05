@@ -706,21 +706,6 @@ class Admin_Subscription {
     }
 
     /**
-     * Enqueue script for profile
-     *
-     * @return void
-     */
-    public function enqueue_profile_script() {
-        $screen = get_current_screen();
-
-        if ( 'profile' != $screen->base ) {
-            return;
-        }
-
-        // wp_enqueue_script( 'wpuf-admin-profile-subs', WPUF_ASSET_URI . '/js/admin-profile-subs.js', [ 'jquery' ] );
-    }
-
-    /**
      * Option fields for date type
      *
      * @param string $selected

@@ -69,29 +69,6 @@ class Admin_Form_Builder {
     }
 
     /**
-     * Add buttons in form submit area
-     *
-     * @since 2.5
-     *
-     * @return void
-     */
-    public function add_form_submit_area() {
-        ?>
-        <input @click.prevent="" type="submit" name="submit" :value="post_form_settings.submit_text">
-
-        <a
-            v-if="post_form_settings.draft_post"
-            @click.prevent=""
-            href="#"
-            class="btn"
-            id="wpuf-post-draft"
-        >
-            <?php esc_html_e( 'Save Draft', 'wp-user-frontend' ); ?>
-        </a>
-        <?php
-    }
-
-    /**
      * Enqueue admin scripts
      *
      * @since 2.5
@@ -116,9 +93,6 @@ class Admin_Form_Builder {
         // as develop's wp_editor() did.
         wp_enqueue_editor();
 
-        // Vue 2 scripts — replaced by React form builder.
-        // wp_enqueue_script( 'wpuf-vue' );
-        // wp_enqueue_script( 'wpuf-vuex' );
         wp_enqueue_script( 'wpuf-subscriptions' );
         wp_enqueue_script( 'wpuf-sweetalert2' );
         wp_enqueue_script( 'wpuf-jquery-scrollTo' );

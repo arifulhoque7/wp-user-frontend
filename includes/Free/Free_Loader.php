@@ -10,7 +10,6 @@ use WeDevs\Wpuf\Admin\Forms\Post\Templates\Pro_Form_Preview_Press_Release;
 use WeDevs\Wpuf\Admin\Forms\Post\Templates\Pro_Form_Preview_Professional_Video;
 use WeDevs\Wpuf\Admin\Forms\Post\Templates\Pro_Form_Preview_Testimonial;
 use WeDevs\Wpuf\Admin\Forms\Post\Templates\Pro_Form_Preview_Volunteer;
-use WeDevs\Wpuf\Pro\Admin\Coupon_Elements;
 use WeDevs\Wpuf\Hooks\Form_Settings_Cleanup;
 
 class Free_Loader extends Pro_Prompt {
@@ -27,24 +26,9 @@ class Free_Loader extends Pro_Prompt {
     public function run_hooks() {
         add_action( 'add_meta_boxes_wpuf_forms', [ $this, 'add_meta_box_post' ], 99 );
 
-        add_action( 'wpuf_form_buttons_custom', [ $this, 'wpuf_form_buttons_custom_runner' ] );
-        add_action( 'wpuf_form_buttons_other', [ $this, 'wpuf_form_buttons_other_runner' ] );
-        add_action( 'wpuf_edit_form_area_profile', [ $this, 'wpuf_edit_form_area_profile_runner' ] );
-        add_action( 'registration_setting', [ $this, 'registration_setting_runner' ] );
-        add_action( 'wpuf_check_post_type', [ $this, 'wpuf_check_post_type_runner' ], 10, 2 );
-        add_action( 'wpuf_form_custom_taxonomies', [ $this, 'wpuf_form_custom_taxonomies_runner' ] );
-        add_action( 'wpuf_conditional_field_render_hook', [ $this, 'wpuf_conditional_field_render_hook_runner' ], 10, 3 );
-
-        //coupon
-        add_action( 'wpuf_coupon_settings_form', [ $this, 'wpuf_coupon_settings_form_runner' ] );
-        add_action( 'wpuf_check_save_permission', [ $this, 'wpuf_check_save_permission_runner' ], 10, 2 );
-
         // admin menu
         add_action( 'wpuf_admin_menu', [ $this, 'admin_menu' ] );
         add_action( 'wpuf_admin_menu_top', [ $this, 'admin_menu_top' ] );
-        add_action( 'wpuf_form_setting', [ $this, 'form_setting_runner' ], 10, 2 );
-        add_action( 'wpuf_form_post_expiration', [ $this, 'wpuf_form_post_expiration_runner' ] );
-        add_action( 'wpuf_form_settings_post_notification', [ $this, 'post_notification_hook_runner' ] );
 
         // Free module toggle AJAX
         add_action( 'wp_ajax_wpuf_toggle_free_module', [ $this, 'toggle_free_module' ] );
@@ -274,7 +258,7 @@ class Free_Loader extends Pro_Prompt {
                 'icon'           => 'dashicons-search',
                 'class'          => 'pro-preview-html',
                 'is_pro_preview' => true,
-            ]
+            ],
         ];
 
         return array_merge( $sections, $new_sections );
@@ -293,8 +277,10 @@ class Free_Loader extends Pro_Prompt {
         $crown_icon_path = WPUF_ROOT . '/assets/images/pro-badge.svg';
         $settings_fields['wpuf_general'][] = [
             'name'           => 'comments_per_page',
-            'label'          => __( 'Comments Per Page',
-                                    'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . WPUF_ASSET_URI . '/images/pro-badge.svg" alt="PRO">' . '</span>',
+            'label'          => __(
+                'Comments Per Page',
+                'wp-user-frontend'
+            ) . '<span class="pro-icon"> <img src="' . WPUF_ASSET_URI . '/images/pro-badge.svg" alt="PRO"></span>',
             'desc'           => __( 'Show how many comments per page in comments add-on', 'wp-user-frontend' ),
             'type'           => 'number',
             'default'        => '20',
@@ -303,8 +289,10 @@ class Free_Loader extends Pro_Prompt {
         ];
         $settings_fields['wpuf_general'][] = [
             'name'           => 'ipstack_key',
-            'label'          => __( 'Ipstack API Key',
-                                    'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . WPUF_ASSET_URI . '/images/pro-badge.svg" alt="PRO">' . '</span>',
+            'label'          => __(
+                'Ipstack API Key',
+                'wp-user-frontend'
+            ) . '<span class="pro-icon"> <img src="' . WPUF_ASSET_URI . '/images/pro-badge.svg" alt="PRO"></span>',
             'desc'           => sprintf(
             // translators: %1$s: opening anchor tag, %2$s: closing anchor tag
                 __( '%1$sRegister here%2$s to get your free ipstack api key', 'wp-user-frontend' ),
@@ -315,19 +303,27 @@ class Free_Loader extends Pro_Prompt {
         ];
         $settings_fields['wpuf_general'][] = [
             'name'           => 'gmap_api_key',
-            'label'          => __( 'Google Map API',
-                                    'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . WPUF_ASSET_URI . '/images/pro-badge.svg" alt="PRO">' . '</span>',
-            'desc'           => __( '<a target="_blank" href="https://developers.google.com/maps/documentation/javascript/get-api-key">API</a> key is needed to render Google Maps',
-                                    'wp-user-frontend' ),
+            'label'          => __(
+                'Google Map API',
+                'wp-user-frontend'
+            ) . '<span class="pro-icon"> <img src="' . WPUF_ASSET_URI . '/images/pro-badge.svg" alt="PRO"></span>',
+            'desc'           => __(
+                '<a target="_blank" href="https://developers.google.com/maps/documentation/javascript/get-api-key">API</a> key is needed to render Google Maps',
+                'wp-user-frontend'
+            ),
             'class'          => 'pro-preview',
             'is_pro_preview' => true,
         ];
         $settings_fields['wpuf_my_account'][] = [
             'name'           => 'show_edit_profile_menu',
-            'label'          => __( 'Edit Profile',
-                                    'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . WPUF_ASSET_URI . '/images/pro-badge.svg" alt="PRO">' . '</span>',
-            'desc'           => __( 'Allow user to update their profile information from the account page',
-                                    'wp-user-frontend' ),
+            'label'          => __(
+                'Edit Profile',
+                'wp-user-frontend'
+            ) . '<span class="pro-icon"> <img src="' . WPUF_ASSET_URI . '/images/pro-badge.svg" alt="PRO"></span>',
+            'desc'           => __(
+                'Allow user to update their profile information from the account page',
+                'wp-user-frontend'
+            ),
             'type'           => 'checkbox',
             'default'        => 'off',
             'class'          => 'pro-preview',
@@ -335,10 +331,14 @@ class Free_Loader extends Pro_Prompt {
         ];
         $settings_fields['wpuf_my_account'][] = [
             'name'           => 'edit_profile_form',
-            'label'          => __( 'Profile Form',
-                                    'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . WPUF_ASSET_URI . '/images/pro-badge.svg" alt="PRO">' . '</span>',
-            'desc'           => __( 'User will use this form to update their information from the account page,',
-                                    'wp-user-frontend' ),
+            'label'          => __(
+                'Profile Form',
+                'wp-user-frontend'
+            ) . '<span class="pro-icon"> <img src="' . WPUF_ASSET_URI . '/images/pro-badge.svg" alt="PRO"></span>',
+            'desc'           => __(
+                'User will use this form to update their information from the account page,',
+                'wp-user-frontend'
+            ),
             'type'           => 'select',
             'options'        => [ 'Default Form' ],
             'class'          => 'pro-preview',
@@ -346,10 +346,14 @@ class Free_Loader extends Pro_Prompt {
         ];
         $settings_fields['wpuf_profile'][] = [
             'name'           => 'avatar_size',
-            'label'          => __( 'Avatar Size',
-                                    'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . WPUF_ASSET_URI . '/images/pro-badge.svg" alt="PRO">' . '</span>',
-            'desc'           => __( 'Avatar size to crop when upload using the registration/profile form.(e.g:100x100)',
-                                    'wp-user-frontend' ),
+            'label'          => __(
+                'Avatar Size',
+                'wp-user-frontend'
+            ) . '<span class="pro-icon"> <img src="' . WPUF_ASSET_URI . '/images/pro-badge.svg" alt="PRO"></span>',
+            'desc'           => __(
+                'Avatar size to crop when upload using the registration/profile form.(e.g:100x100)',
+                'wp-user-frontend'
+            ),
             'type'           => 'text',
             'default'        => '100x100',
             'class'          => 'pro-preview',
@@ -357,94 +361,120 @@ class Free_Loader extends Pro_Prompt {
         ];
         $settings_fields['wpuf_profile'][] = [
             'name'           => 'pending_user_message',
-            'label'          => __( 'Pending User Message',
-                                    'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . WPUF_ASSET_URI . '/images/pro-badge.svg" alt="PRO">' . '</span>',
+            'label'          => __(
+                'Pending User Message',
+                'wp-user-frontend'
+            ) . '<span class="pro-icon"> <img src="' . WPUF_ASSET_URI . '/images/pro-badge.svg" alt="PRO"></span>',
             'desc'           => __( 'Pending user will see this message when try to log in.', 'wp-user-frontend' ),
-            'default'        => __( '<strong>ERROR:</strong> Your account has to be approved by an administrator before you can login.',
-                                    'wp-user-frontend' ),
+            'default'        => __(
+                '<strong>ERROR:</strong> Your account has to be approved by an administrator before you can login.',
+                'wp-user-frontend'
+            ),
             'type'           => 'textarea',
             'class'          => 'pro-preview',
             'is_pro_preview' => true,
         ];
         $settings_fields['wpuf_profile'][] = [
             'name'           => 'denied_user_message',
-            'label'          => __( 'Denied User Message',
-                                    'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . WPUF_ASSET_URI . '/images/pro-badge.svg" alt="PRO">' . '</span>',
+            'label'          => __(
+                'Denied User Message',
+                'wp-user-frontend'
+            ) . '<span class="pro-icon"> <img src="' . WPUF_ASSET_URI . '/images/pro-badge.svg" alt="PRO"></span>',
             'desc'           => __( 'Denied user will see this message when try to log in.', 'wp-user-frontend' ),
-            'default'        => __( '<strong>ERROR:</strong> Your account has been denied by an administrator, please contact admin to approve your account.',
-                                    'wp-user-frontend' ),
+            'default'        => __(
+                '<strong>ERROR:</strong> Your account has been denied by an administrator, please contact admin to approve your account.',
+                'wp-user-frontend'
+            ),
             'type'           => 'textarea',
             'class'          => 'pro-preview',
             'is_pro_preview' => true,
         ];
         $settings_fields['wpuf_mails'][] = [
             'name'           => 'subscription_setting',
-            'label'          => __( '<span class="dashicons dashicons-money"></span> Subscription',
-                                    'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . WPUF_ASSET_URI . '/images/pro-badge.svg" alt="PRO">' . '</span>',
+            'label'          => __(
+                '<span class="dashicons dashicons-money"></span> Subscription',
+                'wp-user-frontend'
+            ) . '<span class="pro-icon"> <img src="' . WPUF_ASSET_URI . '/images/pro-badge.svg" alt="PRO"></span>',
             'type'           => 'html',
             'class'          => 'subscription-setting pro-preview-html',
             'is_pro_preview' => true,
         ];
         $settings_fields['wpuf_mails'][] = [
             'name'           => 'email_setting',
-            'label'          => __( '<span class="dashicons dashicons-admin-generic"></span> Template Settings',
-                                    'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . WPUF_ASSET_URI . '/images/pro-badge.svg" alt="PRO">' . '</span>',
+            'label'          => __(
+                '<span class="dashicons dashicons-admin-generic"></span> Template Settings',
+                'wp-user-frontend'
+            ) . '<span class="pro-icon"> <img src="' . WPUF_ASSET_URI . '/images/pro-badge.svg" alt="PRO"></span>',
             'type'           => 'html',
             'class'          => 'email-setting pro-preview-html',
             'is_pro_preview' => true,
         ];
         $settings_fields['wpuf_mails'][] = [
             'name'           => 'reset_email_setting',
-            'label'          => __( '<span class="dashicons dashicons-unlock"></span> Reset Email',
-                                    'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . WPUF_ASSET_URI . '/images/pro-badge.svg" alt="PRO">' . '</span>',
+            'label'          => __(
+                '<span class="dashicons dashicons-unlock"></span> Reset Email',
+                'wp-user-frontend'
+            ) . '<span class="pro-icon"> <img src="' . WPUF_ASSET_URI . '/images/pro-badge.svg" alt="PRO"></span>',
             'type'           => 'html',
             'class'          => 'reset-email-setting pro-preview-html',
             'is_pro_preview' => true,
         ];
         $settings_fields['wpuf_mails'][] = [
             'name'           => 'confirmation_email_setting',
-            'label'          => __( '<span class="dashicons dashicons-email-alt"></span> Resend Confirmation Email',
-                                    'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . WPUF_ASSET_URI . '/images/pro-badge.svg" alt="PRO">' . '</span>',
+            'label'          => __(
+                '<span class="dashicons dashicons-email-alt"></span> Resend Confirmation Email',
+                'wp-user-frontend'
+            ) . '<span class="pro-icon"> <img src="' . WPUF_ASSET_URI . '/images/pro-badge.svg" alt="PRO"></span>',
             'type'           => 'html',
             'class'          => 'confirmation-email-setting pro-preview-html',
             'is_pro_preview' => true,
         ];
         $settings_fields['wpuf_mails'][] = [
             'name'           => 'pending_user_email',
-            'label'          => __( '<span class="dashicons dashicons-groups"></span> Pending User Email',
-                                    'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . WPUF_ASSET_URI . '/images/pro-badge.svg" alt="PRO">' . '</span>',
+            'label'          => __(
+                '<span class="dashicons dashicons-groups"></span> Pending User Email',
+                'wp-user-frontend'
+            ) . '<span class="pro-icon"> <img src="' . WPUF_ASSET_URI . '/images/pro-badge.svg" alt="PRO"></span>',
             'type'           => 'html',
             'class'          => 'pending-user-email pro-preview-html',
             'is_pro_preview' => true,
         ];
         $settings_fields['wpuf_mails'][] = [
             'name'           => 'denied_user_email',
-            'label'          => __( '<span class="dashicons dashicons-dismiss"></span> Denied User Email',
-                                    'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . WPUF_ASSET_URI . '/images/pro-badge.svg" alt="PRO">' . '</span>',
+            'label'          => __(
+                '<span class="dashicons dashicons-dismiss"></span> Denied User Email',
+                'wp-user-frontend'
+            ) . '<span class="pro-icon"> <img src="' . WPUF_ASSET_URI . '/images/pro-badge.svg" alt="PRO"></span>',
             'type'           => 'html',
             'class'          => 'denied-user-email pro-preview-html',
             'is_pro_preview' => true,
         ];
         $settings_fields['wpuf_mails'][] = [
             'name'           => 'approved_user_email',
-            'label'          => __( '<span class="dashicons dashicons-smiley"></span> Approved User Email',
-                                    'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . WPUF_ASSET_URI . '/images/pro-badge.svg" alt="PRO">' . '</span>',
+            'label'          => __(
+                '<span class="dashicons dashicons-smiley"></span> Approved User Email',
+                'wp-user-frontend'
+            ) . '<span class="pro-icon"> <img src="' . WPUF_ASSET_URI . '/images/pro-badge.svg" alt="PRO"></span>',
             'type'           => 'html',
             'class'          => 'approved-user-email pro-preview-html',
             'is_pro_preview' => true,
         ];
         $settings_fields['wpuf_mails'][] = [
             'name'           => 'account_activated_user_email',
-            'label'          => __( '<span class="dashicons dashicons-smiley"></span> Account Activated Email',
-                                    'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . WPUF_ASSET_URI . '/images/pro-badge.svg" alt="PRO">' . '</span>',
+            'label'          => __(
+                '<span class="dashicons dashicons-smiley"></span> Account Activated Email',
+                'wp-user-frontend'
+            ) . '<span class="pro-icon"> <img src="' . WPUF_ASSET_URI . '/images/pro-badge.svg" alt="PRO"></span>',
             'type'           => 'html',
             'class'          => 'account-activated-user-email pro-preview-html',
             'is_pro_preview' => true,
         ];
         $settings_fields['wpuf_mails'][] = [
             'name'           => 'approved_post_email',
-            'label'          => __( '<span class="dashicons dashicons-saved"></span> Approved Post Email',
-                                    'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . WPUF_ASSET_URI . '/images/pro-badge.svg" alt="PRO">' . '</span>',
+            'label'          => __(
+                '<span class="dashicons dashicons-saved"></span> Approved Post Email',
+                'wp-user-frontend'
+            ) . '<span class="pro-icon"> <img src="' . WPUF_ASSET_URI . '/images/pro-badge.svg" alt="PRO"></span>',
             'type'           => 'html',
             'class'          => 'approved-post-email pro-preview-html',
             'is_pro_preview' => true,
@@ -526,17 +556,23 @@ class Free_Loader extends Pro_Prompt {
                 'name'           => 'enabled',
                 'label'          => __( 'Enable Social Login', 'wp-user-frontend' ),
                 'type'           => 'checkbox',
-                'desc'           => __( 'Enabling this will add Social Icons under registration form to allow users to login or register using Social Profiles',
-                                        'wp-user-frontend' ),
+                'desc'           => __(
+                    'Enabling this will add Social Icons under registration form to allow users to login or register using Social Profiles',
+                    'wp-user-frontend'
+                ),
                 'is_pro_preview' => true,
             ],
             'facebook_app_label'   => [
                 'name'  => 'fb_app_label',
                 'label' => __( 'Facebook App Settings', 'wp-user-frontend' ),
                 'type'  => 'html',
-                'desc'  => '<a target="_blank" href="https://developers.facebook.com/apps/">' . __( 'Create an App',
-                                                                                                    'wp-user-frontend' ) . '</a>' . __( ' if you don\'t have one and fill App ID and App Secret below. ',
-                                                                                                                                'wp-user-frontend' ),
+                'desc'  => '<a target="_blank" href="https://developers.facebook.com/apps/">' . __(
+                    'Create an App',
+                    'wp-user-frontend'
+                ) . '</a>' . __(
+                    ' if you don\'t have one and fill App ID and App Secret below. ',
+                    'wp-user-frontend'
+                ),
             ],
             'facebook_app_url'     => [
                 'name'           => 'fb_app_url',
@@ -561,9 +597,13 @@ class Free_Loader extends Pro_Prompt {
                 'name'           => 'twitter_app_label',
                 'label'          => __( 'Twitter App Settings', 'wp-user-frontend' ),
                 'type'           => 'html',
-                'desc'           => '<a target="_blank" href="https://apps.twitter.com/">' . __( 'Create an App',
-                                                                                                 'wp-user-frontend' ) . '</a>' . __( ' if you don\'t have one and fill Consumer key and Consumer Secret below.',
-                                                                                                                                     'wp-user-frontend' ),
+                'desc'           => '<a target="_blank" href="https://apps.twitter.com/">' . __(
+                    'Create an App',
+                    'wp-user-frontend'
+                ) . '</a>' . __(
+                    ' if you don\'t have one and fill Consumer key and Consumer Secret below.',
+                    'wp-user-frontend'
+                ),
                 'is_pro_preview' => true,
             ],
             'twitter_app_url'      => [
@@ -645,9 +685,13 @@ class Free_Loader extends Pro_Prompt {
                 'name'           => 'instagram_app_label',
                 'label'          => __( 'Instagram App Settings', 'wp-user-frontend' ),
                 'type'           => 'html',
-                'desc'           => '<a target="_blank" href="https://www.instagram.com/developer/">' . __( 'Create an App',
-                                                                                                            'wp-user-frontend' ) . '</a>' . __( ' if you don\'t have one and fill Client ID and Client Secret below.',
-                                                                                                                                                'wp-user-frontend' ),
+                'desc'           => '<a target="_blank" href="https://www.instagram.com/developer/">' . __(
+                    'Create an App',
+                    'wp-user-frontend'
+                ) . '</a>' . __(
+                    ' if you don\'t have one and fill Client ID and Client Secret below.',
+                    'wp-user-frontend'
+                ),
                 'is_pro_preview' => true,
             ],
             'instagram_app_url'    => [
@@ -684,7 +728,7 @@ class Free_Loader extends Pro_Prompt {
                 'label'          => __( 'Avatar Size ', 'wp-user-frontend' ),
                 'desc'           => __( 'Set the image size of profile picture in frontend', 'wp-user-frontend' ),
                 'type'           => 'select',
-                'options'        => [ '32' => '32 x 32', ],
+                'options'        => [ '32' => '32 x 32' ],
                 'is_pro_preview' => true,
             ],
             [
@@ -693,9 +737,9 @@ class Free_Loader extends Pro_Prompt {
                 'type'    => 'radio',
                 'default' => 'layout',
                 'options' => [
-                    'layout'  => '<img class="profile-header" src="' . WPUF_ASSET_URI . '/images/profile-header-template-1.jpg' . '" />',
-                    'layout1' => '<img class="profile-header" src="' . WPUF_ASSET_URI . '/images/profile-header-template-2.jpg' . '" />',
-                    'layout2' => '<img class="profile-header" src="' . WPUF_ASSET_URI . '/images/profile-header-template-3.jpg' . '" />',
+                    'layout'  => '<img class="profile-header" src="' . WPUF_ASSET_URI . '/images/profile-header-template-1.jpg" />',
+                    'layout1' => '<img class="profile-header" src="' . WPUF_ASSET_URI . '/images/profile-header-template-2.jpg" />',
+                    'layout2' => '<img class="profile-header" src="' . WPUF_ASSET_URI . '/images/profile-header-template-3.jpg" />',
                 ],
                 'is_pro_preview' => true,
             ],
@@ -705,12 +749,12 @@ class Free_Loader extends Pro_Prompt {
                 'type'    => 'radio',
                 'default' => 'list',
                 'options' => [
-                    'list'  => '<img class="user-listing" src="' . WPUF_ASSET_URI . '/images/user-listing-template-1.jpg' . '" />',
-                    'list1' => '<img class="user-listing" src="' . WPUF_ASSET_URI . '/images/user-listing-template-2.jpg' . '" />',
-                    'list2' => '<img class="user-listing" src="' . WPUF_ASSET_URI . '/images/user-listing-template-3.jpg' . '" />',
-                    'list3' => '<img class="user-listing" src="' . WPUF_ASSET_URI . '/images/user-listing-template-4.jpg' . '" />',
-                    'list4' => '<img class="user-listing" src="' . WPUF_ASSET_URI . '/images/user-listing-template-5.jpg' . '" />',
-                    'list5' => '<img class="user-listing" src="' . WPUF_ASSET_URI . '/images/user-listing-template-6.jpg' . '" />',
+                    'list'  => '<img class="user-listing" src="' . WPUF_ASSET_URI . '/images/user-listing-template-1.jpg" />',
+                    'list1' => '<img class="user-listing" src="' . WPUF_ASSET_URI . '/images/user-listing-template-2.jpg" />',
+                    'list2' => '<img class="user-listing" src="' . WPUF_ASSET_URI . '/images/user-listing-template-3.jpg" />',
+                    'list3' => '<img class="user-listing" src="' . WPUF_ASSET_URI . '/images/user-listing-template-4.jpg" />',
+                    'list4' => '<img class="user-listing" src="' . WPUF_ASSET_URI . '/images/user-listing-template-5.jpg" />',
+                    'list5' => '<img class="user-listing" src="' . WPUF_ASSET_URI . '/images/user-listing-template-6.jpg" />',
                 ],
                 'is_pro_preview' => true,
             ],
@@ -727,8 +771,10 @@ class Free_Loader extends Pro_Prompt {
             [
                 'name'           => 'show_invoices',
                 'label'          => __( 'Show Invoices', 'wp-user-frontend' ),
-                'desc'           => __( 'Show Invoices option where <code>[wpuf_account]</code> is located',
-                                        'wp-user-frontend' ),
+                'desc'           => __(
+                    'Show Invoices option where <code>[wpuf_account]</code> is located',
+                    'wp-user-frontend'
+                ),
                 'type'           => 'checkbox',
                 'default'        => 'on',
                 'is_pro_preview' => true,
@@ -752,8 +798,10 @@ class Free_Loader extends Pro_Prompt {
             [
                 'name'           => 'set_from_address',
                 'label'          => __( 'From Address', 'wp-user-frontend' ),
-                'desc'           => __( 'This sets the provider information of the Invoice. Note: use the <xmp class="wpuf-xmp-tag"><br></xmp> tag to enter line breaks.',
-                                        'wp-user-frontend' ),
+                'desc'           => __(
+                    'This sets the provider information of the Invoice. Note: use the <xmp class="wpuf-xmp-tag"><br></xmp> tag to enter line breaks.',
+                    'wp-user-frontend'
+                ),
                 'type'           => 'textarea',
                 'is_pro_preview' => true,
             ],
@@ -767,8 +815,10 @@ class Free_Loader extends Pro_Prompt {
             [
                 'name'           => 'set_paragraph',
                 'label'          => __( 'Invoice Paragraph', 'wp-user-frontend' ),
-                'desc'           => __( 'This sets the payment information paragraph of the Invoice',
-                                        'wp-user-frontend' ),
+                'desc'           => __(
+                    'This sets the payment information paragraph of the Invoice',
+                    'wp-user-frontend'
+                ),
                 'type'           => 'textarea',
                 'is_pro_preview' => true,
             ],
@@ -849,15 +899,19 @@ class Free_Loader extends Pro_Prompt {
             [
                 'name'           => 'wpuf_tax_rates',
                 'label'          => '<strong>' . __( 'Tax Rates', 'wp-user-frontend' ) . '</strong>',
-                'desc'           => __( 'Add tax rates for specific regions. Enter a percentage, such as 5 for 5%',
-                                        'wp-user-frontend' ),
+                'desc'           => __(
+                    'Add tax rates for specific regions. Enter a percentage, such as 5 for 5%',
+                    'wp-user-frontend'
+                ),
                 'is_pro_preview' => true,
             ],
             [
                 'name'           => 'fallback_tax_rate',
                 'label'          => '<strong>' . __( 'Fallback Tax Rate', 'wp-user-frontend' ) . '</strong>',
-                'desc'           => __( 'Customers not in a specific rate will be charged this tax rate. Enter a percentage, such as 5 for 5%',
-                                        'wp-user-frontend' ),
+                'desc'           => __(
+                    'Customers not in a specific rate will be charged this tax rate. Enter a percentage, such as 5 for 5%',
+                    'wp-user-frontend'
+                ),
                 'type'           => 'number',
                 'default'        => 0,
                 'is_pro_preview' => true,
@@ -916,7 +970,7 @@ class Free_Loader extends Pro_Prompt {
             ],
             [
                 'name'           => 'avoid_indexing_profiles',
-                'label'          => __( 'Avoid indexing profile by search engines', 'wp-user-frontend' ) . '<span class="pro-icon"> ' . '<img src="' . WPUF_ASSET_URI . '/images/pro-badge.svg" alt="PRO">' . '</span>',
+                'label'          => __( 'Avoid indexing profile by search engines', 'wp-user-frontend' ) . '<span class="pro-icon"> <img src="' . WPUF_ASSET_URI . '/images/pro-badge.svg" alt="PRO"></span>',
                 'desc'           => __( 'Enable this to add a noindex meta tag to all user profile pages across directories. Useful if you want some profiles hidden from search engines.', 'wp-user-frontend' ),
                 'type'           => 'checkbox',
                 'default'        => 'off',
@@ -934,66 +988,16 @@ class Free_Loader extends Pro_Prompt {
      * @return void
      */
     public function add_meta_box_post() {
-        add_meta_box( 'wpuf-metabox-fields-banner', __( 'Upgrade to Pro', 'wp-user-frontend' ), [$this, 'show_banner_metabox'], 'wpuf_forms', 'side', 'core' );
+        add_meta_box( 'wpuf-metabox-fields-banner', __( 'Upgrade to Pro', 'wp-user-frontend' ), [ $this, 'show_banner_metabox' ], 'wpuf_forms', 'side', 'core' );
     }
 
     public function show_banner_metabox() {
-        printf( 'Upgrade to in <a href="%s" target="_blank">Pro Version</a> to get more fields and features.',esc_url( self::get_pro_url() )  );
-    }
-
-    public function wpuf_form_buttons_custom_runner() {
-        //add formbuilder widget pro buttons
-        Form_Element::add_form_custom_buttons();
-    }
-
-    public function wpuf_form_buttons_other_runner() {
-        Form_Element::add_form_other_buttons();
-    }
-
-    public function wpuf_form_post_expiration_runner() {
-        Form_Element::render_form_expiration_tab();
-    }
-
-    public function form_setting_runner( $form_settings, $post ) {
-        Form_Element::add_form_settings_content( $form_settings, $post );
-    }
-
-    public function post_notification_hook_runner() {
-        Form_Element::add_post_notification_content();
-    }
-
-    public function wpuf_edit_form_area_profile_runner() {
-        Form_Element::render_registration_form();
-    }
-
-    public function registration_setting_runner() {
-        Form_Element::render_registration_settings();
-    }
-
-    public function wpuf_check_post_type_runner( $post, $update ) {
-        Form_Element::check_post_type( $post, $update );
-    }
-
-    public function wpuf_form_custom_taxonomies_runner() {
-        Form_Element::render_custom_taxonomies_element();
-    }
-
-    public function wpuf_conditional_field_render_hook_runner( $field_id, $con_fields, $obj ) {
-        Form_Element::render_conditional_field( $field_id, $con_fields, $obj );
+        printf( 'Upgrade to in <a href="%s" target="_blank">Pro Version</a> to get more fields and features.', esc_url( self::get_pro_url() ) );
     }
 
     //subscription
     public function wpuf_admin_subscription_detail_runner( $sub_meta, $hidden_recurring_class, $hidden_trial_class, $obj ) {
         Subscription_Element::add_subscription_element( $sub_meta, $hidden_recurring_class, $hidden_trial_class, $obj );
-    }
-
-    //coupon
-    public function wpuf_coupon_settings_form_runner( $obj ) {
-        Coupon_Elements::add_coupon_elements( $obj );
-    }
-
-    public function wpuf_check_save_permission_runner( $post, $update ) {
-        Coupon_Elements::check_saving_capability( $post, $update );
     }
 
     /**
@@ -1060,10 +1064,44 @@ class Free_Loader extends Pro_Prompt {
                 <div class="modal-window-inner">
                     <div class="content-area">
                         <div class="popup-close-button">
-                            <?php echo wp_kses( $close_icon, array( 'svg' => ['xmlns' => true, 'width' => true, 'height' => true, 'viewBox' => true, 'fill' => true,] , 'path' => ['d' => true, 'fill' => true,] ) ); ?>
+                            <?php
+                            echo wp_kses(
+                                $close_icon, array(
+									'svg' => [
+										'xmlns' => true,
+										'width' => true,
+										'height' => true,
+										'viewBox' => true,
+										'fill' => true,
+									],
+									'path' => [
+										'd' => true,
+										'fill' => true,
+									],
+                                )
+                            );
+							?>
                         </div>
                         <div class="popup-diamond">
-                            <?php echo wp_kses( $diamond_icon , array('svg' => ['xmlns' => true, 'width' => true, 'height' => true, 'viewBox' => true, 'fill' => true,], 'path' => ['d' => true, 'fill' => true, 'stroke' => true, 'stroke-linecap' => true,] ) ); ?>
+                            <?php
+                            echo wp_kses(
+                                $diamond_icon, array(
+									'svg' => [
+										'xmlns' => true,
+										'width' => true,
+										'height' => true,
+										'viewBox' => true,
+										'fill' => true,
+									],
+									'path' => [
+										'd' => true,
+										'fill' => true,
+										'stroke' => true,
+										'stroke-linecap' => true,
+									],
+                                )
+                            );
+							?>
                         </div>
                         <div class="wpuf-popup-header">
                             <h2 class="font-orange header-one">Upgrade to</h2>
@@ -1073,7 +1111,25 @@ class Free_Loader extends Pro_Prompt {
                         <div class="wpuf-popup-list-area">
                             <div class="single-checklist">
                                 <div class="check-icon">
-                                    <?php echo wp_kses( $check_icon, array('svg' => ['xmlns' => true, 'width' => true, 'height' => true, 'viewBox' => true, 'fill' => true,], 'path' => ['d' => true, 'fill' => true, 'fill-rule' => true, 'clip-rule' => true,] ) ); ?>
+                                    <?php
+                                    echo wp_kses(
+                                        $check_icon, array(
+											'svg' => [
+												'xmlns' => true,
+												'width' => true,
+												'height' => true,
+												'viewBox' => true,
+												'fill' => true,
+											],
+											'path' => [
+												'd' => true,
+												'fill' => true,
+												'fill-rule' => true,
+												'clip-rule' => true,
+											],
+                                        )
+                                    );
+									?>
                                 </div>
                                 <div class="check-list">
                                     <p>Get custom <span class="bold font-black">Post Type</span> and <span class="bold font-black">Taxonomy</span> support with
@@ -1082,7 +1138,25 @@ class Free_Loader extends Pro_Prompt {
                             </div>
                             <div class="single-checklist">
                                 <div class="check-icon">
-                                    <?php echo wp_kses( $check_icon, array('svg' => ['xmlns' => true, 'width' => true, 'height' => true, 'viewBox' => true, 'fill' => true,], 'path' => ['d' => true, 'fill' => true, 'fill-rule' => true, 'clip-rule' => true,] ) ); ?>
+                                    <?php
+                                    echo wp_kses(
+                                        $check_icon, array(
+											'svg' => [
+												'xmlns' => true,
+												'width' => true,
+												'height' => true,
+												'viewBox' => true,
+												'fill' => true,
+											],
+											'path' => [
+												'd' => true,
+												'fill' => true,
+												'fill-rule' => true,
+												'clip-rule' => true,
+											],
+                                        )
+                                    );
+									?>
                                 </div>
                                 <div class="check-list">
                                     <p>Enable <span class="bold font-black">conditional logic</span> and <span class="bold font-black">multi-step</span><span class="line-break"></span> functionalities on your forms.</p>
@@ -1090,7 +1164,25 @@ class Free_Loader extends Pro_Prompt {
                             </div>
                             <div class="single-checklist">
                                 <div class="check-icon">
-                                    <?php echo wp_kses( $check_icon, array('svg' => ['xmlns' => true, 'width' => true, 'height' => true, 'viewBox' => true, 'fill' => true,], 'path' => ['d' => true, 'fill' => true, 'fill-rule' => true, 'clip-rule' => true,] ) ); ?>
+                                    <?php
+                                    echo wp_kses(
+                                        $check_icon, array(
+											'svg' => [
+												'xmlns' => true,
+												'width' => true,
+												'height' => true,
+												'viewBox' => true,
+												'fill' => true,
+											],
+											'path' => [
+												'd' => true,
+												'fill' => true,
+												'fill-rule' => true,
+												'clip-rule' => true,
+											],
+                                        )
+                                    );
+									?>
                                 </div>
                                 <div class="check-list">
                                     <p>Show or hide <span class="bold font-black">menus, pages,</span> and <span class="bold font-black">content</span> based on<span class="line-break"></span> user roles or login status of a user.</p>
@@ -1098,7 +1190,25 @@ class Free_Loader extends Pro_Prompt {
                             </div>
                             <div class="single-checklist">
                                 <div class="check-icon">
-                                <?php echo wp_kses( $check_icon, array('svg' => ['xmlns' => true, 'width' => true, 'height' => true, 'viewBox' => true, 'fill' => true,], 'path' => ['d' => true, 'fill' => true, 'fill-rule' => true, 'clip-rule' => true,] ) ); ?>
+                                <?php
+                                echo wp_kses(
+                                    $check_icon, array(
+										'svg' => [
+											'xmlns' => true,
+											'width' => true,
+											'height' => true,
+											'viewBox' => true,
+											'fill' => true,
+										],
+										'path' => [
+											'd' => true,
+											'fill' => true,
+											'fill-rule' => true,
+											'clip-rule' => true,
+										],
+                                    )
+                                );
+								?>
                                 </div>
                                 <div class="check-list">
                                     <p><span class="bold font-black">20+ Premium Modules</span> (Social Login, User<span class="line-break"></span> Directory, User Activity, Stripe, MailChimp, Private<span class="line-break"></span> Messaging, Zapier, & more)</p>
@@ -1106,10 +1216,33 @@ class Free_Loader extends Pro_Prompt {
                             </div>
                         </div>
                         <a href="<?php echo esc_url( self::get_upgrade_to_pro_popup_url() ); ?>"
-                           target="_blank"
-                           class="wpuf-button button-upgrade-to-pro">
+                            target="_blank"
+                            class="wpuf-button button-upgrade-to-pro">
                             <?php esc_html_e( 'Upgrade to PRO', 'wp-user-frontend' ); ?>
-                            <?php printf( '<span class="pro-icon"> %s</span>', wp_kses( $crown_icon, array('svg' => [ 'xmlns' => true, 'width' => true, 'height' => true, 'viewBox' => true, 'fill' => true ], 'path' => [ 'd' => true, 'fill' => true ], 'circle' => [ 'cx' => true, 'cy' => true, 'r' => true ], ) ) );  ?>
+                            <?php
+                            printf(
+                                '<span class="pro-icon"> %s</span>', wp_kses(
+                                    $crown_icon, array(
+										'svg' => [
+											'xmlns' => true,
+											'width' => true,
+											'height' => true,
+											'viewBox' => true,
+											'fill' => true,
+										],
+										'path' => [
+											'd' => true,
+											'fill' => true,
+										],
+										'circle' => [
+											'cx' => true,
+											'cy' => true,
+											'r' => true,
+										],
+                                    )
+                                )
+                            );
+							?>
                         </a>
                     </div>
                     <div class="slider-area">
@@ -1135,13 +1268,70 @@ class Free_Loader extends Pro_Prompt {
             <div class="modal-footer">
                 <div class="footer-feature">
                     <p>
-                        <?php echo wp_kses( $check_icon, array('svg' => ['xmlns' => true, 'width' => true, 'height' => true, 'viewBox' => true, 'fill' => true,], 'path' => ['d' => true, 'fill' => true, 'fill-rule' => true, 'clip-rule' => true,] ) ); ?> Industry leading 24x7 support
+                        <?php
+                        echo wp_kses(
+                            $check_icon, array(
+								'svg' => [
+									'xmlns' => true,
+									'width' => true,
+									'height' => true,
+									'viewBox' => true,
+									'fill' => true,
+								],
+								'path' => [
+									'd' => true,
+									'fill' => true,
+									'fill-rule' => true,
+									'clip-rule' => true,
+								],
+                            )
+                        );
+						?>
+                        Industry leading 24x7 support
                     </p>
                     <p>
-                        <?php echo wp_kses( $check_icon, array('svg' => ['xmlns' => true, 'width' => true, 'height' => true, 'viewBox' => true, 'fill' => true,], 'path' => ['d' => true, 'fill' => true, 'fill-rule' => true, 'clip-rule' => true,] ) ); ?> 14 days no questions asked refund policy
+                        <?php
+                        echo wp_kses(
+                            $check_icon, array(
+								'svg' => [
+									'xmlns' => true,
+									'width' => true,
+									'height' => true,
+									'viewBox' => true,
+									'fill' => true,
+								],
+								'path' => [
+									'd' => true,
+									'fill' => true,
+									'fill-rule' => true,
+									'clip-rule' => true,
+								],
+                            )
+                        );
+						?>
+                        14 days no questions asked refund policy
                     </p>
                     <p>
-                        <?php echo wp_kses( $check_icon, array('svg' => ['xmlns' => true, 'width' => true, 'height' => true, 'viewBox' => true, 'fill' => true,], 'path' => ['d' => true, 'fill' => true, 'fill-rule' => true, 'clip-rule' => true,] ) ); ?> Secured payment
+                        <?php
+                        echo wp_kses(
+                            $check_icon, array(
+								'svg' => [
+									'xmlns' => true,
+									'width' => true,
+									'height' => true,
+									'viewBox' => true,
+									'fill' => true,
+								],
+								'path' => [
+									'd' => true,
+									'fill' => true,
+									'fill-rule' => true,
+									'clip-rule' => true,
+								],
+                            )
+                        );
+						?>
+                        Secured payment
                     </p>
 
                 </div>
@@ -1203,7 +1393,8 @@ class Free_Loader extends Pro_Prompt {
                 </span>
             </h2>
             <div class="wp-list-table widefat wpuf-modules wpuf-pro-modules-preview">
-                <?php if ( $pro_modules ) {
+                <?php
+                if ( $pro_modules ) {
                     foreach ( $pro_modules as $slug => $module ) {
                         ?>
                         <div class="plugin-card">
@@ -1267,10 +1458,12 @@ class Free_Loader extends Pro_Prompt {
         wp_enqueue_script( 'wpuf-module' );
 
         // Localize script for free module toggle
-        wp_localize_script( 'wpuf-module', 'wpuf_free_modules', [
-            'ajaxurl' => admin_url( 'admin-ajax.php' ),
-            'nonce'   => wp_create_nonce( 'wpuf_toggle_free_module' ),
-        ] );
+        wp_localize_script(
+            'wpuf-module', 'wpuf_free_modules', [
+				'ajaxurl' => admin_url( 'admin-ajax.php' ),
+				'nonce'   => wp_create_nonce( 'wpuf_toggle_free_module' ),
+			]
+        );
     }
 
     /**
@@ -1314,11 +1507,13 @@ class Free_Loader extends Pro_Prompt {
             wp_send_json_error( [ 'message' => $result->get_error_message() ] );
         }
 
-        wp_send_json_success( [
-            'message' => 'active' === $status
-                ? __( 'Module activated successfully', 'wp-user-frontend' )
-                : __( 'Module deactivated successfully', 'wp-user-frontend' ),
-        ] );
+        wp_send_json_success(
+            [
+				'message' => 'active' === $status
+					? __( 'Module activated successfully', 'wp-user-frontend' )
+					: __( 'Module deactivated successfully', 'wp-user-frontend' ),
+			]
+        );
     }
 
     /**
@@ -1463,11 +1658,10 @@ class Free_Loader extends Pro_Prompt {
      * @return void
      */
     public function modules_page_contents() {
-
     }
 
     /**
-     * payment gateways for previewing in the Free version
+     * Payment gateways for previewing in the Free version
      *
      * @since 3.6.0
      *
@@ -1504,7 +1698,21 @@ class Free_Loader extends Pro_Prompt {
             $crown = sprintf( '<span class="pro-icon-title"> %s</span>', '<img src="' . WPUF_ASSET_URI . '/images/pro-badge.svg" alt="PRO">' );
         }
 
-        echo '<li><a href="#taxonomy-restriction"><span class="dashicons dashicons-image-filter"></span> ' . esc_html(__( 'Taxonomy Restriction ', 'wp-user-frontend' ) ) . wp_kses($crown, array('svg' => ['xmlns' => true, 'width' => true, 'height' => true, 'viewBox' => true, 'fill' => true,], 'path' => ['d' => true, 'fill' => true, ] ) ) . '</a></li>';
+        echo '<li><a href="#taxonomy-restriction"><span class="dashicons dashicons-image-filter"></span> ' . esc_html( __( 'Taxonomy Restriction ', 'wp-user-frontend' ) ) . wp_kses(
+            $crown, array(
+				'svg' => [
+					'xmlns' => true,
+					'width' => true,
+					'height' => true,
+					'viewBox' => true,
+					'fill' => true,
+				],
+				'path' => [
+					'd' => true,
+					'fill' => true,
+				],
+            )
+        ) . '</a></li>';
     }
 
     /**

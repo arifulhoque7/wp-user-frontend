@@ -2,7 +2,6 @@
 
 namespace WeDevs\Wpuf\Admin\Forms;
 
-use WeDevs\Wpuf\Admin\Subscription;
 use WeDevs\Wpuf\Traits\FieldableTrait;
 
 /**
@@ -168,7 +167,6 @@ class Admin_Form {
         }
         if ( ( 'edit' === $_GET['action'] ) && ! empty( $_GET['id'] ) ) {
             add_action( 'wpuf_form_builder_settings_tabs_post', [ $this, 'add_settings_tabs' ] );
-            add_action( 'wpuf-form-builder-settings-tab-contents-post', [ $this, 'add_settings_tab_contents' ] );
             add_filter( 'wpuf_form_fields_section_before', [ $this, 'add_post_field_section' ] );
 
             add_filter( 'wpuf_form_builder_js_deps', [ $this, 'js_dependencies' ] );
@@ -196,48 +194,6 @@ class Admin_Form {
     /**
      * Add settings tabs
      *
-     * @since 2.5
-     *
-     * @return void
-     */
-    public function add_settings_tab_contents() {
-        global $post;
-
-        $form_settings = wpuf_get_form_settings( $post->ID );
-        ?>
-
-        <div v-show="active_settings_tab === '#wpuf-metabox-settings'" id="wpuf-metabox-settings" class="group">
-            <?php include_once WPUF_ROOT . '/admin/html/form-settings-post.php'; ?>
-        </div>
-
-        <div v-show="active_settings_tab === '#wpuf-metabox-settings-update'" id="wpuf-metabox-settings-update" class="group">
-            <?php include_once WPUF_ROOT . '/admin/html/form-settings-post-edit.php'; ?>
-        </div>
-
-        <div v-show="active_settings_tab === '#wpuf-metabox-submission-restriction'" id="wpuf-metabox-submission-restriction" class="group">
-            <?php include_once WPUF_ROOT . '/admin/html/form-submission-restriction.php'; ?>
-        </div>
-
-        <div v-show="active_settings_tab === '#wpuf-metabox-settings-payment'" id="wpuf-metabox-settings-payment" class="group">
-            <?php include_once WPUF_ROOT . '/admin/html/form-settings-payment.php'; ?>
-        </div>
-
-        <div v-show="active_settings_tab === '#wpuf-metabox-settings-display'" id="wpuf-metabox-settings-display" class="group">
-            <?php include_once WPUF_ROOT . '/admin/html/form-settings-display.php'; ?>
-        </div>
-
-        <div v-show="active_settings_tab === '#wpuf-metabox-post_expiration'" id="wpuf-metabox-post_expiration" class="group wpuf-metabox-post_expiration wpuf-mt-4">
-            <?php wpuf()->admin->admin_form->form_post_expiration(); ?>
-        </div>
-
-        <?php do_action( 'wpuf_post_form_tab_content' ); ?>
-
-        <?php
-    }
-
-    /**
-     * Add settings tabs
-     *
      * Listener of `wpuf_form_builder_settings_tabs_post`. The Vue builder's
      * settings view it printed (admin/form-builder/views/post-form-settings.php)
      * is gone: the React builder renders the settings from
@@ -253,46 +209,6 @@ class Admin_Form {
      */
     public function add_settings_tabs() {
         do_action( 'wpuf_post_form_tab' );
-    }
-
-    /**
-     * Subscription dropdown
-     *
-     * @since 2.5
-     *
-     * @param string $selected
-     *
-     * @return void
-     */
-    public function subscription_dropdown( $selected = null ) {
-        $subscriptions_obj = new Subscription();
-        $subscriptions     = $subscriptions_obj->get_subscriptions();
-
-        printf( '<option>%s</option>', esc_html( __( '- Select -', 'wp-user-frontend' ) ) );
-
-        if ( ! $subscriptions ) {
-            return;
-        }
-
-        printf( '<option>%s</option>', esc_html( __( '- Select -', 'wp-user-frontend' ) ) );
-        foreach ( $subscriptions as $key => $subscription ) {
-            ?>
-            <option value="<?php echo esc_attr( $subscription->ID ); ?>" <?php selected( $selected, $subscription->ID ); ?> >
-                <?php echo esc_html( $subscription->post_title ); ?>
-            </option>
-            <?php
-        }
-    }
-
-    /**
-     * Settings for post expiration
-     *
-     * @since 2.2.7
-     *
-     * @global $post
-     */
-    public function form_post_expiration() {
-        do_action( 'wpuf_form_post_expiration' );
     }
 
     /**

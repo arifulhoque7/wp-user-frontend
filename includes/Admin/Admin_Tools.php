@@ -306,23 +306,6 @@ class Admin_Tools {
         exit();
     }
 
-    /**
-     * Formetted meta key value
-     *
-     * @param array $array
-     *
-     * @return array
-     */
-    public function formetted_meta_key_value( $array ) {
-        $result = [];
-
-        foreach ( $array as $key => $val ) {
-            $result[ $key ] = $val[0];
-        }
-
-        return $result;
-    }
-
     public function tool_page() {
         $msg                   = isset( $_GET['msg'] ) ? sanitize_text_field( wp_unslash( $_GET['msg'] ) ) : '';
         $text                  = '';
@@ -1152,20 +1135,6 @@ class Admin_Tools {
 
         wp_safe_redirect( add_query_arg( [ 'msg' => 'logout_menu_added' ], admin_url( 'admin.php?page=wpuf_tools&tab=tools' ) ) );
         exit;
-    }
-
-    /**
-     * Get logout URL info for display
-     *
-     * @since 4.2.10
-     *
-     * @return array
-     */
-    public function get_logout_url_info() {
-        return [
-            'url'   => wpuf_get_logout_url(),
-            'label' => __( 'Logout', 'wp-user-frontend' ),
-        ];
     }
 
     /**

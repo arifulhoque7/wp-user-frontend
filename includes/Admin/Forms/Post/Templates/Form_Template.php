@@ -20,9 +20,6 @@ class Form_Template {
         // post form templates
         // add_action( 'admin_footer', [ $this, 'render_post_form_templates' ] );
 
-        // form settings
-        add_action( 'wpuf_form_setting', [ $this, 'post_form_settings' ], 8, 2 );
-
         // frontend insert/update
         add_action( 'wpuf_add_post_after_insert', [ $this, 'post_form_submission' ], 10, 3 );
         add_action( 'wpuf_edit_post_after_update', [ $this, 'post_form_submission' ], 10, 3 );
@@ -189,36 +186,6 @@ class Form_Template {
         wp_safe_redirect( admin_url( 'admin.php?page=wpuf-post-forms&action=edit&id=' . $form_id ) );
 
         exit;
-    }
-
-    /**
-     * Add settings field to override a form template
-     *
-     * @param array  $form_settings
-     * @param object $post
-     *
-     * @return void
-     */
-    public function post_form_settings( $form_settings, $post ) {
-        $registry = wpuf_get_post_form_templates();
-        $selected = isset( $form_settings['form_template'] ) ? $form_settings['form_template'] : ''; ?>
-        <tr>
-            <th><?php esc_html_e( 'Form Template', 'wp-user-frontend' ); ?></th>
-            <td>
-                <select name="wpuf_settings[form_template]">
-                    <option value=""><?php esc_html_e( '&mdash; No Template &mdash;', 'wp-user-frontend' ); ?></option>
-                    <?php
-                    if ( $registry ) {
-                        foreach ( $registry as $key => $template ) {
-                            printf( '<option value="%s"%s>%s</option>' . "\n", esc_attr( $key ), esc_attr( selected( $selected, $key, false ) ), esc_html( $template->get_title() ) );
-                        }
-                    }
-                    ?>
-                </select>
-                <p class="description"><?php esc_html_e( 'If selected a form template, it will try to execute that integration options when new post created and updated.', 'wp-user-frontend' ); ?></p>
-            </td>
-        </tr>
-        <?php
     }
 
     /**
