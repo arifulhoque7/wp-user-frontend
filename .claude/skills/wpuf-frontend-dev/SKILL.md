@@ -208,7 +208,7 @@ Scripts and styles are registered in `includes/Assets.php`. When adding new asse
 
 ## Key Reference Files
 
--   `vite.config.mjs` — Vite configuration (3 entry points)
+-   `vite.config.mjs`: Vite configuration (3 entry points)
 -   `tailwind.config.js` — Tailwind with `wpuf-` prefix and scoped preflight
 -   `postcss.config.js` — PostCSS configuration
 -   `Gruntfile.js` — Legacy tasks (Less, i18n, release)
