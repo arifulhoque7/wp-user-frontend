@@ -17,6 +17,9 @@ module.exports = {
         './includes/Free/Free_Loader.php',
         './includes/Admin/template-parts/*.php',
         './admin/form-builder/views/*.php',
+        // Classes of the removed Vue settings view (task 5.1c), kept so the
+        // sheet does not change.
+        './tools/admin-css/src/legacy/*.classes.txt',
         // Vue cleanup: old Vue component PHP templates deleted
         // './admin/form-builder/assets/js/**/*.php',
         './src/admin/apps/form-builder/**/*.{js,jsx}',
