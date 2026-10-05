@@ -131,7 +131,7 @@ export default function ProviderTabs( { providers: allProviders, fields, renderF
                             key={ p.key }
                             data-settings-card={ p.key }
                             onClick={ () => setActive( p.key ) }
-                            className={ `relative flex h-[104px] w-[160px] flex-col items-center justify-center gap-2 rounded-lg border px-5 py-4 text-xs font-medium transition ${
+                            className={ `focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/40 relative flex h-[104px] w-[160px] flex-col items-center justify-center gap-2 rounded-lg border px-5 py-4 text-xs font-medium transition ${
                                 isViewed
                                     ? 'border-primary ring-1 ring-primary text-gray-900'
                                     : 'border-gray-200 text-gray-600 hover:border-gray-300'

@@ -1,6 +1,7 @@
 import { useSelect, useDispatch } from '@wordpress/data';
 import { __ } from '@wordpress/i18n';
 import { STORE_NAME } from '../../../../stores-react/settings/constants';
+import { Button } from '@wpuf/components';
 import MultiSelectChips from './MultiSelectChips';
 import TextField from './TextField';
 import WysiwygField from './WysiwygField';
@@ -13,6 +14,7 @@ import WysiwygField from './WysiwygField';
  * Data lives in the `role_email_templates` side-channel (`extra`), keyed by
  * email type → array of `{ roles, subject, body }`, mirroring the Pro option
  * `wpuf_role_based_email_templates`. Saved server-side via `wpuf_settings_saved`.
+ * Buttons on the shared Button since 4.6b.
  */
 const TEMPLATES_KEY = 'role_email_templates';
 const ROLES_KEY = 'email_role_options';
@@ -45,13 +47,9 @@ export default function RoleEmailTemplates( { field } ) {
                         <span className="text-sm font-semibold text-gray-900">
                             { __( 'Role-specific Template', 'wp-user-frontend' ) } #{ i + 1 }
                         </span>
-                        <button
-                            type="button"
-                            onClick={ () => remove( i ) }
-                            className="text-sm font-medium text-red-600 hover:text-red-700"
-                        >
+                        <Button variant="link" size="sm" className="text-red-600 font-medium enabled:hover:text-red-700" onClick={ () => remove( i ) }>
                             { __( 'Remove', 'wp-user-frontend' ) }
-                        </button>
+                        </Button>
                     </div>
                     <MultiSelectChips
                         field={ { label: __( 'Roles', 'wp-user-frontend' ), options: roles } }
@@ -73,13 +71,9 @@ export default function RoleEmailTemplates( { field } ) {
                     />
                 </div>
             ) ) }
-            <button
-                type="button"
-                onClick={ add }
-                className="rounded-md border border-gray-300! bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
+            <Button variant="secondary" className="font-medium" onClick={ add }>
                 + { __( 'Add New', 'wp-user-frontend' ) }
-            </button>
+            </Button>
         </div>
     );
 }

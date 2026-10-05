@@ -4,6 +4,7 @@
  * validation errors prominently instead of an easy-to-miss inline banner.
  */
 import { __ } from '@wordpress/i18n';
+import { Button } from '@wpuf/components';
 import ModalShell from './ModalShell';
 
 const TONES = {
@@ -25,28 +26,24 @@ export default function MessageModal( { title, message, onClose, tone = 'error',
     const toneStyle = TONES[ tone ] || TONES.error;
 
     return (
-        <ModalShell onClose={ onClose } labelledBy="wpuf-message-modal-title">
-            <span className={ `flex h-[88px] w-[88px] items-center justify-center rounded-full ${ toneStyle.ring }` }>
-                <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke={ toneStyle.stroke } strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d={ ICON_PATHS[ tone ] || ICON_PATHS.error } />
-                </svg>
-            </span>
-
-            <h1 id="wpuf-message-modal-title" className="m-0 mt-7 text-2xl font-extrabold text-gray-800">
-                { title }
-            </h1>
+        <ModalShell
+            onClose={ onClose }
+            title={ title }
+            icon={
+                <span className={ `flex h-[88px] w-[88px] items-center justify-center rounded-full ${ toneStyle.ring }` }>
+                    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke={ toneStyle.stroke } strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d={ ICON_PATHS[ tone ] || ICON_PATHS.error } />
+                    </svg>
+                </span>
+            }
+        >
             <p className="m-0 mt-3 max-w-md text-base font-medium leading-7 text-gray-500">
                 { message }
             </p>
-
-            <button
-                type="button"
-                data-primary
-                onClick={ onClose }
-                className="mt-9 h-[50px] rounded-md bg-primary px-8 text-base font-medium text-white! shadow-xs hover:bg-primaryHover"
-            >
+            { /* eslint-disable-next-line jsx-a11y/no-autofocus -- the dialog's one action */ }
+            <Button autoFocus className="mt-9 h-[50px] px-8 text-base font-medium" onClick={ onClose }>
                 { actionLabel || __( 'OK', 'wp-user-frontend' ) }
-            </button>
+            </Button>
         </ModalShell>
     );
 }

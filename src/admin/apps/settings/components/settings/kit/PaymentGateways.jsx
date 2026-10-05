@@ -116,7 +116,7 @@ export default function PaymentGateways( { fields, renderField, gatewayValue, on
                                 key={ gid }
                                 data-settings-card={ gid }
                                 onClick={ () => setViewed( gid ) }
-                                className={ `relative flex min-w-[150px] flex-col items-center justify-center gap-2 rounded-lg border px-5 py-4 text-sm font-medium transition ${
+                                className={ `focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/40 relative flex min-w-[150px] flex-col items-center justify-center gap-2 rounded-lg border px-5 py-4 text-sm font-medium transition ${
                                     isViewed
                                         ? 'border-primary ring-1 ring-primary text-gray-900'
                                         : 'border-gray-200 text-gray-600 hover:border-gray-300'

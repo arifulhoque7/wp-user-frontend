@@ -56,7 +56,7 @@ export default function SettingsNav( { ia, activeTab, onSelect, search, onSearch
                         type="button"
                         key={ tab.id }
                         onClick={ () => onSelect( tab.id ) }
-                        className={ `flex w-full items-center rounded-md px-3 py-2.5 text-left text-sm font-medium ${
+                        className={ `focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/40 flex w-full items-center rounded-md px-3 py-2.5 text-left text-sm font-medium ${
                             activeTab === tab.id
                                 ? 'bg-primary text-white'
                                 : 'text-gray-700 hover:bg-gray-100'

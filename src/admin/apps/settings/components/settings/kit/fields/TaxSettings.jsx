@@ -1,6 +1,7 @@
 import { useSelect, useDispatch } from '@wordpress/data';
 import { __ } from '@wordpress/i18n';
 import { STORE_NAME } from '../../../../stores-react/settings/constants';
+import { Button, NumberInput } from '@wpuf/components';
 import SelectDropdown from './SelectDropdown';
 
 /**
@@ -87,34 +88,26 @@ function Rates() {
                             />
                         </div>
                         <div className="relative w-24 shrink-0">
-                            <input
-                                type="number"
+                            <NumberInput
                                 step="0.0001"
                                 min="0"
                                 max="100"
                                 value={ row.rate || 0 }
-                                onChange={ ( e ) => update( i, { rate: e.target.value } ) }
-                                className="wpuf-no-spinner w-full rounded-md border border-gray-300 py-2.5 pl-3 pr-7 text-gray-700 shadow-xs focus:border-gray-300"
+                                onChange={ ( next ) => update( i, { rate: next } ) }
+                                aria-label={ __( 'Tax rate', 'wp-user-frontend' ) }
+                                className="wpuf-no-spinner w-full h-[42px] pl-3 pr-7 text-base text-gray-700"
                             />
                             <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-gray-400">%</span>
                         </div>
-                        <button
-                            type="button"
-                            onClick={ () => remove( i ) }
-                            className="shrink-0 text-sm font-medium text-red-600 hover:text-red-700"
-                        >
+                        <Button variant="link" size="sm" className="shrink-0 text-red-600 font-medium enabled:hover:text-red-700" onClick={ () => remove( i ) }>
                             { __( 'Remove', 'wp-user-frontend' ) }
-                        </button>
+                        </Button>
                     </div>
                 );
             } ) }
-            <button
-                type="button"
-                onClick={ add }
-                className="rounded-md border border-gray-300! bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
+            <Button variant="secondary" className="font-medium" onClick={ add }>
                 + { __( 'Add Rate', 'wp-user-frontend' ) }
-            </button>
+            </Button>
         </div>
     );
 }

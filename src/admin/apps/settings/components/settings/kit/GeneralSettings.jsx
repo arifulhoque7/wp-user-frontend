@@ -53,7 +53,7 @@ const OptionCard = ( { logo, label, viewed, checked, onView, onToggle, checkTitl
         data-settings-card={ label }
         onClick={ onView }
         title={ label }
-        className={ `relative flex h-[80px] w-[160px] items-center justify-center rounded-lg border-2 bg-white transition ${
+        className={ `focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/40 relative flex h-[80px] w-[160px] items-center justify-center rounded-lg border-2 bg-white transition ${
             pro
                 ? 'border-dashed border-gray-300 bg-gray-50 opacity-90 hover:opacity-100'
                 : viewed

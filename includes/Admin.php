@@ -108,7 +108,8 @@ class Admin {
 
         // phpcs:ignore WordPress.Security.NonceVerification.Recommended
         $page = isset( $_GET['page'] ) ? sanitize_text_field( wp_unslash( $_GET['page'] ) ) : '';
-        $selected_page = [ 'wpuf-post-forms', 'wpuf-profile-forms', 'wpuf_subscription', 'wpuf_subscriptions', 'wpuf_transaction', 'wpuf_tools' ];
+        // The settings screen shows the same header (4.6b): its changelog icon was an empty dot.
+        $selected_page = [ 'wpuf-post-forms', 'wpuf-profile-forms', 'wpuf_subscription', 'wpuf_subscriptions', 'wpuf_transaction', 'wpuf_tools', 'wpuf-settings' ];
 
         if ( in_array( $page, $selected_page, true ) ) {
             // Printed in the footer (task 2.5b): called here on `init`, its script

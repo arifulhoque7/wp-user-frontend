@@ -4,6 +4,7 @@ import apiFetch from '@wordpress/api-fetch';
 import { __ } from '@wordpress/i18n';
 import { STORE_NAME } from '../../../../stores-react/settings/constants';
 import { stripTags } from '../../utils';
+import { Button } from '@wpuf/components';
 import RadioCardsField from './RadioCardsField';
 import SelectDropdown from './SelectDropdown';
 import TextField from './TextField';
@@ -139,14 +140,9 @@ export default function AISettings( { fields, renderField } ) {
                 <div className="mt-6">
                     <div className="flex items-center justify-between">
                         <label className="text-sm text-gray-700 my-2">{ __( 'AI Model', 'wp-user-frontend' ) }</label>
-                        <button
-                            type="button"
-                            onClick={ fetchModels }
-                            disabled={ fetching }
-                            className="text-xs font-medium text-primary hover:underline disabled:opacity-50"
-                        >
+                        <Button variant="link" size="sm" className="text-xs font-medium" onClick={ fetchModels } disabled={ fetching }>
                             { fetching ? __( 'Fetching…', 'wp-user-frontend' ) : __( '↻ Fetch latest models', 'wp-user-frontend' ) }
-                        </button>
+                        </Button>
                     </div>
                     <SelectDropdown
                         field={ { options: models } }
@@ -161,14 +157,9 @@ export default function AISettings( { fields, renderField } ) {
             ) }
 
             <div className="mt-6 flex items-center gap-3">
-                <button
-                    type="button"
-                    onClick={ testConnection }
-                    disabled={ testing || ! ( keys[ provider ] || '' ).trim() }
-                    className="rounded-md border border-gray-300! bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-                >
+                <Button variant="secondary" className="font-medium" onClick={ testConnection } disabled={ testing || ! ( keys[ provider ] || '' ).trim() }>
                     { testing ? __( 'Testing…', 'wp-user-frontend' ) : __( 'Test Connection', 'wp-user-frontend' ) }
-                </button>
+                </Button>
                 { testResult && (
                     <span className={ `text-sm font-medium ${ testResult.ok ? 'text-emerald-600' : 'text-red-600' }` }>
                         { testResult.ok ? '✓ ' : '✕ ' }{ testResult.message }

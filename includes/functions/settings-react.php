@@ -394,9 +394,16 @@ function wpuf_profile_roles_react_save( $saved, $incoming, $extra ) {
         return;
     }
 
+    // The legacy form posted one select per role: the form id as a string,
+    // '' for a role without a form.
     $clean = [];
+    foreach ( array_keys( (array) apply_filters( 'wpuf_settings_user_roles', wpuf_get_user_roles() ) ) as $role ) {
+        $clean[ $role ] = '';
+    }
+
     foreach ( $extra['profile_role_forms']['map'] as $role => $form_id ) {
-        $clean[ sanitize_key( $role ) ] = absint( $form_id );
+        $form_id                        = absint( $form_id );
+        $clean[ sanitize_key( $role ) ] = $form_id ? (string) $form_id : '';
     }
 
     $val = get_option( 'wpuf_profile', [] );
