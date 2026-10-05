@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import * as fs from 'fs';
 import * as path from 'path';
 import { ParitySitePage } from '../pages/parity';
 import { parityDir, paritySite, paritySitesConfigured, parityWp } from '../utils/paritySites';
@@ -246,6 +247,94 @@ test.describe('Branch settings save', () => {
         } finally {
             restore('develop');
             restore('branch');
+        }
+    });
+
+    test('SET0012 : Classic view switch is per user, survives a legacy save, has footer links, a one-time notice and the third-party notice (4.6c, D12)', { tag: ['@Parity', '@Test_SET0012'] }, async ({ browser }) => {
+        test.setTimeout(240_000);
+        const branch = paritySite('branch');
+        const wp = (code: string) => parityWp(branch, ['eval', code]).trim();
+        const adminId = wp('echo get_users( [ "role" => "administrator", "number" => 1, "fields" => "ID" ] )[0];');
+        const state = () => JSON.parse(wp(`echo wp_json_encode( [ 'user' => get_user_meta( ${adminId}, 'wpuf_settings_ui_mode', true ), 'site' => get_option( 'wpuf_settings_ui_mode', null ), 'seen' => get_user_meta( ${adminId}, 'wpuf_settings_new_ui_seen', true ), 'flag' => get_option( 'wpuf_settings_new_ui_notice', null ) ] );`));
+        const before = state();
+        const reset = () => wp(`delete_user_meta( ${adminId}, 'wpuf_settings_ui_mode' ); delete_user_meta( ${adminId}, 'wpuf_settings_new_ui_seen' ); delete_option( 'wpuf_settings_ui_mode' ); delete_option( 'wpuf_settings_new_ui_notice' );`);
+        const fixture = path.join(branch.wpPath, 'wp-content', 'mu-plugins', 'wpuf-parity-third-party-settings.php');
+        const generalBefore = wp('echo wp_json_encode( get_option( "wpuf_general", null ) );');
+
+        reset();
+        fs.mkdirSync(path.dirname(fixture), { recursive: true });
+        fs.copyFileSync(path.join(parityDir, 'wp', 'third-party-settings.php'), fixture);
+
+        try {
+            const admin = await ParitySitePage.doOpen(browser, branch);
+            const page = admin.page;
+            const root = page.locator('#wpuf-settings-root');
+            const url = '/wp-admin/admin.php?page=wpuf-settings';
+
+            // First visit after an upgrade: the one-time notice, then never again.
+            await page.goto(url);
+            await expect(root.locator('[data-settings-notice="new-ui"]'), 'one-time notice on the first visit').toBeVisible();
+            // Third-party settings the React screen cannot show.
+            const classicOnly = root.locator('[data-settings-notice="classic-only"]');
+            await expect(classicOnly).toContainText('Third Party Custom (wpuf-parity-third-party-settings.php)');
+            await expect(classicOnly).toContainText('wpuf_dashboard (wpuf-parity-third-party-settings.php)');
+            await page.reload();
+            await expect(root.locator('nav button').first()).toBeVisible();
+            await expect(root.locator('[data-settings-notice="new-ui"]'), 'notice shown once').toHaveCount(0);
+
+            // The notice link opens Classic view for this request only.
+            await root.locator('[data-settings-notice="classic-only"] a').click();
+            await expect(page.locator('.wpuf-settings-wrap'), 'classic screen').toBeVisible();
+            await expect(page.locator('input[name="wpuf_general[tp_custom]"]'), 'third-party field on the classic screen').toHaveCount(1);
+            expect(state().user, 'the request override stores nothing').toBe('');
+            await page.goto(url);
+            await expect(root, 'still the React screen').toBeVisible();
+
+            // Footer link: switch to Classic, stored for this user only.
+            await root.locator('a[data-settings-switch="footer"]').click();
+            await expect(page.locator('.wpuf-settings-wrap')).toBeVisible();
+            expect(state(), 'mode stored per user, site default untouched').toMatchObject({ user: 'legacy', site: null });
+
+            // A legacy save reloads in legacy mode.
+            const form = page.locator('form:has([name^="wpuf_general["])').first();
+            await Promise.all([page.waitForNavigation(), form.evaluate((el) => HTMLFormElement.prototype.submit.call(el))]);
+            await expect(page.locator('.wpuf-settings-wrap'), 'legacy mode after a legacy save').toBeVisible();
+            await expect(root).toHaveCount(0);
+
+            // Classic footer link: back to the new screen.
+            await page.locator('#wpfooter a', { hasText: 'Switch to the new settings screen' }).click();
+            await expect(root.locator('nav button').first()).toBeVisible();
+            expect(state().user).toBe('react');
+
+            // Site default legacy applies to a user who never chose; the request override wins.
+            wp(`delete_user_meta( ${adminId}, 'wpuf_settings_ui_mode' ); update_option( 'wpuf_settings_ui_mode', 'legacy' );`);
+            await page.goto(url);
+            await expect(page.locator('.wpuf-settings-wrap'), 'site default').toBeVisible();
+            await page.goto(`${url}&wpuf_settings_ui=react`);
+            await expect(root.locator('nav button').first(), 'request override').toBeVisible();
+
+            // A site that starts on this version gets no notice.
+            wp(`delete_option( 'wpuf_settings_ui_mode' ); delete_user_meta( ${adminId}, 'wpuf_settings_new_ui_seen' ); update_option( 'wpuf_settings_new_ui_notice', 'no' );`);
+            await page.goto(url);
+            await expect(root.locator('nav button').first()).toBeVisible();
+            await expect(root.locator('[data-settings-notice="new-ui"]'), 'no notice on a fresh install').toHaveCount(0);
+            await admin.doClose();
+        } finally {
+            fs.unlinkSync(fixture);
+            reset();
+            if ('' !== before.user) {
+                wp(`update_user_meta( ${adminId}, 'wpuf_settings_ui_mode', '${before.user}' );`);
+            }
+            if (null !== before.site) {
+                wp(`update_option( 'wpuf_settings_ui_mode', '${before.site}' );`);
+            }
+            if ('' !== before.seen) {
+                wp(`update_user_meta( ${adminId}, 'wpuf_settings_new_ui_seen', 1 );`);
+            }
+            if (null !== before.flag) {
+                wp(`update_option( 'wpuf_settings_new_ui_notice', '${before.flag}' );`);
+            }
+            parityWp(branch, 'null' === generalBefore ? ['option', 'delete', 'wpuf_general'] : ['option', 'update', 'wpuf_general', generalBefore, '--format=json']);
         }
     });
 });

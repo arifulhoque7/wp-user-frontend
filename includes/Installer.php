@@ -23,6 +23,10 @@ class Installer {
         if ( ! $installed ) {
             update_option( 'wpuf_installed', time() );
 
+            // A new site starts on the React settings screen: no "new settings
+            // screen" notice (shown once to sites that upgraded).
+            update_option( 'wpuf_settings_new_ui_notice', 'no', false );
+
             // Only a site seeing WPUF for the very first time is offered the guided
             // onboarding. Every later activation, including plugin updates and a
             // deactivate/reactivate on a site already in use, leaves this unset so

@@ -421,14 +421,16 @@ add_action( 'wpuf_settings_saved', 'wpuf_profile_roles_react_save', 10, 3 );
  * Whether the legacy (WeDevs_Settings_API) settings screen should render instead
  * of the React app.
  *
- * Resolution order (first match wins):
- *   1. `?wpuf_settings_ui=legacy|react` — per-request emergency override that
- *      needs no DB write, so a broken React build can still be bypassed.
+ * Resolution order (first match wins, design.md D12):
+ *   1. `?wpuf_settings_ui=legacy|react`: per-request override that needs no DB
+ *      write, so a broken React build can still be bypassed.
  *   2. `WPUF_LEGACY_SETTINGS` constant.
- *   3. `wpuf_settings_ui_mode` option ('react' default | 'legacy').
+ *   3. The current user's choice (user meta `wpuf_settings_ui_mode`).
+ *   4. The site default: `wpuf_settings_ui_mode` option ('react' | 'legacy').
+ * The `wpuf_use_legacy_settings` filter gets the result of 3 / 4.
  *
  * Both screens read/write the SAME wpuf_* options, so switching never loses or
- * forks data — they stay in sync by construction.
+ * forks data.
  *
  * @since WPUF_SINCE
  *
@@ -443,8 +445,6 @@ function wpuf_settings_use_legacy() {
         return true;
     }
 
-    $mode = get_option( 'wpuf_settings_ui_mode', 'react' );
-
     /**
      * Filter whether the legacy settings screen renders.
      *
@@ -452,12 +452,30 @@ function wpuf_settings_use_legacy() {
      *
      * @param bool $is_legacy
      */
-    return (bool) apply_filters( 'wpuf_use_legacy_settings', 'legacy' === $mode );
+    return (bool) apply_filters( 'wpuf_use_legacy_settings', 'legacy' === wpuf_settings_ui_mode() );
 }
 
 /**
- * Toggle the persisted settings UI mode (nonce + capability protected), then
- * redirect back to the settings page.
+ * The persisted settings UI mode of the current user: their own choice, else
+ * the site default.
+ *
+ * @since WPUF_SINCE
+ *
+ * @return string 'react' or 'legacy'
+ */
+function wpuf_settings_ui_mode() {
+    $user_mode = get_current_user_id() ? get_user_meta( get_current_user_id(), 'wpuf_settings_ui_mode', true ) : '';
+
+    if ( in_array( $user_mode, [ 'react', 'legacy' ], true ) ) {
+        return $user_mode;
+    }
+
+    return 'legacy' === get_option( 'wpuf_settings_ui_mode', 'react' ) ? 'legacy' : 'react';
+}
+
+/**
+ * Toggle the current user's settings UI mode (nonce + capability protected),
+ * then redirect back to the settings page. The site default is not changed.
  *
  * @since WPUF_SINCE
  *
@@ -476,8 +494,7 @@ function wpuf_settings_ui_switch() {
         return;
     }
 
-    $mode = get_option( 'wpuf_settings_ui_mode', 'react' );
-    update_option( 'wpuf_settings_ui_mode', 'legacy' === $mode ? 'react' : 'legacy' );
+    update_user_meta( get_current_user_id(), 'wpuf_settings_ui_mode', 'legacy' === wpuf_settings_ui_mode() ? 'react' : 'legacy' );
 
     wp_safe_redirect( admin_url( 'admin.php?page=wpuf-settings' ) );
     exit;
@@ -485,7 +502,7 @@ function wpuf_settings_ui_switch() {
 add_action( 'admin_init', 'wpuf_settings_ui_switch' );
 
 /**
- * Nonce-protected URL that toggles the settings UI mode.
+ * Nonce-protected URL that toggles the current user's settings UI mode.
  *
  * @since WPUF_SINCE
  *
@@ -496,6 +513,127 @@ function wpuf_settings_ui_switch_url() {
         admin_url( 'admin.php?page=wpuf-settings&wpuf_action=switch_settings_ui' ),
         'wpuf_switch_settings_ui'
     );
+}
+
+/**
+ * Whether to show the one-time "new settings screen" notice to the current
+ * user, and remember that it was shown. Only on sites that had WPUF before
+ * the React settings screen (a fresh install sets the option to 'no').
+ *
+ * @since WPUF_SINCE
+ *
+ * @return bool
+ */
+function wpuf_settings_new_ui_notice() {
+    $user_id = get_current_user_id();
+
+    if ( ! $user_id || 'no' === get_option( 'wpuf_settings_new_ui_notice' ) || get_user_meta( $user_id, 'wpuf_settings_new_ui_seen', true ) ) {
+        return false;
+    }
+
+    update_user_meta( $user_id, 'wpuf_settings_new_ui_seen', 1 );
+
+    return true;
+}
+
+/**
+ * Settings other plugins added that only the Classic screen can show: fields
+ * rendered by a PHP callback from outside WPUF (free, Pro and their modules
+ * have React parts), and section hooks (`wsa_form_top_*` / `wsa_form_bottom_*`)
+ * from outside WPUF that print form controls or scripts, which the React
+ * screen cannot run (design.md D12, override safety).
+ *
+ * @since WPUF_SINCE
+ *
+ * @return string[] Readable names, e.g. "Field label (plugin-folder)".
+ */
+function wpuf_settings_classic_only_items() {
+    global $wp_filter;
+
+    $items = [];
+    $roots = array_filter(
+        [
+            defined( 'WPUF_ROOT' ) ? trailingslashit( wp_normalize_path( WPUF_ROOT ) ) : '',
+            defined( 'WPUF_PRO_ROOT' ) ? trailingslashit( wp_normalize_path( WPUF_PRO_ROOT ) ) : '',
+        ]
+    );
+
+    $source = function ( $callback ) use ( $roots ) {
+        try {
+            if ( is_string( $callback ) && false !== strpos( $callback, '::' ) ) {
+                $callback = explode( '::', $callback, 2 );
+            }
+
+            if ( is_array( $callback ) && 2 === count( $callback ) ) {
+                $reflection = new ReflectionMethod( $callback[0], $callback[1] );
+            } elseif ( is_string( $callback ) || $callback instanceof Closure ) {
+                $reflection = new ReflectionFunction( $callback );
+            } else {
+                return '';
+            }
+        } catch ( ReflectionException $e ) {
+            return '';
+        }
+
+        $file = wp_normalize_path( (string) $reflection->getFileName() );
+
+        foreach ( $roots as $root ) {
+            if ( 0 === strpos( $file, $root ) ) {
+                return '';
+            }
+        }
+
+        foreach ( [ WP_PLUGIN_DIR, WPMU_PLUGIN_DIR, get_theme_root() ] as $dir ) {
+            $dir = trailingslashit( wp_normalize_path( $dir ) );
+
+            if ( 0 === strpos( $file, $dir ) ) {
+                return (string) strtok( substr( $file, strlen( $dir ) ), '/' );
+            }
+        }
+
+        return '' === $file ? '' : basename( $file );
+    };
+
+    foreach ( wpuf_settings_fields() as $section_id => $section_fields ) {
+        foreach ( (array) $section_fields as $field ) {
+            if ( empty( $field['callback'] ) || ! is_callable( $field['callback'] ) ) {
+                continue;
+            }
+
+            $from = $source( $field['callback'] );
+
+            if ( '' !== $from ) {
+                $label   = isset( $field['label'] ) ? wp_strip_all_tags( $field['label'] ) : '';
+                $items[] = ( '' !== $label ? $label : ( isset( $field['name'] ) ? $field['name'] : $section_id ) ) . ' (' . $from . ')';
+            }
+        }
+
+        foreach ( [ 'wsa_form_top_' . $section_id, 'wsa_form_bottom_' . $section_id ] as $hook ) {
+            if ( empty( $wp_filter[ $hook ] ) ) {
+                continue;
+            }
+
+            foreach ( $wp_filter[ $hook ]->callbacks as $callbacks ) {
+                foreach ( $callbacks as $callback ) {
+                    $from = $source( $callback['function'] );
+
+                    if ( '' === $from ) {
+                        continue;
+                    }
+
+                    ob_start();
+                    call_user_func( $callback['function'], [ 'id' => $section_id ] );
+                    $output = (string) ob_get_clean();
+
+                    if ( preg_match( '/<(input|select|textarea|button|script|form)\b/i', $output ) ) {
+                        $items[] = $section_id . ' (' . $from . ')';
+                    }
+                }
+            }
+        }
+    }
+
+    return array_values( array_unique( $items ) );
 }
 
 /**

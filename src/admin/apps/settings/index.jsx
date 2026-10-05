@@ -7,10 +7,10 @@
  */
 import { createRoot } from '@wordpress/element';
 import { useSelect, useDispatch } from '@wordpress/data';
-import { useEffect, useState, useCallback, useRef } from '@wordpress/element';
+import { useEffect, useState, useCallback, useRef, createInterpolateElement } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
-import { Button, PageHeader, PageShell, Tabs, WpufProviders } from '@wpuf/components';
+import { Button, PageFooter, PageHeader, PageShell, Tabs, WpufProviders } from '@wpuf/components';
 import SettingsNav from './components/settings/SettingsNav';
 import SettingsSection, { PROVIDER_SECTIONS } from './components/settings/SettingsSection';
 import { stripTags } from './components/settings/utils';
@@ -47,6 +47,8 @@ const SettingsApp = () => {
 
     const boot = window.wpuf_settings || {};
     const [ pendingTab, setPendingTab ] = useState( null );
+    const [ showNewUi, setShowNewUi ] = useState( !! boot.new_ui_notice );
+    const classicOnly = Array.isArray( boot.classic_only ) ? boot.classic_only : [];
     const [ activeSub, setActiveSub ] = useState( null );
     const [ footerLeft, setFooterLeft ] = useState( 160 );
     const [ justSaved, setJustSaved ] = useState( false );
@@ -234,7 +236,7 @@ const SettingsApp = () => {
             />
 
             { isLoading ? (
-                <div className="px-3 pt-8 pb-[100px]">
+                <div className="px-3 pt-8 pb-6">
                     <div className="flex animate-pulse gap-8 rounded-lg border border-gray-200 bg-white p-8 shadow-xs">
                         {/* Left nav skeleton */}
                         <div className="w-[280px] shrink-0 [&>:not([hidden])~:not([hidden])]:mt-3 [&>:not([hidden])~:not([hidden])]:mb-0">
@@ -259,7 +261,41 @@ const SettingsApp = () => {
                     </div>
                 </div>
             ) : (
-            <div className="px-3 pt-8 pb-[100px]">
+            <div className="px-3 pt-8 pb-6">
+            { /* Settings of other plugins the React screen cannot show (D12). */ }
+            { classicOnly.length > 0 && (
+                <div role="status" data-settings-notice="classic-only" className="mb-6 flex items-start gap-3 rounded-md border-l-4 border-amber-400 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                    <div className="min-w-0 flex-1">
+                        <p className="m-0 font-medium">
+                            { __( 'Some settings added by other plugins are only available in Classic view:', 'wp-user-frontend' ) }
+                        </p>
+                        <p className="m-0 mt-1">{ classicOnly.join( ', ' ) }</p>
+                    </div>
+                    { boot.classic_url && (
+                        <a href={ boot.classic_url } className="shrink-0 font-medium text-amber-900 underline hover:text-amber-900">
+                            { __( 'Open Classic view', 'wp-user-frontend' ) }
+                        </a>
+                    ) }
+                </div>
+            ) }
+
+            { /* Shown once to each admin of a site that had the classic screen (D12). */ }
+            { showNewUi && (
+                <div role="status" data-settings-notice="new-ui" className="mb-6 flex items-start gap-3 rounded-md border-l-4 border-primary bg-emerald-50 px-4 py-3 text-sm text-gray-700">
+                    <p className="m-0 min-w-0 flex-1">
+                        { boot.switch_ui_url
+                            ? createInterpolateElement(
+                                __( 'This is the new settings screen. Every setting is where it was stored before; you can go back to the <a>Classic view</a> at any time.', 'wp-user-frontend' ),
+                                { a: <a href={ boot.switch_ui_url } className="font-medium text-primary underline" /> } // eslint-disable-line jsx-a11y/anchor-has-content
+                            )
+                            : __( 'This is the new settings screen. Every setting is where it was stored before.', 'wp-user-frontend' ) }
+                    </p>
+                    <Button variant="link" size="sm" className="shrink-0 text-gray-600" onClick={ () => setShowNewUi( false ) }>
+                        { __( 'Dismiss', 'wp-user-frontend' ) }
+                    </Button>
+                </div>
+            ) }
+
             { error ? (
                 <MessageModal
                     title={ __( 'Couldn’t save settings', 'wp-user-frontend' ) }
@@ -333,6 +369,15 @@ const SettingsApp = () => {
             </div>
             </div>
             ) }
+
+            { /* WordPress's footer is hidden on shared-layer screens (D26): the switch
+                link lives here (D12). The margin clears the fixed Save bar. */ }
+            <PageFooter className="mb-[74px]">
+                { boot.switch_ui_url && createInterpolateElement(
+                    __( 'Prefer the old screen? Switch to the <a>Classic view</a>.', 'wp-user-frontend' ),
+                    { a: <a href={ boot.switch_ui_url } data-settings-switch="footer" className="text-gray-600 underline hover:text-gray-900" /> } // eslint-disable-line jsx-a11y/anchor-has-content
+                ) }
+            </PageFooter>
 
             { ! isLoading && (
                 <div

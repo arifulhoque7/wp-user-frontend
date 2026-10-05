@@ -69,6 +69,9 @@ class Settings extends Screen {
             wp_enqueue_script( 'wpuf-subscriptions' );
             wp_enqueue_script( 'wpuf-settings' );
 
+            // Footer link back to the new screen (design.md D12).
+            add_filter( 'admin_footer_text', [ $this, 'legacy_footer_text' ], 99 );
+
             return;
         }
 
@@ -107,6 +110,12 @@ class Settings extends Screen {
                 'support_url'   => 'https://wedevs.com/docs/wp-user-frontend-pro/',
                 // Nonce-protected link to fall back to the classic settings UI.
                 'switch_ui_url' => function_exists( 'wpuf_settings_ui_switch_url' ) ? wpuf_settings_ui_switch_url() : '',
+                // This request only, the user's mode stays (override-safety notice).
+                'classic_url'   => admin_url( 'admin.php?page=wpuf-settings&wpuf_settings_ui=legacy' ),
+                // Settings of other plugins only the Classic screen can show.
+                'classic_only'  => function_exists( 'wpuf_settings_classic_only_items' ) ? wpuf_settings_classic_only_items() : [],
+                // One-time "new settings screen" notice (sites that upgraded).
+                'new_ui_notice' => function_exists( 'wpuf_settings_new_ui_notice' ) && wpuf_settings_new_ui_notice(),
             ]
         );
     }
@@ -170,6 +179,25 @@ class Settings extends Screen {
             <h2><?php esc_html_e( 'Loading', 'wp-user-frontend' ); ?>...</h2>
         </div>
         <?php
+    }
+
+    /**
+     * Footer text of the classic screen: a link to the new settings screen.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return string
+     */
+    public function legacy_footer_text() {
+        if ( ! function_exists( 'wpuf_settings_ui_switch_url' ) ) {
+            return '';
+        }
+
+        return sprintf(
+            '<a href="%1$s">%2$s</a>',
+            esc_url( wpuf_settings_ui_switch_url() ),
+            esc_html__( 'Switch to the new settings screen', 'wp-user-frontend' )
+        );
     }
 
     /**
