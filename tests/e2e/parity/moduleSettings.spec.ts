@@ -244,6 +244,8 @@ test.describe('Parity module dependencies', () => {
         } finally {
             for (const name of SIDES) {
                 parityWp(paritySite(name), ['plugin', 'activate', ...PLUGINS]);
+                // BuddyPress sends the next admin page to its welcome screen after activation.
+                parityWp(paritySite(name), ['transient', 'delete', '_bp_activation_redirect']);
             }
         }
 

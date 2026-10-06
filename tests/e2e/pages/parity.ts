@@ -270,6 +270,8 @@ export class ParitySitePage {
             && ((response.url().includes('admin-ajax.php')
                 && (response.request().postData() || '').includes('wpuf_form_builder_save_form'))
                 || /wpuf\/v1\/admin\/forms\/\d+/.test(decodeURIComponent(response.url()))));
+        // A stage add of a meta field opens the custom field tip (as develop does); it blocks the Save click.
+        await this.doDismissAlerts();
         await this.page.locator(Selectors.parity.builderSaveButton).first().click();
         const response = await saved;
         expect(response.ok(), 'builder save request must succeed').toBeTruthy();
@@ -499,7 +501,9 @@ export class ParitySitePage {
     async doDismissAlerts() {
         const alert = this.page.locator(Selectors.parity.alertPopup);
         while ((await alert.count()) > 0) {
-            await this.page.locator(Selectors.parity.alertConfirm).first().click();
+            // Develop's custom field tip has "Don't show again" as its confirm button; click the same one on the branch.
+            const dontShow = alert.first().getByRole('button', { name: "Don't show again" });
+            await ((await dontShow.count()) ? dontShow.first() : this.page.locator(Selectors.parity.alertConfirm).first()).click();
             await expect(alert).toHaveCount(0);
         }
     }

@@ -213,7 +213,14 @@ test.describe('Branch settings save', () => {
             await page.goto('/wp-admin/admin.php?page=wpuf-settings');
             await root.locator('nav button').first().waitFor();
 
-            await root.locator('label[for="load_script"]').click();
+            // Tick (not toggle): unset checkboxes show their default, which may already be on.
+            const tick = async (id: string) => {
+                if (!(await root.locator(`#${id}`).isChecked())) {
+                    await root.locator(`label[for="${id}"]`).click();
+                }
+                await expect(root.locator(`#${id}`)).toBeChecked();
+            };
+            await tick('load_script');
             await root.locator('#custom_css').fill('a { color: red; }');
             await root.locator('#admin_access').click();
             await page.locator('[data-slot="select-item"]:visible', { hasText: /^\s*Admin Only\s*$/ }).click();
@@ -228,7 +235,7 @@ test.describe('Branch settings save', () => {
             await save();
 
             await openTab('Payments');
-            await root.locator('label[for="enable_payment"]').click();
+            await tick('enable_payment');
             await row('Currency').getByRole('combobox').click();
             await page.keyboard.type('Bangladeshi');
             await page.locator('[data-slot="command-item"]:visible').first().click();
