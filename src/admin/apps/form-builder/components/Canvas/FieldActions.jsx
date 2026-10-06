@@ -1,6 +1,7 @@
 import { useCallback } from '@wordpress/element';
 import { useSelect, useDispatch } from '@wordpress/data';
 import { __ } from '@wordpress/i18n';
+import { dialogs } from '@wpuf/components';
 import { STORE_NAME } from '../../store';
 import { isFieldSingleInstance, containsField } from '../../utils/fieldUtils';
 import { isFailedToValidate } from '../../utils/globalHelpers';
@@ -95,25 +96,14 @@ export default function FieldActions( { field, index, container = { type: 'top' 
     }, [ field.template, formFields, singleObjects, cloneInContainer ] );
 
     const handleDelete = useCallback( () => {
-        if ( typeof window.Swal === 'undefined' ) {
-            removeFromContainer();
-            return;
-        }
-
-        const iconDelete = ( window.wpuf_admin_script || {} ).asset_url + '/images/delete-icon-rounded.svg';
-
-        window.Swal.fire( {
+        dialogs.confirm( {
             title: i18n.delete_field_warn_title || __( 'Are you sure?', 'wp-user-frontend' ),
-            html: '<span class="text-gray-500 font-medium">' + ( i18n.delete_field_warn_msg || __( 'Are you sure you want to delete this field?', 'wp-user-frontend' ) ) + '</span>',
-            iconHtml: '<img src="' + iconDelete + '" alt="delete">',
-            showCancelButton: true,
-            confirmButtonText: i18n.yes_delete_it || __( 'Yes, delete it!', 'wp-user-frontend' ),
-            cancelButtonText: i18n.no_cancel_it || __( 'No, cancel it!', 'wp-user-frontend' ),
-            cancelButtonColor: '#fff',
-            confirmButtonColor: '#EF4444',
-            reverseButtons: true,
-        } ).then( ( result ) => {
-            if ( result.isConfirmed ) {
+            message: i18n.delete_field_warn_msg || __( 'Are you sure you want to delete this field?', 'wp-user-frontend' ),
+            confirmText: i18n.yes_delete_it || __( 'Yes, delete it!', 'wp-user-frontend' ),
+            cancelText: i18n.no_cancel_it || __( 'No, cancel it!', 'wp-user-frontend' ),
+            tone: 'danger',
+        } ).then( ( confirmed ) => {
+            if ( confirmed ) {
                 removeFromContainer();
             }
         } );

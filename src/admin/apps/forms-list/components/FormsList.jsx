@@ -6,7 +6,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { applyFilters } from '@wordpress/hooks';
-import { ErrorState, Pagination, Tabs, notify, useConfirm } from '@wpuf/components';
+import { AIConfigModal, ErrorState, Pagination, Tabs, notify, useConfirm } from '@wpuf/components';
 
 import useFormsFetch, { PER_PAGE } from '../hooks/useFormsFetch';
 import useClipboard from '../hooks/useClipboard';
@@ -17,7 +17,6 @@ import FormsTable from './FormsTable';
 import TableSkeleton from './TableSkeleton';
 import EmptyState from './EmptyState';
 import CreateButtons from './CreateButtons';
-import AIConfigModal from './AIConfigModal';
 import TemplatePicker from './TemplatePicker';
 
 const FormsList = ( {

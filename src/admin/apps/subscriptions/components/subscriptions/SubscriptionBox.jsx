@@ -235,6 +235,7 @@ const SubscriptionBox = ({ subscription, onEdit, onChanged }) => {
 
 			{/* develop's Popup: trash / permanent delete confirmation */}
 			<ConfirmDialog
+				variant="panel"
 				open={null !== confirming}
 				tone="danger"
 				busy={busy}

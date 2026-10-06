@@ -13,30 +13,10 @@ import { STORE_NAME } from '../../store';
 import useAddField from '../../hooks/useAddField';
 import { createField, isFieldSingleInstance, containsField } from '../../utils/fieldUtils';
 import { canDrop, parseContainer } from '../../utils/dndTree';
+import { showOops } from '../../common/BuilderDialogs';
 
-/**
- * Develop's "Oops..." alert.
- *
- * @param {string} message Message.
- */
-export function showOops( message ) {
-    if ( typeof window.Swal === 'undefined' ) {
-        return;
-    }
-
-    window.Swal.fire( {
-        title: '<span class="text-primary">Oops...</span>',
-        html: '<p class="text-gray-500 text-xl m-0 p-0">' + message + '</p>',
-        imageUrl: ( ( window.wpuf_form_builder || {} ).asset_url || '' ) + '/images/oops.svg',
-        showCloseButton: true,
-        padding: '1rem',
-        width: '35rem',
-        customClass: {
-            confirmButton: 'flex! focus:shadow-none! bg-primary!',
-            closeButton: 'absolute',
-        },
-    } );
-}
+// Develop's "Oops..." alert, kept importable from here.
+export { showOops };
 
 /**
  * @return {Function} `( template, { container, index } ) => void`

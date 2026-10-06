@@ -11,35 +11,6 @@ export function getRandomId() {
 }
 
 /**
- * Show a SweetAlert2 warning dialog.
- *
- * @param {Object}   settings Swal.fire options
- * @param {Function} callback Optional callback
- */
-export function warn( settings, callback ) {
-    if ( typeof window.Swal === 'undefined' ) {
-        return;
-    }
-
-    const defaults = {
-        title: '',
-        text: '',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d54e21',
-    };
-
-    const merged = { ...defaults, ...settings };
-
-    // When imageUrl is provided, remove the default icon so both don't show
-    if ( merged.imageUrl ) {
-        delete merged.icon;
-    }
-
-    window.Swal.fire( merged, callback );
-}
-
-/**
  * Check if reCAPTCHA API keys are configured.
  *
  * @return {boolean}

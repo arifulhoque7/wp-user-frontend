@@ -508,9 +508,10 @@ export const Selectors = {
             customFieldsEmbed: '//p[normalize-space(text())="Embed"]',
 
             // prompt1
-            prompt1PopUpModalClose: '//div[@class="swal2-loader"]/following-sibling::button[1]',
+            // "Don't show again" of the custom field tooltip (develop: Swal confirm; React: the dialog's cancel slot).
+            prompt1PopUpModalClose: '//div[@class="swal2-loader"]/following-sibling::button[1] | //*[@data-wpuf-vue-dialog]//*[@data-slot="alert-dialog-cancel"]',
             // prompt2
-            prompt2PopUpModalOk: '//button[@class="swal2-deny swal2-styled"]/following-sibling::button[1]',
+            prompt2PopUpModalOk: '//button[@class="swal2-deny swal2-styled"]/following-sibling::button[1] | //*[@data-wpuf-vue-dialog]//*[@data-slot="alert-dialog-action"]',
             // Pro Check Pop Up
             checkProPopUp: '//button[text()="Get the Pro version"]',
             checkProPopUpCloseButton: '//button[@aria-label="Close this dialog"]',
@@ -959,8 +960,8 @@ export const Selectors = {
             clickFormEditorSettings: '(//a[contains(@class,"wpuf-nav-tab")][normalize-space()="Settings"] | (//a[contains(@class,"wpuf-nav-tab wpuf-nav-tab-active")])[2])[1]',
             clickBlankForm: '//a[contains(normalize-space(.), "Create Form") and (@title="Blank Form" or ancestor::div[contains(@class,"wpuf-template-card")]//span[normalize-space()="Blank Form"])]',
             useField: (field: string) => `//p[normalize-space()="${field}"]`,
-            // OK of the "Oops... You already have this field in the form" alert.
-            alreadyAddedOk: '.swal2-container .swal2-confirm',
+            // OK of the "Oops... You already have this field in the form" alert (SweetAlert on develop).
+            alreadyAddedOk: '.swal2-container .swal2-confirm, [data-slot="alert-dialog-action"]',
             clickAddFieldButton: '//a[contains(text(),"Add Field")]',
             validateField: (field: string) => `(//label[@for="${field}" or @for="wpuf-${field}"]/../..//div[@class="wpuf-fields"])[1]`,
         },
@@ -2237,7 +2238,7 @@ export const Selectors = {
         // Modal h1 by id — `text=Unsaved Changes` is ambiguous (also matches the
         // footer "Unsaved changes" badge + the modal body copy).
         // React: the shared Modal (base-ui dialog named by its title).
-        unsavedModalTitle: 'role=dialog[name="Unsaved Changes"]',
+        unsavedModalTitle: 'role=alertdialog[name="Unsaved Changes"]',
         unsavedDiscardButton: 'button:has-text("Discard Changes")',
         unsavedContinueButton: 'button:has-text("Continue Editing")',
         // Exact text (the notice also has "Open Classic view"); header + footer both link, take the first.
@@ -2376,9 +2377,9 @@ export const Selectors = {
         paletteFieldButton: (type: string) => `.wpuf-field-button[data-form-field="${type}"]`,
         // Fields on the builder stage
         stageFields: 'li[class*="form-field-"]',
-        // SweetAlert popup (e.g. "field can be added only once") and its buttons
-        alertPopup: '.swal2-container .swal2-popup',
-        alertConfirm: '.swal2-container .swal2-confirm',
+        // Builder alert (develop: SweetAlert; branch: shared dialogs) and its confirm button
+        alertPopup: '.swal2-container .swal2-popup, [data-wpuf-vue-dialog]',
+        alertConfirm: '.swal2-container .swal2-confirm, [data-wpuf-vue-dialog] [data-slot="alert-dialog-action"]',
         // Field settings panel (same classes on the Vue and the React builder)
         stageFieldEdit: 'Edit',
         fieldOptionsPanel: '.wpuf-form-builder-field-options',

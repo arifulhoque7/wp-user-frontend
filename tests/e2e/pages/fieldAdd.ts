@@ -153,6 +153,19 @@ export class FieldAddPage extends Base {
 
 
 
+    /**
+     * Close a builder prompt (custom field tooltip, API key notice) when it opens.
+     * The React builder opens it one render after the click, so wait briefly
+     * instead of checking visibility once.
+     */
+    async dismissPromptIfShown(selector: string) {
+        const prompt = this.page.locator(selector).first();
+        if (await prompt.waitFor({ state: 'visible', timeout: 3000 }).then(() => true, () => false)) {
+            await prompt.click();
+            await prompt.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {});
+        }
+    }
+
     /**************************************/
     /********** @Common Fields ***********/
     /************************************/
@@ -163,9 +176,7 @@ export class FieldAddPage extends Base {
         //CustomFields
         await this.validateAndClick(Selectors.postForms.addCustomFields_Common.customFieldsText);
         
-        if (await this.page.isVisible(Selectors.postForms.addCustomFields_Common.prompt1PopUpModalClose)) {
-            await this.validateAndClick(Selectors.postForms.addCustomFields_Common.prompt1PopUpModalClose);
-        }
+        await this.dismissPromptIfShown(Selectors.postForms.addCustomFields_Common.prompt1PopUpModalClose);
         await this.validateAndClick(Selectors.postForms.addCustomFields_Common.customFieldsTextarea);
         await this.validateAndClick(Selectors.postForms.addCustomFields_Common.customFieldsDropdown);
         await this.validateAndClick(Selectors.postForms.addCustomFields_Common.customFieldsMultiSelect);
@@ -201,9 +212,7 @@ export class FieldAddPage extends Base {
             await this.validateAndClick(Selectors.postForms.addCustomFields_Common.customFieldsAddressField);
             //GoogleMaps
             await this.validateAndClick(Selectors.postForms.addCustomFields_Common.customFieldsGoogleMaps);
-            if (await this.page.isVisible(Selectors.postForms.addCustomFields_Common.prompt2PopUpModalOk)) {
-                await this.validateAndClick(Selectors.postForms.addCustomFields_Common.prompt2PopUpModalOk);
-            }
+            await this.dismissPromptIfShown(Selectors.postForms.addCustomFields_Common.prompt2PopUpModalOk);
             await this.validateAndClick(Selectors.postForms.addCustomFields_Common.customFieldsGoogleMapsEdit);
             await this.validateAndClick(Selectors.postForms.addCustomFields_Common.googleMapsSearchbox);
             await this.validateAndClick(Selectors.postForms.addPostFieldButton);
@@ -227,9 +236,7 @@ export class FieldAddPage extends Base {
         //CustomFields
         await this.validateAndClick(Selectors.postForms.addCustomFields_Common.customFieldsText);
         
-        if (await this.page.isVisible(Selectors.postForms.addCustomFields_Common.prompt1PopUpModalClose)) {
-            await this.validateAndClick(Selectors.postForms.addCustomFields_Common.prompt1PopUpModalClose);
-        }
+        await this.dismissPromptIfShown(Selectors.postForms.addCustomFields_Common.prompt1PopUpModalClose);
         await this.validateAndClick(Selectors.postForms.addCustomFields_Common.customFieldsTextarea);
     }
 
@@ -325,9 +332,7 @@ export class FieldAddPage extends Base {
 
         else {
             //ShortCode
-            if (await this.page.isVisible(Selectors.postForms.addCustomFields_Common.prompt1PopUpModalClose)) {
-                await this.validateAndClick(Selectors.postForms.addCustomFields_Common.prompt1PopUpModalClose);
-            }
+            await this.dismissPromptIfShown(Selectors.postForms.addCustomFields_Common.prompt1PopUpModalClose);
             //ActionHook
             await this.validateAndClick(Selectors.postForms.addOthers_Common.othersActionHook);
             //TermsAndConditions
@@ -336,9 +341,7 @@ export class FieldAddPage extends Base {
             await this.validateAndClick(Selectors.postForms.addOthers_Common.othersRatings);
             //ReallySimpleCaptcha
             await this.validateAndClick(Selectors.postForms.addOthers_Common.othersReallySimpleCaptcha);
-            if (await this.page.isVisible(Selectors.postForms.addCustomFields_Common.prompt2PopUpModalOk)) {
-                await this.validateAndClick(Selectors.postForms.addCustomFields_Common.prompt2PopUpModalOk);
-            }
+            await this.dismissPromptIfShown(Selectors.postForms.addCustomFields_Common.prompt2PopUpModalOk);
             //MathCaptcha
             await this.validateAndClick(Selectors.postForms.addOthers_Common.othersMathCaptcha);
              
@@ -382,9 +385,7 @@ export class FieldAddPage extends Base {
         await this.validateAndClick(Selectors.postForms.addTaxonomies_PF.categoryBlock);
         await this.validateAndClick(Selectors.postForms.addCustomFields_Common.customFieldsText);
         
-        if (await this.page.isVisible(Selectors.postForms.addCustomFields_Common.prompt1PopUpModalClose)) {
-            await this.validateAndClick(Selectors.postForms.addCustomFields_Common.prompt1PopUpModalClose);
-        }
+        await this.dismissPromptIfShown(Selectors.postForms.addCustomFields_Common.prompt1PopUpModalClose);
         await this.validateAndClick(Selectors.postForms.addCustomFields_Common.customFieldsTextarea);
         await this.validateAndClick(Selectors.postForms.addCustomFields_Common.customFieldsDropdown);
         await this.validateAndClick(Selectors.postForms.addCustomFields_Common.customFieldsRadio);
@@ -415,9 +416,7 @@ export class FieldAddPage extends Base {
         await this.validateAndClick(Selectors.postForms.addPostFields_PF.postTitleBlock);
         //DateTime
         await this.validateAndClick(Selectors.postForms.addCustomFields_Common.customFieldsDateTime);
-        if (await this.page.isVisible(Selectors.postForms.addCustomFields_Common.prompt1PopUpModalClose)) {
-            await this.validateAndClick(Selectors.postForms.addCustomFields_Common.prompt1PopUpModalClose);
-        }
+        await this.dismissPromptIfShown(Selectors.postForms.addCustomFields_Common.prompt1PopUpModalClose);
 
     }
 
@@ -425,9 +424,7 @@ export class FieldAddPage extends Base {
         //FOS
         await this.validateAndClick(Selectors.postForms.addPostFields_PF.postTitleBlock);
         await this.validateAndClick(Selectors.postForms.addCustomFields_Common.customFieldsWebsiteUrl);
-        if (await this.page.isVisible(Selectors.postForms.addCustomFields_Common.prompt1PopUpModalClose)) {
-            await this.validateAndClick(Selectors.postForms.addCustomFields_Common.prompt1PopUpModalClose);
-        }
+        await this.dismissPromptIfShown(Selectors.postForms.addCustomFields_Common.prompt1PopUpModalClose);
     }
 
 

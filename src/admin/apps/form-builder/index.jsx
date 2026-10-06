@@ -15,7 +15,6 @@ import {
     getAllFieldPreviews,
     getAllFieldSettingInputs,
 } from './extensions/registry';
-import { __ } from '@wordpress/i18n';
 import { hasRecaptchaApiKeys, hasTurnstileApiKeys } from './utils/globalHelpers';
 import { fireRootInit } from './extensions/hooks';
 import { registerFreeFieldPreviews } from './components/FieldPreview';
@@ -25,6 +24,7 @@ import HelpText from './components/FieldPreview/HelpText';
 import SettingHelpText from './components/FieldSettings/inputs/SettingHelpText';
 import LegacySlot from './common/LegacySlot';
 import FormBuilder from './components/FormBuilder';
+import { openHiddenTaxonomies } from './common/BuilderDialogs';
 
 /**
  * Initialize the store from PHP-localized data.
@@ -166,38 +166,8 @@ document.addEventListener( 'DOMContentLoaded', () => {
     // Show "Pro Fields Hidden" warning when form has custom taxonomy fields and Pro is not active
     const builderData = window.wpuf_form_builder || {};
 
-    if ( builderData.has_hidden_taxonomies && ! builderData.is_pro_active && typeof window.Swal !== 'undefined' ) {
-        setTimeout( () => {
-            const assetUrl = builderData.asset_url || '';
-
-            window.Swal.fire( {
-                title: '',
-                html: '<div class="wpuf-pro-modal-content">' +
-                    '<div class="wpuf-pro-modal-left">' +
-                    '<div class="wpuf-pro-modal-icon">' +
-                    '<img src="' + assetUrl + '/images/free-circle.svg" alt="' + __( 'Pro upgrade notification icon', 'wp-user-frontend' ) + '">' +
-                    '</div>' +
-                    '<h2 class="wpuf-pro-modal-title">' + __( 'Pro Fields Hidden', 'wp-user-frontend' ) + '</h2>' +
-                    '<p class="wpuf-pro-modal-text">' + __( 'This form includes custom taxonomy fields from third-party plugins. These are Pro-only and are hidden in both the builder and frontend until WPUF Pro is activated.', 'wp-user-frontend' ) + '</p>' +
-                    '</div>' +
-                    '<div class="wpuf-pro-modal-right">' +
-                    '<img src="' + assetUrl + '/images/event-pro-field.jpeg" alt="' + __( 'Event Pro Field preview', 'wp-user-frontend' ) + '">' +
-                    '</div>' +
-                    '</div>',
-                icon: false,
-                showCancelButton: false,
-                showConfirmButton: true,
-                confirmButtonColor: '#059669',
-                confirmButtonText: __( 'Okay', 'wp-user-frontend' ),
-                customClass: {
-                    popup: 'wpuf-pro-taxonomy-warning',
-                    confirmButton: 'wpuf-btn-primary',
-                    icon: 'wpuf-warning-icon',
-                },
-                width: '1038px',
-                padding: '36px',
-            } );
-        }, 500 );
+    if ( builderData.has_hidden_taxonomies && ! builderData.is_pro_active ) {
+        setTimeout( openHiddenTaxonomies, 500 );
     }
 
     const root = createRoot( container );

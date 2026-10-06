@@ -1,64 +1,36 @@
 import { __ } from '@wordpress/i18n';
+import { dialogs } from '@wpuf/components';
 
 /**
- * Check if SweetAlert2 is available.
- *
- * @return {boolean}
+ * Builder alerts and confirms on the shared dialogs (the file kept its name
+ * from the SweetAlert2 version; callers did not change).
  */
-function hasSwal() {
-    return typeof window.Swal !== 'undefined';
-}
 
 /**
- * Get the asset URL for images.
- *
- * @return {string}
- */
-function getAssetUrl() {
-    return ( window.wpuf_admin_script || window.wpuf_form_builder || {} ).asset_url || '';
-}
-
-/**
- * Show a warning/error modal with custom warning icon.
+ * Show a warning/error alert.
  *
  * @param {Object} options
  * @param {string} options.title   Modal title.
  * @param {string} options.message Modal body text.
  *
- * @return {Promise|undefined} Swal promise if available.
+ * @return {Promise} Resolves to { isConfirmed } when closed.
  */
 export function showAlert( { title, message } ) {
-    if ( ! hasSwal() ) {
-        return;
-    }
-
-    const iconSrc = getAssetUrl() + '/images/warning-circle.svg';
-
-    return window.Swal.fire( {
-        title,
-        html: '<span class="text-gray-500 font-medium">' + message + '</span>',
-        iconHtml: '<img src="' + iconSrc + '" alt="warning">',
-        showCancelButton: false,
-        confirmButtonText: __( 'OK', 'wp-user-frontend' ),
-        confirmButtonColor: '#059669',
-        customClass: {
-            confirmButton: 'wpuf-btn-primary',
-            icon: 'wpuf-warning-icon',
-        },
-    } );
+    return dialogs.alert( { title, message, confirmText: __( 'OK', 'wp-user-frontend' ) } )
+        .then( ( isConfirmed ) => ( { isConfirmed } ) );
 }
 
 /**
- * Show a confirmation modal with confirm/cancel buttons.
+ * Show a confirmation with confirm/cancel buttons.
  *
  * @param {Object}  options
  * @param {string}  options.title         Modal title.
  * @param {string}  options.message       Modal body text.
  * @param {string}  options.confirmText   Confirm button label.
  * @param {string}  options.cancelText    Cancel button label.
- * @param {string}  options.confirmColor  Confirm button color (default: '#EF4444' red).
+ * @param {string}  options.confirmColor  '#EF4444' (default) shows the destructive action, any other the primary one.
  *
- * @return {Promise|undefined} Swal promise resolving to { isConfirmed }.
+ * @return {Promise} Resolves to { isConfirmed }.
  */
 export function showConfirm( {
     title,
@@ -67,24 +39,12 @@ export function showConfirm( {
     cancelText,
     confirmColor = '#EF4444',
 } ) {
-    if ( ! hasSwal() ) {
-        return;
-    }
-
-    const iconSrc = getAssetUrl() + '/images/warning-circle.svg';
-
-    return window.Swal.fire( {
+    return dialogs.confirm( {
         title,
-        html: '<span class="text-gray-500 font-medium">' + message + '</span>',
-        iconHtml: '<img src="' + iconSrc + '" alt="warning">',
-        showCancelButton: true,
-        confirmButtonText: confirmText || __( 'Yes', 'wp-user-frontend' ),
-        cancelButtonText: cancelText || __( 'Cancel', 'wp-user-frontend' ),
-        confirmButtonColor: confirmColor,
-        cancelButtonColor: '#fff',
-        reverseButtons: true,
-        customClass: {
-            icon: 'wpuf-warning-icon',
-        },
-    } );
+        message,
+        confirmText: confirmText || __( 'Yes', 'wp-user-frontend' ),
+        cancelText: cancelText || __( 'Cancel', 'wp-user-frontend' ),
+        tone: '#EF4444' === confirmColor ? 'danger' : 'primary',
+        icon: 'warning',
+    } ).then( ( isConfirmed ) => ( { isConfirmed } ) );
 }

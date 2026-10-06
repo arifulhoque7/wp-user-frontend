@@ -1,12 +1,14 @@
 /**
  * Wraps a WPUF admin React tree in plugin-ui's ThemeProvider (WPUF tokens),
  * one Toaster and an error boundary. Rendered by each screen that uses
- * shared/ui (window.wpuf.components.WpufProviders for Pro).
+ * shared/ui (window.wpuf.components.WpufProviders for Pro), and the host of
+ * the `dialogs` API.
  */
 import { ThemeProvider, Toaster } from '@wedevs/plugin-ui';
 
 import { wpufDarkTokens, wpufTokens } from '../theme';
 import ErrorBoundary from './ErrorBoundary';
+import { DialogHost } from '../ui/dialogs';
 
 export const PLUGIN_ID = 'wpuf-admin';
 
@@ -31,6 +33,8 @@ export default function WpufProviders( { children, withToaster = true, host = fa
                     <Toaster position="top-right" offset={ { top: 80, right: 32 } } richColors />
                 </div>
             ) }
+            { /* Dialogs opened through `dialogs` (one host per page, with the Toaster). */ }
+            { withToaster && <DialogHost /> }
         </ThemeProvider>
     );
 }

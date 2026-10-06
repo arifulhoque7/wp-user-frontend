@@ -151,3 +151,20 @@ body.wpuf-builder-screen form#wpuf-form-builder {
 body.wpuf-builder-screen form#wpuf-form-builder {
     margin-left: -20px !important;
 }
+
+/* Develop's popup backdrops behind the shared ConfirmDialog: SweetAlert's 40%
+   black (variant alert) and Popup.vue's gray-500 at 75% (variant panel), no blur. */
+.pui-root:has(> [data-wpuf-vue-dialog="alert"]) > [data-slot="alert-dialog-overlay"] {
+    background-color: rgba(0, 0, 0, 0.4) !important;
+    backdrop-filter: none !important;
+}
+
+.pui-root:has(> [data-wpuf-vue-dialog="panel"]) > [data-slot="alert-dialog-overlay"] {
+    background-color: rgba(107, 114, 128, 0.75) !important;
+    backdrop-filter: none !important;
+}
+
+.pui-root:has(> [data-wpuf-vue-dialog="card"]) > [data-slot="alert-dialog-overlay"] {
+    background-color: rgba(0, 0, 0, 0.5) !important;
+    backdrop-filter: none !important;
+}
