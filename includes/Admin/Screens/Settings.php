@@ -103,6 +103,8 @@ class Settings extends Screen {
                 'nonce'       => wp_create_nonce( 'wp_rest' ),
                 'is_pro'      => class_exists( 'WP_User_Frontend_Pro' ),
                 'asset_url'   => WPUF_ASSET_URI,
+                // Quick links next to page / form selects (edit, add new).
+                'admin_url'   => admin_url(),
                 'version'     => WPUF_VERSION,
                 'pro_version' => defined( 'WPUF_PRO_VERSION' ) ? WPUF_PRO_VERSION : '',
                 'plan'        => function_exists( 'wpuf_pro_current_plan' ) ? wpuf_pro_current_plan() : '',

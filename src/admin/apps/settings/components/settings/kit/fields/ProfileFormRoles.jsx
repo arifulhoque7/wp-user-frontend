@@ -2,6 +2,7 @@ import { useSelect, useDispatch } from '@wordpress/data';
 import { __ } from '@wordpress/i18n';
 import { STORE_NAME } from '../../../../stores-react/settings/constants';
 import SelectDropdown from './SelectDropdown';
+import QuickLinks from './QuickLinks';
 
 /**
  * Profile Forms for User Roles — a role → profile-form mapping table. Replaces
@@ -52,9 +53,12 @@ export default function ProfileFormRoles() {
                             value={ map[ role ] ? String( map[ role ] ) : '' }
                             onChange={ ( n, val ) => setRole( role, val ) }
                         />
+                        <QuickLinks kind="profile_form" value={ map[ role ] ? String( map[ role ] ) : '' } addNew={ false } />
                     </div>
                 </div>
             ) ) }
+
+            <QuickLinks kind="profile_form" />
 
             { ! isPro && (
                 <p className="mt-3 rounded-md border border-dashed border-gray-300 bg-gray-50 px-3 py-2 text-xs text-gray-500">

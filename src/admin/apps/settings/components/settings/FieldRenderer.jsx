@@ -26,6 +26,7 @@ import TaxSettings from './kit/fields/TaxSettings';
 import ProBadge from './kit/ProBadge';
 import ProPreviewWrapper from './kit/ProPreviewWrapper';
 import ProNote from './kit/fields/ProNote';
+import QuickLinks, { QUICK_LINKS } from './kit/fields/QuickLinks';
 import { RawHTML } from '@wordpress/element';
 import { applyFilters } from '@wordpress/hooks';
 import { stripTags } from './utils';
@@ -240,6 +241,7 @@ export default function FieldRenderer( { sectionId, field, value, onChange, forc
     return (
         <div className="mt-6 wpuf-input-container" data-setting={ field.name }>
             { isProInactive ? <ProPreviewWrapper>{ control }</ProPreviewWrapper> : control }
+            { ! isProInactive && QUICK_LINKS[ field.name ] && <QuickLinks kind={ QUICK_LINKS[ field.name ] } value={ value } /> }
             { normalized.__descHtml && (
                 <RawHTML className="mt-1 text-sm text-gray-500">{ normalized.__descHtml }</RawHTML>
             ) }

@@ -8,6 +8,7 @@ import { Button } from '@wpuf/components';
 import RadioCardsField from './RadioCardsField';
 import SelectDropdown from './SelectDropdown';
 import TextField from './TextField';
+import { ApiKeyLink } from './QuickLinks';
 import NumberField from './NumberField';
 import HtmlField from './HtmlField';
 
@@ -134,6 +135,7 @@ export default function AISettings( { fields, renderField } ) {
                     value={ keys[ provider ] || '' }
                     onChange={ ( n, v ) => setKey( v ) }
                 />
+                <ApiKeyLink provider={ provider } />
             </div>
 
             { modelField && (
