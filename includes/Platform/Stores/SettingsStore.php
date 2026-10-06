@@ -191,6 +191,11 @@ class SettingsStore {
             // stored as `"7"` by the legacy screen.
             $default = is_int( $field['default'] ) || is_float( $field['default'] ) ? (string) $field['default'] : $field['default'];
 
+            // The legacy editor posted a wysiwyg default trimmed, with \r\n breaks.
+            if ( isset( $field['type'] ) && 'wysiwyg' === $field['type'] ) {
+                $default = Normalizers::wysiwyg_default( $default );
+            }
+
             $sanitized[ $field['name'] ] = $this->sanitize_value( $default, $field );
         }
 

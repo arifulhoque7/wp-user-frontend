@@ -168,4 +168,27 @@ class Normalizers {
 
         return preg_replace( '/\r\n|\r|\n/', "\r\n", $value );
     }
+
+    /**
+     * A wysiwyg field's default the way the legacy screen stored it: its
+     * `wp_editor()` (TinyMCE) posted the default back with every line trimmed
+     * (the PHP source indentation and trailing spaces gone) and `\r\n` line
+     * breaks. Edited bodies come from the editor in both screens; only the
+     * untouched default differs without this.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param mixed $default Field default
+     *
+     * @return mixed The normalized string; other types unchanged
+     */
+    public static function wysiwyg_default( $default ) {
+        if ( ! is_string( $default ) ) {
+            return $default;
+        }
+
+        $lines = array_map( 'trim', preg_split( '/\r\n|\n|\r/', $default ) );
+
+        return trim( implode( "\r\n", $lines ) );
+    }
 }

@@ -203,6 +203,29 @@ class SettingsStoreTest extends WP_UnitTestCase {
     }
 
     /**
+     * The legacy wp_editor() posted a wysiwyg default back trimmed per line
+     * with \r\n breaks (the PHP source indentation gone); the first save stores
+     * that shape (5b.9a, settings comparison 2026-10-06).
+     */
+    public function test_wysiwyg_default_is_stored_like_the_legacy_editor_posted_it() {
+        $store  = Stores::settings();
+        $fields = [
+            [ 'name' => 'edited', 'type' => 'text', 'default' => '' ],
+            [ 'name' => 'body', 'type' => 'wysiwyg', 'default' => "Hi {username},\n\n            Your post has been approved.\n\n            Thanks" ],
+            [ 'name' => 'tail', 'type' => 'wysiwyg', 'default' => "Dear Subscriber, \r\n\r\nYour pack is expiring!" ],
+            [ 'name' => 'plain', 'type' => 'textarea', 'default' => "  keep\n  as is" ],
+        ];
+
+        delete_option( 'wpuf_test_wysiwyg_default' );
+        $stored = $store->save_section( 'wpuf_test_wysiwyg_default', [ 'edited' => 'x' ], $fields );
+        delete_option( 'wpuf_test_wysiwyg_default' );
+
+        $this->assertSame( "Hi {username},\r\n\r\nYour post has been approved.\r\n\r\nThanks", $stored['body'] );
+        $this->assertSame( "Dear Subscriber,\r\n\r\nYour pack is expiring!", $stored['tail'] );
+        $this->assertSame( "  keep\n  as is", $stored['plain'], 'only wysiwyg defaults are normalized' );
+    }
+
+    /**
      * Without Pro, a Pro preview field or section is display only: develop's
      * legacy screen never posted it, so a save stores nothing for it (4.7,
      * free-only pass).
