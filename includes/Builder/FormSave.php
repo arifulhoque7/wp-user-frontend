@@ -131,10 +131,88 @@ class FormSave {
             'integrations'      => $integrations,
         ];
 
+        $restore = $this->set_legacy_request( $post_data, $form_data, $settings );
+
+        try {
+            $saved_fields = Admin_Form_Builder::save_form( $data );
+        } finally {
+            $this->restore_request( $restore );
+        }
+
         return [
-            'form_fields'   => Admin_Form_Builder::save_form( $data ),
+            'form_fields'   => $saved_fields,
             'form_settings' => $settings,
         ];
+    }
+
+    /**
+     * Give the save the request develop's builder sent, for code that reads it on
+     * `save_post` (e.g. the Pro BuddyPress module reads `wpuf_settings` from
+     * `$_REQUEST['form_data']`): develop posted the whole builder form, so
+     * `form_data` carried every `wpuf_settings[...]` input; the React builder
+     * sends the settings as JSON. Values are slashed as WordPress slashes
+     * request data. Restored after the save (restore_request()).
+     *
+     * @param array $post_data Unslashed body
+     * @param array $form_data Builder form fields
+     * @param array $settings  Settings as saved
+     *
+     * @return array Previous values to restore: [ superglobal => [ key => value|null ] ]
+     */
+    private function set_legacy_request( array $post_data, array $form_data, $settings ) {
+        $legacy_form_data = $form_data;
+
+        if ( is_array( $settings ) ) {
+            $legacy_form_data['wpuf_settings'] = $settings;
+        }
+
+        $values = [
+            'action'        => 'wpuf_form_builder_save_form',
+            'form_data'     => http_build_query( $legacy_form_data ),
+            'form_fields'   => isset( $post_data['form_fields'] ) ? $post_data['form_fields'] : '',
+            'notifications' => isset( $post_data['notifications'] ) ? $post_data['notifications'] : '',
+        ];
+
+        $previous = [
+            'post'    => [],
+            'request' => [],
+        ];
+
+        foreach ( $values as $key => $value ) {
+            // phpcs:disable WordPress.Security.NonceVerification -- request was verified by the caller (REST permission or AJAX nonce); this only restores develop's request shape.
+            $previous['post'][ $key ]    = array_key_exists( $key, $_POST ) ? $_POST[ $key ] : null; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+            $previous['request'][ $key ] = array_key_exists( $key, $_REQUEST ) ? $_REQUEST[ $key ] : null; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+            $_POST[ $key ]               = wp_slash( $value );
+            $_REQUEST[ $key ]            = wp_slash( $value );
+            // phpcs:enable WordPress.Security.NonceVerification
+        }
+
+        return $previous;
+    }
+
+    /**
+     * Put the request back as it was before set_legacy_request().
+     *
+     * @param array $previous Previous values
+     *
+     * @return void
+     */
+    private function restore_request( array $previous ) {
+        foreach ( $previous['post'] as $key => $value ) {
+            if ( null === $value ) {
+                unset( $_POST[ $key ] );
+            } else {
+                $_POST[ $key ] = $value;
+            }
+        }
+
+        foreach ( $previous['request'] as $key => $value ) {
+            if ( null === $value ) {
+                unset( $_REQUEST[ $key ] );
+            } else {
+                $_REQUEST[ $key ] = $value;
+            }
+        }
     }
 
     /**

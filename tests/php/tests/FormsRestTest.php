@@ -220,4 +220,46 @@ class FormsRestTest extends WP_UnitTestCase {
         $this->assertSame( 404, $this->server->dispatch( new WP_REST_Request( 'DELETE', '/wpuf/v1/admin/forms/' . $page ) )->get_status() );
         $this->assertSame( 'publish', get_post_status( $page ) );
     }
+
+    public function test_save_gives_listeners_the_develop_request_and_restores_it() {
+        wp_set_current_user( self::factory()->user->create( [ 'role' => 'administrator' ] ) );
+        $form_id = $this->make_form();
+        $seen    = null;
+
+        // Like the Pro BuddyPress module: reads wpuf_settings from $_REQUEST['form_data'] on save_post.
+        $listener = function ( $post_id ) use ( $form_id, &$seen ) {
+            if ( $post_id !== $form_id || ! isset( $_REQUEST['form_data'] ) ) {
+                return;
+            }
+            parse_str( wp_unslash( $_REQUEST['form_data'] ), $data );
+            $seen = $data;
+        };
+        add_action( 'save_post', $listener, 1 );
+
+        $payload = $this->payload( $form_id, [ 'post_type' => 'post', '_wpuf_bp_mapping' => [ 'first_name' => '7' ] ] );
+        $this->assertSame( 200, $this->post( $form_id, $payload )->get_status() );
+        remove_action( 'save_post', $listener, 1 );
+
+        $this->assertIsArray( $seen );
+        $this->assertSame( (string) $form_id, $seen['wpuf_form_id'] );
+        $this->assertSame( [ 'first_name' => '7' ], $seen['wpuf_settings']['_wpuf_bp_mapping'] );
+        $this->assertArrayNotHasKey( 'form_data', $_REQUEST );
+        $this->assertArrayNotHasKey( 'form_data', $_POST );
+    }
+
+    public function test_free_only_rest_requests_attach_the_pro_settings_cleanup() {
+        if ( class_exists( 'WP_User_Frontend_Pro' ) ) {
+            $this->markTestSkipped( 'Free-only behaviour.' );
+        }
+
+        $loader = wpuf()->free_loader;
+        $this->assertNotNull( $loader );
+
+        remove_all_actions( 'wpuf_form_builder_save_form' );
+        $loader->boot_rest_cleanup();
+        $loader->boot_rest_cleanup();
+
+        $this->assertNotFalse( has_action( 'wpuf_form_builder_save_form' ) );
+        $this->assertCount( 1, $GLOBALS['wp_filter']['wpuf_form_builder_save_form']->callbacks[10], 'attached once' );
+    }
 }

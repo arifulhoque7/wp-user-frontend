@@ -126,6 +126,48 @@ class Free_Loader extends Pro_Prompt {
                 new Form_Settings_Cleanup();
             }
         }
+
+        // The builder saves over REST (wpuf/v1/admin/forms/{id}), outside wp-admin:
+        // strip the Pro-only settings there too, as the AJAX save in wp-admin did.
+        add_action( 'rest_api_init', [ $this, 'boot_rest_cleanup' ] );
+    }
+
+    /**
+     * Pro-only settings cleanup for REST requests (the builder save).
+     *
+     * @since WPUF_SINCE
+     *
+     * @return void
+     */
+    public function boot_rest_cleanup() {
+        if ( is_admin() || ! apply_filters( 'wpuf_free_loader', true ) || $this->has_settings_cleanup() ) {
+            return;
+        }
+
+        new Form_Settings_Cleanup();
+    }
+
+    /**
+     * Whether a Form_Settings_Cleanup listener is already attached.
+     *
+     * @return bool
+     */
+    private function has_settings_cleanup() {
+        global $wp_filter;
+
+        if ( empty( $wp_filter['wpuf_form_builder_save_form'] ) ) {
+            return false;
+        }
+
+        foreach ( $wp_filter['wpuf_form_builder_save_form']->callbacks as $callbacks ) {
+            foreach ( $callbacks as $callback ) {
+                if ( is_array( $callback['function'] ) && $callback['function'][0] instanceof Form_Settings_Cleanup ) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     public function admin_menu_top() {
