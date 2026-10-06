@@ -217,38 +217,6 @@ class Admin_Form_Builder_Ajax {
         );
     }
 
-    public function get_roles() {
-        // Security: Check nonce and user capabilities
-        check_ajax_referer( 'wpuf-form-builder' );
-
-        if ( ! current_user_can( wpuf_admin_role() ) ) {
-            wp_send_json_error( __( 'Unauthorized operation', 'wp-user-frontend' ) );
-        }
-
-        $roles = wpuf_get_user_roles();
-
-        $html = '<div class="wpuf-mt-6 wpuf-input-container"><div class="wpuf-flex wpuf-items-center"><label for="default_category" class="wpuf-text-sm wpuf-text-gray-700 wpuf-my-2">' . __( 'Choose who can submit post ', 'wp-user-frontend' ) . '</label></div>';
-        $html .= '<select
-                    multiple
-                    id="roles"
-                    data-roles="roles"
-                    name="wpuf_settings[roles][]"
-                    :class="setting_class_names(\'dropdown\')">';
-
-        foreach ( $roles as $key => $role ) {
-            $html .= '<option value="' . $key . '">' . $role . '</option>';
-        }
-
-        $html .= '</select>';
-
-        wp_send_json_success(
-            [
-                'success' => 'true',
-                'data'    => $html,
-            ]
-        );
-    }
-
     /**
      * Validate if fallback PPP cost is required and empty
      *
