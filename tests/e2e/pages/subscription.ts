@@ -645,7 +645,11 @@ export class SubscriptionPage extends Base {
         await this.waitForLoading();
         await this.validateAndFillStrings(Selectors.subscription.newPackPage.inputColor, buttonColor);
         await this.waitForLoading();
+        // The save is a REST call: wait for it, or the next test can load the
+        // packs page before the colour is stored.
+        const saved = this.page.waitForResponse((response) => response.url().includes('subscription-settings') && response.request().method() === 'POST');
         await this.validateAndClick(Selectors.subscription.newPackPage.savePreferencesButton);
+        await saved;
         await this.waitForLoading();
         console.log('\x1b[32m%s\x1b[0m', `✅ Button color set to ${buttonColor}`);
     }
