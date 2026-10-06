@@ -801,6 +801,18 @@ export class FieldOptionSettingsPage extends Base {
         console.log('\x1b[32m%s\x1b[0m', `✅ Validated open in new window: ${expectedNewWindow}`);
     }
 
+    /**
+     * Close the jQuery UI date/time picker when it is open (Escape closes it),
+     * so the next click on a date input is not intercepted by its pane.
+     */
+    async closeDatePicker() {
+        const picker = this.page.locator('#ui-datepicker-div');
+        if (await picker.isVisible().catch(() => false)) {
+            await this.page.keyboard.press('Escape');
+            await picker.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {});
+        }
+    }
+
     async validatePublishTime() {
         let PostTitle: string;
         //Enter Post Title
@@ -808,6 +820,9 @@ export class FieldOptionSettingsPage extends Base {
         console.log(PostForm.title);
         await this.page.waitForTimeout(1000);
         //Enter Date / Time
+        // FOS0089 opened the picker on this input and left it open; its button
+        // pane then covers the input and the click never lands. Close it first.
+        await this.closeDatePicker();
         await this.validateAndClick(Selectors.postForms.postFormsFrontendCreate.postDateTimeFormsFE.dateTimeSelect);
         await this.selectOptionWithValue(Selectors.postForms.postFormsFrontendCreate.postDateTimeFormsFE.selectYear, '2024');
         await this.selectOptionWithValue(Selectors.postForms.postFormsFrontendCreate.postDateTimeFormsFE.selectMonth, '7');
