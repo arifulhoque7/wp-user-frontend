@@ -1,0 +1,228 @@
+<?php
+/**
+ * React admin assets
+ *
+ * @package WP_User_Frontend
+ * @since WPUF_SINCE
+ */
+
+namespace WeDevs\Wpuf\Admin;
+
+use WeDevs\Wpuf\Platform\Contracts\Hookable;
+
+/**
+ * Registry of the React admin bundles: the shared layer (`wpuf-admin-runtime`,
+ * `wpuf-admin-ui`) and the screen bundles (forms list, builder, settings,
+ * subscriptions), with dependencies and versions from their generated
+ * `*.asset.php`, plus the React screens' stylesheet switch and body classes.
+ *
+ * The legacy `WeDevs\Wpuf\Assets` registry still registers every handle (one
+ * list, the `wpuf_scripts_to_register` / `wpuf_styles_to_register` filters,
+ * same order): it merges these entries in. Old handles stay there.
+ *
+ * @since WPUF_SINCE
+ */
+class Assets implements Hookable {
+
+    /**
+     * Hook the stylesheet switch and body classes. Translations are set by the
+     * legacy registry right after registration (set_translations()).
+     *
+     * @since WPUF_SINCE
+     *
+     * @return void
+     */
+    public function register_hooks() {
+        add_filter( 'style_loader_src', [ $this, 'use_react_forms_styles' ], 10, 2 );
+        add_filter( 'admin_body_class', [ $this, 'react_forms_body_class' ] );
+    }
+
+    /**
+     * Dependencies and version of a React bundle from its generated
+     * `assets/js/{name}.min.asset.php`, or the fallbacks when it is missing.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param string $name         Bundle name
+     * @param array  $dependencies Fallback dependencies
+     *
+     * @return array { dependencies, version }
+     */
+    public function react_asset( $name, $dependencies ) {
+        $file = WPUF_ROOT . '/assets/js/' . $name . '.min.asset.php';
+
+        return file_exists( $file )
+            ? require $file
+            : [
+                'dependencies' => $dependencies,
+                'version'      => WPUF_VERSION,
+            ];
+    }
+
+    /**
+     * React bundle scripts, keyed by handle without the `wpuf-` prefix, in
+     * registration order.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return array
+     */
+    public function scripts() {
+        $forms_list_asset_file = WPUF_ROOT . '/assets/js/forms-list-react.min.asset.php';
+        $forms_list_asset      = file_exists( $forms_list_asset_file ) ? require $forms_list_asset_file : [ 'dependencies' => [], 'version' => WPUF_VERSION ];
+        $settings_asset        = $this->react_asset( 'settings-react', [ 'wp-element', 'wp-data', 'wp-api-fetch', 'wp-i18n', 'wp-hooks', 'wp-components' ] );
+        $subscriptions_asset   = $this->react_asset( 'subscriptions', [ 'wp-element', 'wp-data', 'wp-api-fetch', 'wp-i18n', 'wp-hooks', 'wp-components', 'wp-primitives' ] );
+        $form_builder_asset    = $this->react_asset( 'form-builder', [] );
+        // The shared React admin layer (design.md D24): screens and Pro get
+        // these as dependencies through the `@wpuf/*` / plugin-ui externals.
+        $admin_runtime_asset = $this->react_asset( 'admin-runtime', [ 'wp-api-fetch', 'wp-element', 'wp-hooks', 'wp-url' ] );
+        $admin_ui_asset      = $this->react_asset( 'admin-ui', [ 'react', 'react-dom', 'react-jsx-runtime', 'wp-components', 'wp-element', 'wp-i18n', 'wp-plugins' ] );
+
+        return [
+            'forms-list-react'          => [
+                'src'       => WPUF_ASSET_URI . '/js/forms-list-react.min.js',
+                'deps'      => $forms_list_asset['dependencies'],
+                'version'   => $forms_list_asset['version'],
+                'in_footer' => true,
+            ],
+            'settings-react'            => [
+                'src'       => WPUF_ASSET_URI . '/js/settings-react.min.js',
+                'deps'      => $settings_asset['dependencies'],
+                'version'   => $settings_asset['version'],
+                'in_footer' => true,
+            ],
+            'admin-subscriptions-react' => [
+                'src'       => WPUF_ASSET_URI . '/js/subscriptions.min.js',
+                'deps'      => $subscriptions_asset['dependencies'],
+                'version'   => $subscriptions_asset['version'],
+                'in_footer' => true,
+            ],
+            'admin-runtime'             => [
+                'src'       => WPUF_ASSET_URI . '/js/admin-runtime.min.js',
+                'deps'      => $admin_runtime_asset['dependencies'],
+                'version'   => $admin_runtime_asset['version'],
+                'in_footer' => true,
+            ],
+            // @wedevs/plugin-ui, loaded once; the page also needs the wp-components style.
+            'admin-ui'                  => [
+                'src'       => WPUF_ASSET_URI . '/js/admin-ui.min.js',
+                'deps'      => array_values( array_unique( array_merge( [ 'wpuf-admin-runtime' ], $admin_ui_asset['dependencies'] ) ) ),
+                'version'   => $admin_ui_asset['version'],
+                'in_footer' => true,
+            ],
+            'form-builder-react'        => [
+                'src'       => WPUF_ASSET_URI . '/js/form-builder.min.js',
+                'deps'      => $form_builder_asset['dependencies'],
+                'version'   => $form_builder_asset['version'],
+                'in_footer' => true,
+            ],
+        ];
+    }
+
+    /**
+     * React screen stylesheets, keyed by handle without the `wpuf-` prefix, in
+     * registration order.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return array
+     */
+    public function styles() {
+        return [
+            'settings-react'      => [
+                'src' => WPUF_ASSET_URI . '/css/settings-react.css',
+                // settings-react-rtl.css (built by tools/admin-css) on RTL sites.
+                'rtl' => true,
+            ],
+            'subscriptions-react' => [
+                'src'     => WPUF_ASSET_URI . '/css/subscriptions.css',
+                'version' => $this->react_asset( 'subscriptions', [] )['version'],
+                // subscriptions-rtl.css (built by tools/admin-css) on RTL sites.
+                'rtl'     => true,
+            ],
+        ];
+    }
+
+    /**
+     * The shared admin components (window.wpuf.components) print their own
+     * strings, so they load translations like the screens do.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return void
+     */
+    public function set_translations() {
+        wp_set_script_translations( 'wpuf-admin-ui', 'wp-user-frontend' );
+    }
+
+    /**
+     * Whether the current admin page is a React forms list or builder.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return bool
+     */
+    public function is_react_forms_page() {
+        global $plugin_page;
+
+        return is_admin() && in_array( $plugin_page, [ 'wpuf-post-forms', 'wpuf-profile-forms' ], true );
+    }
+
+    /**
+     * On the React forms list and builder, serve the React stylesheet under the
+     * old handle (`wpuf-forms-list` for the lists, `wpuf-admin-form-builder` for
+     * the builder) so Pro and modules that depend on those handles keep working;
+     * the other handle prints nothing.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param string $src    Stylesheet URL
+     * @param string $handle Handle
+     *
+     * @return string|false
+     */
+    public function use_react_forms_styles( $src, $handle = '' ) {
+        if ( ! in_array( $handle, [ 'wpuf-admin-form-builder', 'wpuf-forms-list' ], true ) || ! $this->is_react_forms_page() ) {
+            return $src;
+        }
+
+        $action  = isset( $_GET['action'] ) ? sanitize_key( wp_unslash( $_GET['action'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only view switch.
+        $builder = in_array( $action, [ 'edit', 'add-new' ], true );
+        $serves  = $builder ? 'wpuf-admin-form-builder' : 'wpuf-forms-list';
+
+        if ( $handle !== $serves ) {
+            return false;
+        }
+
+        $file = $builder ? 'forms-react' : 'forms-list-react';
+
+        if ( is_rtl() ) {
+            $file .= '-rtl';
+        }
+
+        return add_query_arg( 'ver', WPUF_VERSION, WPUF_ASSET_URI . '/css/admin/' . $file . '.css' );
+    }
+
+    /**
+     * Body classes of the React forms list and builder.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param string $classes Admin body classes
+     *
+     * @return string
+     */
+    public function react_forms_body_class( $classes ) {
+        if ( ! $this->is_react_forms_page() ) {
+            return $classes;
+        }
+
+        $action = isset( $_GET['action'] ) ? sanitize_key( wp_unslash( $_GET['action'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only view switch.
+
+        if ( in_array( $action, [ 'edit', 'add-new' ], true ) ) {
+            $classes .= ' wpuf-builder-screen';
+        }
+
+        return trim( $classes . ' wpuf-admin-react' );
+    }
+}

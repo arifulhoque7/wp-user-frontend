@@ -43,7 +43,7 @@ class Registry {
      * @since WPUF_SINCE
      */
     public function __construct() {
-        foreach ( [ new PostFormsList(), new Subscriptions(), new Settings() ] as $screen ) {
+        foreach ( [ new PostFormsList(), new Subscriptions(), new Settings(), new Transactions(), new Tools(), new Subscribers(), new Premium(), new Help() ] as $screen ) {
             $this->add( $screen );
         }
     }

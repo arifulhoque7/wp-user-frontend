@@ -8,6 +8,7 @@
 
 namespace WeDevs\Wpuf\Platform\Providers;
 
+use WeDevs\Wpuf\Admin\Assets;
 use WeDevs\Wpuf\Admin\BootPayload;
 use WeDevs\Wpuf\Admin\Screens\Registry;
 use WeDevs\Wpuf\Builder\HookBridge;
@@ -43,6 +44,14 @@ class CoreServiceProvider extends ServiceProvider {
             Registry::class,
             function () {
                 return new Registry();
+            }
+        );
+
+        // React admin bundles (handles, deps from *.asset.php), stylesheet switch, body classes.
+        $this->share_tagged(
+            Assets::class,
+            function () {
+                return new Assets();
             }
         );
 

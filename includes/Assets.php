@@ -45,88 +45,56 @@ class Assets {
             ]
         );
         add_action( 'init', [ $this, 'register_all_scripts' ] );
-        add_filter( 'style_loader_src', [ $this, 'use_react_forms_styles' ], 10, 2 );
-        add_filter( 'admin_body_class', [ $this, 'react_forms_body_class' ] );
+        // The React stylesheet switch and body classes are hooked by Admin\Assets.
     }
 
     /**
-     * Whether this is a React forms list or builder page (post forms, and the
-     * registration forms page Pro adds).
+     * React admin assets (Admin\Assets).
      *
      * @since WPUF_SINCE
+     *
+     * @return \WeDevs\Wpuf\Admin\Assets
+     */
+    protected function react() {
+        return wpuf()->platform()->get( \WeDevs\Wpuf\Admin\Assets::class );
+    }
+
+    /**
+     * Whether the current admin page is a React forms list or builder.
+     *
+     * @since WPUF_SINCE Forwards to Admin\Assets.
      *
      * @return bool
      */
     protected function is_react_forms_page() {
-        global $plugin_page;
-
-        return is_admin() && in_array( $plugin_page, [ 'wpuf-post-forms', 'wpuf-profile-forms' ], true );
+        return $this->react()->is_react_forms_page();
     }
 
     /**
-     * On the React forms lists and builders, serve the Tailwind 4 sheet once,
-     * in the place the old sheets had in the cascade: on the builders
-     * assets/css/admin/forms-react.css through admin/form-builder.css (head), on
-     * the lists assets/css/admin/forms-list-react.css through forms-list.min.css
-     * (enqueued while rendering, printed after Pro's styles), with the other
-     * handle printing nothing. Both sheets carry the shared components' part
-     * and have a right-to-left copy, served on RTL sites. Done when the tag is printed, so
-     * every handle Free and Pro enqueue keeps working. The classic post edit
-     * screen keeps the old sheet.
+     * Serve the React forms stylesheet under the old handles.
      *
-     * @since WPUF_SINCE
+     * @since WPUF_SINCE Forwards to Admin\Assets (which hooks it).
      *
      * @param string $src    Stylesheet URL
-     * @param string $handle Style handle
+     * @param string $handle Handle
      *
      * @return string|false
      */
     public function use_react_forms_styles( $src, $handle = '' ) {
-        if ( ! in_array( $handle, [ 'wpuf-admin-form-builder', 'wpuf-forms-list' ], true ) || ! $this->is_react_forms_page() ) {
-            return $src;
-        }
-
-        $action  = isset( $_GET['action'] ) ? sanitize_key( wp_unslash( $_GET['action'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only view switch.
-        $builder = in_array( $action, [ 'edit', 'add-new' ], true );
-        $serves  = $builder ? 'wpuf-admin-form-builder' : 'wpuf-forms-list';
-
-        if ( $handle !== $serves ) {
-            return false;
-        }
-
-        $file = $builder ? 'forms-react' : 'forms-list-react';
-
-        if ( is_rtl() ) {
-            $file .= '-rtl';
-        }
-
-        return add_query_arg( 'ver', WPUF_VERSION, WPUF_ASSET_URI . '/css/admin/' . $file . '.css' );
+        return $this->react()->use_react_forms_styles( $src, $handle );
     }
 
     /**
-     * The Tailwind 4 sheet scopes its utilities to this body class; builders
-     * also get `wpuf-builder-screen`, which keeps the shared page look (gray
-     * page, no #wpcontent gutter, hidden footer) off their own full-screen
-     * layout.
+     * Body classes of the React forms list and builder.
      *
-     * @since WPUF_SINCE
+     * @since WPUF_SINCE Forwards to Admin\Assets (which hooks it).
      *
      * @param string $classes Admin body classes
      *
      * @return string
      */
     public function react_forms_body_class( $classes ) {
-        if ( ! $this->is_react_forms_page() ) {
-            return $classes;
-        }
-
-        $action = isset( $_GET['action'] ) ? sanitize_key( wp_unslash( $_GET['action'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only view switch.
-
-        if ( in_array( $action, [ 'edit', 'add-new' ], true ) ) {
-            $classes .= ' wpuf-builder-screen';
-        }
-
-        return trim( $classes . ' wpuf-admin-react' );
+        return $this->react()->react_forms_body_class( $classes );
     }
 
     /**
@@ -145,7 +113,7 @@ class Assets {
 
         // The shared admin components (window.wpuf.components) print their own
         // strings, so they load translations like the screens do.
-        wp_set_script_translations( 'wpuf-admin-ui', 'wp-user-frontend' );
+        $this->react()->set_translations();
 
         do_action( 'wpuf_after_register_scripts', $scripts, $styles );
     }
@@ -231,17 +199,12 @@ class Assets {
             'frontend-forms'      => [
                 'src' => WPUF_ASSET_URI . '/css/frontend-forms.css',
             ],
-            'settings-react'      => [
-                'src' => WPUF_ASSET_URI . '/css/settings-react.css',
-                // settings-react-rtl.css (built by tools/admin-css) on RTL sites.
-                'rtl' => true,
-            ],
-            'subscriptions-react' => [
-                'src'     => WPUF_ASSET_URI . '/css/subscriptions.css',
-                'version' => $this->react_asset( 'subscriptions', [] )['version'],
-                // subscriptions-rtl.css (built by tools/admin-css) on RTL sites.
-                'rtl'     => true,
-            ],
+        ];
+
+        // React screen stylesheets (Admin\Assets), at their old place in the list.
+        $styles = array_merge( $styles, $this->react()->styles() );
+
+        $styles += [
             'elementor-frontend-forms'      => [
                 'src' => WPUF_ASSET_URI . '/css/elementor-frontend-forms.css',
             ],
@@ -347,14 +310,7 @@ class Assets {
      * @return array { dependencies, version }
      */
     protected function react_asset( $name, $dependencies ) {
-        $file = WPUF_ROOT . '/assets/js/' . $name . '.min.asset.php';
-
-        return file_exists( $file )
-            ? require $file
-            : [
-                'dependencies' => $dependencies,
-                'version'      => WPUF_VERSION,
-            ];
+        return $this->react()->react_asset( $name, $dependencies );
     }
 
     /**
@@ -368,17 +324,6 @@ class Assets {
         $this->scheme         = is_ssl() ? 'https' : 'http';
         $api_key              = wpuf_get_option( 'gmap_api_key', 'wpuf_general' );
 
-        $forms_list_asset_file = WPUF_ROOT . '/assets/js/forms-list-react.min.asset.php';
-        $forms_list_asset      = file_exists( $forms_list_asset_file ) ? require $forms_list_asset_file : [ 'dependencies' => [], 'version' => WPUF_VERSION ];
-        // The other React admin apps are registered here too (task 2.5b), so every
-        // screen enqueues by handle and Pro can depend on them.
-        $settings_asset      = $this->react_asset( 'settings-react', [ 'wp-element', 'wp-data', 'wp-api-fetch', 'wp-i18n', 'wp-hooks', 'wp-components' ] );
-        $subscriptions_asset = $this->react_asset( 'subscriptions', [ 'wp-element', 'wp-data', 'wp-api-fetch', 'wp-i18n', 'wp-hooks', 'wp-components', 'wp-primitives' ] );
-        $form_builder_asset  = $this->react_asset( 'form-builder', [] );
-        // The shared React admin layer (design.md D24): screens and Pro get
-        // these as dependencies through the `@wpuf/*` / plugin-ui externals.
-        $admin_runtime_asset = $this->react_asset( 'admin-runtime', [ 'wp-api-fetch', 'wp-element', 'wp-hooks', 'wp-url' ] );
-        $admin_ui_asset      = $this->react_asset( 'admin-ui', [ 'react', 'react-dom', 'react-jsx-runtime', 'wp-components', 'wp-element', 'wp-i18n', 'wp-plugins' ] );
         $form_builder_js_deps = apply_filters(
             'wpuf_form_builder_js_deps',
             [
@@ -590,43 +535,13 @@ class Assets {
                 'src'       => WPUF_ASSET_URI . '/js/forms-list.min.js',
                 'in_footer' => true,
             ],
-            'forms-list-react'   => [
-                'src'       => WPUF_ASSET_URI . '/js/forms-list-react.min.js',
-                'deps'      => $forms_list_asset['dependencies'],
-                'version'   => $forms_list_asset['version'],
-                'in_footer' => true,
-            ],
-            'settings-react'     => [
-                'src'       => WPUF_ASSET_URI . '/js/settings-react.min.js',
-                'deps'      => $settings_asset['dependencies'],
-                'version'   => $settings_asset['version'],
-                'in_footer' => true,
-            ],
-            'admin-subscriptions-react' => [
-                'src'       => WPUF_ASSET_URI . '/js/subscriptions.min.js',
-                'deps'      => $subscriptions_asset['dependencies'],
-                'version'   => $subscriptions_asset['version'],
-                'in_footer' => true,
-            ],
-            'admin-runtime'      => [
-                'src'       => WPUF_ASSET_URI . '/js/admin-runtime.min.js',
-                'deps'      => $admin_runtime_asset['dependencies'],
-                'version'   => $admin_runtime_asset['version'],
-                'in_footer' => true,
-            ],
-            // @wedevs/plugin-ui, loaded once; the page also needs the wp-components style.
-            'admin-ui'           => [
-                'src'       => WPUF_ASSET_URI . '/js/admin-ui.min.js',
-                'deps'      => array_values( array_unique( array_merge( [ 'wpuf-admin-runtime' ], $admin_ui_asset['dependencies'] ) ) ),
-                'version'   => $admin_ui_asset['version'],
-                'in_footer' => true,
-            ],
-            'form-builder-react' => [
-                'src'       => WPUF_ASSET_URI . '/js/form-builder.min.js',
-                'deps'      => $form_builder_asset['dependencies'],
-                'version'   => $form_builder_asset['version'],
-                'in_footer' => true,
-            ],
+        ];
+
+        // React admin bundles (Admin\Assets), at their old place in the list, so
+        // every screen enqueues by handle and Pro can depend on them.
+        $scripts = array_merge( $scripts, $this->react()->scripts() );
+
+        $scripts += [
             'frontend-subscriptions' => [
                 'src'       => WPUF_ASSET_URI . '/js/frontend-subscriptions.min.js',
                 'in_footer' => true,
