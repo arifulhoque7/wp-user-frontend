@@ -82,7 +82,7 @@ export function openCustomFieldTooltip( fieldId ) {
                     <a href={ settingsUrl } target="_blank" rel="noreferrer" style={ { fontWeight: 700, color: PRIMARY } }>
                         { __( 'WP-admin > WPUF > Settings > Frontend Posting', 'wp-user-frontend' ) }
                     </a>
-                    { __( '- there you have to check the checkbox: "Show custom field data in the post content area', 'wp-user-frontend' ) }
+                    { __( '- there you have to check the checkbox: "Show custom field data in the post content area', 'wp-user-frontend' ) }"
                 </p>
                 <img src={ assetUrl() + '/images/custom-fields/settings.png' } alt="" style={ IMAGE } />
                 <p style={ { margin: 0, fontSize: 'inherit', lineHeight: 'inherit', color: 'inherit' } }>
