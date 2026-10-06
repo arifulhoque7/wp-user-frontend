@@ -197,7 +197,7 @@ class FormsController extends RestController {
      * @return \WP_REST_Response|\WP_Error
      */
     public function get_item( $request ) {
-        $form = $this->forms->read( (int) $request['id'] );
+        $form = $this->forms->find( (int) $request['id'] );
 
         if ( null === $form ) {
             return $this->error( 'not_found', __( 'Invalid form id', 'wp-user-frontend' ), 404 );
@@ -207,14 +207,14 @@ class FormsController extends RestController {
             [
                 'success' => true,
                 'data'    => [
-                    'id'            => (int) $form['post']->ID,
-                    'post_type'     => $form['post']->post_type,
-                    'post_title'    => $form['post']->post_title,
-                    'post_status'   => $form['post']->post_status,
-                    'form_fields'   => $form['fields'],
-                    'form_settings' => $form['settings'],
-                    'notifications' => $form['notifications'],
-                    'integrations'  => $form['integrations'],
+                    'id'            => $form->get_id(),
+                    'post_type'     => $form->get_type(),
+                    'post_title'    => $form->get_title(),
+                    'post_status'   => $form->get_status(),
+                    'form_fields'   => $form->get_fields(),
+                    'form_settings' => $form->get_settings(),
+                    'notifications' => $form->get_notifications(),
+                    'integrations'  => $form->get_integrations(),
                 ],
             ]
         );

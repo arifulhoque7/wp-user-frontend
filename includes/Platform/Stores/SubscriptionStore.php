@@ -9,6 +9,9 @@
 namespace WeDevs\Wpuf\Platform\Stores;
 
 use Exception;
+use WeDevs\Wpuf\Admin\Subscription;
+use WeDevs\Wpuf\Platform\Contracts\DataStore;
+use WeDevs\Wpuf\Platform\Models\SubscriptionPack;
 use WP_Error;
 use WP_REST_Request;
 
@@ -19,7 +22,9 @@ use WP_REST_Request;
  *
  * @since WPUF_SINCE
  */
-class SubscriptionStore {
+class SubscriptionStore implements DataStore {
+
+    use QueriesPosts;
 
     /**
      * Subscription post type
@@ -37,6 +42,83 @@ class SubscriptionStore {
      */
     public function is_subscription( $id ) {
         return self::POST_TYPE === get_post_type( absint( $id ) );
+    }
+
+    /**
+     * Whether the id is a subscription pack (DataStore).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int $id Id
+     *
+     * @return bool
+     */
+    public function exists( $id ) {
+        return $this->is_subscription( $id );
+    }
+
+    /**
+     * A pack with its meta as `Admin\Subscription::get_subscription_meta()`
+     * returns it (DataStore). Read only.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int $id Pack id
+     *
+     * @return array|null `post`, `meta`
+     */
+    public function read( $id ) {
+        if ( ! $this->is_subscription( $id ) ) {
+            return null;
+        }
+
+        $post = get_post( absint( $id ) );
+
+        return [
+            'post' => $post,
+            'meta' => Subscription::get_subscription_meta( $post->ID, $post ),
+        ];
+    }
+
+    /**
+     * A pack as a model (DataStore).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int $id Pack id
+     *
+     * @return SubscriptionPack|null
+     */
+    public function find( $id ) {
+        $read = $this->read( $id );
+
+        return null === $read ? null : SubscriptionPack::from_read( $read );
+    }
+
+    /**
+     * Packs as models (DataStore).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param array $args Query args
+     *
+     * @return SubscriptionPack[]
+     */
+    public function query( array $args = [] ) {
+        return array_values( array_filter( array_map( [ $this, 'find' ], $this->query_ids( self::POST_TYPE, $args ) ) ) );
+    }
+
+    /**
+     * Number of packs matching the args (DataStore).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param array $args Query args
+     *
+     * @return int
+     */
+    public function count( array $args = [] ) {
+        return $this->count_posts( self::POST_TYPE, $args );
     }
 
     /**

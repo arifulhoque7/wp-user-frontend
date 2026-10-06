@@ -8,6 +8,8 @@
 
 namespace WeDevs\Wpuf\Platform\Stores;
 
+use WeDevs\Wpuf\Platform\Contracts\DataStore;
+use WeDevs\Wpuf\Platform\Models\Form;
 use WP_Error;
 
 /**
@@ -18,7 +20,9 @@ use WP_Error;
  *
  * @since WPUF_SINCE
  */
-class FormStore {
+class FormStore implements DataStore {
+
+    use QueriesPosts;
 
     /**
      * Field store.
@@ -96,6 +100,60 @@ class FormStore {
             'notifications' => wpuf_get_form_notifications( $form_id ),
             'integrations'  => get_post_meta( $form_id, 'integrations', true ),
         ];
+    }
+
+    /**
+     * Whether the id is a builder form (DataStore).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int $id Id
+     *
+     * @return bool
+     */
+    public function exists( $id ) {
+        return $this->is_form( $id );
+    }
+
+    /**
+     * A form as a model (DataStore).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int $id Form id
+     *
+     * @return Form|null
+     */
+    public function find( $id ) {
+        $read = $this->read( $id );
+
+        return null === $read ? null : Form::from_read( $read );
+    }
+
+    /**
+     * Forms as models (DataStore). `post_type` narrows to one form type.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param array $args Query args
+     *
+     * @return Form[]
+     */
+    public function query( array $args = [] ) {
+        return array_values( array_filter( array_map( [ $this, 'find' ], $this->query_ids( $this->post_types(), $args ) ) ) );
+    }
+
+    /**
+     * Number of forms matching the args (DataStore).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param array $args Query args
+     *
+     * @return int
+     */
+    public function count( array $args = [] ) {
+        return $this->count_posts( $this->post_types(), $args );
     }
 
     /**
