@@ -39,7 +39,7 @@ class Assets implements Hookable {
 
     /**
      * Dependencies and version of a React bundle from its generated
-     * `assets/js/{name}.min.asset.php`, or the fallbacks when it is missing.
+     * `assets/js/react/{name}.asset.php`, or the fallbacks when it is missing.
      *
      * @since WPUF_SINCE
      *
@@ -49,7 +49,7 @@ class Assets implements Hookable {
      * @return array { dependencies, version }
      */
     public function react_asset( $name, $dependencies ) {
-        $file = WPUF_ROOT . '/assets/js/' . $name . '.min.asset.php';
+        $file = WPUF_ROOT . '/assets/js/react/' . $name . '.asset.php';
 
         return file_exists( $file )
             ? require $file
@@ -68,7 +68,7 @@ class Assets implements Hookable {
      * @return array
      */
     public function scripts() {
-        $forms_list_asset_file = WPUF_ROOT . '/assets/js/forms-list-react.min.asset.php';
+        $forms_list_asset_file = WPUF_ROOT . '/assets/js/react/forms-list-react.asset.php';
         $forms_list_asset      = file_exists( $forms_list_asset_file ) ? require $forms_list_asset_file : [ 'dependencies' => [], 'version' => WPUF_VERSION ];
         $settings_asset        = $this->react_asset( 'settings-react', [ 'wp-element', 'wp-data', 'wp-api-fetch', 'wp-i18n', 'wp-hooks', 'wp-components' ] );
         $subscriptions_asset   = $this->react_asset( 'subscriptions', [ 'wp-element', 'wp-data', 'wp-api-fetch', 'wp-i18n', 'wp-hooks', 'wp-components', 'wp-primitives' ] );
@@ -80,38 +80,38 @@ class Assets implements Hookable {
 
         return [
             'forms-list-react'          => [
-                'src'       => WPUF_ASSET_URI . '/js/forms-list-react.min.js',
+                'src'       => WPUF_ASSET_URI . '/js/react/forms-list-react.js',
                 'deps'      => $forms_list_asset['dependencies'],
                 'version'   => $forms_list_asset['version'],
                 'in_footer' => true,
             ],
             'settings-react'            => [
-                'src'       => WPUF_ASSET_URI . '/js/settings-react.min.js',
+                'src'       => WPUF_ASSET_URI . '/js/react/settings-react.js',
                 'deps'      => $settings_asset['dependencies'],
                 'version'   => $settings_asset['version'],
                 'in_footer' => true,
             ],
             'admin-subscriptions-react' => [
-                'src'       => WPUF_ASSET_URI . '/js/subscriptions.min.js',
+                'src'       => WPUF_ASSET_URI . '/js/react/subscriptions.js',
                 'deps'      => $subscriptions_asset['dependencies'],
                 'version'   => $subscriptions_asset['version'],
                 'in_footer' => true,
             ],
             'admin-runtime'             => [
-                'src'       => WPUF_ASSET_URI . '/js/admin-runtime.min.js',
+                'src'       => WPUF_ASSET_URI . '/js/react/admin-runtime.js',
                 'deps'      => $admin_runtime_asset['dependencies'],
                 'version'   => $admin_runtime_asset['version'],
                 'in_footer' => true,
             ],
             // @wedevs/plugin-ui, loaded once; the page also needs the wp-components style.
             'admin-ui'                  => [
-                'src'       => WPUF_ASSET_URI . '/js/admin-ui.min.js',
+                'src'       => WPUF_ASSET_URI . '/js/react/admin-ui.js',
                 'deps'      => array_values( array_unique( array_merge( [ 'wpuf-admin-runtime' ], $admin_ui_asset['dependencies'] ) ) ),
                 'version'   => $admin_ui_asset['version'],
                 'in_footer' => true,
             ],
             'form-builder-react'        => [
-                'src'       => WPUF_ASSET_URI . '/js/form-builder.min.js',
+                'src'       => WPUF_ASSET_URI . '/js/react/form-builder.js',
                 'deps'      => $form_builder_asset['dependencies'],
                 'version'   => $form_builder_asset['version'],
                 'in_footer' => true,
@@ -152,7 +152,7 @@ class Assets implements Hookable {
      * @return void
      */
     public function set_translations() {
-        wp_set_script_translations( 'wpuf-admin-ui', 'wp-user-frontend' );
+        wp_set_script_translations( 'wpuf-admin-ui', 'wp-user-frontend', WPUF_ROOT . '/languages' );
     }
 
     /**

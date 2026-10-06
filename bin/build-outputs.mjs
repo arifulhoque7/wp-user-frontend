@@ -6,7 +6,7 @@
 // (dependencies + content hash, read by includes/Assets.php).
 export const react = [ 'form-builder', 'forms-list-react', 'settings-react', 'subscriptions', 'admin-runtime', 'admin-ui' ];
 export const built = [
-    ...react.flatMap( ( name ) => [ `assets/js/${ name }.min.js`, `assets/js/${ name }.min.asset.php` ] ),
+    ...react.flatMap( ( name ) => [ `assets/js/react/${ name }.js`, `assets/js/react/${ name }.asset.php` ] ),
     'assets/js/account.min.js',
     'assets/js/ai-form-builder.min.js',
     'assets/js/frontend-form.min.js',

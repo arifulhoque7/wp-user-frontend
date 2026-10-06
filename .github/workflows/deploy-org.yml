@@ -36,6 +36,8 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '7.4'
+          # bin/make-pot.mjs (grunt i18n) extracts the POT with WP-CLI.
+          tools: wp-cli
 
       # `pnpm build` ends with bin/verify-build.mjs, so a half-built bundle fails here.
       - name: Install and build
@@ -44,7 +46,7 @@ jobs:
           pnpm build
 
       # POT + legacy assets (less/concat/uglify/tailwind) + readme.md.
-      # grunt-wp-i18n generates the POT, so no separate WP-CLI install is needed.
+      # The POT comes from bin/make-pot.mjs (WP-CLI, set up with PHP above).
       - name: Build legacy assets + POT
         run: pnpm exec grunt release
 

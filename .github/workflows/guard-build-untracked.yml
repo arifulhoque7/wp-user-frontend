@@ -26,6 +26,7 @@ jobs:
             'assets/js/frontend-form.min.js' \
             'assets/js/frontend-subscriptions.min.js' \
             'assets/js/subscriptions.min.js' \
+            'assets/js/react/' \
             'assets/js/upload.min.js' \
             'assets/js/wpuf-form-builder.js' \
             'assets/js/wpuf-form-builder-mixins.js' \

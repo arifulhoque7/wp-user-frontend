@@ -58,10 +58,10 @@ export default function Header( { activeTab, onTabChange } ) {
                 <div className="flex items-center">
                     <img
                         src={ `${ data.asset_url || '' }/images/wpuf-icon-circle.svg` }
-                        alt="WPUF Icon"
+                        alt={ __( 'WPUF Icon', 'wp-user-frontend' ) }
                         className="mr-2"
                     />
-                    <nav className="flex items-center" aria-label="Tabs">
+                    <nav className="flex items-center" aria-label={ __( 'Tabs', 'wp-user-frontend' ) }>
                         <div className="relative flex">
                             <div className="flex items-center">
                                 <input

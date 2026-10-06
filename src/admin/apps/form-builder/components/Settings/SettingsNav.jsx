@@ -1,3 +1,4 @@
+import { __ } from '@wordpress/i18n';
 import { useMemo } from '@wordpress/element';
 import { useSelect } from '@wordpress/data';
 import { applyFilters } from '@wordpress/hooks';
@@ -78,7 +79,7 @@ export default function SettingsNav( { activeTab, onTabChange } ) {
                                                     <span>
                                                         <img
                                                             src={ `${ data.asset_url || '' }/images/pro-badge.svg` }
-                                                            alt="pro icon"
+                                                            alt={ __( 'pro icon', 'wp-user-frontend' ) }
                                                         />
                                                     </span>
                                                 ) }

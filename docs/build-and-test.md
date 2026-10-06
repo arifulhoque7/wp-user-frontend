@@ -66,6 +66,19 @@ pnpm on branch `feature/react-admin-revamp` (like FlyHR): `pnpm install --frozen
 import). Tailwind scans sources only, so a full build is deterministic (no CSS drift).
 `modules/user-directory` keeps npm (`build:user-directory` runs `npm ci` there).
 
+## Translations (React admin)
+- The React admin bundles build to `assets/js/react/<name>.js` (+ `.asset.php`),
+  minified but **not** named `.min.js`: `wp i18n make-pot` and translate.wordpress.org
+  skip `*.min.js`, and WordPress loads a script's JSON translations by the md5 of the
+  enqueued file's path, so the bundle must be both extracted and enqueued under that name.
+- `node bin/make-pot.mjs` (run by `grunt i18n` / `grunt release`, needs WP-CLI) writes
+  `languages/wp-user-frontend.pot` from the PHP, `src/admin` and those bundles.
+- Every React handle calls `wp_set_script_translations( $handle, 'wp-user-frontend', WPUF_ROOT . '/languages' )`
+  so JSON shipped in the plugin's `languages/` loads too, not only `WP_LANG_DIR`.
+- Wrap every user-facing string in `__()` (also `title`, `alt`, `aria-label`, `placeholder`).
+- Pro: `node tools/make-pot.mjs` links each React string to its bundle (`assets/js/<bundle>.js`;
+  core reads `.min.js` as `.js` for translations).
+
 ## Before Committing
 1. `composer phpcs` on changed PHP files.
 2. Relevant `pnpm run build:*` for changed Vue entry point.

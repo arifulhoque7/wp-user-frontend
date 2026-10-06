@@ -2,8 +2,10 @@
  * One wp-scripts config for the React admin apps (builder, forms list,
  * subscriptions, settings).
  *
- * Sources live in src/admin/apps/<app> (task 3.5); output names are unchanged (assets/js/<name>.min.js + .min.asset.php,
- * assets/css/<name>.css + -rtl.css), so the registered handles keep working.
+ * Sources live in src/admin/apps/<app> (task 3.5). Output: assets/js/react/<name>.js + .asset.php
+ * (minified, but not named .min.js: translate.wordpress.org and `wp i18n make-pot` skip
+ * *.min.js, so the strings would never be extracted and the JSON translations, keyed
+ * by the enqueued file's path, would not match) and assets/css/<name>.css + -rtl.css.
  * Plus the shared layer entries admin-runtime and admin-ui (design.md D24).
  * Build one app with `WPUF_ENTRY=<name>`, e.g. `WPUF_ENTRY=form-builder`.
  */
@@ -62,7 +64,7 @@ const config = ( group, withWpufExternals ) => ( {
     ...defaultConfig,
     entry: group,
     output: {
-        filename: 'js/[name].min.js',
+        filename: 'js/react/[name].js',
         path: path.resolve( __dirname, 'assets' ),
         // assets/ holds every other build's output and tracked sources: never clean it.
         clean: false,

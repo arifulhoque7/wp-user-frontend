@@ -11,6 +11,7 @@ export.sh
 !/bin/verify-build.mjs
 !/bin/build-outputs.mjs
 !/bin/sanitize-dist.mjs
+!/bin/make-pot.mjs
 nbproject
 node_modules
 includes/pro
@@ -92,10 +93,8 @@ openspec/
 /plugins/
 /assets/*
 
-# React settings screen: generated build outputs (built via
-# `npm run build:settings-react`; produced fresh in the release workflow).
-assets/js/settings-react.min.js
-assets/js/settings-react.min.js.map
-assets/js/settings-react.min.asset.php
+# React admin bundles (webpack.admin.config.js) and the settings stylesheet:
+# generated, produced fresh in the release workflow.
+assets/js/react/
 assets/css/settings-react.css
 .phpunit.result.cache

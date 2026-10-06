@@ -16,7 +16,7 @@ export default function ProFeatureAlert( { optionField } ) {
                 data-tip={ __( 'Available in PRO version', 'wp-user-frontend' ) }
             >
                 <a href={ data.pro_link || '' } target="_blank" rel="noopener noreferrer">
-                    <img src={ `${ data.asset_url || '' }/images/pro-badge.svg` } alt="pro icon" />
+                    <img src={ `${ data.asset_url || '' }/images/pro-badge.svg` } alt={ __( 'pro icon', 'wp-user-frontend' ) } />
                 </a>
             </label>
         </div>

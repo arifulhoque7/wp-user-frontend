@@ -147,7 +147,7 @@ class Admin_Form_Builder {
 
         // React form builder bundle, registered in the shared Assets registry (task 2.5b).
         wp_enqueue_script( 'wpuf-form-builder-react' );
-        wp_set_script_translations( 'wpuf-form-builder-react', 'wp-user-frontend' );
+        wp_set_script_translations( 'wpuf-form-builder-react', 'wp-user-frontend', WPUF_ROOT . '/languages' );
         wpuf()->platform()->get( BootPayload::class )->attach( 'form_builder', 'wpuf-form-builder-react' );
 
         /*

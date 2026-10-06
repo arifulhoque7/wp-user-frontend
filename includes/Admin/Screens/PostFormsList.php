@@ -87,7 +87,7 @@ class PostFormsList extends Screen {
                 wp_enqueue_style( 'wpuf-admin' );
                 wp_enqueue_style( 'wpuf-forms-list' );
                 wp_enqueue_script( 'wpuf-forms-list-react' );
-                wp_set_script_translations( 'wpuf-forms-list-react', 'wp-user-frontend' );
+                wp_set_script_translations( 'wpuf-forms-list-react', 'wp-user-frontend', WPUF_ROOT . '/languages' );
                 wpuf()->platform()->get( BootPayload::class )->attach( 'post_forms', 'wpuf-forms-list-react' );
 
                 // Check AI configuration status

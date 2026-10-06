@@ -232,6 +232,11 @@ module.exports = function( grunt) {
 
         // is to run NPM commands through Grunt
         shell: {
+            // POT with the React strings (WP-CLI make-pot over src/admin and the
+            // assets/js/react bundles); grunt-wp-i18n reads PHP only.
+            makepot: {
+                command: 'node bin/make-pot.mjs',
+            },
             npm_build: {
                 command: 'pnpm run build',
             },
@@ -273,7 +278,7 @@ module.exports = function( grunt) {
     grunt.registerTask( 'default', [ 'less', 'uglify', 'i18n', 'tailwind' ] );
 
     // file auto generation
-    grunt.registerTask( 'i18n', [ 'makepot' ] );
+    grunt.registerTask( 'i18n', [ 'shell:makepot' ] );
     grunt.registerTask( 'readme', [ 'wp_readme_to_markdown' ] );
 
     // build stuff

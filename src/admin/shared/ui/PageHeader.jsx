@@ -67,7 +67,7 @@ export default function PageHeader( { variant = 'bleed', utm = 'wpuf-header', su
         >
             <div className="flex justify-start items-center">
                 { boot.assetUrl && <img src={ boot.assetUrl + '/images/wpuf-icon-circle.svg' } alt={ __( 'WPUF Icon', 'wp-user-frontend' ) } className="w-12 h-auto mr-4" /> }
-                <h2 className="m-0 text-2xl leading-7 font-bold text-[#1d2327]">{ isPro ? 'WP User Frontend Pro' : 'WP User Frontend' }</h2>
+                <h2 className="m-0 text-2xl leading-7 font-bold text-[#1d2327]">{ isPro ? __( 'WP User Frontend Pro', 'wp-user-frontend' ) : __( 'WP User Frontend', 'wp-user-frontend' ) }</h2>
                 { plan && <span className={ cn( BADGE, 'font-semibold' ) }>{ plan }</span> }
                 { version && <span className={ cn( BADGE, 'font-medium' ) }>{ 'v' + version }</span> }
                 { ! isPro && (

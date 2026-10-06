@@ -92,7 +92,7 @@ class Settings extends Screen {
         $handle = 'wpuf-settings-react';
 
         wp_enqueue_script( $handle );
-        wp_set_script_translations( $handle, 'wp-user-frontend' );
+        wp_set_script_translations( $handle, 'wp-user-frontend', WPUF_ROOT . '/languages' );
         wpuf()->platform()->get( BootPayload::class )->attach( 'settings', $handle );
 
         wp_localize_script(

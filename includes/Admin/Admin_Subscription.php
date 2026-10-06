@@ -107,6 +107,7 @@ class Admin_Subscription {
         wp_enqueue_script( 'wpuf-admin-subscriptions-react' );
         wp_enqueue_style( 'wpuf-subscriptions-react' );
         $script_handle = 'wpuf-admin-subscriptions-react';
+        wp_set_script_translations( $script_handle, 'wp-user-frontend', WPUF_ROOT . '/languages' );
         wpuf()->platform()->get( BootPayload::class )->attach( 'subscriptions', $script_handle );
 
         wp_localize_script(
