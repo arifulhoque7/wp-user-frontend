@@ -15,9 +15,10 @@ use WP_REST_Controller;
 use WP_REST_Response;
 
 /**
- * Base for new `wpuf/v1/admin/*` routes: capability permission callbacks with
+ * Base of every WPUF REST controller: capability permission callbacks with
  * explicit 401/403, pagination headers, typed casts and `wpuf_{resource}_{reason}`
- * errors. Frozen routes keep their own controllers (Api\*).
+ * errors. The frozen controllers (Api\FormList, Api\Subscription, Api\Settings)
+ * extend it too and keep their own paths, arguments, permissions and responses.
  *
  * @since WPUF_SINCE
  */

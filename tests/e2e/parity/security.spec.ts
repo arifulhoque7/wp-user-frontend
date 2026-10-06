@@ -12,16 +12,29 @@ test.describe('Branch security', () => {
 
     test('SEC0001 : builder page never prints the reCAPTCHA / Turnstile secret keys', { tag: ['@Security', '@Test_SEC0001'] }, async ({ browser }) => {
         const branch = paritySite('branch');
-        for (const [key, value] of [['recaptcha_private', 'SEC0001-RC-SECRET'], ['turnstile_secret_key', 'SEC0001-TS-SECRET']]) {
-            parityWp(branch, ['option', 'patch', 'update', 'wpuf_general', key, value]);
-        }
-        const formId = new ParityPage().doSeedForm(branch, 'post-form-parity.json');
-        const admin = await ParitySitePage.doOpen(browser, branch);
-        const html = await admin.getAdminHtml(`/wp-admin/admin.php?page=wpuf-post-forms&action=edit&id=${formId}`);
-        await admin.doClose();
+        // Put wpuf_general back afterwards: other specs (CTR0001) compare its
+        // state with develop's (an empty option is re-added on every admin load).
+        const savedGeneral = parityWp(branch, ['option', 'get', 'wpuf_general', '--format=json']).trim();
+        try {
+            for (const [key, value] of [['recaptcha_private', 'SEC0001-RC-SECRET'], ['turnstile_secret_key', 'SEC0001-TS-SECRET']]) {
+                // `patch update` needs the key to exist; a site whose settings were
+                // never saved has no such key yet, so insert it then.
+                try {
+                    parityWp(branch, ['option', 'patch', 'update', 'wpuf_general', key, value]);
+                } catch {
+                    parityWp(branch, ['option', 'patch', 'insert', 'wpuf_general', key, value]);
+                }
+            }
+            const formId = new ParityPage().doSeedForm(branch, 'post-form-parity.json');
+            const admin = await ParitySitePage.doOpen(browser, branch);
+            const html = await admin.getAdminHtml(`/wp-admin/admin.php?page=wpuf-post-forms&action=edit&id=${formId}`);
+            await admin.doClose();
 
-        expect(html, 'reCAPTCHA secret printed').not.toContain('SEC0001-RC-SECRET');
-        expect(html, 'Turnstile secret printed').not.toContain('SEC0001-TS-SECRET');
+            expect(html, 'reCAPTCHA secret printed').not.toContain('SEC0001-RC-SECRET');
+            expect(html, 'Turnstile secret printed').not.toContain('SEC0001-TS-SECRET');
+        } finally {
+            parityWp(branch, ['option', 'update', 'wpuf_general', savedGeneral, '--format=json']);
+        }
     });
 
     test('SEC0002 : builder save rejects a foreign settings meta key, a non-form post and a missing nonce', { tag: ['@Security', '@Test_SEC0002'] }, async ({ browser }) => {

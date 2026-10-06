@@ -3,12 +3,12 @@
 namespace WeDevs\Wpuf\Api;
 
 use WeDevs\Wpuf\Platform\Stores\Stores;
-use WP_REST_Controller;
+use WeDevs\Wpuf\Platform\REST\RestController;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_REST_Server;
 
-class Subscription extends WP_REST_Controller {
+class Subscription extends RestController {
     /**
      * The namespace of this controller's route.
      *

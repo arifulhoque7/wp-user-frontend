@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { spawnSync } from 'child_process';
+import * as fs from 'fs';
 import * as path from 'path';
 import { ParityPage, ParitySitePage } from '../pages/parity';
 import { parityDir, paritySite, paritySitesConfigured, parityWp } from '../utils/paritySites';
@@ -54,6 +55,11 @@ test.describe('Runtime contract', () => {
         const label = `ctr-${Date.now()}`;
         const developDir = await crawl(browser, 'develop', label);
         const branchDir = await crawl(browser, 'branch', label);
+        // A crawl that recorded nothing would diff two empty sets and pass with 0.
+        for (const dir of [developDir, branchDir]) {
+            const recorded = fs.existsSync(dir) ? fs.readdirSync(dir).filter((file) => file.endsWith('.json')).length : 0;
+            expect(recorded, `contract recordings in ${dir}`).toBeGreaterThan(0);
+        }
         const allow = process.env.CONTRACT_ALLOW ? [`--allow=${process.env.CONTRACT_ALLOW}`] : [];
         const run = spawnSync('php', [path.resolve(parityDir, '..', '..', 'contracts', 'diff.php'), developDir, branchDir, ...allow], { encoding: 'utf-8' });
         const diff = run.stdout || '';

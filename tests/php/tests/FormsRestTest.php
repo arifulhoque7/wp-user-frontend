@@ -1,0 +1,223 @@
+<?php
+/**
+ * Admin forms REST routes and the builder save service (task 5b.4)
+ *
+ * @package WP_User_Frontend
+ */
+
+use WeDevs\Wpuf\Builder\FormSave;
+use WeDevs\Wpuf\Platform\REST\Controllers\FormsController;
+use WeDevs\Wpuf\Platform\REST\RestController;
+
+/**
+ * @covers \WeDevs\Wpuf\Platform\REST\Controllers\FormsController
+ * @covers \WeDevs\Wpuf\Builder\FormSave
+ * @covers \WeDevs\Wpuf\Platform\Providers\RestServiceProvider
+ */
+class FormsRestTest extends WP_UnitTestCase {
+
+    /**
+     * REST server for the test.
+     *
+     * @var WP_REST_Server
+     */
+    private $server;
+
+    public function set_up() {
+        parent::set_up();
+
+        global $wp_rest_server;
+        $wp_rest_server = new WP_REST_Server();
+        $this->server   = $wp_rest_server;
+
+        do_action( 'rest_api_init', $this->server );
+    }
+
+    public function tear_down() {
+        global $wp_rest_server;
+        $wp_rest_server = null;
+
+        parent::tear_down();
+    }
+
+    /**
+     * A post form with a title field.
+     *
+     * @return int
+     */
+    private function make_form() {
+        $form_id = self::factory()->post->create( [ 'post_type' => 'wpuf_forms', 'post_status' => 'publish', 'post_title' => 'REST form' ] );
+
+        update_post_meta( $form_id, 'wpuf_form_settings', [ 'post_type' => 'post', 'submit_text' => 'Submit' ] );
+
+        return $form_id;
+    }
+
+    /**
+     * The builder payload for a form.
+     *
+     * @param int   $form_id Form id
+     * @param array $settings Settings to send
+     *
+     * @return array
+     */
+    private function payload( $form_id, $settings = [ 'post_type' => 'post', 'submit_text' => 'Send' ] ) {
+        return [
+            'form_data'            => http_build_query(
+                [
+                    'wpuf_form_id'      => $form_id,
+                    'form_settings_key' => 'wpuf_form_settings',
+                    'post_title'        => 'REST form saved',
+                ]
+            ),
+            'form_fields'          => wp_json_encode(
+                [
+                    [
+                        'input_type' => 'text',
+                        'template'   => 'post_title',
+                        'name'       => 'post_title',
+                        'label'      => 'Title',
+                        'is_new'     => true,
+                    ],
+                ]
+            ),
+            'notifications'        => '[]',
+            'settings'             => wp_json_encode( $settings ),
+            'legacy_settings_keys' => '[]',
+        ];
+    }
+
+    /**
+     * POST the payload to the route.
+     *
+     * @param int   $route_id Form id in the route
+     * @param array $body     Body params
+     *
+     * @return WP_REST_Response
+     */
+    private function post( $route_id, $body ) {
+        $request = new WP_REST_Request( 'POST', '/wpuf/v1/admin/forms/' . $route_id );
+        $request->set_body_params( $body );
+
+        return $this->server->dispatch( $request );
+    }
+
+    public function test_routes_registered_once_and_controllers_share_the_base() {
+        $routes = $this->server->get_routes();
+
+        $this->assertCount( 3, $routes['/wpuf/v1/admin/forms/(?P<id>[\d]+)'] );
+        foreach ( [ 'duplicate', 'trash', 'restore' ] as $action ) {
+            $this->assertCount( 1, $routes[ '/wpuf/v1/admin/forms/(?P<id>[\d]+)/' . $action ] );
+        }
+        $this->assertCount( 1, $routes['/wpuf/v1/wpuf_form'] );
+        $this->assertCount( 2, $routes['/wpuf/v1/settings'] );
+
+        foreach ( [ \WeDevs\Wpuf\Api\FormList::class, \WeDevs\Wpuf\Api\Subscription::class, \WeDevs\Wpuf\Api\Settings::class, FormsController::class ] as $class ) {
+            $this->assertTrue( is_subclass_of( $class, RestController::class ), $class );
+        }
+
+        $this->assertSame( wpuf()->api->form_list, wpuf()->platform()->get( \WeDevs\Wpuf\Api\FormList::class ) );
+    }
+
+    public function test_permissions_401_403_404() {
+        $form_id = $this->make_form();
+
+        wp_set_current_user( 0 );
+        $this->assertSame( 401, $this->server->dispatch( new WP_REST_Request( 'GET', '/wpuf/v1/admin/forms/' . $form_id ) )->get_status() );
+
+        wp_set_current_user( self::factory()->user->create( [ 'role' => 'subscriber' ] ) );
+        $this->assertSame( 403, $this->server->dispatch( new WP_REST_Request( 'GET', '/wpuf/v1/admin/forms/' . $form_id ) )->get_status() );
+        $this->assertSame( 403, $this->post( $form_id, $this->payload( $form_id ) )->get_status() );
+
+        wp_set_current_user( self::factory()->user->create( [ 'role' => 'administrator' ] ) );
+        $page = self::factory()->post->create( [ 'post_type' => 'page' ] );
+        $this->assertSame( 404, $this->server->dispatch( new WP_REST_Request( 'GET', '/wpuf/v1/admin/forms/' . $page ) )->get_status() );
+
+        $read = $this->server->dispatch( new WP_REST_Request( 'GET', '/wpuf/v1/admin/forms/' . $form_id ) );
+        $this->assertSame( 200, $read->get_status() );
+        $this->assertSame( 'wpuf_forms', $read->get_data()['data']['post_type'] );
+    }
+
+    public function test_route_id_must_match_the_payload_form() {
+        wp_set_current_user( self::factory()->user->create( [ 'role' => 'administrator' ] ) );
+        $form_a = $this->make_form();
+        $form_b = $this->make_form();
+
+        $response = $this->post( $form_a, $this->payload( $form_b ) );
+
+        $this->assertSame( 400, $response->get_status() );
+        $this->assertSame( 'wpuf_form_invalid_id', $response->get_data()['code'] );
+    }
+
+    public function test_rest_save_stores_what_the_save_service_stores() {
+        wp_set_current_user( self::factory()->user->create( [ 'role' => 'administrator' ] ) );
+        $rest_form    = $this->make_form();
+        $service_form = $this->make_form();
+
+        $response = $this->post( $rest_form, $this->payload( $rest_form ) );
+        $this->assertSame( 200, $response->get_status() );
+        $this->assertTrue( $response->get_data()['success'] );
+
+        $payload = $this->payload( $service_form );
+        parse_str( $payload['form_data'], $form_data );
+        ( new FormSave() )->save( $payload, $form_data );
+
+        $this->assertSame( get_post_meta( $service_form, 'wpuf_form_settings', true ), get_post_meta( $rest_form, 'wpuf_form_settings', true ) );
+        $this->assertSame( 'Send', get_post_meta( $rest_form, 'wpuf_form_settings', true )['submit_text'] );
+        $this->assertSame( 'REST form saved', get_post( $rest_form )->post_title );
+        $this->assertCount( 1, wpuf_get_form_fields( $rest_form ) );
+        $this->assertSame( $response->get_data()['data']['form_settings'], get_post_meta( $rest_form, 'wpuf_form_settings', true ) );
+    }
+
+    public function test_save_service_rejects_bad_payloads() {
+        $form_id = $this->make_form();
+        $saver   = new FormSave();
+
+        $this->assertSame( 'wpuf_form_invalid_id', $saver->save( [], [] )->get_error_code() );
+
+        $page = self::factory()->post->create( [ 'post_type' => 'page' ] );
+        $this->assertSame( 'wpuf_form_invalid_id', $saver->save( [], [ 'wpuf_form_id' => $page, 'form_settings_key' => 'wpuf_form_settings' ] )->get_error_code() );
+
+        $this->assertSame( 'wpuf_form_invalid_settings', $saver->save( [], [ 'wpuf_form_id' => $form_id, 'form_settings_key' => '_edit_lock' ] )->get_error_code() );
+
+        $payload = $this->payload( $form_id, [ 'payment_options' => 'on', 'choose_payment_option' => 'force_pack_purchase', 'fallback_ppp_enable' => 'on', 'fallback_ppp_cost' => '' ] );
+        parse_str( $payload['form_data'], $form_data );
+        $this->assertSame( 'wpuf_form_ppp_cost_required', $saver->save( $payload, $form_data )->get_error_code() );
+    }
+
+    public function test_list_actions_duplicate_trash_restore_delete() {
+        wp_set_current_user( self::factory()->user->create( [ 'role' => 'administrator' ] ) );
+        $form_id = $this->make_form();
+        $this->post( $form_id, $this->payload( $form_id ) );
+
+        $dup = $this->server->dispatch( new WP_REST_Request( 'POST', '/wpuf/v1/admin/forms/' . $form_id . '/duplicate' ) );
+        $this->assertSame( 201, $dup->get_status() );
+        $copy = $dup->get_data()['data']['id'];
+        $this->assertSame( 'draft', get_post_status( $copy ) );
+        $this->assertSame( get_post_meta( $form_id, 'wpuf_form_settings', true ), get_post_meta( $copy, 'wpuf_form_settings', true ) );
+        $this->assertCount( 1, wpuf_get_form_fields( $copy ) );
+
+        $not_trashed = $this->server->dispatch( new WP_REST_Request( 'POST', '/wpuf/v1/admin/forms/' . $form_id . '/restore' ) );
+        $this->assertSame( 400, $not_trashed->get_status() );
+
+        $trash = $this->server->dispatch( new WP_REST_Request( 'POST', '/wpuf/v1/admin/forms/' . $form_id . '/trash' ) );
+        $this->assertSame( 200, $trash->get_status() );
+        $this->assertSame( 'trash', get_post_status( $form_id ) );
+
+        $restore = $this->server->dispatch( new WP_REST_Request( 'POST', '/wpuf/v1/admin/forms/' . $form_id . '/restore' ) );
+        $this->assertSame( 200, $restore->get_status() );
+        $this->assertSame( 'publish', get_post_status( $form_id ) );
+
+        $delete = $this->server->dispatch( new WP_REST_Request( 'DELETE', '/wpuf/v1/admin/forms/' . $copy ) );
+        $this->assertSame( 200, $delete->get_status() );
+        $this->assertNull( get_post( $copy ) );
+        $this->assertCount( 0, wpuf_get_form_fields( $copy ) );
+
+        $page = self::factory()->post->create( [ 'post_type' => 'page' ] );
+        foreach ( [ 'duplicate', 'trash', 'restore' ] as $action ) {
+            $this->assertSame( 404, $this->server->dispatch( new WP_REST_Request( 'POST', '/wpuf/v1/admin/forms/' . $page . '/' . $action ) )->get_status() );
+        }
+        $this->assertSame( 404, $this->server->dispatch( new WP_REST_Request( 'DELETE', '/wpuf/v1/admin/forms/' . $page ) )->get_status() );
+        $this->assertSame( 'publish', get_post_status( $page ) );
+    }
+}

@@ -6,6 +6,7 @@ import { fireBeforeSave, fireAfterSave } from '../extensions/hooks';
 import { showToast } from '../common/Toast';
 import { showAlert } from '../common/SwalModal';
 import { getLegacySettingsPayload } from '../common/LegacySlot';
+import { request, restPath } from '@wpuf/api';
 
 /**
  * Check if a toggle/checkbox value is considered "on".
@@ -112,10 +113,11 @@ function validatePaymentSettings( settings ) {
 }
 
 /**
- * Hook for handling form save via AJAX.
+ * Hook for handling form save over REST (`wpuf/v1/admin/forms/{id}`).
  *
  * Sends form_fields, notifications, and form_settings as JSON from the React store.
- * Also serializes remaining PHP form elements (nonce, post_id) via FormData.
+ * Also serializes remaining PHP form elements (nonce, post_id) via FormData, the
+ * payload the AJAX action `wpuf_form_builder_save_form` (kept as a shim) takes.
  *
  * @return {Object} { isSaving, saveForm }
  */
@@ -171,7 +173,10 @@ export default function useFormSave() {
         // Settings other plugins printed on the builder hooks (legacy slots).
         const legacy = getLegacySettingsPayload();
 
-        wp.ajax.send( 'wpuf_form_builder_save_form', {
+        const formId = parseInt( new FormData( formElement ).get( 'wpuf_form_id' ), 10 ) || 0;
+
+        request( restPath( 'wpuf/v1', `/admin/forms/${ formId }` ), {
+            method: 'POST',
             data: {
                 form_data: formData,
                 form_fields: JSON.stringify( formFields ),
@@ -180,8 +185,10 @@ export default function useFormSave() {
                 legacy_settings: legacy.data,
                 legacy_settings_keys: JSON.stringify( legacy.keys ),
             },
+        } )
+            .then( ( body ) => {
+                const response = body && body.data ? body.data : {};
 
-            success( response ) {
                 if ( response.form_fields ) {
                     setFormFields( response.form_fields );
                 }
@@ -199,18 +206,16 @@ export default function useFormSave() {
 
                 showToast( __( 'Saved form data', 'wp-user-frontend' ) );
                 fireAfterSave();
-            },
-
-            error( response ) {
+            } )
+            .catch( ( error ) => {
                 setIsSaving( false );
 
-                if ( response && typeof response === 'string' ) {
-                    showToast( response, 'error' );
+                if ( error && 'string' === typeof error.message && error.status ) {
+                    showToast( error.message, 'error' );
                 } else {
                     showToast( __( 'Something went wrong saving the form.', 'wp-user-frontend' ), 'error' );
                 }
-            },
-        } );
+            } );
     }, [ isSaving, formFields, notifications, settings, markClean, setFormFields, setFormSettings, setCurrentPanel ] );
 
     return { isSaving, saveForm };

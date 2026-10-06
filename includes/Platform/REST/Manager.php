@@ -13,11 +13,11 @@ use WeDevs\Wpuf\Platform\Contracts\Hookable;
 use WeDevs\Wpuf\Platform\Contracts\RestRoute;
 
 /**
- * Registers the free plugin's REST controllers on `rest_api_init`: the legacy
- * core controllers built by `API` (each built once) (FormList, Subscription,
- * Settings; frozen paths, arguments, permissions and responses) and every
- * platform service tagged `RestRoute`. Replaces the loop in API::init_api(),
- * which built every controller a second time.
+ * Registers the free plugin's REST controllers on `rest_api_init`: every
+ * platform service tagged `RestRoute` (RestServiceProvider), which includes the
+ * frozen controllers `API` built (FormList, Subscription, Settings; same
+ * objects, frozen paths, arguments, permissions and responses). Replaces the
+ * loop in API::init_api(), which built every controller a second time.
  *
  * @since WPUF_SINCE
  */
@@ -71,6 +71,16 @@ class Manager implements Hookable {
         foreach ( $this->container->tagged_ids( RestRoute::class ) as $id ) {
             $controllers[] = $this->container->get( $id );
         }
+
+        // The frozen controllers come from API and from the container (same
+        // objects, RestServiceProvider): register each object once.
+        $unique = [];
+
+        foreach ( $controllers as $controller ) {
+            $unique[ spl_object_hash( $controller ) ] = $controller;
+        }
+
+        $controllers = array_values( $unique );
 
         /**
          * Filter the REST controllers WPUF registers on rest_api_init.

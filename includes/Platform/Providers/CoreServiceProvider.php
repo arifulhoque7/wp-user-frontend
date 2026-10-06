@@ -12,7 +12,6 @@ use WeDevs\Wpuf\Admin\BootPayload;
 use WeDevs\Wpuf\Admin\Screens\Registry;
 use WeDevs\Wpuf\Builder\HookBridge;
 use WeDevs\Wpuf\Builder\HookDeprecations;
-use WeDevs\Wpuf\Platform\REST\Manager;
 use WeDevs\Wpuf\Platform\ServiceProvider;
 use WeDevs\Wpuf\Platform\VersionGuard;
 
@@ -31,14 +30,6 @@ class CoreServiceProvider extends ServiceProvider {
      * @return void
      */
     public function register() {
-        // Registers the REST controllers once on rest_api_init (replaces API::init_api()).
-        $this->share_tagged(
-            Manager::class,
-            function ( $container ) {
-                return new Manager( $container );
-            }
-        );
-
         // Older Pro without the React admin: its Vue builder scripts are skipped, one notice.
         $this->share_tagged(
             VersionGuard::class,

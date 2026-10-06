@@ -3,12 +3,12 @@
 namespace WeDevs\Wpuf\Api;
 
 use WP_Error;
-use WP_REST_Controller;
+use WeDevs\Wpuf\Platform\REST\RestController;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_REST_Server;
 
-class FormList extends WP_REST_Controller {
+class FormList extends RestController {
     /**
      * The namespace of this controller's route.
      *

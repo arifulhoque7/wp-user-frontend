@@ -259,11 +259,17 @@ export class ParitySitePage {
         await expect(this.page.locator(Selectors.parity.builderSaveButton).first()).toBeEnabled({ timeout: 45000 });
     }
 
-    /** Click Save without touching anything and wait for the save request to succeed. */
+    /**
+     * Click Save without touching anything and wait for the save request to
+     * succeed: develop posts the AJAX action, the branch the REST route
+     * `wpuf/v1/admin/forms/{id}` (same payload and `{ success, data }` body).
+     */
     async doSaveBuilder() {
         const saved = this.page.waitForResponse((response) =>
-            response.url().includes('admin-ajax.php')
-            && (response.request().postData() || '').includes('wpuf_form_builder_save_form'));
+            response.request().method() === 'POST'
+            && ((response.url().includes('admin-ajax.php')
+                && (response.request().postData() || '').includes('wpuf_form_builder_save_form'))
+                || /wpuf\/v1\/admin\/forms\/\d+/.test(decodeURIComponent(response.url()))));
         await this.page.locator(Selectors.parity.builderSaveButton).first().click();
         const response = await saved;
         expect(response.ok(), 'builder save request must succeed').toBeTruthy();

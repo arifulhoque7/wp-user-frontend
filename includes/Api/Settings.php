@@ -4,7 +4,7 @@ namespace WeDevs\Wpuf\Api;
 
 use WeDevs\Wpuf\Platform\Stores\Normalizers;
 use WeDevs\Wpuf\Platform\Stores\Stores;
-use WP_REST_Controller;
+use WeDevs\Wpuf\Platform\REST\RestController;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_REST_Server;
@@ -18,7 +18,7 @@ use WP_REST_Server;
  *
  * @since WPUF_SINCE
  */
-class Settings extends WP_REST_Controller {
+class Settings extends RestController {
 
     /**
      * Route namespace.

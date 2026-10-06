@@ -174,6 +174,12 @@ Traps:
 - A test failing in a few **milliseconds** with "Target page, context or browser
   has been closed" means the browser window was closed; just rerun. Same for a
   one-off `page.goto: net::ERR_ABORTED` (navigation interrupted, seen on PFS0040).
+- **Builder save goes over REST on the branch** (`POST wpuf/v1/admin/forms/{id}`), AJAX on develop:
+  wait for either (`ParityPage.doSaveBuilder()`), never only `admin-ajax.php`.
+- **Parity specs that change site options must restore them** (SEC0001 restores
+  `wpuf_general`): a leftover key changed CTR0001's count from 65 to 78.
+- **CTR0001 with an odd count**: list `wp-content/uploads/wpuf-contracts/ctr-*` with
+  their times first; a crawl that recorded nothing now fails instead of passing with 0.
 - **Never run two Playwright processes on the same output dir** (they delete each
   other's artifacts: `ENOENT ... .playwright-artifacts`). Give parallel runs their
   own `TEST_PARALLEL_INDEX` + `SHARD_INDEX` (and base URL); run parity alone.
