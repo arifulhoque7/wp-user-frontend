@@ -3,6 +3,9 @@ import HelpTextIcon from './HelpTextIcon';
 
 const isOn = ( value ) => true === value || 'yes' === value || 'on' === value;
 
+// Unset option: the field default, as the legacy screen showed it (`std`).
+const current = ( value, field ) => ( undefined !== value && null !== value ? value : field.default );
+
 /**
  * Checkbox setting on the shared Checkbox (4.6a): box before the label,
  * stores 'on' / 'off' (legacy shape).
@@ -13,7 +16,7 @@ export default function CheckboxField( { field, name, value, onChange } ) {
             <Checkbox
                 id={ name }
                 className="mr-2"
-                value={ isOn( value ) ? 'on' : 'off' }
+                value={ isOn( current( value, field ) ) ? 'on' : 'off' }
                 checkedValue="on"
                 uncheckedValue="off"
                 onChange={ ( next ) => onChange( name, next ) }
