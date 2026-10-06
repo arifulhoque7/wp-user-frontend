@@ -27,7 +27,7 @@ if ( ! function_exists( 'wpuf_onboarding_required_mark' ) ) {
 $login_page  = absint( wpuf_get_option( 'login_page', 'wpuf_profile', 0 ) );
 $reg_page    = absint( wpuf_get_option( 'reg_override_page', 'wpuf_profile', 0 ) );
 $override    = wpuf_get_option( 'register_link_override', 'wpuf_profile', 'off' );
-$autologin   = wpuf_get_option( 'autologin_after_registration', 'wpuf_profile', 'off' );
+$autologin   = wpuf_get_option( 'autologin_after_registration', 'wpuf_profile', 'on' );
 
 $is_pro      = wpuf_is_pro_active();
 $layouts     = wpuf_get_login_layout_options();
