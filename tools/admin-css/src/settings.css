@@ -122,17 +122,6 @@
     outline: 2px solid transparent !important;
 }
 
-/* Fixed Save+Cancel footer pinned to the viewport bottom. `left` is set inline
-   from the live admin-menu width so it always aligns with the content and never
-   sits under the sidebar (handles expanded / folded / responsive). */
-/* Logical side: the bar ends at the page edge opposite the admin menu, in LTR
-   and RTL (the script sets `inset-inline-start` to the menu width). */
-.wpuf-settings-footer {
-    position: fixed;
-    bottom: 0;
-    inset-inline-end: 0;
-}
-
 /* Tooltip styles — DaisyUI's .tooltip doesn't work with the wpuf- prefix, so we
    define .wpuf-tooltip manually (data-tip + ::before). Ported from the
    subscriptions React page so help icons behave identically. */

@@ -6,6 +6,7 @@
  * panel padding); `mt-auto` keeps it at the bottom of a PageShell. WordPress's own #wpfooter is hidden on these screens.
  */
 import { __ } from '@wordpress/i18n';
+import { useEffect, useRef, useState } from '@wordpress/element';
 import { cn } from '@wedevs/plugin-ui';
 
 import { useBoot } from '../hooks';
@@ -18,9 +19,10 @@ export default function PageFooter( { children, className } ) {
     const boot = useBoot();
 
     // The wrapper keeps FlyHR's 24px gap (its main panel's bottom padding)
-    // between the content and the footer, and pushes it to the bottom.
+    // between the content and the footer, and pushes it to the bottom. Layout
+    // is inline: a screen's stylesheet only has the classes its own sources use.
     return (
-        <div className={ cn( 'mt-auto pt-6', className ) }>
+        <div className={ cn( 'pt-6', className ) } style={ { marginTop: 'auto', paddingTop: '24px' } }>
             <footer
                 data-wpuf-ui=""
                 className="-ml-5 w-[calc(100%+40px)] flex flex-col flex-wrap items-center justify-center gap-2 bg-white px-5 py-6"
@@ -40,12 +42,62 @@ export default function PageFooter( { children, className } ) {
 }
 
 /**
+ * Minimum height that makes an element reach the end of the page: the page is
+ * as tall as the window or, when that is longer, the WordPress admin menu (a
+ * long menu made the page run past `100vh` and left a gray gap below the
+ * footer). Notices above the element take their part. Follows menu fold /
+ * responsive changes (body class) and window resizes.
+ *
+ * @param {Object} ref Ref of the element.
+ *
+ * @return {number} Minimum height in px (0 until measured).
+ */
+export function usePageFillHeight( ref ) {
+    const [ minHeight, setMinHeight ] = useState( 0 );
+
+    useEffect( () => {
+        const update = () => {
+            if ( ! ref.current ) {
+                return;
+            }
+
+            const menu = document.getElementById( 'adminmenuwrap' );
+            const bar = document.getElementById( 'wpadminbar' );
+            const pageHeight = Math.max( window.innerHeight, ( menu ? menu.offsetHeight : 0 ) + ( bar ? bar.offsetHeight : 0 ) );
+            const top = ref.current.getBoundingClientRect().top + window.scrollY;
+
+            setMinHeight( Math.max( 0, Math.floor( pageHeight - top ) ) );
+        };
+
+        update();
+        window.addEventListener( 'resize', update );
+        const observer = new window.MutationObserver( update );
+        observer.observe( document.body, { attributes: true, attributeFilter: [ 'class' ] } );
+
+        return () => {
+            window.removeEventListener( 'resize', update );
+            observer.disconnect();
+        };
+    }, [ ref ] );
+
+    return minHeight;
+}
+
+/**
  * Full-height column for a screen (FlyHR shell): header, content, footer at
- * the bottom even when the content is short.
+ * the bottom of the page even when the content is short. Used by every React
+ * screen (forms lists, builder, subscriptions, settings).
  *
  * @param {Object} props
  * @param {*}      props.children Header, content and PageFooter.
  */
 export function PageShell( { children, className } ) {
-    return <div className={ cn( 'flex min-h-[calc(100vh-32px)] flex-col', className ) }>{ children }</div>;
+    const ref = useRef( null );
+    const minHeight = usePageFillHeight( ref );
+
+    return (
+        <div ref={ ref } className={ className } style={ { display: 'flex', flexDirection: 'column', minHeight: minHeight ? `${ minHeight }px` : 'calc(100vh - 32px)' } }>
+            { children }
+        </div>
+    );
 }

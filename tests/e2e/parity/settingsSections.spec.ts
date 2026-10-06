@@ -124,7 +124,7 @@ async function findRow(page: Page, section: Locator, name: string): Promise<Loca
 /** Enter one planned value through the React control of its row. */
 async function editReact(page: Page, row: Locator, item: Plan): Promise<string | null> {
     const { type, value, labels, field } = item;
-    // Centered: the fixed Save bar covers the bottom of the window.
+    // Centered: the sticky Save card covers the bottom of the window.
     await row.evaluate((el) => el.scrollIntoView({ block: 'center' }));
 
     if ('text' === type) {

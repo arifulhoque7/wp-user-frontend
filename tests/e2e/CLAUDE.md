@@ -180,6 +180,10 @@ Traps:
   `wpuf_general`): a leftover key changed CTR0001's count from 65 to 78.
 - **CTR0001 with an odd count**: list `wp-content/uploads/wpuf-contracts/ctr-*` with
   their times first; a crawl that recorded nothing now fails instead of passing with 0.
+- **Fresh local site (`wp-env clean all`)**: skip RS0001 (`--grep-invert RS0001`; it resets an
+  existing site through the WP Reset plugin, which a clean site does not have) and seed the
+  Pro license first (`wp option update wpuf_license "$(cat <license json>)" --format=json` on
+  `cli` and `tests-cli`), else LS0005 waits on the license screen and setup stops there.
 - **Never run two Playwright processes on the same output dir** (they delete each
   other's artifacts: `ENOENT ... .playwright-artifacts`). Give parallel runs their
   own `TEST_PARALLEL_INDEX` + `SHARD_INDEX` (and base URL); run parity alone.

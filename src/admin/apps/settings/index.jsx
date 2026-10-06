@@ -10,7 +10,7 @@ import { useSelect, useDispatch } from '@wordpress/data';
 import { useEffect, useState, useCallback, useRef, createInterpolateElement } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
-import { Button, PageFooter, PageHeader, Tabs, WpufProviders } from '@wpuf/components';
+import { Button, PageFooter, PageHeader, PageShell, Tabs, WpufProviders } from '@wpuf/components';
 import SettingsNav from './components/settings/SettingsNav';
 import SettingsSection, { PROVIDER_SECTIONS } from './components/settings/SettingsSection';
 import { stripTags } from './components/settings/utils';
@@ -50,9 +50,6 @@ const SettingsApp = () => {
     const [ showNewUi, setShowNewUi ] = useState( !! boot.new_ui_notice );
     const classicOnly = Array.isArray( boot.classic_only ) ? boot.classic_only : [];
     const [ activeSub, setActiveSub ] = useState( null );
-    const [ footerLeft, setFooterLeft ] = useState( 160 );
-    const shellRef = useRef( null );
-    const [ shellMinHeight, setShellMinHeight ] = useState( 0 );
     const [ justSaved, setJustSaved ] = useState( false );
     const savedTimer = useRef( null );
 
@@ -73,35 +70,6 @@ const SettingsApp = () => {
         if ( savedTimer.current ) {
             clearTimeout( savedTimer.current );
         }
-    }, [] );
-
-    // Keep the fixed footer aligned with the content area by tracking the live
-    // WordPress admin-menu width (changes on fold toggle + responsive breakpoints).
-    useEffect( () => {
-        const update = () => {
-            const menu = document.getElementById( 'adminmenuwrap' );
-            const w = menu ? menu.offsetWidth : 160;
-            setFooterLeft( window.innerWidth <= 782 ? 0 : w );
-
-            // The screen fills the page down to its end, so the logo footer sits
-            // right above the Save bar on short tabs. The page is as tall as the
-            // window or, when that is longer, the admin menu; notices above the
-            // screen take their part of it.
-            if ( shellRef.current ) {
-                const bar = document.getElementById( 'wpadminbar' );
-                const pageHeight = Math.max( window.innerHeight, ( menu ? menu.offsetHeight : 0 ) + ( bar ? bar.offsetHeight : 0 ) );
-                const top = shellRef.current.getBoundingClientRect().top + window.scrollY;
-                setShellMinHeight( Math.max( 0, Math.floor( pageHeight - top ) ) );
-            }
-        };
-        update();
-        window.addEventListener( 'resize', update );
-        const observer = new MutationObserver( update );
-        observer.observe( document.body, { attributes: true, attributeFilter: [ 'class' ] } );
-        return () => {
-            window.removeEventListener( 'resize', update );
-            observer.disconnect();
-        };
     }, [] );
 
     const sectionTitle = ( id ) => {
@@ -233,7 +201,7 @@ const SettingsApp = () => {
     } );
 
     return (
-        <div ref={ shellRef } className="wpuf-settings-react flex flex-col" style={ { minHeight: shellMinHeight ? `${ shellMinHeight }px` : 'calc(100vh - 32px)' } }>
+        <PageShell className="wpuf-settings-react">
             <PageHeader
                 utm="wpuf-settings"
                 supportUrl={ boot.support_url || undefined }
@@ -380,57 +348,49 @@ const SettingsApp = () => {
                     ) }
                 </div>
             </div>
+            { /* Save / Cancel: a sticky card at the end of the content, as FlyHR's
+                Add Employee form (owner 2026-10-06): it follows the window bottom
+                while the section is taller than the window and sits above the
+                logo footer, never over it. */ }
+            <div className="wpuf-settings-actions sticky bottom-0 z-10 mt-6 flex items-center justify-end gap-3 rounded-[10px] border border-gray-200 bg-white/95 px-6 py-4 shadow-[0_-1px_3px_rgba(0,0,0,0.06)] backdrop-blur">
+                { justSaved ? (
+                    <span className="me-auto flex items-center gap-1 text-xs font-medium text-emerald-600">
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                        { __( 'Saved', 'wp-user-frontend' ) }
+                    </span>
+                ) : isDirty ? (
+                    <span className="me-auto text-xs text-gray-400">
+                        { __( 'Unsaved changes', 'wp-user-frontend' ) }
+                    </span>
+                ) : null }
+                <Button
+                    variant="secondary"
+                    className="h-[42px] px-6 font-medium"
+                    disabled={ ! isDirty || isSaving }
+                    onClick={ () => discard() }
+                >
+                    { __( 'Cancel', 'wp-user-frontend' ) }
+                </Button>
+                <Button
+                    className="h-[42px] px-8 font-medium"
+                    disabled={ isSaving || ! isDirty }
+                    onClick={ handleSave }
+                >
+                    { isSaving ? __( 'Saving…', 'wp-user-frontend' ) : __( 'Save', 'wp-user-frontend' ) }
+                </Button>
+            </div>
             </div>
             ) }
 
             { /* WordPress's footer is hidden on shared-layer screens (D26): the switch
-                link lives here (D12), at the bottom of the window on short tabs; the
-                margin clears the fixed Save bar. */ }
-            { /* This wrapper carries the layout classes itself: on a host screen
-                the shared footer wrapper's own classes are not styled. */ }
-            <div className="mt-auto mb-[74px]">
-                <PageFooter>
-                    { boot.switch_ui_url && createInterpolateElement(
-                        __( 'Prefer the old screen? Switch to the <a>Classic view</a>.', 'wp-user-frontend' ),
-                        { a: <a href={ boot.switch_ui_url } data-settings-switch="footer" className="text-gray-600 underline hover:text-gray-900" /> } // eslint-disable-line jsx-a11y/anchor-has-content
-                    ) }
-                </PageFooter>
-            </div>
+                link lives here (D12), at the bottom of the window on short tabs. */ }
+            <PageFooter>
+                { boot.switch_ui_url && createInterpolateElement(
+                    __( 'Prefer the old screen? Switch to the <a>Classic view</a>.', 'wp-user-frontend' ),
+                    { a: <a href={ boot.switch_ui_url } data-settings-switch="footer" className="text-gray-600 underline hover:text-gray-900" /> } // eslint-disable-line jsx-a11y/anchor-has-content
+                ) }
+            </PageFooter>
 
-            { ! isLoading && (
-                <div
-                    className="wpuf-settings-footer z-40 flex items-center justify-between border-t border-gray-200 bg-white px-[32px] py-4 shadow-[0_-1px_3px_rgba(0,0,0,0.06)]"
-                    style={ { insetInlineStart: `${ footerLeft }px` } }
-                >
-                    <Button
-                        variant="secondary"
-                        className="h-[42px] px-6 font-medium"
-                        disabled={ ! isDirty || isSaving }
-                        onClick={ () => discard() }
-                    >
-                        { __( 'Cancel', 'wp-user-frontend' ) }
-                    </Button>
-                    <div className="flex items-center gap-3">
-                        { justSaved ? (
-                            <span className="flex items-center gap-1 text-xs font-medium text-emerald-600">
-                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-                                { __( 'Saved', 'wp-user-frontend' ) }
-                            </span>
-                        ) : isDirty ? (
-                            <span className="text-xs text-gray-400">
-                                { __( 'Unsaved changes', 'wp-user-frontend' ) }
-                            </span>
-                        ) : null }
-                        <Button
-                            className="h-[42px] px-8 font-medium"
-                            disabled={ isSaving || ! isDirty }
-                            onClick={ handleSave }
-                        >
-                            { isSaving ? __( 'Saving…', 'wp-user-frontend' ) : __( 'Save', 'wp-user-frontend' ) }
-                        </Button>
-                    </div>
-                </div>
-            ) }
 
             { pendingTab && (
                 <UnsavedChanges
@@ -438,7 +398,7 @@ const SettingsApp = () => {
                     onContinue={ () => setPendingTab( null ) }
                 />
             ) }
-        </div>
+        </PageShell>
     );
 };
 
