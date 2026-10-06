@@ -104,7 +104,6 @@ class Admin_Form_Builder {
         wp_enqueue_script( 'wpuf-admin' );
         wp_enqueue_script( 'zxcvbn' );
         wp_enqueue_script( 'password-strength-meter' );
-        // wp_enqueue_script( 'wpuf-form-builder-wpuf-forms' );
         /**
          * Unique fields list. Only 1 field can be added in a form.
          */
@@ -134,10 +133,6 @@ class Admin_Form_Builder {
         );
         $taxonomy_terms = array_keys( get_taxonomies() );
         $single_objects = array_merge( $single_objects, $taxonomy_terms );
-        // Vue form builder scripts — replaced by React.
-        // wp_enqueue_script( 'wpuf-form-builder-mixins' );
-        // wp_enqueue_script( 'wpuf-form-builder-components' );
-        // wp_enqueue_script( 'wpuf-form-builder' );
         wp_enqueue_script( 'wp-color-picker' );
 
         // The stage's rich text previews are a static TinyMCE mockup: they need the
