@@ -6,7 +6,7 @@
  * @since WPUF_SINCE
  */
 import { useState } from '@wordpress/element';
-import { __, sprintf } from '@wordpress/i18n';
+import { __, _n, sprintf } from '@wordpress/i18n';
 import { Button, Select, dialogs } from '@wpuf/components';
 
 import { ActionBar, ChoiceCard, Field, ProBadgeImage, StepShell, SwitchRow, Tick, TickCircle } from './parts';
@@ -103,7 +103,8 @@ export function PostFormStep( { data, nav, save, busy } ) {
                                 <span className="mt-2 block">
                                     { __( 'Your default form now:', 'wp-user-frontend' ) }{ ' ' }
                                     <a href={ data.existing.url } target="_blank" rel="noopener noreferrer" className="font-medium text-primary hover:underline">{ data.existing.title }</a>
-                                    { '. ' }{ __( 'A new one takes its place.', 'wp-user-frontend' ) }
+                                    { '.' }
+                                    { 'skip' !== template && <>{ ' ' }{ __( 'A new one takes its place.', 'wp-user-frontend' ) }</> }
                                 </span>
                             ) }
                         </>
@@ -372,8 +373,13 @@ export function CommonStep( { data, nav, save, busy, state } ) {
                                 { needsKeys.length > 0 && (
                                     <p className="wpuf-onboarding-help is-warning m-0 mt-3 text-[13px] leading-5 text-amber-700">
                                         { sprintf(
-                                            /* translators: %s: gateway names, for example "PayPal" */
-                                            __( 'Bank transfer starts taking payments as soon as you finish here. %s still needs its API keys, so add them in Payment settings before you go live.', 'wp-user-frontend' ),
+                                            /* translators: %s: gateway names, for example "PayPal" or "PayPal, Credit Card" */
+                                            _n(
+                                                'Bank transfer starts taking payments as soon as you finish here. %s still needs its API keys, so add them in Payment settings before you go live.',
+                                                'Bank transfer starts taking payments as soon as you finish here. %s still need their API keys, so add them in Payment settings before you go live.',
+                                                needsKeys.length,
+                                                'wp-user-frontend'
+                                            ),
                                             needsKeys.join( ', ' )
                                         ) }{ ' ' }
                                         <a href={ state.urls?.payment } target="_blank" rel="noopener noreferrer" className="font-medium text-primary hover:underline">{ __( 'Payment settings', 'wp-user-frontend' ) }</a>

@@ -1696,7 +1696,8 @@ class Onboarding {
             $is_pro_preview = ! empty( $gateway['is_pro_preview'] );
 
             $gateways[ $id ]['is_pro_preview'] = $is_pro_preview;
-            $gateways[ $id ]['needs_setup']    = ! $is_pro_preview && in_array( $id, $needs_credentials, true );
+            // A gateway whose module is off cannot take keys yet; its card says so.
+            $gateways[ $id ]['needs_setup']    = ! $is_pro_preview && empty( $gateway['needs_module'] ) && in_array( $id, $needs_credentials, true );
 
             if ( ! empty( $gateway['needs_module'] ) ) {
                 $gateways[ $id ]['hint'] = __( 'Turn the Stripe module on in Modules, then add your keys.', 'wp-user-frontend' );
