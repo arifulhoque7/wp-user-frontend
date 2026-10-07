@@ -121,8 +121,9 @@ model list (`gemini-mock-flash`, `configureMock(key, 'google')`) and the builder
 (`AiFormBuilderPage.proActive()`), so the specs work on a dev checkout (`wpuf-pro`) and on the
 release zip (`wp-user-frontend-pro`).
 
-**Release smoke** — `tests/releaseSmokeTest.spec.ts` (RS0001-RS0005) opens every React admin
-screen and fails on a JS error or a 4xx/5xx plugin asset. Run it on a site with the release
+**Release smoke** — `tests/releaseSmokeTest.spec.ts` (RS0001-RS0006) opens every React admin
+screen and fails on a JS error, a 4xx/5xx plugin asset, a Vue runtime or Vue app, or an asset of
+the removed Vue admin (`VUE_ASSETS` in the spec). Run it on a site with the release
 packages installed (steps in `docs/build-and-test.md`, "Release build check"). Run against a local site with
 `QA_BASE_URL=http://site.test WPUF_E2E_WP_PATH=/path/to/site`. AI0015 / AI0016 need
 WooCommerce / Dokan active, AI0013 needs Pro off.
