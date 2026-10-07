@@ -23,6 +23,7 @@ const entries = {
     'ai-form-builder': './src/admin/apps/ai-form-builder/index.jsx',
     // Shell of the single React admin app (task 5d).
     'admin-app': './src/admin/app/index.js',
+    'registration-promo': './src/admin/apps/registration-promo/index.jsx',
 };
 
 // The shared layer (design.md D24): bundles @wpuf/* sources and plugin-ui,

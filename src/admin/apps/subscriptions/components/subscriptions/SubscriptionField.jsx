@@ -190,7 +190,7 @@ const SubscriptionField = ( { field, fieldId, subscription, onFieldChange } ) =>
 			<div className="col-span-2 relative group">
 				{/* Pro overlay */}
 				{ isPro && (
-					<div className="hidden rounded-md border border-dashed border-emerald-200 group-hover:flex cursor-pointer absolute items-center justify-center bg-emerald-50/50 backdrop-blur-xs z-10 p-4 w-[104%] h-[180%] top-[-40%] left-[-2%]">
+					<div className="hidden rounded-md border border-dashed border-emerald-600 group-hover:flex cursor-pointer absolute items-center justify-center bg-emerald-50/50 backdrop-blur-xs z-10 p-4 w-[104%] h-[180%] top-[-40%] left-[-2%]">
 						<a
 							href={ wpufSubscriptions.upgradeUrl || '#' }
 							target="_blank"

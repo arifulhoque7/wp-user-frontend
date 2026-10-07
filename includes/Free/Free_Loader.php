@@ -171,6 +171,11 @@ class Free_Loader extends Pro_Prompt {
     }
 
     public function admin_menu_top() {
+        // Registration Forms without Pro: a route of the React admin app.
+        if ( wpuf()->platform()->has( \WeDevs\Wpuf\Admin\Screens\Registry::class ) ) {
+            wpuf()->platform()->get( \WeDevs\Wpuf\Admin\Screens\Registry::class )->add( new \WeDevs\Wpuf\Admin\Screens\RegistrationPromo() );
+        }
+
         $capability     = wpuf_admin_role();
         $reg_forms_hook = add_submenu_page(
             wpuf()->admin->menu->parent_slug,
@@ -209,6 +214,11 @@ class Free_Loader extends Pro_Prompt {
      * @return void
      */
     public function reg_form_menu_action() {
+        // Admin app on: the registry runs the load step and opens the route.
+        if ( wpuf()->platform()->has( \WeDevs\Wpuf\Admin\Screens\Registry::class ) ) {
+            wpuf()->platform()->get( \WeDevs\Wpuf\Admin\Screens\Registry::class )->load( 'wpuf-profile-forms' );
+        }
+
         wp_enqueue_style( 'wpuf-admin' );
         wp_enqueue_style( 'wpuf-registration-forms' );
         wp_enqueue_script( 'wpuf-registration-forms' );

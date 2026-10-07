@@ -37,6 +37,7 @@ const APP = `${Urls.baseUrl}/wp-admin/admin.php?page=wp-user-frontend`;
  * @Test_APP0015 : List row action buttons in the app: Edit (builder route, no page load), Duplicate, Trash, Restore, Delete Permanently, bulk Move to trash; registration Edit (Pro)
  * @Test_APP0016 : Pro without a valid license: Registration Forms stays Pro's preview page (no app route, no way round it); the free routes still run in the app
  * @Test_APP0017 : License (Pro) is the app route #/license: old URL lands there, the key is masked (never in the page), a site without an active key gets the key form
+ * @Test_APP0018 : Without Pro, Registration Forms is the app route #/registration-forms on the new components (free shortcode with Copy, Pro features, modules icons)
  */
 
 test.beforeAll(async () => {
@@ -50,6 +51,11 @@ test.beforeAll(async () => {
 test.afterAll(async () => {
     await browser.close();
 });
+
+/** Whether Pro's registration list is an app route (without Pro the route is the free page). */
+async function proRegistrationList(): Promise<boolean> {
+    return page.evaluate(() => !!((window as unknown as { wpufAdmin?: { app?: { routes: { id: string; app: string; mode: string }[] } } }).wpufAdmin?.app?.routes || []).find((r) => 'registration-forms' === r.id && 'forms-list' === r.app && 'app' === r.mode));
+}
 
 /** Whether the admin app is on (its page carries the app boot data). */
 async function appOn(): Promise<boolean> {
@@ -172,7 +178,7 @@ test.describe('Admin app', () => {
         expect(await listType()).toBe('wpuf_forms');
 
         const registration = page.locator('#toplevel_page_wp-user-frontend a', { hasText: 'Registration Forms' }).first();
-        test.skip(!(await registration.getAttribute('href') || '').includes('#/registration-forms'), 'registration forms need Pro');
+        test.skip(!(await proRegistrationList()), 'registration forms need Pro');
 
         await registration.click();
         await expect(page.locator('#wpuf-profile-forms-list-table-view').first()).toBeVisible({ timeout: 30000 });
@@ -512,8 +518,7 @@ test.describe('Admin app', () => {
         aiWp(['post', 'delete', String(id), '--force']); // the copy was deleted permanently above
 
         // Registration list (Pro): Edit opens its builder route.
-        const reg = page.locator('#toplevel_page_wp-user-frontend a', { hasText: 'Registration Forms' }).first();
-        if (((await reg.getAttribute('href')) || '').includes('#/registration-forms')) {
+        if (await proRegistrationList()) {
             const regTitle = `APP0015 reg ${Date.now()}`;
             const regId = newForm(regTitle, 'wpuf_profile');
             await page.goto(`${APP}#/registration-forms`);
@@ -531,7 +536,7 @@ test.describe('Admin app', () => {
 
         const registrationRoute = () => page.evaluate(() => ((window as unknown as { wpufAdmin: { app: { routes: { id: string; mode: string }[] } } }).wpufAdmin.app.routes.find((r) => 'registration-forms' === r.id) || { mode: 'none' }).mode);
         await page.goto(`${APP}#/post-forms`);
-        test.skip('app' !== (await registrationRoute()), 'needs licensed Pro to start from');
+        test.skip(!(await proRegistrationList()), 'needs licensed Pro to start from');
 
         // The stored license stays in this process; it is never printed.
         const saved = aiWp(['option', 'get', 'wpuf_license', '--format=json']).trim();
@@ -573,7 +578,7 @@ test.describe('Admin app', () => {
         test.skip(!process.env.WPUF_E2E_WP_PATH, 'needs WP-CLI on the site');
 
         const row = page.locator('#toplevel_page_wp-user-frontend a', { hasText: 'License' }).first();
-        test.skip(!((await row.getAttribute('href').catch(() => '')) || '').includes('#/license'), 'license route needs Pro');
+        test.skip(!(await row.count()) || !((await row.getAttribute('href')) || '').includes('#/license'), 'license route needs Pro');
 
         // The stored license stays in this process; it is never printed.
         const saved = aiWp(['option', 'get', 'wpuf_license', '--format=json']).trim();
@@ -601,5 +606,18 @@ test.describe('Admin app', () => {
         } finally {
             aiWp(['option', 'update', 'wpuf_license', saved, '--format=json']);
         }
+    });
+
+    test('APP0018 : Registration Forms without Pro in the app', { tag: ['@Lite', '@Test_APP0018'] }, async () => {
+        test.skip(!(await appOn()), 'admin app is off');
+        const promo = await page.evaluate(() => !!((window as unknown as { wpufAdmin: { app: { routes: { id: string; app: string }[] } } }).wpufAdmin.app.routes.find((r) => 'registration-forms' === r.id && 'registration-promo' === r.app)));
+        test.skip(!promo, 'only without Pro');
+
+        await page.goto(`${Urls.baseUrl}/wp-admin/admin.php?page=wpuf-profile-forms`);
+        await expect(page).toHaveURL(/page=wp-user-frontend#\/registration-forms/);
+        await expect(page.locator('[data-registration-shortcode]')).toHaveText('[wpuf-registration]', { timeout: 30000 });
+        await expect(page.locator('#toplevel_page_wp-user-frontend li.current a')).toHaveText('Registration Forms');
+        await expect(page.locator('.wpuf-registration-pro img[src*="/images/modules/"]')).toHaveCount(6);
+        await expect(page.locator('.wpuf-registration-pro').getByRole('button', { name: 'Upgrade to PRO' })).toBeVisible();
     });
 });

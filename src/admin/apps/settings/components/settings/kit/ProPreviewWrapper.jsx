@@ -10,7 +10,7 @@ export default function ProPreviewWrapper( { children } ) {
     const proLink = wpuf.upgrade_url || 'https://wedevs.com/wp-user-frontend-pro/pricing/';
 
     return (
-        <div className="relative rounded-sm border border-dashed border-transparent hover:border-sky-500 group/pro-item transition-all opacity-60 hover:opacity-100">
+        <div className="relative rounded-sm border border-dashed border-transparent hover:border-primary group/pro-item transition-all opacity-60 hover:opacity-100">
             <a
                 className="absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 z-30 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white! opacity-0 group-hover/pro-item:opacity-100 transition-all hover:bg-primaryHover"
                 target="_blank"

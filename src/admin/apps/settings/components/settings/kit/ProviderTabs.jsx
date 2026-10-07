@@ -114,7 +114,7 @@ export default function ProviderTabs( { providers: allProviders, fields, renderF
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 title={ p.label }
-                                className="relative flex h-[104px] w-[160px] flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-gray-300 bg-gray-50 px-5 py-4 text-xs font-medium text-gray-500 opacity-80 hover:border-sky-400 hover:opacity-100"
+                                className="relative flex h-[104px] w-[160px] flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-gray-300 bg-gray-50 px-5 py-4 text-xs font-medium text-gray-500 opacity-80 hover:border-primary hover:opacity-100"
                             >
                                 <span className="absolute right-2 top-2"><ProBadge /></span>
                                 <span className="opacity-60"><ProviderIcon provider={ p } /></span>

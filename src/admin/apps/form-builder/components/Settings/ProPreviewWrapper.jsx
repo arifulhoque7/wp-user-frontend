@@ -18,7 +18,7 @@ export default function ProPreviewWrapper( { proPreview, settings } ) {
     const proLink = window.wpuf_form_builder?.pro_link || 'https://wedevs.com/wp-user-frontend-pro/pricing/';
 
     return (
-        <div className="p-4 relative rounded-sm border border-transparent hover:border-sky-500 border-dashed group/pro-item wpuf-transition-all opacity-50 hover:opacity-100">
+        <div className="p-4 relative rounded-sm border border-transparent hover:border-primary border-dashed group/pro-item wpuf-transition-all opacity-50 hover:opacity-100">
             <a
                 className="wpuf-btn-primary absolute top-[50%] left-[50%] -translate-y-[50%] -translate-x-[50%] z-30 opacity-0 group-hover/pro-item:opacity-100 wpuf-transition-all"
                 target="_blank"

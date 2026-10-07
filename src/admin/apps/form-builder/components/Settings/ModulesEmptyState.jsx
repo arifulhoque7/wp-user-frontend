@@ -13,7 +13,7 @@ export default function ModulesEmptyState( { isProActive } ) {
     const adminUrl = window.wpuf_admin_url || data.admin_url || '';
 
     return (
-        <div className="py-4 border-b border-gray-300 flex items-center justify-evenly flex-col h-[70vh] p-4 relative rounded-sm border border-transparent hover:border-sky-500 border-dashed group/pro-item wpuf-transition-all opacity-50 hover:opacity-100">
+        <div className="py-4 border-b border-gray-300 flex items-center justify-evenly flex-col h-[70vh] p-4 relative rounded-sm border border-transparent hover:border-primary border-dashed group/pro-item wpuf-transition-all opacity-50 hover:opacity-100">
             { ! isProActive && (
                 <>
                     <a

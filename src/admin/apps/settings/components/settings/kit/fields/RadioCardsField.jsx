@@ -96,7 +96,7 @@ export default function RadioCardsField( { field, name, value, onChange, single 
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 title={ labelOf( opt, key ) }
-                                className="relative flex min-w-[150px] flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-gray-300 bg-gray-50 px-5 py-4 text-sm font-medium text-gray-500 opacity-80 hover:border-sky-400 hover:opacity-100"
+                                className="relative flex min-w-[150px] flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-gray-300 bg-gray-50 px-5 py-4 text-sm font-medium text-gray-500 opacity-80 hover:border-primary hover:opacity-100"
                             >
                                 <span className="absolute right-2 top-2"><ProBadge /></span>
                                 { icon ? (
