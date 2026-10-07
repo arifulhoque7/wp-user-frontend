@@ -30,7 +30,7 @@ Applies to the builders, forms lists, subscriptions, settings and onboarding onl
 | Technology | Usage | Files |
 |---|---|---|
 | jQuery | Frontend forms, form builder, general interactivity | `assets/js/` |
-| Vue 3.4 | **Legacy only** — existing admin pages (subscriptions, forms list, AI builder, account) | `.vue` files, Vite entry points |
+| Vue 3.4 | **Legacy only**: frontend subscriptions and account (the admin lists, builders, subscriptions, settings and AI form builder are React) | `.vue` files, Vite entry points |
 | Tailwind CSS 3.3.5 | Styling with scoped preflight | `tailwind.config.js` |
 | Less | Legacy admin/frontend styles | `assets/less/` |
 | Vite 5.1 | Bundler for Vue entry points (5 entries) | `vite.config.mjs` |
