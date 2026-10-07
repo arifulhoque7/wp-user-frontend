@@ -111,6 +111,10 @@ class AI_Form_Handler {
 
         $form_type = $this->get_form_type_from_referer();
 
+        // The admin app opens the AI form builder as a route: after the checks
+        // above, go there with the stage keys of this request.
+        $this->redirect_to_app_route( $form_type );
+
         // Remove admin notices for this page
         remove_all_actions( 'admin_notices' );
         remove_all_actions( 'all_admin_notices' );
@@ -132,6 +136,49 @@ class AI_Form_Handler {
         $this->screen()->render();
 
         require_once ABSPATH . 'wp-admin/admin-footer.php';
+        exit;
+    }
+
+    /**
+     * Redirect to the admin app's AI form builder route when the app runs it.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param string $form_type post|profile
+     *
+     * @return void
+     */
+    private function redirect_to_app_route( $form_type ) {
+        if ( ! function_exists( 'wpuf_admin_app_enabled' ) || ! wpuf_admin_app_enabled() ) {
+            return;
+        }
+
+        $route_id = 'profile' === $form_type ? 'registration-forms-ai' : 'post-forms-ai';
+        $route    = null;
+
+        foreach ( wpuf()->platform()->get( \WeDevs\Wpuf\Admin\App\AppPage::class )->routes() as $item ) {
+            if ( $route_id === $item['id'] && 'app' === $item['mode'] ) {
+                $route = $item;
+            }
+        }
+
+        if ( ! $route ) {
+            return;
+        }
+
+        $stage = $this->screen()->stage_data();
+        $args  = array_filter(
+            [
+                'stage'       => 'input' === $stage['stage'] ? '' : $stage['stage'],
+                'description' => $stage['description'],
+                'prompt'      => $stage['prompt'],
+                'form_id'     => $stage['formId'],
+                'form_title'  => $stage['formTitle'],
+            ],
+            'strlen'
+        );
+
+        wp_safe_redirect( wpuf_admin_app_url( $route['path'], $args ) );
         exit;
     }
 

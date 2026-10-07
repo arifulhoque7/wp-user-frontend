@@ -337,25 +337,6 @@ const render = async () => {
     doAction( 'wpuf.admin.routeChanged', { route, params, query } );
 };
 
-/**
- * Ask the registered guards before leaving the current route.
- *
- * @param {Object} next Next location.
- *
- * @return {Promise<boolean>} Allowed.
- */
-const allowed = async ( next ) => {
-    for ( const guard of guards ) {
-        const answer = await guard( next );
-
-        if ( false === answer ) {
-            return false;
-        }
-    }
-
-    return true;
-};
-
 const onHashChange = async ( event ) => {
     if ( skipNext ) {
         skipNext = false;
@@ -367,14 +348,25 @@ const onHashChange = async ( event ) => {
     const found = match( next.path );
     const leaving = current && ( ! found || `${ found.route.id }:${ JSON.stringify( found.params ) }` !== current.key );
 
-    if ( leaving && guards.size ) {
+    // Guards that answer at once (nothing unsaved) let the route change as is.
+    const pending = leaving && guards.size ? [ ...guards ].map( ( guard ) => guard( next ) ) : [];
+
+    if ( pending.some( ( answer ) => false === answer ) ) {
+        window.history.replaceState( null, '', event && event.oldURL ? new URL( event.oldURL ).hash : buildHash( current.route.path, current.query ) );
+
+        return;
+    }
+
+    if ( pending.some( ( answer ) => answer && 'function' === typeof answer.then ) ) {
         // Put the old URL back while the screen asks (unsaved changes).
         const previous = event && event.oldURL ? new URL( event.oldURL ).hash : buildHash( current.route.path, current.query );
         const target = window.location.hash;
 
         window.history.replaceState( null, '', previous );
 
-        if ( ! ( await allowed( next ) ) ) {
+        const answers = await Promise.all( pending );
+
+        if ( answers.some( ( answer ) => false === answer ) ) {
             return;
         }
 

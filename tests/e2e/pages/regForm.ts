@@ -26,7 +26,7 @@ export class RegFormPage extends Base {
         // Visit Registration forms page
         await this.navigateToURL(this.wpufRegistrationFormPage);
 
-        const validateWPUFProActivate = await this.page.isVisible(Selectors.registrationForms.navigatePage_RF.checkAddButton_RF);
+        const validateWPUFProActivate = await this.isVisibleSoon(Selectors.registrationForms.navigatePage_RF.checkAddButton_RF);
         if (validateWPUFProActivate == true) {
             console.log('WPUF Pro is Activated');
         }

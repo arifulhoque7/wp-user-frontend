@@ -28,6 +28,11 @@ class PostFormsList extends Screen {
     const BUILDER_GROUP = 'wpuf-post-forms-builder';
 
     /**
+     * App load group of the AI form builder route.
+     */
+    const AI_GROUP = 'wpuf-post-forms-ai';
+
+    /**
      * Stylesheets the load hook enqueued (load_once()), null before it ran.
      *
      * @var string[]|null
@@ -176,8 +181,7 @@ class PostFormsList extends Screen {
 
     /**
      * Admin app routes: the post forms list, the builder and the AI form
-     * builder (task 5d). The AI form builder is not in the app yet: it opens
-     * its page.
+     * builder (task 5d).
      *
      * @since WPUF_SINCE
      *
@@ -232,6 +236,9 @@ class PostFormsList extends Screen {
                 'title'       => __( 'AI Form Builder', 'wp-user-frontend' ),
                 'app'         => 'ai-form-builder',
                 'boot'        => 'wpuf-ai-form-generation',
+                'in_app'      => true,
+                'group'       => self::AI_GROUP,
+                'formType'    => 'post',
                 'menuPath'    => '/post-forms',
                 'container'   => 'wpuf-ai-form-builder',
                 'bodyClasses' => [ 'wpuf-ai-form-builder-page' ],
@@ -317,6 +324,9 @@ class PostFormsList extends Screen {
                 $this->load_once();
 
                 return Admin_Form_Builder::enqueue_app_assets();
+            },
+            self::AI_GROUP      => function () {
+                return wpuf()->platform()->get( AiFormBuilder::class )->load_in_app_for( 'post' );
             },
         ];
     }

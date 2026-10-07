@@ -15,6 +15,7 @@ import { buildSummary, newSessionId } from './lib/chat';
 import InputStage from './components/InputStage';
 import ProcessingStage from './components/ProcessingStage';
 import SuccessStage from './components/SuccessStage';
+import { openRoute } from '../../app/client';
 
 const DEFAULT_TITLE = 'Generated Form';
 
@@ -83,6 +84,20 @@ function initialInput() {
 /**
  * The app.
  */
+/**
+ * Open a form's builder: its admin app route, or the builder page.
+ *
+ * @param {string} formType  post|profile|registration.
+ * @param {number} id        Form ID.
+ * @param {string} [pageUrl] Builder page URL (create-form's edit_url).
+ */
+const openBuilder = ( formType, id, pageUrl ) => {
+    const profile = 'profile' === formType || 'registration' === formType;
+    const page = profile ? 'wpuf-profile-forms' : 'wpuf-post-forms';
+
+    openRoute( `/${ profile ? 'registration' : 'post' }-forms/${ id }/edit`, pageUrl || `admin.php?page=${ page }&action=edit&id=${ id }` );
+};
+
 export default function AIFormBuilderApp() {
     const start = initialInput();
     const [ stage, setStage ] = useState( 'input' );
@@ -189,9 +204,7 @@ export default function AIFormBuilderApp() {
         const formType = config().formType || 'post';
 
         if ( formId.current ) {
-            const page = 'profile' === formType || 'registration' === formType ? 'wpuf-profile-forms' : 'wpuf-post-forms';
-
-            window.location.href = `admin.php?page=${ page }&action=edit&id=${ formId.current }`;
+            openBuilder( formType, formId.current );
             return;
         }
 
@@ -213,7 +226,7 @@ export default function AIFormBuilderApp() {
             const result = await createForm( formData );
 
             formId.current = result.form_id;
-            window.location.href = result.edit_url;
+            openBuilder( formType, result.form_id, result.edit_url );
         } catch ( error ) {
             setSaving( false );
             dialogs.alert( {

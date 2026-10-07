@@ -92,6 +92,16 @@ class AdminAppTest extends WP_UnitTestCase {
         unset( $_GET['action'] );
     }
 
+    public function test_ai_route_loads_the_ai_form_builder_for_its_form_type() {
+        $fired   = did_action( 'wpuf_load_ai_form_builder_page' );
+        $globals = wpuf()->platform()->get( \WeDevs\Wpuf\Admin\Screens\AiFormBuilder::class )->load_in_app_for( 'post' );
+
+        $this->assertSame( $fired + 1, did_action( 'wpuf_load_ai_form_builder_page' ), 'the AI page load hook fires' );
+        $this->assertSame( 'post', $globals['wpufAIFormBuilder']['formType'] );
+        $this->assertSame( 'input', $globals['wpufAIFormBuilder']['stage'] );
+        $this->assertSame( 'wpuf-post-forms-ai', wp_list_pluck( $this->app()->routes(), 'group', 'id' )['post-forms-ai'] );
+    }
+
     public function test_builder_routes_have_their_own_load_group() {
         $groups = wp_list_pluck( $this->app()->routes(), 'group', 'id' );
 
@@ -166,7 +176,7 @@ class AdminAppTest extends WP_UnitTestCase {
         $this->assertSame( 'app', $modes['subscriptions'] );
         $this->assertSame( 'app', $modes['post-forms'] );
         $this->assertSame( 'app', $modes['post-form-edit'] );
-        $this->assertSame( 'page', $modes['post-forms-ai'] );
+        $this->assertSame( 'app', $modes['post-forms-ai'] );
     }
 
     public function test_old_settings_and_subscriptions_requests_map_to_their_routes() {

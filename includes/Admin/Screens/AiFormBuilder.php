@@ -37,6 +37,33 @@ class AiFormBuilder extends Screen {
     private $boot;
 
     /**
+     * Localized `wpufAIFormBuilder` data by form type (enqueue()).
+     *
+     * @var array
+     */
+    private $localized = [];
+
+    /**
+     * Load the AI form builder for a form type on the admin app page, as its
+     * page does (`wpuf_load_ai_form_builder_page`), and return the route's
+     * window globals. The stage keys come from the route query in the app.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param string $form_type post|profile
+     *
+     * @return array
+     */
+    public function load_in_app_for( $form_type ) {
+        /** This action is documented in includes/Admin/Forms/AI_Form_Handler.php */
+        do_action( 'wpuf_load_ai_form_builder_page', $form_type );
+
+        return [
+            'wpufAIFormBuilder' => isset( $this->localized[ $form_type ] ) ? $this->localized[ $form_type ] : $this->localize_data( $form_type ),
+        ];
+    }
+
+    /**
      * Constructor.
      *
      * @since WPUF_SINCE
@@ -100,6 +127,7 @@ class AiFormBuilder extends Screen {
         $localize_data = apply_filters( 'wpuf_ai_form_builder_localize_data', $this->localize_data( $form_type ) );
 
         wp_localize_script( self::HANDLE, 'wpufAIFormBuilder', $localize_data );
+        $this->localized[ $form_type ] = $localize_data;
 
         $body_class = $this->body_class();
 

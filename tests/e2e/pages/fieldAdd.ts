@@ -463,11 +463,13 @@ export class FieldAddPage extends Base {
     async validatePostFormCreated(validateNewPostName_PF: string) {
         //Return HOME
         await this.validateAndClick(Selectors.postForms.createBlankForm_PF.clickpostFormsMenuOption);
+        // In the admin app the menu row is a route change: wait for the list before reloading it.
+        await this.isVisibleSoon(Selectors.postForms.navigatePage_PF.checkAddButton_PF);
         await this.page.reload();
          
 
         //ASSERTION > Check if-VALID
-        const checkNewBlankFormCreatedValid_PF = await this.page.isVisible(Selectors.postForms.navigatePage_PF.checkAddButton_PF);
+        const checkNewBlankFormCreatedValid_PF = await this.isVisibleSoon(Selectors.postForms.navigatePage_PF.checkAddButton_PF);
         if (checkNewBlankFormCreatedValid_PF === true) {
             await this.checkElementText(Selectors.postForms.navigatePage_PF.postFormsPageFormsTitleCheck_PF(validateNewPostName_PF), validateNewPostName_PF);
             return await this.page.textContent(Selectors.postForms.navigatePage_PF.postFormShortCode(validateNewPostName_PF));
@@ -477,11 +479,13 @@ export class FieldAddPage extends Base {
     async validateProductPostFormCreated(validateNewPostName_PF: string) {
         //Return HOME
         await this.validateAndClick(Selectors.postForms.createBlankForm_PF.clickpostFormsMenuOption);
+        // In the admin app the menu row is a route change: wait for the list before reloading it.
+        await this.isVisibleSoon(Selectors.postForms.navigatePage_PF.checkAddButton_PF);
         await this.page.reload();
          
 
         //ASSERTION > Check if-VALID
-        const checkNewBlankFormCreatedValid_PF = await this.page.isVisible(Selectors.postForms.navigatePage_PF.checkAddButton_PF);
+        const checkNewBlankFormCreatedValid_PF = await this.isVisibleSoon(Selectors.postForms.navigatePage_PF.checkAddButton_PF);
         if (checkNewBlankFormCreatedValid_PF === true) {
             await this.checkElementText(Selectors.postForms.navigatePage_PF.postFormsPageFormsTitleCheck_PF(validateNewPostName_PF), validateNewPostName_PF);
             return await this.page.textContent(Selectors.postForms.navigatePage_PF.postFormShortCode(validateNewPostName_PF));
@@ -528,7 +532,7 @@ export class FieldAddPage extends Base {
          
 
         //ASSERTION > Check if-VALID
-        const checkNewBlankFormCreatedValid_RF = await this.page.isVisible(Selectors.registrationForms.navigatePage_RF.checkAddButton_RF);
+        const checkNewBlankFormCreatedValid_RF = await this.isVisibleSoon(Selectors.registrationForms.navigatePage_RF.checkAddButton_RF);
         if (checkNewBlankFormCreatedValid_RF === true) {
             await this.checkElementText(Selectors.registrationForms.navigatePage_RF.postFormsPageFormTitleCheck_RF, validateNewPostName_RF);
         }

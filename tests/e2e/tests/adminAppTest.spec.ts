@@ -2,7 +2,7 @@ import { Browser, BrowserContext, Page, test, expect, chromium } from '@playwrig
 import { faker } from '@faker-js/faker';
 import { BasicLoginPage } from '../pages/basicLogin';
 import { SettingsReactPage } from '../pages/settingsReact';
-import { aiWp } from '../pages/aiFormBuilder';
+import { aiWp, AiFormBuilderPage } from '../pages/aiFormBuilder';
 import { Users, Urls } from '../utils/testData';
 
 let browser: Browser;
@@ -31,6 +31,8 @@ const APP = `${Urls.baseUrl}/wp-admin/admin.php?page=wp-user-frontend`;
  * @Test_APP0010 : One builder after another: no stale form data, rootInit once per opened builder, old builder URL lands on the route
  * @Test_APP0011 : Unsaved builder changes ask before leaving the route; Continue stays, Discard leaves; save works in the app
  * @Test_APP0012 : The new form route creates a form and opens its builder; registration builder (Pro) opens in the app
+ * @Test_APP0013 : Add New in the app: the template picker's Blank Form and a template each create a form and open its builder in the app
+ * @Test_APP0014 : AI form builder in the app: list button -> AI route -> generate -> Edit with Builder -> builder route, no page load; old AI URLs (with nonce) land on the route
  */
 
 test.beforeAll(async () => {
@@ -335,5 +337,101 @@ test.describe('Admin app', () => {
         await expect(page.locator('#toplevel_page_wp-user-frontend li.current a')).toHaveText('Registration Forms');
         await expect(page.locator('#wpuf-form-builder')).toHaveClass(/wpuf-form-builder-profile/);
         aiWp(['post', 'delete', String(reg), '--force']);
+    });
+
+    test('APP0013 : Add New: blank form and a template open their builder in the app', { tag: ['@Lite', '@Test_APP0013'] }, async () => {
+        test.skip(!(await appOn()), 'admin app is off');
+
+        const screens = [
+            { list: '#/post-forms', template: 'post_form_template_post', postType: 'wpuf_forms', route: 'post-forms' },
+            { list: '#/registration-forms', template: 'simple_user_signup_template', postType: 'wpuf_profile', route: 'registration-forms' },
+        ];
+
+        for (const screen of screens) {
+            await page.goto(`${APP}${screen.list}`);
+            const add = page.locator('.new-wpuf-form').first();
+
+            if ('wpuf_profile' === screen.postType && !(await add.isVisible({ timeout: 15000 }).catch(() => false))) {
+                continue; // registration forms need Pro
+            }
+
+            const picker = page.locator('.wpuf-template-picker');
+
+            // Blank Form: the new form route, no page load.
+            await add.click();
+            await expect(picker).toBeVisible();
+            await page.evaluate(() => { (window as unknown as { wpufNoReload: boolean }).wpufNoReload = true; });
+            await picker.locator('[data-template="blank"] a').first().click({ force: true });
+            await expect(page).toHaveURL(new RegExp(`#/${screen.route}/\\d+/edit$`), { timeout: 30000 });
+            await expect(page.locator('#wpuf-form-builder input[name="post_title"]').first()).toBeVisible({ timeout: 30000 });
+            expect(await page.evaluate(() => (window as unknown as { wpufNoReload?: boolean }).wpufNoReload), 'blank form without a page load').toBe(true);
+            const blank = (await builderState()).id;
+
+            // A template: created by the server's template action, then its builder in the app.
+            await page.goto(`${APP}${screen.list}`);
+            await add.click();
+            await expect(picker).toBeVisible();
+            await picker.locator(`[data-template="${screen.template}"] a`).first().click({ force: true });
+            await expect(page).toHaveURL(new RegExp(`page=wp-user-frontend#/${screen.route}/\\d+/edit$`), { timeout: 30000 });
+            await expect(page.locator('#wpuf-form-builder input[name="post_title"]').first()).toBeVisible({ timeout: 30000 });
+            const state = await builderState();
+            expect(state.id).not.toBe(blank);
+            expect(state.fields, 'the template brought its fields').toBeGreaterThan(0);
+
+            if (process.env.WPUF_E2E_WP_PATH) {
+                expect(aiWp(['post', 'get', String(state.id), '--field=post_type']).trim()).toBe(screen.postType);
+                aiWp(['post', 'delete', String(blank), String(state.id), '--force']);
+            }
+        }
+    });
+
+    test('APP0014 : AI form builder runs in the app', { tag: ['@Lite', '@Test_APP0014'] }, async () => {
+        test.skip(!(await appOn()), 'admin app is off');
+        test.skip(!process.env.WPUF_E2E_WP_PATH, 'needs WP-CLI on the site (AI mock key)');
+
+        const ai = new AiFormBuilderPage(page);
+        ai.configureMock();
+
+        try {
+            for (const list of ['post', 'profile'] as const) {
+                const route = 'profile' === list ? 'registration-forms' : 'post-forms';
+
+                await page.goto(`${APP}#/${route}`);
+                const button = page.locator(ai.S.listButton).first();
+
+                if ('profile' === list && !(await button.isVisible({ timeout: 15000 }).catch(() => false))) {
+                    continue; // registration forms need Pro
+                }
+
+                await page.evaluate(() => { (window as unknown as { wpufNoReload: boolean }).wpufNoReload = true; });
+                await button.click();
+                await expect(page).toHaveURL(new RegExp(`page=wp-user-frontend#/${route}/ai`));
+                await expect(page.locator(ai.S.inputHeading)).toBeVisible({ timeout: 30000 });
+                expect(await page.evaluate(() => document.body.classList.contains('wpuf-ai-form-builder-page'))).toBe(true);
+                expect(await page.evaluate(() => (window as unknown as { wpufAIFormBuilder: { formType: string } }).wpufAIFormBuilder.formType)).toBe(list);
+
+                await ai.generate('profile' === list ? 'Create a sign up form' : 'Create a contact form');
+                await page.locator(ai.S.editInBuilderButton).click();
+                await expect(page).toHaveURL(new RegExp(`#/${route}/\\d+/edit$`), { timeout: 30000 });
+                await expect(page.locator('#wpuf-form-builder input[name="post_title"]').first()).toBeVisible({ timeout: 30000 });
+                expect(await page.evaluate(() => document.body.classList.contains('wpuf-ai-form-builder-page')), 'AI body class gone on the builder').toBe(false);
+                expect(await page.evaluate(() => (window as unknown as { wpufNoReload?: boolean }).wpufNoReload), 'AI -> builder without a page load').toBe(true);
+                const id = (await builderState()).id;
+                expect(aiWp(['post', 'get', String(id), '--field=post_type']).trim()).toBe('profile' === list ? 'wpuf_profile' : 'wpuf_forms');
+                aiWp(['post', 'delete', String(id), '--force']);
+            }
+
+            // Old AI URLs keep their nonce check, then land on the route with their stage.
+            await page.goto(`${APP}#/post-forms`);
+            await expect(page.locator('#wpuf-post-forms-list-table-view').first()).toBeVisible({ timeout: 30000 });
+            const nonce = await page.evaluate(() => (window as unknown as { wpuf_forms_list: { template_nonce: string } }).wpuf_forms_list.template_nonce);
+            await page.goto(`${Urls.baseUrl}/wp-admin/admin.php?action=post_form_template&template=ai_form&_wpnonce=${nonce}&description=Old%20link`);
+            await expect(page).toHaveURL(/page=wp-user-frontend#\/post-forms\/ai\?description=Old(%20|\+)link$/);
+            await expect(page.locator(ai.S.inputHeading)).toBeVisible({ timeout: 30000 });
+            await page.goto(`${Urls.baseUrl}/wp-admin/admin.php?action=wpuf_ai_form_success&_wpnonce=bad`);
+            await expect(page.locator('body')).toContainText('Security check failed');
+        } finally {
+            ai.restore();
+        }
     });
 });

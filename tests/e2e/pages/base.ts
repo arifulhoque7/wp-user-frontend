@@ -122,6 +122,13 @@ export class Base {
         }
     }
 
+    // Whether an element shows within the timeout. The React lists (and the
+    // admin app, which loads a route's stylesheet before it renders) appear a
+    // moment after the page load, so an instant isVisible() can miss them.
+    async isVisibleSoon(locator: string, timeout = 15000): Promise<boolean> {
+        return this.page.locator(locator).first().waitFor({ state: 'visible', timeout }).then(() => true, () => false);
+    }
+
     // Extract form ID from URL (can be current page URL or provided URL)
     async getFormId(): Promise<string> {
         try {

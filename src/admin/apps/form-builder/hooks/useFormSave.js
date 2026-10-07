@@ -7,6 +7,7 @@ import { showToast } from '../common/Toast';
 import { showAlert } from '../common/SwalModal';
 import { getLegacySettingsPayload } from '../common/LegacySlot';
 import { request, restPath } from '@wpuf/api';
+import { setPendingClean } from '../common/saveState';
 
 /**
  * Check if a toggle/checkbox value is considered "on".
@@ -200,9 +201,12 @@ export default function useFormSave() {
                 setIsSaving( false );
                 setCurrentPanel( 'form-fields-v4-1' );
 
-                setTimeout( () => {
-                    markClean();
-                }, 500 );
+                setPendingClean( new Promise( ( resolve ) => {
+                    setTimeout( () => {
+                        markClean();
+                        resolve();
+                    }, 500 );
+                } ) );
 
                 showToast( __( 'Saved form data', 'wp-user-frontend' ) );
                 fireAfterSave();
