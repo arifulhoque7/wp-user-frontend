@@ -11,6 +11,10 @@
  *   integration (WooCommerce, EDD, Dokan...) the title ends with " (<integration>)";
  * - chat (a current form is sent): "website" adds a Website field, "date" adds an Event Date
  *   field, "remove the message" drops the Message field, anything else adds "Extra Field".
+ * - Settings "Test Connection": any request with the key gets HTTP 200 (connection successful);
+ * - Google model list (Settings "Fetch latest models"): one model, `gemini-mock-flash`;
+ * - builder "AI Generate Options" (AJAX `wpuf_ai_generate_field_options`): three options
+ *   "Mock Red", "Mock Green", "Mock Blue".
  *
  * Every answered request is counted in the option `wpuf_ai_mock_calls` (tests read it to
  * prove a chat question made no request).
@@ -47,6 +51,27 @@ function wpuf_ai_mock_answer( $pre, $args, $url ) {
     }
 
     update_option( 'wpuf_ai_mock_calls', (int) get_option( 'wpuf_ai_mock_calls', 0 ) + 1, false );
+
+    if ( 'google' === $provider && false !== strpos( $url, '/models?key=' ) ) {
+        return wpuf_ai_mock_http(
+            200, [
+                'models' => [
+                    [
+                        'name'                       => 'models/gemini-mock-flash',
+                        'displayName'                => 'Gemini Mock Flash',
+                        'supportedGenerationMethods' => [ 'generateContent' ],
+                        'inputTokenLimit'            => 8192,
+                        'outputTokenLimit'           => 2048,
+                    ],
+                ],
+            ]
+        );
+    }
+
+    // phpcs:ignore WordPress.Security.NonceVerification.Missing -- test mock, reads the action name only.
+    if ( wp_doing_ajax() && isset( $_POST['action'] ) && 'wpuf_ai_generate_field_options' === $_POST['action'] ) {
+        return wpuf_ai_mock_reply( $provider, [ 'options' => [ 'Mock Red', 'Mock Green', 'Mock Blue' ] ] );
+    }
 
     $request = wpuf_ai_mock_rest_body();
 

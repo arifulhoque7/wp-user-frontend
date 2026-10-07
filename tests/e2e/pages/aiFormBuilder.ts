@@ -57,7 +57,7 @@ export class AiFormBuilderPage extends Base {
     }
 
     /** Store the mock provider settings (the previous `wpuf_ai` is kept for restore()). */
-    configureMock(key = AI_MOCK_KEY) {
+    configureMock(key = AI_MOCK_KEY, provider: 'openai' | 'google' = 'openai') {
         if (null === this.saved) {
             try {
                 this.saved = aiWp(['option', 'get', 'wpuf_ai', '--format=json']).trim();
@@ -66,9 +66,11 @@ export class AiFormBuilderPage extends Base {
             }
         }
 
-        const value = JSON.stringify({ ai_provider: 'openai', ai_model: 'gpt-4o-mini', openai_api_key: key, temperature: '0.7' });
+        const model = 'google' === provider ? 'gemini-mock-flash' : 'gpt-4o-mini';
+        const value = JSON.stringify({ ai_provider: provider, ai_model: model, [`${provider}_api_key`]: key, temperature: '0.7' });
         aiWp(['option', 'update', 'wpuf_ai', value, '--format=json']);
         aiWp(['option', 'update', 'wpuf_ai_mock_calls', '0']);
+        aiWp(['transient', 'delete', 'wpuf_ai_models_cache']);
     }
 
     /** Put `wpuf_ai` back as it was before configureMock(). */
@@ -104,6 +106,12 @@ export class AiFormBuilderPage extends Base {
     /** Fields stored for a form: [ { template, label, required } ]. */
     storedFields(formId: number): { template: string; label: string; required: string }[] {
         const out = aiWp(['eval', `echo PHP_EOL, wp_json_encode( array_map( function ( $f ) { return [ 'template' => $f['template'], 'label' => $f['label'], 'required' => $f['required'] ?? '' ]; }, wpuf_get_form_fields( ${formId} ) ) ), PHP_EOL;`], true);
+        return evalJson(out);
+    }
+
+    /** Model ids the AI settings offer (cached list, Google models included after a fetch). */
+    modelIds(): string[] {
+        const out = aiWp(['eval', 'echo PHP_EOL, wp_json_encode( array_keys( \\WeDevs\\Wpuf\\AI\\Config::get_models() ) ), PHP_EOL;'], true);
         return evalJson(out);
     }
 

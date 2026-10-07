@@ -2437,5 +2437,17 @@ export const Selectors = {
         proFieldsDialog: '.wpuf-ai-pro-fields-dialog',
         proFieldItems: '.wpuf-ai-pro-fields-dialog .wpuf-pro-field-item',
         errorDialog: '.wpuf-ai-error-dialog',
+        // Settings > Integrations > AI Settings
+        testConnectionButton: 'button:has-text("Test Connection")',
+        fetchModelsButton: 'button:has-text("Fetch latest models")',
+        // Builder: "AI Generate Options" on a dropdown / radio / checkbox field
+        builderField: (template: string) => `li.form-field-${template}`,
+        builderFieldEdit: (template: string) => `li.form-field-${template} >> text=Edit`,
+        optionsAiButton: 'button[title="AI Generate Options"]',
+        optionsAiModal: '.wpuf-ai-modal',
+        optionsAiPrompt: '.wpuf-ai-modal textarea',
+        optionsAiGenerate: '.wpuf-ai-modal button:has-text("Generate")',
+        optionsAiList: '.wpuf-ai-modal .wpuf-ai-options-list',
+        optionsAiImport: '.wpuf-ai-modal button:has-text("Import Selected")',
     },
 };

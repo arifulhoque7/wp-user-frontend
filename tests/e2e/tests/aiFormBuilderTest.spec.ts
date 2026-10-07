@@ -48,6 +48,10 @@ test.afterAll(async () => {
  * @Test_AI0015 : Integration post form (WooCommerce): its prompts, sent to the API, kept on Regenerate
  * @Test_AI0016 : Integration registration form (Dokan, Pro): Pro prompts, profile form created
  * @Test_AI0017 : Key removed after the builder opened: Generate shows the "Oops..." dialog, no provider request
+ * @Test_AI0018 : Registration list without a key (Pro): "AI Provider Not Configured", Go to Settings lands on AI Settings
+ * @Test_AI0019 : Settings: Test Connection with the stored key reports success
+ * @Test_AI0020 : Settings: Google "Fetch latest models" lists the provider's models
+ * @Test_AI0021 : Builder: "AI Generate Options" on a dropdown field imports the generated options
  **/
 
 test.describe('AI Form Builder', () => {
@@ -305,5 +309,62 @@ test.describe('AI Form Builder', () => {
         } finally {
             ai.configureMock(AI_MOCK_KEY);
         }
+    });
+
+    test('AI0018 : Registration list without a key (Pro): "AI Provider Not Configured", Go to Settings lands on AI Settings', { tag: ['@Pro', '@Test_AI0018'] }, async () => {
+        test.skip(!ai.proActive(), 'registration forms need Pro');
+        ai.configureMock('');
+
+        try {
+            await ai.openFromList('profile');
+            await expect(page.locator(ai.S.configModal)).toBeVisible();
+            await expect(page.locator(ai.S.configModal)).toContainText('AI Provider Not Configured');
+            await page.locator(ai.S.configModal).getByRole('button', { name: 'Go to Settings' }).click();
+            await page.waitForURL(/page=wpuf-settings/);
+            await expect(page).toHaveURL(/tab=integrations&sub=wpuf_ai/);
+            await expect(page.getByText('AI Provider', { exact: true }).first()).toBeVisible({ timeout: 30000 });
+        } finally {
+            ai.configureMock(AI_MOCK_KEY);
+        }
+    });
+
+    test('AI0019 : Settings: Test Connection with the stored key reports success', { tag: ['@Lite', '@Test_AI0019'] }, async () => {
+        await page.goto(`${ai.wpufSettingsPage}#wpuf_ai`);
+        await page.locator(ai.S.testConnectionButton).click();
+        await expect(page.getByText('OpenAI connection successful!')).toBeVisible({ timeout: 30000 });
+        expect(ai.mockCalls(), 'one provider request').toBe(1);
+    });
+
+    test('AI0020 : Settings: Google "Fetch latest models" lists the provider\'s models', { tag: ['@Lite', '@Test_AI0020'] }, async () => {
+        ai.configureMock(AI_MOCK_KEY, 'google');
+
+        try {
+            await page.goto(`${ai.wpufSettingsPage}#wpuf_ai`);
+            await page.locator(ai.S.fetchModelsButton).click();
+            await expect(page.locator(ai.S.fetchModelsButton)).toBeEnabled({ timeout: 30000 });
+            expect(ai.modelIds()).toContain('gemini-mock-flash');
+        } finally {
+            ai.configureMock(AI_MOCK_KEY);
+        }
+    });
+
+    test('AI0021 : Builder: "AI Generate Options" on a dropdown field imports the generated options', { tag: ['@Lite', '@Test_AI0021'] }, async () => {
+        await ai.open();
+        await ai.generate('Create a contact form');
+        await ai.editInBuilder();
+
+        await page.hover(ai.S.builderField('dropdown_field'));
+        await page.locator(ai.S.builderFieldEdit('dropdown_field')).first().click();
+        await page.locator(ai.S.optionsAiButton).click();
+        await expect(page.locator(ai.S.optionsAiModal)).toBeVisible();
+        await page.locator(ai.S.optionsAiPrompt).fill('Colours');
+        await page.locator(ai.S.optionsAiGenerate).click();
+        await expect(page.locator(ai.S.optionsAiList)).toContainText(['Mock Red'], { timeout: 30000 });
+        await expect(page.locator(ai.S.optionsAiList)).toContainText('Mock Blue');
+        await page.locator(ai.S.optionsAiImport).click();
+        await expect(page.locator(ai.S.optionsAiModal)).toHaveCount(0);
+
+        const labels = await page.locator('input[value="Mock Red"], input[value="Mock Green"], input[value="Mock Blue"]').count();
+        expect(labels, 'the three options are in the option list').toBeGreaterThanOrEqual(3);
     });
 });

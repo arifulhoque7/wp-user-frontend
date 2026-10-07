@@ -115,7 +115,9 @@ Anthropic / Google calls ONLY when the stored key is `sk-wpuf-e2e-mock`
 (`AiFormBuilderPage.configureMock()` sets it and `restore()` puts the old `wpuf_ai` back).
 Prompts pick the answer: "mock-error" (provider 500), "not-a-form" (refusal), "pro-fields"
 (phone + date), chat "website" / "date" / "remove the message"; integrations add
-" (<id>)" to the title. Run against a local site with
+" (<id>)" to the title. It also answers Settings "Test Connection" (HTTP 200), the Google
+model list (`gemini-mock-flash`, `configureMock(key, 'google')`) and the builder's
+"AI Generate Options" AJAX (Mock Red / Green / Blue). Run against a local site with
 `QA_BASE_URL=http://site.test WPUF_E2E_WP_PATH=/path/to/site`. AI0015 / AI0016 need
 WooCommerce / Dokan active, AI0013 needs Pro off.
 

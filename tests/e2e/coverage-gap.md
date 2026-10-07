@@ -38,7 +38,7 @@
 | 12 | Content / menu / taxonomy restriction | 🟡 field-visibility only | **P0** |
 | 13 | User dashboard & account page | 🟡 posts edit/delete | P1 (profile/subscription/billing) |
 | 14 | Frontend login / lost-password / social login | 🟡 `[wpuf-login]` + lost-pass built (`FL0001`–`FL0006`) | P2 (reset-link completion, social) |
-| 15 | AI form builder & AI Review | 🟡 builder covered (AI0001-AI0017, mock provider), AI Review open | P2 |
+| 15 | AI form builder & AI Review | 🟡 builder covered (AI0001-AI0021, mock provider), AI Review open | P2 |
 | 16 | Pro modules (directory, PM, SMS, reports, analytics, QR, BuddyPress, PMPro, comments, SEO, Zapier) | 🔴 | P2 |
 | 17 | Integrations (Elementor, Events Calendar, ACF, n8n) | 🔴 | P2 |
 | 18 | reCaptcha / Turnstile / Math captcha (functional) | 🟡 Math enforced (`PF0027`); reCaptcha/Turnstile 🔴 | P1 |
@@ -402,7 +402,7 @@ the form.
 
 **Covered:** `LS0027`/`LS0028` enable Google AI / OpenAI keys only.
 
-**Covered (2026-10-07):** `tests/aiFormBuilderTest.spec.ts` AI0001-AI0017 (not configured modal + "Go to Settings" lands on the AI section, generate without a key, input stage, generate, chat
+**Covered (2026-10-07):** `tests/aiFormBuilderTest.spec.ts` AI0001-AI0021 (not configured modal + "Go to Settings" lands on the AI section from both lists, generate without a key, settings Test Connection, Google "Fetch latest models", builder "AI Generate Options", input stage, generate, chat
 Accept / Reject / checkpoints, canned answers without a request, Regenerate, Edit with Builder stored fields, provider error,
 refusal, registration form, free-only Pro-field dialog, XSS-safe chat, WooCommerce / Dokan integrations) against the mock
 provider `wp/wpuf-ai-mock.php`; parity PAR0040 (develop Vue vs React store the same form).
