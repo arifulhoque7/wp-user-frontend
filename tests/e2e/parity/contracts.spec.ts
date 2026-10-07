@@ -33,6 +33,8 @@ async function crawl(browser: import('@playwright/test').Browser, name: 'develop
         'wpuf_transaction',
     ];
 
+    // Recorder state of the admin app's redirect chain (runtime-recorder.php).
+    parityWp(site, ['option', 'delete', 'wpuf_contract_pending', 'wpuf_contract_last']);
     parityWp(site, ['option', 'update', 'wpuf_contract_record', label]);
     const admin = await ParitySitePage.doOpen(browser, site);
     // One untimed visit first so first-load writes (option defaults) are not recorded.
@@ -43,7 +45,7 @@ async function crawl(browser: import('@playwright/test').Browser, name: 'develop
         await admin.page.goto(`/wp-admin/admin.php?page=${screen}`, { waitUntil: 'networkidle' });
     }
     await admin.doClose();
-    parityWp(site, ['option', 'delete', 'wpuf_contract_record']);
+    parityWp(site, ['option', 'delete', 'wpuf_contract_record', 'wpuf_contract_pending', 'wpuf_contract_last']);
 
     return path.join(site.wpPath, 'wp-content', 'uploads', 'wpuf-contracts', label);
 }

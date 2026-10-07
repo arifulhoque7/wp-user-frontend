@@ -328,7 +328,8 @@ class Admin_Form_Handler {
             } elseif ( ! empty( $_GET['duplicated'] ) ) {
                 $duplicated = sanitize_text_field( wp_unslash( $_GET['duplicated'] ) );
 
-                $form_url = admin_url( 'admin.php?page=wpuf-post-forms&action=edit&id=' . $duplicated );
+                // In the admin app: the builder route (no page load).
+                $form_url = wpuf_is_admin_app() ? wpuf_admin_app_url( '/post-forms/' . absint( $duplicated ) . '/edit' ) : admin_url( 'admin.php?page=wpuf-post-forms&action=edit&id=' . $duplicated );
                 $notice   = sprintf(
                     // translators: %s is the form url
                     __( 'Form duplicated successfully. <a href="%s">View form.</a>', 'wp-user-frontend' ),
@@ -369,7 +370,8 @@ class Admin_Form_Handler {
             } elseif ( ! empty( $_GET['duplicated'] ) ) {
                 $duplicated = sanitize_text_field( wp_unslash( $_GET['duplicated'] ) );
 
-                $form_url = admin_url( 'admin.php?page=wpuf-profile-forms&action=edit&id=' . $duplicated );
+                // In the admin app: the builder route (no page load).
+                $form_url = wpuf_is_admin_app() ? wpuf_admin_app_url( '/registration-forms/' . absint( $duplicated ) . '/edit' ) : admin_url( 'admin.php?page=wpuf-profile-forms&action=edit&id=' . $duplicated );
                 $notice   = sprintf(
                     // translators: %s is the form url
                     __( 'Form duplicated successfully. <a href="%s">View form.</a>', 'wp-user-frontend' ),

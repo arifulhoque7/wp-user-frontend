@@ -8,7 +8,7 @@ Read when setting up the dev loop or before running CI-equivalent checks locally
 ```bash
 pnpm build                           # Production build (all entry points), ends with bin/verify-build.mjs
 pnpm run build:admin                # React admin apps in one wp-scripts build (webpack.admin.config.js)
-WPUF_ENTRY=form-builder pnpm run build:admin  # one app (form-builder | forms-list-react | subscriptions | settings-react)
+WPUF_ENTRY=form-builder pnpm run build:admin  # one app (form-builder | forms-list-react | subscriptions | settings-react | ai-form-builder | admin-app = the app shell)
 pnpm run build:forms-list-react     # Build forms list module (alias of WPUF_ENTRY=forms-list-react)
 pnpm run build:subscriptions         # Build admin subscriptions module
 pnpm run build:frontend-subscriptions # Build frontend subscriptions module

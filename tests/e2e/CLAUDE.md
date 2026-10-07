@@ -161,6 +161,35 @@ Traps:
   an "Oops... already have this field" alert; close it (`alreadyAddedOk`).
 - Save toast text is "Saved form data" (as develop).
 
+## The admin app (one page, hash routes)
+
+The React screens run as one admin app on `admin.php?page=wp-user-frontend`
+(`#/post-forms`, `#/post-forms/:id/edit`, `#/post-forms/new`, `#/post-forms/ai`,
+`#/registration-forms…` with Pro, `#/subscriptions`, `#/settings?tab=&sub=`).
+Old URLs still work: the old page's load step runs (row actions, template
+actions, add-new), then it redirects to the route. `define( 'WPUF_ADMIN_APP', false )`
+turns the app off (each screen on its own page again). App tests: `adminAppTest.spec.ts`
+(APP0001-APP0014); release smoke RS0007 (no reload across menu rows) and RS0008
+(reload on each route).
+
+- **Builder URLs have two shapes**: the builder page (`action=edit&id=N`, app off)
+  and the route (`#/post-forms/N/edit`). Wait with `BUILDER_URL` and read the id
+  with `builderFormId()` (`utils/builderUrl.ts`); `Base::getFormId()` reads both.
+- **Menu rows are route changes**, not page loads: after a click, wait for the
+  screen, not for a navigation. Reloading right after a menu click can reload the
+  previous route (the shell restores the old URL while a screen asks about unsaved
+  changes).
+- **A hash route's stylesheet loads before the screen renders**, a moment after
+  the page `load` event: use `Base::isVisibleSoon()` (or an expect with a
+  timeout), never an instant `isVisible()`, for list checks after a load.
+- **Third-party code that checks the page slug** (`$_GET['page'] === 'wpuf-post-forms'`)
+  sees `wp-user-frontend` on the app page; `wpuf_is_admin_app()` /
+  `wpuf_is_admin_screen( $slug )` answer for the app (the parity fixture
+  `parity/wp/third-party-retired-hooks.php` shows the change).
+- **CTR0001** follows the app's redirect chain: the recorder (`tests/contracts/runtime-recorder.php`)
+  merges an old URL's load step and the builder's REST boot into the screen the app
+  page shows. Run with `CONTRACT_ALLOW=<allow file> CONTRACT_BASELINE=278`.
+
 ## Reruns and local runs: what breaks and why
 
 - **Partial runs (`--grep`) must include the tests that create state**: a spec's

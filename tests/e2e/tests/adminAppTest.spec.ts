@@ -4,6 +4,7 @@ import { BasicLoginPage } from '../pages/basicLogin';
 import { SettingsReactPage } from '../pages/settingsReact';
 import { aiWp, AiFormBuilderPage } from '../pages/aiFormBuilder';
 import { Users, Urls } from '../utils/testData';
+import { builderFormId } from '../utils/builderUrl';
 
 let browser: Browser;
 let context: BrowserContext;
@@ -33,6 +34,7 @@ const APP = `${Urls.baseUrl}/wp-admin/admin.php?page=wp-user-frontend`;
  * @Test_APP0012 : The new form route creates a form and opens its builder; registration builder (Pro) opens in the app
  * @Test_APP0013 : Add New in the app: the template picker's Blank Form and a template each create a form and open its builder in the app
  * @Test_APP0014 : AI form builder in the app: list button -> AI route -> generate -> Edit with Builder -> builder route, no page load; old AI URLs (with nonce) land on the route
+ * @Test_APP0015 : List row action buttons in the app: Edit (builder route, no page load), Duplicate, Trash, Restore, Delete Permanently, bulk Move to trash; registration Edit (Pro)
  */
 
 test.beforeAll(async () => {
@@ -432,6 +434,92 @@ test.describe('Admin app', () => {
             await expect(page.locator('body')).toContainText('Security check failed');
         } finally {
             ai.restore();
+        }
+    });
+
+    test('APP0015 : List row action buttons work in the app', { tag: ['@Lite', '@Test_APP0015'] }, async () => {
+        test.skip(!(await appOn()), 'admin app is off');
+        test.skip(!process.env.WPUF_E2E_WP_PATH, 'needs WP-CLI on the site');
+
+        const title = `APP0015 ${Date.now()}`;
+        const id = newForm(title);
+        const list = page.locator('#wpuf-post-forms-list-table-view');
+        const notices = page.locator('#wpuf-admin-app-notices');
+        const rowAction = async (formTitle: string, item: string) => {
+            await page.locator(`button[aria-label="Actions for ${formTitle}"]`).first().click();
+            await page.getByRole('menuitem', { name: item, exact: true }).click();
+        };
+        const openList = async (hash = '#/post-forms') => {
+            await page.goto(`${APP}${hash}`);
+            await expect(list.locator('table').first()).toBeVisible({ timeout: 30000 });
+        };
+
+        // Edit: the builder route, no page load.
+        await openList();
+        await page.evaluate(() => { (window as unknown as { wpufNoReload: boolean }).wpufNoReload = true; });
+        await rowAction(title, 'Edit');
+        await expect(page).toHaveURL(new RegExp(`#/post-forms/${id}/edit$`));
+        await expect(page.locator('#wpuf-form-builder input[name="post_title"]').first()).toHaveValue(title, { timeout: 30000 });
+        expect(await page.evaluate(() => (window as unknown as { wpufNoReload?: boolean }).wpufNoReload), 'Edit without a page load').toBe(true);
+
+        // Duplicate: the server action, back to the list with its notice.
+        await openList();
+        await rowAction(title, 'Duplicate');
+        await expect(page).toHaveURL(/page=wp-user-frontend#\/post-forms/, { timeout: 30000 });
+        await expect(notices).toContainText('Form duplicated successfully.');
+        const copy = Number(builderFormId(new URL((await notices.locator('a', { hasText: 'View form' }).first().getAttribute('href')) || '', Urls.baseUrl).toString()));
+        expect(copy, 'the copy exists').toBeGreaterThan(id);
+        const copyTitle = aiWp(['post', 'get', String(copy), '--field=post_title']).trim();
+
+        // The notice's "View form" link: the copy's builder route, no page load.
+        await page.evaluate(() => { (window as unknown as { wpufNoReload: boolean }).wpufNoReload = true; });
+        await notices.locator('a', { hasText: 'View form' }).first().click();
+        await expect(page).toHaveURL(new RegExp(`#/post-forms/${copy}/edit$`));
+        await expect(page.locator('#wpuf-form-builder input[name="post_title"]').first()).toHaveValue(copyTitle, { timeout: 30000 });
+        expect(await page.evaluate(() => (window as unknown as { wpufNoReload?: boolean }).wpufNoReload), 'View form without a page load').toBe(true);
+
+        // Trash the copy, restore it from the Trash tab, then delete it permanently.
+        await openList();
+        await rowAction(copyTitle, 'Trash');
+        await expect(notices).toContainText(/form(s)? moved to the trash\./, { timeout: 30000 });
+        const trashed = aiWp(['post', 'list', '--post_type=wpuf_forms', '--post_status=trash', `--title=${copyTitle}`, '--format=ids']).trim();
+        expect(trashed, 'one copy in the trash').not.toBe('');
+
+        await openList();
+        await list.getByText(/^Trash/).first().click();
+        await expect(page.locator(`button[aria-label="Actions for ${copyTitle}"]`).first()).toBeVisible({ timeout: 30000 });
+        await rowAction(copyTitle, 'Restore');
+        await expect(notices).toContainText('1 form restored from the trash.', { timeout: 30000 });
+
+        await openList();
+        await rowAction(copyTitle, 'Trash');
+        await expect(notices).toContainText('1 form moved to the trash.', { timeout: 30000 });
+        await openList();
+        await list.getByText(/^Trash/).first().click();
+        await expect(page.locator(`button[aria-label="Actions for ${copyTitle}"]`).first()).toBeVisible({ timeout: 30000 });
+        await rowAction(copyTitle, 'Delete Permanently');
+        await page.getByRole('alertdialog').getByRole('button', { name: 'Delete Permanently' }).click();
+        await expect(notices).toContainText('1 form permanently deleted.', { timeout: 30000 });
+
+        // Bulk: select the remaining form, Move to trash.
+        await openList();
+        await page.getByRole('checkbox', { name: `Select ${title}` }).first().check();
+        await page.getByRole('button', { name: 'Move to trash' }).first().click();
+        await expect(notices).toContainText('1 form moved to the trash.', { timeout: 30000 });
+        expect(aiWp(['post', 'get', String(id), '--field=post_status']).trim()).toBe('trash');
+        aiWp(['post', 'delete', String(id), '--force']); // the copy was deleted permanently above
+
+        // Registration list (Pro): Edit opens its builder route.
+        const reg = page.locator('#toplevel_page_wp-user-frontend a', { hasText: 'Registration Forms' }).first();
+        if (((await reg.getAttribute('href')) || '').includes('#/registration-forms')) {
+            const regTitle = `APP0015 reg ${Date.now()}`;
+            const regId = newForm(regTitle, 'wpuf_profile');
+            await page.goto(`${APP}#/registration-forms`);
+            await expect(page.locator(`button[aria-label="Actions for ${regTitle}"]`).first()).toBeVisible({ timeout: 30000 });
+            await rowAction(regTitle, 'Edit');
+            await expect(page).toHaveURL(new RegExp(`#/registration-forms/${regId}/edit$`));
+            await expect(page.locator('#wpuf-form-builder input[name="post_title"]').first()).toHaveValue(regTitle, { timeout: 30000 });
+            aiWp(['post', 'delete', String(regId), '--force']);
         }
     });
 });

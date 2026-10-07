@@ -15,7 +15,14 @@ use WeDevs\Wpuf\Admin\Screens\Subscriptions;
  */
 class AdminScreensTest extends WP_UnitTestCase {
 
+    public function set_up() {
+        parent::set_up();
+        // These tests cover the screens on their own pages (the admin app off).
+        add_filter( 'wpuf_admin_app_enabled', '__return_false' );
+    }
+
     public function tear_down() {
+        remove_filter( 'wpuf_admin_app_enabled', '__return_false' );
         global $plugin_page;
 
         $plugin_page = null; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited

@@ -346,7 +346,28 @@ class PostFormsList extends Screen {
 
         $before = wp_styles()->queue;
         $this->load();
+        $this->load_page_extras();
         $this->loaded_styles = array_values( array_diff( wp_styles()->queue, $before ) );
+    }
+
+    /**
+     * What the post forms page got from Form_Template on its own screen (its
+     * screen check does not see the app page): the builder's stylesheet
+     * dependencies, and LearnPress's admin sheet taken off (it clashes with
+     * the builder).
+     *
+     * @return void
+     */
+    private function load_page_extras() {
+        array_map( 'wp_enqueue_style', (array) wpuf()->assets->form_builder_css_deps );
+
+        add_action(
+            'admin_enqueue_scripts',
+            function () {
+                wp_deregister_style( 'learn-press-admin' );
+            },
+            99
+        );
     }
 
     /**

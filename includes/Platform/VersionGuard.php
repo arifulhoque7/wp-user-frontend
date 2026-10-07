@@ -90,7 +90,8 @@ class VersionGuard implements Hookable {
     private function is_builder_screen() {
         $page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- screen detection only.
 
-        return in_array( $page, [ 'wpuf-post-forms', 'wpuf-profile-forms' ], true );
+        // The admin app page opens the builders as routes.
+        return in_array( $page, [ 'wpuf-post-forms', 'wpuf-profile-forms' ], true ) || wpuf_is_admin_app();
     }
 
     /**
@@ -124,7 +125,7 @@ class VersionGuard implements Hookable {
 
         $page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- screen detection only.
 
-        if ( 0 !== strpos( $page, 'wpuf' ) ) {
+        if ( 0 !== strpos( $page, 'wpuf' ) && ! wpuf_is_admin_app() ) {
             return;
         }
 

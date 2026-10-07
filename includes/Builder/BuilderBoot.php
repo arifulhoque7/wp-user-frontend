@@ -29,16 +29,19 @@ use WP_Error;
 class BuilderBoot {
 
     /**
-     * Builder screens by form post type: page slug and load hook.
+     * Builder screens by form post type: page slug, load hook and the view
+     * hook the screen printed the builder on.
      */
     const SCREENS = [
         'wpuf_forms'   => [
             'page' => 'wpuf-post-forms',
             'hook' => 'wpuf_load_post_forms',
+            'view' => 'wpuf_admin_form_builder_view',
         ],
         'wpuf_profile' => [
             'page' => 'wpuf-profile-forms',
             'hook' => 'wpuf_load_profile_forms',
+            'view' => 'wpuf_admin_form_builder',
         ],
     ];
 
@@ -101,6 +104,10 @@ class BuilderBoot {
             // register builder filters there. Enqueues do nothing in this request.
             $builder->enqueue_builder_assets();
             $data = $builder->localize_data();
+
+            // The builder screen's view hook (the screen printed the builder form on
+            // it); the app renders that form itself, so the output is discarded.
+            do_action( $screen['view'] );
             // The builder screen printed these as hidden form inputs.
             $data['builder_form'] = $builder->form_attributes();
             ob_end_clean();

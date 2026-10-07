@@ -7,14 +7,16 @@
  */
 
 /**
- * Whether the React admin screens run as one app (one page, hash routes).
+ * Whether the React admin screens run as one app (one page, hash routes). On
+ * by default; `define( 'WPUF_ADMIN_APP', false )` or the filter turns it off
+ * (each screen then loads on its own page, as before).
  *
  * @since WPUF_SINCE
  *
  * @return bool
  */
 function wpuf_admin_app_enabled() {
-    $enabled = defined( 'WPUF_ADMIN_APP' ) ? (bool) WPUF_ADMIN_APP : false;
+    $enabled = defined( 'WPUF_ADMIN_APP' ) ? (bool) WPUF_ADMIN_APP : true;
 
     /**
      * Filters whether the React admin screens run as one app.

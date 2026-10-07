@@ -21,6 +21,8 @@ let page: Page;
  * @Test_RS0004 : Settings screen mounts
  * @Test_RS0005 : Registration forms list and a new registration form open in React (Pro)
  * @Test_RS0006 : AI form builder page mounts
+ * @Test_RS0007 : Admin app: every in-app menu row opens its screen with no page load and no JS error
+ * @Test_RS0008 : Admin app: a reload on each route (deep link) opens that screen
  *
  * Every screen also fails when it loads Vue: a Vue runtime or app, or a bundle / sheet of the
  * removed Vue admin (old forms list, old builder, old AI builder, old subscriptions admin).
@@ -39,6 +41,9 @@ const VUE_ASSETS = [
 ];
 
 const problems: string[] = [];
+// REST requests a page load cut off (a reload during a fetch): the screen logs a
+// fetch_error for them, which is not a problem of the screen.
+let aborted = 0;
 
 test.beforeAll(async () => {
     browser = await chromium.launch();
@@ -49,6 +54,11 @@ test.beforeAll(async () => {
     page.on('console', (message) => {
         if ('error' === message.type()) {
             problems.push(`console: ${message.text()}`);
+        }
+    });
+    page.on('requestfailed', (request) => {
+        if ((request.failure()?.errorText || '').includes('ERR_ABORTED') && /wp-json|rest_route/.test(request.url())) {
+            aborted++;
         }
     });
     page.on('response', (response) => {
@@ -68,12 +78,14 @@ test.afterAll(async () => {
 /** Open an admin page, wait for it to settle and fail on any collected problem. */
 async function visit(path: string) {
     problems.length = 0;
+    aborted = 0;
     await page.goto(`${Urls.baseUrl}/wp-admin/${path}`);
     await page.waitForLoadState('networkidle');
 }
 
 async function expectClean(label: string) {
-    expect(problems, `${label}: JS errors / failed plugin assets`).toEqual([]);
+    const real = aborted ? problems.filter((problem) => !problem.includes('fetch_error')) : problems;
+    expect(real, `${label}: JS errors / failed plugin assets`).toEqual([]);
 
     const loaded = await page.evaluate(() => ({
         vue: 'undefined' !== typeof (window as unknown as { Vue?: unknown }).Vue || !!document.querySelector('[data-v-app]'),
@@ -137,6 +149,66 @@ test.describe('Release smoke: React admin screens', () => {
             await expect(page.locator('h2:has-text("Create Form with AI")')).toBeVisible({ timeout: 30000 });
             await page.waitForLoadState('networkidle');
             await expectClean('AI form builder');
+        } finally {
+            ai.restore();
+        }
+    });
+
+    test('RS0007 : Admin app: menu rows open their screens without a page load', { tag: ['@Lite', '@Test_RS0007'] }, async () => {
+        await visit('admin.php?page=wp-user-frontend#/post-forms');
+        test.skip(!(await page.evaluate(() => !!(window as unknown as { wpuf?: { app?: unknown } }).wpuf?.app)), 'admin app is off');
+        await expect(page.locator('#wpuf-post-forms-list-table-view').first()).toBeVisible({ timeout: 30000 });
+        await page.evaluate(() => { (window as unknown as { wpufNoReload: boolean }).wpufNoReload = true; });
+
+        const rows = [
+            { menu: 'Registration Forms', ready: '#wpuf-profile-forms-list-table-view', pro: true },
+            { menu: 'Subscriptions', ready: '#wpuf-subscription-page button' },
+            { menu: 'Settings', ready: '#wpuf-settings-root nav button' },
+            { menu: 'Post Forms', ready: '#wpuf-post-forms-list-table-view table' },
+        ];
+
+        for (const row of rows) {
+            const link = page.locator('#toplevel_page_wp-user-frontend a', { hasText: row.menu }).first();
+
+            if (row.pro && !((await link.getAttribute('href')) || '').includes('#/')) {
+                continue; // registration forms need Pro
+            }
+
+            await link.click();
+            await expect(page.locator(row.ready).first(), `${row.menu} opens`).toBeVisible({ timeout: 30000 });
+        }
+
+        expect(await page.evaluate(() => (window as unknown as { wpufNoReload?: boolean }).wpufNoReload), 'no page load across menu rows').toBe(true);
+        await expectClean('admin app menu rows');
+    });
+
+    test('RS0008 : Admin app: a reload on each route opens that screen', { tag: ['@Lite', '@Test_RS0008'] }, async () => {
+        await visit('admin.php?page=wp-user-frontend#/post-forms');
+        test.skip(!(await page.evaluate(() => !!(window as unknown as { wpuf?: { app?: unknown } }).wpuf?.app)), 'admin app is off');
+        await expect(page.locator('#wpuf-post-forms-list-table-view td a').first()).toBeVisible({ timeout: 30000 });
+        const edit = await page.locator('#wpuf-post-forms-list-table-view td a').first().getAttribute('href');
+        const pro = await page.evaluate(() => !!(window as unknown as { wpufAdmin: { app: { routes: { id: string; mode: string }[] } } }).wpufAdmin.app.routes.find((r) => 'registration-forms' === r.id && 'app' === r.mode));
+        const ai = new AiFormBuilderPage(page);
+        ai.configureMock();
+
+        const routes = [
+            { hash: '#/post-forms', ready: '#wpuf-post-forms-list-table-view table' },
+            { hash: (edit || '').replace(/^.*(#\/post-forms\/\d+\/edit).*$/, '$1'), ready: '#wpuf-form-builder input[name="post_title"]' },
+            { hash: '#/post-forms/ai', ready: 'h2:has-text("Create Form with AI")' },
+            { hash: '#/subscriptions', ready: '#wpuf-subscription-page button' },
+            { hash: '#/settings?tab=general', ready: '#wpuf-settings-root nav button' },
+            ...(pro ? [{ hash: '#/registration-forms', ready: '#wpuf-profile-forms-list-table-view' }] : []),
+        ];
+
+        try {
+            for (const route of routes) {
+                expect(route.hash, 'route hash').toMatch(/^#\//);
+                await visit(`admin.php?page=wp-user-frontend${route.hash}`);
+                await page.reload();
+                await page.waitForLoadState('networkidle');
+                await expect(page.locator(route.ready).first(), `${route.hash} after a reload`).toBeVisible({ timeout: 30000 });
+                await expectClean(`route ${route.hash}`);
+            }
         } finally {
             ai.restore();
         }

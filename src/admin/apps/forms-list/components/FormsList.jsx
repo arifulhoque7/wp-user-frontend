@@ -134,6 +134,13 @@ const FormsList = ( {
 
     // Row action handler
     const handleAction = useCallback( async ( action, form ) => {
+        // Edit: the builder route in the admin app (no page load), else its page.
+        if ( 'edit' === action ) {
+            openRoute( `${ routeBase }/${ form.ID }/edit`, buildAdminUrl( form.ID, 'edit' ) );
+
+            return;
+        }
+
         if ( 'delete' === action ) {
             const ok = await confirm( {
                 title: __( 'Delete Permanently', 'wp-user-frontend' ),
@@ -147,7 +154,7 @@ const FormsList = ( {
         }
 
         window.location.href = buildAdminUrl( form.ID, action );
-    }, [ buildAdminUrl, confirm ] );
+    }, [ buildAdminUrl, confirm, routeBase ] );
 
     // Bulk action handler (develop's bulk request to the server list action)
     const handleBulkAction = useCallback( async ( bulkAction ) => {

@@ -41,11 +41,11 @@ class AdminAppTest extends WP_UnitTestCase {
         return wpuf()->platform()->get( AppPage::class );
     }
 
-    public function test_flag_is_off_by_default_and_filterable() {
-        $this->assertFalse( wpuf_admin_app_enabled() );
-
-        add_filter( 'wpuf_admin_app_enabled', '__return_true' );
+    public function test_app_is_on_by_default_and_filterable() {
         $this->assertTrue( wpuf_admin_app_enabled() );
+
+        add_filter( 'wpuf_admin_app_enabled', '__return_false' );
+        $this->assertFalse( wpuf_admin_app_enabled() );
     }
 
     public function test_app_url_points_at_the_top_level_page_with_a_hash_route() {
