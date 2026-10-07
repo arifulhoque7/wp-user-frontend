@@ -29,6 +29,7 @@ import SettingHelpText from './components/FieldSettings/inputs/SettingHelpText';
 import LegacySlot from './common/LegacySlot';
 import FormBuilder from './components/FormBuilder';
 import { openHiddenTaxonomies } from './common/BuilderDialogs';
+import { builderLoadError, builderSkeleton } from './skeleton';
 
 /**
  * Initialize the store from PHP-localized data.
@@ -256,13 +257,11 @@ function builderForm( attributes ) {
  */
 function mountInApp( element, context ) {
     const type = context.route.formType || 'wpuf_forms';
-    const status = document.createElement( 'p' );
     let root = null;
     let cancelled = false;
 
-    status.className = 'wpuf-admin-app-loading';
-    status.textContent = __( 'Loading…', 'wp-user-frontend' );
-    element.append( status );
+    // The builder's shape, shimmering, until the form arrives.
+    element.append( builderSkeleton() );
 
     const open = async () => {
         const id = parseInt( context.params.id, 10 ) || 0;
@@ -303,7 +302,7 @@ function mountInApp( element, context ) {
 
     open().catch( ( error ) => {
         if ( ! cancelled ) {
-            status.textContent = ( error && error.message ) || __( 'The form builder could not be loaded.', 'wp-user-frontend' );
+            element.replaceChildren( builderLoadError( ( error && error.message ) || __( 'The form builder could not be loaded.', 'wp-user-frontend' ) ) );
         }
     } );
 
