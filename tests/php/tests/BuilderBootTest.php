@@ -40,13 +40,43 @@ class BuilderBootTest extends WP_UnitTestCase {
         $data    = ( new BuilderBoot() )->boot( $form_id );
 
         $this->assertIsArray( $data );
-        $this->assertSame( [ 'wpuf_form_builder', 'wpuf_single_objects', 'wpuf_mixins' ], array_keys( $data ) );
+        $this->assertSame( [ 'wpuf_form_builder', 'wpuf_single_objects', 'wpuf_mixins', 'builder_form' ], array_keys( $data ) );
         $this->assertSame( 'wpuf_forms', $data['wpuf_form_builder']['form_type'] );
         $this->assertSame( $form_id, $data['wpuf_form_builder']['post']->ID );
         $this->assertNotEmpty( $data['wpuf_form_builder']['form_fields'] );
         $this->assertArrayHasKey( 'legacy_slots', $data['wpuf_form_builder'] );
         $this->assertContains( 'post_title', $data['wpuf_single_objects'] );
         $this->assertSame( [ 'root', 'builder_stage', 'form_fields', 'field_options' ], array_keys( $data['wpuf_mixins'] ) );
+    }
+
+    public function test_boot_returns_the_builder_form_inputs() {
+        $form_id = wpuf_create_sample_form( 'Boot Form', 'wpuf_forms' );
+        $form    = ( new BuilderBoot() )->boot( $form_id )['builder_form'];
+
+        // The hidden inputs of the builder screen's form (wpuf_form_id, form_settings_key, nonce).
+        $this->assertSame( (string) $form_id, $form['form_id'] );
+        $this->assertSame( 'post', $form['form_type'] );
+        $this->assertSame( 'wpuf_forms', $form['post_type'] );
+        $this->assertSame( 'wpuf_form_settings', $form['form_settings_key'] );
+        $this->assertSame( 1, wp_verify_nonce( $form['nonce'], 'wpuf_form_builder_save_form' ) );
+    }
+
+    public function test_rest_creates_a_form_for_the_new_form_route() {
+        $request = new \WP_REST_Request( 'POST', '/wpuf/v1/admin/forms' );
+        $request->set_param( 'type', 'wpuf_forms' );
+
+        $response = rest_get_server()->dispatch( $request );
+        $id       = $response->get_data()['data']['id'];
+
+        $this->assertSame( 201, $response->get_status() );
+        $this->assertSame( 'wpuf_forms', get_post_type( $id ) );
+
+        $request->set_param( 'type', 'post' );
+        $this->assertSame( 400, rest_get_server()->dispatch( $request )->get_status(), 'only form post types' );
+
+        wp_set_current_user( self::factory()->user->create( [ 'role' => 'editor' ] ) );
+        $request->set_param( 'type', 'wpuf_forms' );
+        $this->assertSame( 403, rest_get_server()->dispatch( $request )->get_status(), 'managers only' );
     }
 
     public function test_top_level_scalars_have_the_localized_shape() {

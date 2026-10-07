@@ -5,8 +5,6 @@ import { STORE_NAME } from '../store';
 import { createField, isFieldSingleInstance, containsField } from '../utils/fieldUtils';
 import { openCustomFieldTooltip, showOops } from '../common/BuilderDialogs';
 
-const isProfilePage = window.location.search.includes( 'page=wpuf-profile-forms' );
-
 // "Don't show again" for the custom field tooltip lasts for the page, shared by
 // every place that adds a field (palette click, stage drop).
 const tooltipState = { enabled: true };
@@ -71,14 +69,18 @@ function openAdvancedOptions( fieldId, openFieldSettings ) {
  * @return {Function} `( template, dropIndex? ) => void`
  */
 export default function useAddField() {
-    const { fieldSettings, formFields, indexToInsert } = useSelect( ( select ) => {
+    const { fieldSettings, formFields, indexToInsert, formType } = useSelect( ( select ) => {
         const store = select( STORE_NAME );
         return {
             fieldSettings: store.getFieldSettings(),
             formFields: store.getFormFields(),
             indexToInsert: store.getIndexToInsert(),
+            formType: store.getFormType(),
         };
     }, [] );
+
+    // Registration forms (the URL decided before; the admin app has one URL).
+    const isProfilePage = 'wpuf_profile' === formType;
 
     const { addField, setIndexToInsert, openFieldSettings } = useDispatch( STORE_NAME );
 
@@ -121,7 +123,7 @@ export default function useAddField() {
         if ( ! isProfilePage && field.is_meta === 'yes' && tooltipState.enabled ) {
             showTooltip( field );
         }
-    }, [ formFields, fieldSettings, indexToInsert, singleObjects, addField, setIndexToInsert, showTooltip ] );
+    }, [ formFields, fieldSettings, indexToInsert, singleObjects, addField, setIndexToInsert, showTooltip, isProfilePage ] );
 
     return handleAddField;
 }

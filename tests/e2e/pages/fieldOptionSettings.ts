@@ -6,6 +6,7 @@ import { Base } from './base';
 import { FieldAddPage } from './fieldAdd';
 import { faker } from '@faker-js/faker';
 import { PostForm } from '../utils/testData';
+import { builderFormId } from '../utils/builderUrl';
 
 export class FieldOptionSettingsPage extends Base {
     constructor(page: Page) {
@@ -65,10 +66,7 @@ export class FieldOptionSettingsPage extends Base {
 
     async getFormId(): Promise<string> {
         try {
-            const targetUrl = this.page.url();
-            const urlObj = new URL(targetUrl);
-            const idParam = urlObj.searchParams.get('id');
-            return idParam;
+            return builderFormId(this.page.url()) || null;
         } catch (error) {
             console.log('\x1b[31m%s\x1b[0m', `❌ Failed to extract form ID from URL: ${error}`);
             throw error;

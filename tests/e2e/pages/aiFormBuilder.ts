@@ -5,6 +5,7 @@ import { expect, type Page } from '@playwright/test';
 import { Base } from './base';
 import { Selectors } from './selectors';
 import { wpCli } from '../utils/wpEnvCli';
+import { BUILDER_URL, builderFormId } from '../utils/builderUrl';
 
 /** The key the mock provider (tests/e2e/wp/wpuf-ai-mock.php) answers. */
 export const AI_MOCK_KEY = 'sk-wpuf-e2e-mock';
@@ -177,7 +178,7 @@ export class AiFormBuilderPage extends Base {
     /** "Edit with Builder" and wait for the builder of the new form; returns its id. */
     async editInBuilder(): Promise<number> {
         await this.page.locator(this.S.editInBuilderButton).click();
-        await this.page.waitForURL(/action=edit&id=\d+/, { timeout: 30000 });
-        return parseInt(new URL(this.page.url()).searchParams.get('id') || '0', 10);
+        await this.page.waitForURL(BUILDER_URL, { timeout: 30000 });
+        return parseInt(builderFormId(this.page.url()) || '0', 10);
     }
 }

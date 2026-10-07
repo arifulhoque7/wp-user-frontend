@@ -3,6 +3,7 @@ dotenv.config({ quiet: true });
 import { expect, type Page } from '@playwright/test';
 import { Urls } from '../utils/testData';
 import { faker } from '@faker-js/faker';
+import { builderFormId } from '../utils/builderUrl';
 
 // Keep the terminal readable: page-object step logs ("✅ Clicked on //...") are
 // suppressed by default so only Playwright's own test-title lines show. Set
@@ -124,10 +125,7 @@ export class Base {
     // Extract form ID from URL (can be current page URL or provided URL)
     async getFormId(): Promise<string> {
         try {
-            const targetUrl = this.page.url();
-            const urlObj = new URL(targetUrl);
-            const idParam = urlObj.searchParams.get('id');
-            return idParam;
+            return builderFormId(this.page.url()) || null;
         } catch (error) {
             console.log('\x1b[31m%s\x1b[0m', `❌ Failed to extract form ID from URL: ${error}`);
             return null;

@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { ParitySitePage } from '../pages/parity';
 import { paritySite, paritySitesConfigured, parityProActive, parityWp } from '../utils/paritySites';
+import { BUILDER_URL, builderFormId } from '../utils/builderUrl';
 
 /**
  * The React form template picker ("Add New" on the forms lists): every card
@@ -74,8 +75,8 @@ test.describe('Form template picker', () => {
             // The template still creates its form and opens the builder.
             await page.locator('.new-wpuf-form').first().click();
             await picker.locator(`[data-template="${screen.template}"] a`).click({ force: true });
-            await page.waitForURL(/action=edit&id=\d+/);
-            const formId = new URL(page.url()).searchParams.get('id') as string;
+            await page.waitForURL(BUILDER_URL);
+            const formId = builderFormId(page.url());
             expect(parityWp(branch, ['post', 'get', formId, '--field=post_type']).trim()).toBe(screen.postType);
             // The form and its fields go again.
             const fields = parityWp(branch, ['post', 'list', '--post_type=wpuf_input', `--post_parent=${formId}`, '--format=ids']).trim();

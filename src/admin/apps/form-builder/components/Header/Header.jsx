@@ -4,6 +4,26 @@ import { __ } from '@wordpress/i18n';
 import { STORE_NAME } from '../../store';
 import useFormSave from '../../hooks/useFormSave';
 import LegacySlot, { getLegacySlots } from '../../common/LegacySlot';
+import { inApp } from '../../../../app/client';
+
+/**
+ * Builder URL of another form of the same type: its app route in the admin
+ * app, else its builder page. The store's form type is the post type.
+ *
+ * @param {string} formType Form post type (`wpuf_forms`, `wpuf_profile`).
+ * @param {number} id       Form ID.
+ *
+ * @return {string} URL.
+ */
+const formEditUrl = ( formType, id ) => {
+    const profile = 'wpuf_profile' === formType || 'profile' === formType;
+
+    if ( inApp() ) {
+        return `#/${ profile ? 'registration' : 'post' }-forms/${ id }/edit`;
+    }
+
+    return `admin.php?page=wpuf-${ profile ? 'profile' : 'post' }-forms&action=edit&id=${ id }`;
+};
 
 export default function Header( { activeTab, onTabChange } ) {
     const { post, formType } = useSelect( ( select ) => {
@@ -97,7 +117,7 @@ export default function Header( { activeTab, onTabChange } ) {
                                                     <li key={ form.id }>
                                                         <a
                                                             className="block rounded-none font-medium text-left px-4 py-2 text-sm! text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:shadow-none focus:outline-hidden"
-                                                            href={ `admin.php?page=wpuf-${ formType }-forms&action=edit&id=${ form.id }` }
+                                                            href={ formEditUrl( formType, form.id ) }
                                                         >
                                                             { form.title }
                                                         </a>

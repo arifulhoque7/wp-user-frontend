@@ -9,6 +9,7 @@ import LegacySlot, { getLegacySlots } from '../../common/LegacySlot';
 import ModulesEmptyState from './ModulesEmptyState';
 import useFormSave from '../../hooks/useFormSave';
 import { BuilderSlot, settingsSlotName } from '../../slots';
+import { inApp } from '../../../../app/client';
 
 /**
  * Main form settings component — mirrors post-form-settings.php Vue template.
@@ -61,10 +62,11 @@ export default function FormSettings() {
         return null;
     }, [ settingsItems, activeTab ] );
 
-    // Cancel URL
-    const postFormsUrl = ( window.wpuf_form_builder?.post?.post_type === 'wpuf_profile' )
-        ? ( window.wpuf_admin_url || '' ) + 'admin.php?page=wpuf-profile-forms'
-        : ( window.wpuf_admin_url || '' ) + 'admin.php?page=wpuf-post-forms';
+    // Cancel URL (in the admin app: the list route, no page load)
+    const isProfileForm = window.wpuf_form_builder?.post?.post_type === 'wpuf_profile';
+    const postFormsUrl = inApp()
+        ? `#${ isProfileForm ? '/registration-forms' : '/post-forms' }`
+        : ( window.wpuf_admin_url || '' ) + ( isProfileForm ? 'admin.php?page=wpuf-profile-forms' : 'admin.php?page=wpuf-post-forms' );
 
     return (
         <div className="wpuf-settings-container bg-white border border-gray-200 rounded-lg mx-4 mt-4 flex transition-transform duration-200 ease-in-out">

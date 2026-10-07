@@ -127,6 +127,27 @@ class FormsController extends RestController {
             ]
         );
 
+        // A new form for the builder's "new form" route (the builder page's
+        // `action=add-new` did the same before opening the form).
+        register_rest_route(
+            $this->namespace,
+            '/' . $this->rest_base,
+            [
+                [
+                    'methods'             => WP_REST_Server::CREATABLE,
+                    'callback'            => [ $this, 'create_item' ],
+                    'permission_callback' => $this->permission( Caps::MANAGE_FORMS ),
+                    'args'                => [
+                        'type' => [
+                            'type'     => 'string',
+                            'required' => true,
+                            'enum'     => array_keys( BuilderBoot::SCREENS ),
+                        ],
+                    ],
+                ],
+            ]
+        );
+
         // The builder's data for one form (the React admin app opens builders
         // without a page load). Same permission as reading the form.
         register_rest_route(
@@ -193,6 +214,41 @@ class FormsController extends RestController {
                 'data'    => $data,
             ]
         );
+    }
+
+    /**
+     * Create a sample form of a type, as the builder page's `action=add-new`
+     * did (registration forms need Pro).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param WP_REST_Request $request Request
+     *
+     * @return \WP_REST_Response|\WP_Error
+     */
+    public function create_item( $request ) {
+        $type = (string) $request['type'];
+
+        if ( 'wpuf_profile' === $type && ! class_exists( 'WP_User_Frontend_Pro' ) ) {
+            return $this->error( 'invalid_type', __( 'Registration forms need WP User Frontend Pro.', 'wp-user-frontend' ), 400 );
+        }
+
+        $title   = 'wpuf_profile' === $type ? 'Sample Registration Form' : 'Sample Form';
+        $form_id = wpuf_create_sample_form( $title, $type, true );
+
+        if ( ! $form_id ) {
+            return $this->error( 'not_created', __( 'The form could not be created.', 'wp-user-frontend' ), 500 );
+        }
+
+        $response = rest_ensure_response(
+            [
+                'success' => true,
+                'data'    => [ 'id' => (int) $form_id ],
+            ]
+        );
+        $response->set_status( 201 );
+
+        return $response;
     }
 
     /**

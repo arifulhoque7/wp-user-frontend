@@ -27,6 +27,10 @@ const APP = `${Urls.baseUrl}/wp-admin/admin.php?page=wp-user-frontend`;
  * @Test_APP0006 : Subscriptions list -> new form -> back / forward inside the route; a deep link reload opens the form
  * @Test_APP0007 : Post forms list <-> registration forms list (Pro) through the menu without a page load, each list with its own data
  * @Test_APP0008 : A list row action (trash) runs on the server and comes back to the list in the app with its notice
+ * @Test_APP0009 : Post list -> builder -> list without a page load; the builder's stylesheet and body class only on its route
+ * @Test_APP0010 : One builder after another: no stale form data, rootInit once per opened builder, old builder URL lands on the route
+ * @Test_APP0011 : Unsaved builder changes ask before leaving the route; Continue stays, Discard leaves; save works in the app
+ * @Test_APP0012 : The new form route creates a form and opens its builder; registration builder (Pro) opens in the app
  */
 
 test.beforeAll(async () => {
@@ -191,5 +195,145 @@ test.describe('Admin app', () => {
         await expect(page.locator('#wpuf-admin-app-notices')).toContainText('1 form moved to the trash.');
         expect(aiWp(['post', 'get', String(id), '--field=post_status']).trim()).toBe('trash');
         aiWp(['post', 'delete', String(id), '--force']);
+    });
+
+    /** Builder state from the page: form name, field count, store form id. */
+    const builderState = () => page.evaluate(() => {
+        const w = window as unknown as { wp: { data: { select: ( name: string ) => { getPost: () => { ID: number; post_title: string }; getFormFields: () => unknown[]; getIsDirty: () => boolean } } }; wpuf: { storeName: string } };
+        const store = w.wp.data.select( w.wpuf.storeName );
+
+        return { id: store.getPost().ID, title: store.getPost().post_title, fields: store.getFormFields().length, dirty: store.getIsDirty() };
+    });
+    const builderReady = async (title: string) => {
+        await expect(page.locator('#wpuf-form-builder #wpuf-form-builder-app input[name="post_title"]').first()).toHaveValue(title, { timeout: 30000 });
+    };
+    /** Rename in the builder header (the save posts the header input) and mark the form changed. */
+    const renameForm = async (title: string) => {
+        const name = page.locator('#wpuf-form-builder input[name="post_title"]').first();
+        await name.click();
+        await name.fill(title);
+        await name.press('Enter');
+        await page.evaluate(() => {
+            const w = window as unknown as { wp: { data: { dispatch: ( n: string ) => { markDirty: () => void } } }; wpuf: { storeName: string } };
+            w.wp.data.dispatch( w.wpuf.storeName ).markDirty();
+        });
+    };
+    const newForm = (title: string, type = 'wpuf_forms') => Number(aiWp(['eval', `echo wpuf_create_sample_form( '${title}', '${type}' );`], true).trim().split('\n').pop());
+
+    test('APP0009 : Post list -> builder -> list without a page load', { tag: ['@Lite', '@Test_APP0009'] }, async () => {
+        test.skip(!(await appOn()), 'admin app is off');
+        test.skip(!process.env.WPUF_E2E_WP_PATH, 'needs WP-CLI on the site');
+
+        const id = newForm('APP0009 builder');
+        const sheetOn = (sheet: string) => page.evaluate((s) => {
+            const link = document.getElementById(s) as HTMLLinkElement | null;
+            return !!link && !link.disabled;
+        }, sheet);
+
+        await page.goto(`${APP}#/post-forms`);
+        await expect(page.locator('#wpuf-post-forms-list-table-view').first()).toBeVisible({ timeout: 30000 });
+        await page.evaluate(() => { (window as unknown as { wpufNoReload: boolean }).wpufNoReload = true; });
+
+        await page.evaluate((formId) => { window.location.hash = `#/post-forms/${formId}/edit`; }, id);
+        await builderReady('APP0009 builder');
+        expect(await page.evaluate(() => document.body.classList.contains('wpuf-builder-screen'))).toBe(true);
+        expect(await sheetOn('wpuf-admin-form-builder-css'), 'builder sheet on').toBe(true);
+        expect(await sheetOn('wpuf-forms-list-css'), 'list sheet off').toBe(false);
+        await expect(page.locator('#toplevel_page_wp-user-frontend li.current a')).toHaveText('Post Forms');
+        await expect(page.locator('input[name="wpuf_form_id"]')).toHaveValue(String(id));
+        await expect(page.locator('input[name="wpuf_form_builder_nonce"]')).toHaveCount(1);
+
+        await page.locator('#toplevel_page_wp-user-frontend a', { hasText: 'Post Forms' }).first().click();
+        await expect(page.locator('#wpuf-post-forms-list-table-view').first()).toBeVisible({ timeout: 30000 });
+        expect(await page.evaluate(() => document.body.classList.contains('wpuf-builder-screen'))).toBe(false);
+        expect(await sheetOn('wpuf-forms-list-css'), 'list sheet back on').toBe(true);
+        expect(await sheetOn('wpuf-admin-form-builder-css'), 'builder sheet off').toBe(false);
+        expect(await page.evaluate(() => (window as unknown as { wpufNoReload?: boolean }).wpufNoReload), 'no page load').toBe(true);
+        aiWp(['post', 'delete', String(id), '--force']);
+    });
+
+    test('APP0010 : One builder after another without stale data', { tag: ['@Lite', '@Test_APP0010'] }, async () => {
+        test.skip(!(await appOn()), 'admin app is off');
+        test.skip(!process.env.WPUF_E2E_WP_PATH, 'needs WP-CLI on the site');
+
+        const first = newForm('APP0010 first');
+        const second = Number(aiWp(['eval', "echo wpuf_create_sample_form( 'APP0010 second', 'wpuf_forms', true );"], true).trim().split('\n').pop());
+
+        // Old builder URL: the load step runs, then the app route.
+        await page.goto(`${Urls.baseUrl}/wp-admin/admin.php?page=wpuf-post-forms&action=edit&id=${first}`);
+        await expect(page).toHaveURL(new RegExp(`page=wp-user-frontend#/post-forms/${first}/edit`));
+        await builderReady('APP0010 first');
+        await page.evaluate(() => {
+            const w = window as unknown as { wp: { hooks: { addAction: ( h: string, n: string, cb: () => void ) => void } }; rootInits: number };
+            w.rootInits = 0;
+            w.wp.hooks.addAction( 'wpuf.formBuilder.rootInit', 'e2e/count', () => { w.rootInits++; } );
+        });
+        const a = await builderState();
+        expect(a.id).toBe(first);
+
+        await page.evaluate((formId) => { window.location.hash = `#/post-forms/${formId}/edit`; }, second);
+        await builderReady('APP0010 second');
+        const b = await builderState();
+        expect(b.id).toBe(second);
+        expect(b.fields, 'blank form has its own (fewer) fields').toBeLessThan(a.fields);
+        expect(b.dirty).toBe(false);
+        expect(await page.evaluate(() => (window as unknown as { rootInits: number }).rootInits), 'rootInit once per opened builder').toBe(1);
+        await expect(page.locator('input[name="wpuf_form_id"]')).toHaveValue(String(second));
+        await expect(page.locator('#wpuf-form-builder')).toHaveCount(1);
+
+        aiWp(['post', 'delete', String(first), String(second), '--force']);
+    });
+
+    test('APP0011 : Unsaved builder changes ask before leaving; save works in the app', { tag: ['@Lite', '@Test_APP0011'] }, async () => {
+        test.skip(!(await appOn()), 'admin app is off');
+        test.skip(!process.env.WPUF_E2E_WP_PATH, 'needs WP-CLI on the site');
+
+        const id = newForm('APP0011 guard');
+
+        await page.goto(`${APP}#/post-forms/${id}/edit`);
+        await builderReady('APP0011 guard');
+        await renameForm('APP0011 renamed');
+        expect((await builderState()).dirty).toBe(true);
+
+        await page.evaluate(() => { window.location.hash = '#/post-forms'; });
+        await expect(page.getByRole('heading', { name: 'Unsaved Changes' })).toBeVisible();
+        await page.getByRole('button', { name: 'Continue Editing' }).click();
+        await expect(page).toHaveURL(new RegExp(`#/post-forms/${id}/edit`));
+        await expect(page.locator('#wpuf-form-builder')).toHaveCount(1);
+
+        // Save in the app: the REST save reads the route's hidden inputs.
+        const saved = page.waitForResponse((r) => r.url().includes(`admin/forms/${id}`) && 'POST' === r.request().method());
+        await page.locator('//button[normalize-space(text())="Save"]').first().click();
+        expect((await saved).status()).toBe(200);
+        await expect.poll(() => aiWp(['post', 'get', String(id), '--field=post_title']).trim()).toBe('APP0011 renamed');
+
+        await renameForm('APP0011 unsaved');
+        await page.evaluate(() => { window.location.hash = '#/post-forms'; });
+        await page.getByRole('button', { name: 'Discard Changes' }).click();
+        await expect(page.locator('#wpuf-post-forms-list-table-view').first()).toBeVisible({ timeout: 30000 });
+        aiWp(['post', 'delete', String(id), '--force']);
+    });
+
+    test('APP0012 : New form route creates a form; registration builder opens in the app', { tag: ['@Lite', '@Test_APP0012'] }, async () => {
+        test.skip(!(await appOn()), 'admin app is off');
+        test.skip(!process.env.WPUF_E2E_WP_PATH, 'needs WP-CLI on the site');
+
+        await page.goto(`${APP}#/post-forms/new`);
+        await expect(page).toHaveURL(/#\/post-forms\/\d+\/edit$/, { timeout: 30000 });
+        await builderReady('Sample Form');
+        const created = (await builderState()).id;
+        expect(aiWp(['post', 'get', String(created), '--field=post_type']).trim()).toBe('wpuf_forms');
+        aiWp(['post', 'delete', String(created), '--force']);
+
+        const registration = await page.evaluate(() => !!((window as unknown as { wpufAdmin: { app: { routes: { id: string; mode: string }[] } } }).wpufAdmin.app.routes.find((r) => 'registration-form-edit' === r.id && 'app' === r.mode)));
+        test.skip(!registration, 'registration builder needs Pro');
+
+        const reg = newForm('APP0012 registration', 'wpuf_profile');
+        await page.evaluate((formId) => { window.location.hash = `#/registration-forms/${formId}/edit`; }, reg);
+        await builderReady('APP0012 registration');
+        expect((await builderState()).id).toBe(reg);
+        await expect(page.locator('#toplevel_page_wp-user-frontend li.current a')).toHaveText('Registration Forms');
+        await expect(page.locator('#wpuf-form-builder')).toHaveClass(/wpuf-form-builder-profile/);
+        aiWp(['post', 'delete', String(reg), '--force']);
     });
 });

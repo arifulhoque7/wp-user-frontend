@@ -75,8 +75,7 @@ class AdminAppTest extends WP_UnitTestCase {
         }
     }
 
-    public function test_builder_requests_stay_pages_while_the_builder_is_not_in_the_app() {
-        // The builders are not in the app yet (task 5d.5); the list is.
+    public function test_old_builder_requests_map_to_builder_routes() {
         $forms = wpuf()->platform()->get( Registry::class )->get( 'wpuf-post-forms' );
 
         $this->assertInstanceOf( Screen::class, $forms );
@@ -84,11 +83,22 @@ class AdminAppTest extends WP_UnitTestCase {
 
         $_GET['action'] = 'edit';
         $_GET['id']     = '12';
-        $this->assertSame( '', $forms->app_route_for_request(), 'builder stays its own page' );
+        $this->assertSame( '/post-forms/12/edit', $forms->app_route_for_request() );
 
+        // add-new: the load step creates the form and redirects to its builder.
         $_GET['action'] = 'add-new';
-        $this->assertSame( '', $forms->app_route_for_request(), 'new form stays its own page' );
-        unset( $_GET['action'], $_GET['id'] );
+        unset( $_GET['id'] );
+        $this->assertSame( '', $forms->app_route_for_request() );
+        unset( $_GET['action'] );
+    }
+
+    public function test_builder_routes_have_their_own_load_group() {
+        $groups = wp_list_pluck( $this->app()->routes(), 'group', 'id' );
+
+        $this->assertSame( 'wpuf-post-forms', $groups['post-forms'] );
+        $this->assertSame( 'wpuf-post-forms-builder', $groups['post-form-edit'] );
+        $this->assertSame( 'wpuf-post-forms-builder', $groups['post-form-new'] );
+        $this->assertArrayHasKey( 'wpuf-post-forms-builder', wpuf()->platform()->get( Registry::class )->get( 'wpuf-post-forms' )->app_groups() );
     }
 
     public function test_menu_rows_point_at_app_routes_only_when_in_app() {
@@ -155,7 +165,8 @@ class AdminAppTest extends WP_UnitTestCase {
         $this->assertSame( 'app', $modes['settings'] );
         $this->assertSame( 'app', $modes['subscriptions'] );
         $this->assertSame( 'app', $modes['post-forms'] );
-        $this->assertSame( 'page', $modes['post-form-edit'] );
+        $this->assertSame( 'app', $modes['post-form-edit'] );
+        $this->assertSame( 'page', $modes['post-forms-ai'] );
     }
 
     public function test_old_settings_and_subscriptions_requests_map_to_their_routes() {

@@ -153,12 +153,8 @@ const syncPage = ( route ) => {
 
     [ ...body.classList ].filter( ( name ) => name.startsWith( 'wpuf-route-' ) ).forEach( ( name ) => body.classList.remove( name ) );
     body.classList.add( `wpuf-route-${ route.id }` );
+    routes.forEach( ( other ) => ( other.bodyClasses || [] ).forEach( ( name ) => body.classList.remove( name ) ) );
     ( route.bodyClasses || [] ).forEach( ( name ) => body.classList.add( name ) );
-    routes.forEach( ( other ) => {
-        if ( other.screen !== route.screen ) {
-            ( other.bodyClasses || [] ).forEach( ( name ) => body.classList.remove( name ) );
-        }
-    } );
 
     const notices = document.getElementById( 'wpuf-admin-app-notices' );
 
@@ -168,21 +164,22 @@ const syncPage = ( route ) => {
 };
 
 /**
- * Stylesheets of the active screen on, other screens' sheets off (each
- * screen's Tailwind base differs). Held sheets arrive as placeholders and
- * become links the first time their screen opens.
+ * Stylesheets of the active load group on, other groups' sheets off (each
+ * screen's Tailwind base differs; a screen's list and builder are separate
+ * groups). Held sheets arrive as placeholders and become links the first
+ * time their group opens.
  *
- * @param {string} screen Screen slug.
+ * @param {string} group Load group (route `group`).
  *
- * @return {Promise} Resolves when the screen's new sheets have loaded.
+ * @return {Promise} Resolves when the group's new sheets have loaded.
  */
-const activateStyles = ( screen ) => {
+const activateStyles = ( group ) => {
     const loads = [];
 
     document.querySelectorAll( 'template[data-wpuf-route-style]' ).forEach( ( placeholder ) => {
         const owners = ( placeholder.dataset.screens || '' ).split( ' ' );
 
-        if ( ! owners.includes( screen ) || document.getElementById( placeholder.dataset.id ) ) {
+        if ( ! owners.includes( group ) || document.getElementById( placeholder.dataset.id ) ) {
             return;
         }
 
@@ -200,7 +197,7 @@ const activateStyles = ( screen ) => {
     } );
 
     Object.entries( app.styles || {} ).forEach( ( [ handle, owners ] ) => {
-        const on = owners.includes( screen );
+        const on = owners.includes( group );
 
         [ `${ handle }-css`, `${ handle }-rtl-css`, `${ handle }-inline-css` ].forEach( ( id ) => {
             const node = document.getElementById( id );
@@ -300,14 +297,16 @@ const render = async () => {
     guards.clear();
 
     // The screen reads its window globals and boot data as on its own page.
-    Object.entries( ( app.globals || {} )[ route.screen ] || {} ).forEach( ( [ name, value ] ) => {
+    const group = route.group || route.screen;
+
+    Object.entries( ( app.globals || {} )[ group ] || {} ).forEach( ( [ name, value ] ) => {
         window[ name ] = value;
     } );
     window.wpufAdmin = { ...( ( boot.screens || {} )[ route.boot ] || boot ), app };
 
     syncChrome( route );
     syncPage( route );
-    await activateStyles( route.screen );
+    await activateStyles( group );
 
     const element = document.createElement( 'div' );
 

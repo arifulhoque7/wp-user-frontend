@@ -91,6 +91,7 @@ class AppPage {
                     [
                         'notices' => false,
                         'menu'    => $screen->slug(),
+                        'group'   => $screen->slug(),
                     ],
                     $route,
                     [
@@ -132,24 +133,26 @@ class AppPage {
                 continue;
             }
 
-            $notices = $this->notice_callbacks();
-            // Each screen loads on the page's own style queue, so a sheet two
-            // screens enqueue belongs to both (printed only on their routes;
-            // each screen's Tailwind base differs).
-            $styles->queue = $baseline;
-            $screen->load_in_app();
+            foreach ( $screen->app_groups() as $group => $load ) {
+                $notices = $this->notice_callbacks();
+                // Each group loads on the page's own style queue, so a sheet two
+                // groups enqueue belongs to both (printed only on their routes;
+                // each screen's Tailwind base differs).
+                $styles->queue = $baseline;
+                $group_globals = call_user_func( $load );
 
-            foreach ( array_diff( $this->resolved_styles(), $global ) as $handle ) {
-                $this->style_owners[ $handle ][] = $screen->slug();
+                foreach ( array_diff( $this->resolved_styles(), $global ) as $handle ) {
+                    $this->style_owners[ $handle ][] = $group;
+                }
+
+                $queue = array_merge( $queue, $styles->queue );
+                // A screen's load step may remove admin notices for its own page
+                // (wpuf_remove_admin_notices); other routes still show them.
+                $this->restore_notice_callbacks( $notices );
+
+                // Per group: the post and registration lists use the same global names.
+                $globals[ $group ] = (array) $group_globals;
             }
-
-            $queue = array_merge( $queue, $styles->queue );
-            // A screen's load step may remove admin notices for its own page
-            // (wpuf_remove_admin_notices); other routes still show them.
-            $this->restore_notice_callbacks( $notices );
-
-            // Per screen: the post and registration lists use the same global names.
-            $globals[ $screen->slug() ] = (array) $screen->app_globals();
         }
 
         $styles->queue = array_values( array_unique( $queue ) );
@@ -171,7 +174,9 @@ class AppPage {
             ]
         );
 
-        $this->initial_screen = $this->screen_of_route( $this->initial_route() );
+        $initial              = $this->route_of_path( $this->initial_route() );
+        $this->initial_screen = $initial ? $initial['screen'] : '';
+        $this->initial_group  = $initial ? $initial['group'] : '';
 
         add_action( 'admin_print_styles', [ $this, 'hold_inline_styles' ], 1 );
         add_filter( 'style_loader_tag', [ $this, 'route_style_tag' ], 10, 4 );
@@ -183,7 +188,7 @@ class AppPage {
     }
 
     /**
-     * Screens that brought each stylesheet handle (handle => slugs).
+     * Load groups that brought each stylesheet handle (handle => group ids).
      *
      * @var array
      */
@@ -204,7 +209,14 @@ class AppPage {
     private $initial_screen = '';
 
     /**
-     * Whether a stylesheet waits for its route (owned by screens, none of them
+     * Load group of the route the page opens with ('' when unknown).
+     *
+     * @var string
+     */
+    private $initial_group = '';
+
+    /**
+     * Whether a stylesheet waits for its route (owned by groups, none of them
      * the initial route's).
      *
      * @param string $handle Style handle
@@ -214,7 +226,7 @@ class AppPage {
     private function is_held( $handle ) {
         $base = preg_replace( '/-rtl$/', '', $handle );
 
-        return isset( $this->style_owners[ $base ] ) && ! in_array( $this->initial_screen, $this->style_owners[ $base ], true );
+        return isset( $this->style_owners[ $base ] ) && ! in_array( $this->initial_group, $this->style_owners[ $base ], true );
     }
 
     /**
@@ -284,28 +296,28 @@ class AppPage {
     }
 
     /**
-     * Screen slug of a route path ('' when none matches).
+     * Route of a route path (null when none matches).
      *
      * @param string $route Route path with optional query
      *
-     * @return string
+     * @return array|null
      */
-    private function screen_of_route( $route ) {
+    private function route_of_path( $route ) {
         $path = strtok( (string) $route, '?' );
 
         if ( ! $path ) {
-            return '';
+            return null;
         }
 
         foreach ( $this->routes() as $item ) {
             $pattern = '#^' . preg_replace( '#/:[A-Za-z_]+#', '/[^/]+', $item['path'] ) . '/?$#';
 
             if ( preg_match( $pattern, $path ) ) {
-                return $item['screen'];
+                return $item;
             }
         }
 
-        return '';
+        return null;
     }
 
     /**

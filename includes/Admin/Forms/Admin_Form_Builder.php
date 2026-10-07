@@ -41,6 +41,13 @@ class Admin_Form_Builder {
     public static $current = null;
 
     /**
+     * Stylesheets enqueue_app_assets() enqueued, null before it ran.
+     *
+     * @var string[]|null
+     */
+    private static $app_styles = null;
+
+    /**
      * Class contructor
      *
      * @since 2.5
@@ -114,6 +121,19 @@ class Admin_Form_Builder {
      * @return void
      */
     public function enqueue_builder_assets() {
+        self::enqueue_libraries();
+    }
+
+    /**
+     * The builder's libraries and enqueue hooks (enqueue_builder_assets()),
+     * without a builder: the React admin app page loads them once and opens
+     * any form's builder without a page load.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return void
+     */
+    public static function enqueue_libraries() {
         wp_enqueue_style( 'wpuf-font-awesome' );
         wp_enqueue_style( 'wpuf-sweetalert2' );
         wp_enqueue_style( 'wpuf-selectize' );
@@ -151,6 +171,58 @@ class Admin_Form_Builder {
         do_action( 'wpuf_form_builder_enqueue_after_components' );
 
         do_action( 'wpuf_form_builder_enqueue_after_main_instance' );
+    }
+
+    /**
+     * The builder on the React admin app page: its libraries, bundle and
+     * footer steps, as the builder screen loads them. Each form's data comes
+     * over REST when its builder opens (Builder\BuilderBoot).
+     *
+     * @since WPUF_SINCE
+     *
+     * @return array Window globals before the first builder opens.
+     */
+    public static function enqueue_app_assets() {
+        if ( null === self::$app_styles ) {
+            $before = wp_styles()->queue;
+
+            self::enqueue_libraries();
+            wp_enqueue_script( 'wpuf-form-builder-react' );
+            wp_set_script_translations( 'wpuf-form-builder-react', 'wp-user-frontend', WPUF_ROOT . '/languages' );
+            add_action( 'admin_footer', [ __CLASS__, 'custom_dequeue' ] );
+            add_action( 'admin_footer', [ __CLASS__, 'retired_footer' ] );
+
+            self::$app_styles = array_values( array_diff( wp_styles()->queue, $before ) );
+        } else {
+            // The hooks fire once; a second builder group (registration forms)
+            // gets the same stylesheets.
+            array_map( 'wp_enqueue_style', self::$app_styles );
+        }
+
+        // Scripts that read these at load time find them; a builder's own
+        // values replace them when it opens.
+        return [
+            'wpuf_form_builder'   => new \stdClass(),
+            'wpuf_single_objects' => array_values( self::single_objects() ),
+        ];
+    }
+
+    /**
+     * The builder's hidden form inputs: form ID, form type, settings key and
+     * the save nonce (admin/form-builder/views/form-builder-v4.1.php).
+     *
+     * @since WPUF_SINCE
+     *
+     * @return array
+     */
+    public function form_attributes() {
+        return [
+            'form_id'           => (int) $this->settings['post_id'],
+            'form_type'         => $this->settings['form_type'],
+            'post_type'         => $this->settings['post_type'],
+            'form_settings_key' => $this->settings['form_settings_key'],
+            'nonce'             => wp_create_nonce( 'wpuf_form_builder_save_form' ),
+        ];
     }
 
     /**
@@ -325,9 +397,19 @@ class Admin_Form_Builder {
      * @return void
      */
     public function admin_footer() {
-        // Vue cleanup: x-template includes removed (React renders all components).
-        // The retired template hooks still fire once per builder page; their Vue
-        // output is discarded (Builder\HookDeprecations, 4.4g).
+        self::retired_footer();
+    }
+
+    /**
+     * Vue cleanup: x-template includes removed (React renders all components).
+     * The retired template hooks still fire once per builder page; their Vue
+     * output is discarded (Builder\HookDeprecations, 4.4g).
+     *
+     * @since WPUF_SINCE
+     *
+     * @return void
+     */
+    public static function retired_footer() {
         $retired = wpuf()->platform()->get( HookDeprecations::class );
         $retired->action( 'wpuf_form_builder_add_js_templates' );
         $retired->fire_template_actions();

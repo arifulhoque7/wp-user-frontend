@@ -5,6 +5,7 @@ import * as path from 'path';
 import { Selectors } from './selectors';
 import { Users } from '../utils/testData';
 import { parityDir, parityWp, type ParitySite } from '../utils/paritySites';
+import { BUILDER_URL, builderFormId } from '../utils/builderUrl';
 
 /**
  * Stored form as dumped by parity/wp/dump-form.php: every value with its PHP type,
@@ -411,9 +412,10 @@ export class ParitySitePage {
     /** Open the "add new" builder; returns the id of the created draft form. */
     async doOpenNewBuilder(postType: string): Promise<number> {
         await this.page.goto(`/wp-admin/admin.php?page=${builderPage[postType]}&action=add-new`);
-        await this.page.waitForURL(/action=edit&id=\d+/);
+        // The builder page (`action=edit&id=N`) or, with the admin app, its route (`#/post-forms/N/edit`).
+        await this.page.waitForURL(BUILDER_URL);
         await expect(this.page.locator(Selectors.parity.builderSaveButton).first()).toBeEnabled();
-        return Number(new URL(this.page.url()).searchParams.get('id'));
+        return Number(builderFormId(this.page.url()));
     }
 
     /** Field types offered by the palette that add a field on click. */

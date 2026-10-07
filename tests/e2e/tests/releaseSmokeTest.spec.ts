@@ -2,6 +2,7 @@ import { Browser, BrowserContext, Page, test, expect, chromium } from '@playwrig
 import { BasicLoginPage } from '../pages/basicLogin';
 import { AiFormBuilderPage } from '../pages/aiFormBuilder';
 import { Users, Urls } from '../utils/testData';
+import { BUILDER_URL } from '../utils/builderUrl';
 
 let browser: Browser;
 let context: BrowserContext;
@@ -95,7 +96,7 @@ test.describe('Release smoke: React admin screens', () => {
 
     test('RS0002 : New post form opens the React builder', { tag: ['@Lite', '@Test_RS0002'] }, async () => {
         await visit('admin.php?page=wpuf-post-forms&action=add-new');
-        await expect(page).toHaveURL(/action=edit&id=\d+/);
+        await expect(page).toHaveURL(BUILDER_URL);
         await expect(page.locator('body.wpuf-admin-react')).toHaveCount(1);
         await expect(page.getByRole('tab', { name: 'Form Editor' }).first()).toBeVisible({ timeout: 30000 });
         await expectClean('post form builder');
@@ -121,7 +122,7 @@ test.describe('Release smoke: React admin screens', () => {
         await expectClean('registration forms list');
 
         await visit('admin.php?page=wpuf-profile-forms&action=add-new');
-        await expect(page).toHaveURL(/action=edit&id=\d+/);
+        await expect(page).toHaveURL(BUILDER_URL);
         await expect(page.getByRole('tab', { name: 'Form Editor' }).first()).toBeVisible({ timeout: 30000 });
         await expectClean('registration form builder');
     });

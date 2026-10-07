@@ -101,7 +101,8 @@ abstract class Screen {
      * id), `in_app` (true once the route runs in the app; else `page`, the old
      * URL with `:name` filled from the path, opens), `menu` (WPUF submenu slug
      * it lights), `menuLink` (the menu row points at this route), `container`
-     * (old mount element id), `notices` (shows admin notices), `bodyClasses`.
+     * (old mount element id), `notices` (shows admin notices), `bodyClasses`,
+     * `group` (load group, see app_groups()).
      *
      * @since WPUF_SINCE
      *
@@ -164,6 +165,27 @@ abstract class Screen {
      */
     public function app_globals() {
         return [];
+    }
+
+    /**
+     * Load groups of the screen on the app page: group id => callable that
+     * loads the group (enqueues) and returns its window globals. Routes name
+     * their group (`group`, default the screen slug); a group's stylesheets
+     * are on only on its routes (the list and the builder of a screen use
+     * different stylesheets). Default: one group, load_in_app() + app_globals().
+     *
+     * @since WPUF_SINCE
+     *
+     * @return callable[]
+     */
+    public function app_groups() {
+        return [
+            $this->slug() => function () {
+                $this->load_in_app();
+
+                return $this->app_globals();
+            },
+        ];
     }
 
     /**

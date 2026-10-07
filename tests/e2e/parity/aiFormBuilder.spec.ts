@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { ParitySitePage } from '../pages/parity';
 import { paritySite, paritySitesConfigured, parityWp, type ParitySite } from '../utils/paritySites';
+import { BUILDER_URL, builderFormId } from '../utils/builderUrl';
 
 /**
  * PAR0040: the AI form builder creates the same form on develop (Vue) and the
@@ -70,8 +71,8 @@ test.describe('Parity AI form builder', () => {
                 await expect(page.getByText('Changes accepted & checkpoint saved')).toBeVisible();
 
                 await page.getByRole('button', { name: /Edit with Builder/ }).first().click();
-                await page.waitForURL(/action=edit&id=\d+/, { timeout: 30000 });
-                const formId = parseInt(new URL(page.url()).searchParams.get('id') || '0', 10);
+                await page.waitForURL(BUILDER_URL, { timeout: 30000 });
+                const formId = parseInt(builderFormId(page.url()) || '0', 10);
                 results[name] = stored(site, formId);
                 await admin.doClose();
             } finally {

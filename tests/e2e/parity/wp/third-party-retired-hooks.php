@@ -16,7 +16,12 @@ add_action( 'wpuf_builder_field_options', function () {
 
 // React slots: one fill per slot, scope wpuf-form-builder.
 add_action( 'admin_enqueue_scripts', function () {
-    if ( empty( $_GET['page'] ) || 'wpuf-post-forms' !== $_GET['page'] ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+    // The builder page, or the admin app page that opens builders as routes
+    // (how a plugin that checked the page slug keeps working with the app).
+    $builder_page = ! empty( $_GET['page'] ) && 'wpuf-post-forms' === $_GET['page']; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+    $app_page     = function_exists( 'wpuf_is_admin_app' ) && wpuf_is_admin_app();
+
+    if ( ! $builder_page && ! $app_page ) {
         return;
     }
     wp_register_script( 'wpuf-parity-slots', false, [ 'wp-plugins', 'wp-components', 'wp-element' ], '1', true );

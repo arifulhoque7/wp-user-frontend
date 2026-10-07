@@ -9,6 +9,7 @@
 namespace WeDevs\Wpuf\Admin\Screens;
 
 use WeDevs\Wpuf\Admin\BootPayload;
+use WeDevs\Wpuf\Admin\Forms\Admin_Form_Builder;
 use WeDevs\Wpuf\Admin\Forms\Template_Picker;
 
 /**
@@ -20,6 +21,18 @@ use WeDevs\Wpuf\Admin\Forms\Template_Picker;
 class PostFormsList extends Screen {
 
     use PrintsNotices;
+
+    /**
+     * App load group of the builder routes.
+     */
+    const BUILDER_GROUP = 'wpuf-post-forms-builder';
+
+    /**
+     * Stylesheets the load hook enqueued (load_once()), null before it ran.
+     *
+     * @var string[]|null
+     */
+    private $loaded_styles = null;
 
     /**
      * Menu slug
@@ -144,8 +157,8 @@ class PostFormsList extends Screen {
                     'registry'       => wpuf_get_post_form_templates(),
                     'pro_templates'  => wpuf_get_pro_form_previews(),
                     'action_name'    => 'post_form_template',
-                    // The builder is its own page until it runs in the admin app (task 5d.5).
-                    'blank_form_url' => admin_url( 'admin.php?page=wpuf-post-forms&action=add-new' ),
+                    // In the admin app: the new form route (no page load).
+                    'blank_form_url' => $in_app ? wpuf_admin_app_url( '/post-forms/new' ) : admin_url( 'admin.php?page=wpuf-post-forms&action=add-new' ),
                 ]
             ),
         ];
@@ -163,7 +176,8 @@ class PostFormsList extends Screen {
 
     /**
      * Admin app routes: the post forms list, the builder and the AI form
-     * builder (task 5d). Not in the app yet: they open their pages.
+     * builder (task 5d). The AI form builder is not in the app yet: it opens
+     * its page.
      *
      * @since WPUF_SINCE
      *
@@ -185,12 +199,18 @@ class PostFormsList extends Screen {
                 'page'      => 'admin.php?page=wpuf-post-forms',
             ],
             [
-                'id'       => 'post-form-new',
-                'path'     => '/post-forms/new',
-                'app'      => 'form-builder',
-                'boot'     => 'form_builder',
-                'menuPath' => '/post-forms',
-                'page'     => 'admin.php?page=wpuf-post-forms&action=add-new',
+                'id'          => 'post-form-new',
+                'path'        => '/post-forms/new',
+                'title'       => __( 'Edit Form', 'wp-user-frontend' ),
+                'app'         => 'form-builder',
+                'boot'        => 'form_builder',
+                'in_app'      => true,
+                'group'       => self::BUILDER_GROUP,
+                'formType'    => 'wpuf_forms',
+                'menuPath'    => '/post-forms',
+                'container'   => 'wpuf-form-builder-route',
+                'bodyClasses' => [ 'wpuf-builder-screen' ],
+                'page'        => 'admin.php?page=wpuf-post-forms&action=add-new',
             ],
             [
                 'id'          => 'post-form-edit',
@@ -198,8 +218,11 @@ class PostFormsList extends Screen {
                 'title'       => __( 'Edit Form', 'wp-user-frontend' ),
                 'app'         => 'form-builder',
                 'boot'        => 'form_builder',
+                'in_app'      => true,
+                'group'       => self::BUILDER_GROUP,
+                'formType'    => 'wpuf_forms',
                 'menuPath'    => '/post-forms',
-                'container'   => 'wpuf-form-builder-app',
+                'container'   => 'wpuf-form-builder-route',
                 'bodyClasses' => [ 'wpuf-builder-screen' ],
                 'page'        => 'admin.php?page=wpuf-post-forms&action=edit&id=:id',
             ],
@@ -219,15 +242,23 @@ class PostFormsList extends Screen {
 
     /**
      * App route of a post forms page request: the list (its row and bulk
-     * actions ran in the load step and redirected with their notice), or ''
-     * for the builder while it is not in the app.
+     * actions ran in the load step and redirected with their notice) or a
+     * form's builder.
      *
      * @since WPUF_SINCE
      *
      * @return string
      */
     public function app_route_for_request() {
-        return in_array( $this->action(), [ 'edit', 'add-new' ], true ) ? '' : '/post-forms';
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only view selection.
+        $id = isset( $_GET['id'] ) ? absint( wp_unslash( $_GET['id'] ) ) : 0;
+
+        if ( 'edit' === $this->action() ) {
+            return $id ? '/post-forms/' . $id . '/edit' : '/post-forms';
+        }
+
+        // add-new: the load step created the form and redirected to its builder.
+        return 'add-new' === $this->action() ? '' : '/post-forms';
     }
 
     /**
@@ -260,8 +291,52 @@ class PostFormsList extends Screen {
      * @return void
      */
     public function load_in_app() {
-        $this->load();
+        $this->load_once();
         $this->enqueue_list_assets();
+    }
+
+    /**
+     * App load groups: the list, and the builder (its own stylesheets; any
+     * form's data comes over REST when its builder opens).
+     *
+     * @since WPUF_SINCE
+     *
+     * @return callable[]
+     */
+    public function app_groups() {
+        return [
+            $this->slug()       => function () {
+                $this->load_in_app();
+                // The list page prints this handle without its file (the builder's
+                // sheet, Assets::use_react_forms_styles()): the builder group owns it.
+                wp_dequeue_style( 'wpuf-admin-form-builder' );
+
+                return $this->app_globals();
+            },
+            self::BUILDER_GROUP => function () {
+                $this->load_once();
+
+                return Admin_Form_Builder::enqueue_app_assets();
+            },
+        ];
+    }
+
+    /**
+     * The load hook once per request; later calls enqueue the stylesheets it
+     * enqueued again (each app group starts from the page's style queue).
+     *
+     * @return void
+     */
+    private function load_once() {
+        if ( null !== $this->loaded_styles ) {
+            array_map( 'wp_enqueue_style', $this->loaded_styles );
+
+            return;
+        }
+
+        $before = wp_styles()->queue;
+        $this->load();
+        $this->loaded_styles = array_values( array_diff( wp_styles()->queue, $before ) );
     }
 
     /**

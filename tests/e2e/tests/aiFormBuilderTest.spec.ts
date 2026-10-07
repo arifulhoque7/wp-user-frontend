@@ -2,6 +2,7 @@ import { Browser, BrowserContext, Page, test, expect, chromium } from '@playwrig
 import { AiFormBuilderPage, AI_MOCK_KEY } from '../pages/aiFormBuilder';
 import { BasicLoginPage } from '../pages/basicLogin';
 import { Users } from '../utils/testData';
+import { BUILDER_URL } from '../utils/builderUrl';
 
 let browser: Browser;
 let context: BrowserContext;
@@ -228,7 +229,8 @@ test.describe('AI Form Builder', () => {
         await expect(page.locator(ai.S.previewTitle)).toHaveText('Mock Sign Up Form');
 
         const formId = await ai.editInBuilder();
-        expect(page.url()).toContain('page=wpuf-profile-forms');
+        // The registration builder page, or its admin app route.
+        expect(page.url()).toMatch(/page=wpuf-profile-forms|#\/registration-forms\//);
         const form = ai.storedForm(formId);
         expect(form.post_type).toBe('wpuf_profile');
         expect(ai.storedFields(formId).map((field) => field.template)).toEqual(['user_email', 'user_login', 'password', 'first_name']);
@@ -244,7 +246,7 @@ test.describe('AI Form Builder', () => {
         await expect(page.locator(ai.S.proFieldItems)).toHaveText(['Phone Number', 'Date Picker']);
 
         await page.locator(ai.S.dialogCancel).click(); // Continue without Pro
-        await page.waitForURL(/action=edit&id=\d+/, { timeout: 30000 });
+        await page.waitForURL(BUILDER_URL, { timeout: 30000 });
     });
 
     test('AI0014 : Chat text is rendered as text (no markup from the AI reply)', { tag: ['@Lite', '@Test_AI0014'] }, async () => {

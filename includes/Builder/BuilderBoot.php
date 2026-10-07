@@ -67,7 +67,7 @@ class BuilderBoot {
      *
      * @param int $form_id Form ID
      *
-     * @return array|WP_Error { wpuf_form_builder, wpuf_single_objects, wpuf_mixins }
+     * @return array|WP_Error { wpuf_form_builder, wpuf_single_objects, wpuf_mixins, builder_form }
      */
     public function boot( $form_id ) {
         $form = get_post( absint( $form_id ) );
@@ -101,6 +101,8 @@ class BuilderBoot {
             // register builder filters there. Enqueues do nothing in this request.
             $builder->enqueue_builder_assets();
             $data = $builder->localize_data();
+            // The builder screen printed these as hidden form inputs.
+            $data['builder_form'] = $builder->form_attributes();
             ob_end_clean();
 
             return array_map( [ $this, 'as_localized' ], $data );
