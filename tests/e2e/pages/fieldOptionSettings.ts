@@ -805,9 +805,20 @@ export class FieldOptionSettingsPage extends Base {
      */
     async closeDatePicker() {
         const picker = this.page.locator('#ui-datepicker-div');
-        if (await picker.isVisible().catch(() => false)) {
+        if (!(await picker.isVisible().catch(() => false))) {
+            return;
+        }
+        // The timepicker add-on ignores Escape at times: its Done button closes
+        // it, an outside click is the last resort.
+        const done = picker.locator('button', { hasText: 'Done' }).first();
+        if (await done.isVisible().catch(() => false)) {
+            await done.click().catch(() => {});
+        } else {
             await this.page.keyboard.press('Escape');
-            await picker.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {});
+        }
+        if (!(await picker.waitFor({ state: 'hidden', timeout: 3000 }).then(() => true, () => false))) {
+            await this.page.mouse.click(5, 300);
+            await picker.waitFor({ state: 'hidden', timeout: 3000 }).catch(() => {});
         }
     }
 

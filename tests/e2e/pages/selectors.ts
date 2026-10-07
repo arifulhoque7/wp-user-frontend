@@ -154,7 +154,8 @@ export const Selectors = {
         // WPUF Settings Page
         wpufSettingsPage: {
             // Main Settings Tab
-            settingsTab: '//a[@href="admin.php?page=wpuf-settings"]',
+            // The settings menu row: the page link, or its admin app route.
+            settingsTab: '//a[@href="admin.php?page=wpuf-settings" or @href="admin.php?page=wp-user-frontend#/settings"]',
 
             // Menu-2nd Option
             // FrontEnd Posting
@@ -2339,12 +2340,13 @@ export const Selectors = {
     onboardingMenus: {
         parentMenu: '//li[@id="toplevel_page_wp-user-frontend"]',
         submenuLinks: '//li[@id="toplevel_page_wp-user-frontend"]//ul[contains(@class,"wp-submenu")]//a',
-        postFormsMenu: '//li[@id="toplevel_page_wp-user-frontend"]//a[contains(@href,"page=wpuf-post-forms")]',
-        registrationFormsMenu: '//li[@id="toplevel_page_wp-user-frontend"]//a[contains(@href,"page=wpuf-profile-forms")]',
+        postFormsMenu: '//li[@id="toplevel_page_wp-user-frontend"]//a[contains(@href,"page=wpuf-post-forms") or contains(@href,"#/post-forms")]',
+        registrationFormsMenu: '//li[@id="toplevel_page_wp-user-frontend"]//a[contains(@href,"page=wpuf-profile-forms") or contains(@href,"#/registration-forms")]',
         userDirectoryMenu: '//li[@id="toplevel_page_wp-user-frontend"]//a[contains(@href,"page=wpuf_userlisting")]',
-        subscriptionsMenu: '//li[@id="toplevel_page_wp-user-frontend"]//a[contains(@href,"page=wpuf_subscription")]',
+        // The page link, or its admin app route.
+        subscriptionsMenu: '//li[@id="toplevel_page_wp-user-frontend"]//a[contains(@href,"page=wpuf_subscription") or contains(@href,"#/subscriptions")]',
         transactionsMenu: '//li[@id="toplevel_page_wp-user-frontend"]//a[contains(@href,"page=wpuf_transaction")]',
-        settingsMenu: '//li[@id="toplevel_page_wp-user-frontend"]//a[contains(@href,"page=wpuf-settings")]',
+        settingsMenu: '//li[@id="toplevel_page_wp-user-frontend"]//a[contains(@href,"page=wpuf-settings") or contains(@href,"#/settings")]',
         // Registered only when Pro is inactive, so its absence is what identifies a
         // Pro build. The registration forms menu cannot be used: free registers it too.
         premiumMenu: '//li[@id="toplevel_page_wp-user-frontend"]//a[contains(@href,"page=wpuf_premium")]',
