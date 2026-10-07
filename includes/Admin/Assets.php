@@ -183,10 +183,11 @@ class Assets implements Hookable {
     }
 
     /**
-     * On the React forms list and builder, serve the React stylesheet under the
-     * old handle (`wpuf-forms-list` for the lists, `wpuf-admin-form-builder` for
-     * the builder) so Pro and modules that depend on those handles keep working;
-     * the other handle prints nothing.
+     * The React forms list and builder sheets are registered under the old
+     * handles (`wpuf-forms-list` for the lists, `wpuf-admin-form-builder` for
+     * the builder) so Pro and modules that depend on those handles keep working.
+     * Both handles get enqueued on these pages; the one the page does not use
+     * prints nothing.
      *
      * @since WPUF_SINCE
      *
@@ -204,17 +205,7 @@ class Assets implements Hookable {
         $builder = in_array( $action, [ 'edit', 'add-new' ], true );
         $serves  = $builder ? 'wpuf-admin-form-builder' : 'wpuf-forms-list';
 
-        if ( $handle !== $serves ) {
-            return false;
-        }
-
-        $file = $builder ? 'forms-react' : 'forms-list-react';
-
-        if ( is_rtl() ) {
-            $file .= '-rtl';
-        }
-
-        return add_query_arg( 'ver', WPUF_VERSION, WPUF_ASSET_URI . '/css/admin/' . $file . '.css' );
+        return $handle === $serves ? $src : false;
     }
 
     /**

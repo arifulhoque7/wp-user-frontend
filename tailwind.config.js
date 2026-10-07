@@ -9,19 +9,21 @@ module.exports = {
         // Sources only: generated bundles live next to the hand-written JS in
         // assets/js, and scanning them made the CSS depend on build order and
         // on stale files left on disk.
-        './assets/**/*.{js,jsx,ts,tsx,vue,html}',
+        './assets/**/*.js',
         '!./assets/js/**/*.min.js',
+        '!./assets/js/react/**',
+        '!./assets/js/blocks/**',
         '!./assets/js/wpuf-user-directory-free.js',
         '!./assets/vendor/**',
         './includes/Admin/**/*.php',
         './includes/Free/Free_Loader.php',
         './includes/Admin/template-parts/*.php',
         './admin/form-builder/views/*.php',
-        // Classes of the removed Vue settings view (task 5.1c), kept so the
-        // sheet does not change.
+        // Class lists of removed Vue admin views. The frontend sheets built from
+        // this config (account, frontend subscriptions) still rely on some of
+        // them (measured 2026-10-07: dropping them removes classes the user
+        // directory and field notices use), so they stay.
         './tools/admin-css/src/legacy/*.classes.txt',
-        // Vue cleanup: old Vue component PHP templates deleted
-        // './admin/form-builder/assets/js/**/*.php',
         './src/admin/apps/form-builder/**/*.{js,jsx}',
         './src/admin/apps/forms-list/**/*.{js,jsx}',
         './templates/**/*.php',

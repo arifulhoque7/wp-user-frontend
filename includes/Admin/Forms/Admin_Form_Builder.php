@@ -57,7 +57,6 @@ class Admin_Form_Builder {
         if ( ! empty( $post->ID ) ) {
             add_action( 'in_admin_header', 'wpuf_remove_admin_notices' );
             add_action( 'admin_enqueue_scripts', [ $this, 'admin_enqueue_scripts' ] );
-            add_action( 'admin_print_scripts', [ $this, 'admin_print_scripts' ] );
             add_action( 'admin_footer', [ $this, 'custom_dequeue' ] );
             add_action( 'admin_footer', [ $this, 'admin_footer' ] );
             add_action( 'wpuf_admin_form_builder', [ $this, 'include_form_builder' ] );
@@ -255,38 +254,16 @@ class Admin_Form_Builder {
     }
 
     /**
-     * Print js scripts in admin head
+     * Printed the Vue builder's `wpuf_form_builder_mixins()` helper and a
+     * Promise polyfill from a CDN. The React builder needs neither, so it is no
+     * longer hooked and prints nothing; kept for code that calls it.
      *
      * @since 2.5
+     * @since WPUF_SINCE Prints nothing.
      *
      * @return void
      */
-    public function admin_print_scripts() {
-        ?>
-        <script>
-            if (!window.Promise) {
-                var promise_polyfill = document.createElement( 'script' );
-                promise_polyfill.setAttribute( 'src', 'https://cdnjs.cloudflare.com/polyfill/v3/polyfill.js?version=4.8.0&features=default' );
-                document.head.appendChild( promise_polyfill );
-            }
-        </script>
-        <script>
-            var wpuf_form_builder_mixins = function ( mixins, mixin_parent ) {
-                if (!mixins || !mixins.length) {
-                    return [];
-                }
-
-                if (!mixin_parent) {
-                    mixin_parent = window;
-                }
-
-                return mixins.map( function ( mixin ) {
-                    return mixin_parent[mixin];
-                } );
-            };
-        </script>
-        <?php
-    }
+    public function admin_print_scripts() {}
 
     /**
      * Include vue component templates

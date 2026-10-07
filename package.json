@@ -48,7 +48,6 @@
     "@types/node": "^22.20.5",
     "@types/react": "^18.3.31",
     "@types/react-dom": "^18.3.7",
-    "@vitejs/plugin-vue": "^5.0.4",
     "@wordpress/dependency-extraction-webpack-plugin": "^6.56.0",
     "@wordpress/scripts": "^36.0.0",
     "autoprefixer": "^10.4.16",
@@ -88,11 +87,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@headlessui/react": "^1.7.18",
-    "@headlessui/vue": "^1.7.23",
     "@heroicons/react": "^2.1.1",
-    "@heroicons/vue": "^2.1.1",
-    "@vueform/multiselect": "^2.6.8",
-    "@vuepic/vue-datepicker": "^8.2.0",
     "@wedevs/plugin-ui": "github:getdokan/plugin-ui#acc2771a07c2e4319a742c422629c252e9911bee",
     "@wordpress/api-fetch": "^7.56.0",
     "@wordpress/components": "^41.0.0",
@@ -109,13 +104,9 @@
     "array-uniq": "^3.0.0",
     "cli": "^1.0.1",
     "clsx": "^2.1.0",
-    "epic-spinners": "^2.0.0",
-    "pinia": "^2.1.7",
     "react": "^18.3.1",
     "react-datepicker": "^6.0.0",
     "react-dom": "^18.3.1",
-    "react-select": "^5.8.0",
-    "vue": "^3.4.19",
-    "vue-router": "^4.3.2"
+    "react-select": "^5.8.0"
   }
 }

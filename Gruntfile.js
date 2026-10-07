@@ -1,7 +1,6 @@
 'use strict';
 module.exports = function( grunt) {
     const tailwindFileMap = {
-        'admin/form-builder/views/form-builder-v4.1.php': 'admin/form-builder.css',
         'templates/account.php': 'frontend/account.css',
     }
 
@@ -303,9 +302,7 @@ module.exports = function( grunt) {
 
     grunt.registerTask('tailwind-minify', function() {
         const cssFiles = [
-            { input: 'assets/css/forms-list.css', output: 'assets/css/forms-list.min.css' },
-            { input: 'assets/css/frontend-subscriptions.css', output: 'assets/css/frontend-subscriptions.min.css' },
-            { input: 'assets/css/admin/subscriptions.css', output: 'assets/css/admin/subscriptions.min.css' }
+            { input: 'assets/css/frontend-subscriptions.css', output: 'assets/css/frontend-subscriptions.min.css' }
         ];
 
         cssFiles.forEach(file => {

@@ -114,37 +114,34 @@ class AdminAssetsTest extends WP_UnitTestCase {
         global $plugin_page;
 
         set_current_screen( 'dashboard' ); // is_admin()
-        $old    = WPUF_ASSET_URI . '/css/admin/form-builder.css?ver=1';
         $assets = wpuf()->assets;
 
-        // Classic screens keep the old sheet.
+        // The old handles carry the React sheets (RTL copies swapped in by WordPress);
+        // the Tailwind 3 sheets they used to point at are no longer built.
+        $styles = $assets->get_styles();
+        $this->assertStringEndsWith( '/css/admin/forms-react.css', $styles['admin-form-builder']['src'] );
+        $this->assertStringEndsWith( '/css/admin/forms-list-react.css', $styles['forms-list']['src'] );
+        $this->assertTrue( $styles['admin-form-builder']['rtl'] );
+        $this->assertTrue( $styles['forms-list']['rtl'] );
+
+        // Other screens: untouched.
         $plugin_page = 'wpuf-settings'; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
-        $this->assertSame( $old, $assets->use_react_forms_styles( $old, 'wpuf-admin-form-builder' ) );
+        $this->assertSame( 'b.css', $assets->use_react_forms_styles( 'b.css', 'wpuf-admin-form-builder' ) );
         $this->assertSame( 'a', $assets->react_forms_body_class( 'a' ) );
 
-        // Builders: the builder handle prints the new sheet, forms-list prints nothing.
+        // Builders: the builder handle prints, forms-list prints nothing.
         $plugin_page    = 'wpuf-post-forms'; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
         $_GET['action'] = 'edit';
-        $this->assertStringContainsString( '/css/admin/forms-react.css?ver=', $assets->use_react_forms_styles( $old, 'wpuf-admin-form-builder' ) );
-
-        $GLOBALS['wp_locale']->text_direction = 'rtl';
-        $rtl_builder = $assets->use_react_forms_styles( $old, 'wpuf-admin-form-builder' );
-        $GLOBALS['wp_locale']->text_direction = 'ltr';
-        $this->assertStringContainsString( '/css/admin/forms-react-rtl.css?ver=', $rtl_builder );
+        $this->assertSame( 'b.css', $assets->use_react_forms_styles( 'b.css', 'wpuf-admin-form-builder' ) );
+        $this->assertSame( 'b-rtl.css', $assets->use_react_forms_styles( 'b-rtl.css', 'wpuf-admin-form-builder-rtl' ) );
         $this->assertFalse( $assets->use_react_forms_styles( 'y.css', 'wpuf-forms-list' ) );
         $this->assertSame( 'x.css', $assets->use_react_forms_styles( 'x.css', 'wpuf-admin' ) );
         $this->assertSame( 'a wpuf-builder-screen wpuf-admin-react', $assets->react_forms_body_class( 'a' ) );
 
-        // Lists: forms-list (printed after Pro's styles) carries the lists' sheet
-        // (forms sheet + shared components), its RTL copy on RTL sites.
+        // Lists: forms-list prints, the builder handle prints nothing.
         unset( $_GET['action'] );
-        $this->assertFalse( $assets->use_react_forms_styles( $old, 'wpuf-admin-form-builder' ) );
-        $this->assertStringContainsString( '/css/admin/forms-list-react.css?ver=', $assets->use_react_forms_styles( 'y.css', 'wpuf-forms-list' ) );
-
-        $GLOBALS['wp_locale']->text_direction = 'rtl';
-        $rtl = $assets->use_react_forms_styles( 'y.css', 'wpuf-forms-list' );
-        $GLOBALS['wp_locale']->text_direction = 'ltr';
-        $this->assertStringContainsString( '/css/admin/forms-list-react-rtl.css?ver=', $rtl );
+        $this->assertFalse( $assets->use_react_forms_styles( 'b.css', 'wpuf-admin-form-builder' ) );
+        $this->assertSame( 'y.css', $assets->use_react_forms_styles( 'y.css', 'wpuf-forms-list' ) );
 
         $plugin_page = 'wpuf-profile-forms'; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
         $this->assertSame( 'wpuf-admin-react', $assets->react_forms_body_class( '' ) );

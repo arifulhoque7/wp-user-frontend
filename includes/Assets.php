@@ -257,15 +257,15 @@ class Assets {
                 'src'  => WPUF_ASSET_URI . '/css/wpuf-form-builder.css',
                 'deps' => $this->form_builder_css_deps,
             ],
+            // React builder sheet (tools/admin-css), under the old handle that
+            // Pro and modules depend on.
             'admin-form-builder'  => [
-                'src'  => WPUF_ASSET_URI . '/css/admin/form-builder.css',
+                'src'  => WPUF_ASSET_URI . '/css/admin/forms-react.css',
                 'deps' => $this->form_builder_css_deps,
+                'rtl'  => true,
             ],
             'admin'               => [
                 'src' => WPUF_ASSET_URI . '/css/admin.css',
-            ],
-            'admin-subscriptions' => [
-                'src' => WPUF_ASSET_URI . '/css/admin/subscriptions.min.css',
             ],
             'registration-forms'  => [
                 'src' => WPUF_ASSET_URI . '/css/registration-forms.css',
@@ -284,8 +284,10 @@ class Assets {
             'onboarding'          => [
                 'src' => WPUF_ASSET_URI . '/css/admin/wpuf-onboarding.css',
             ],
+            // React forms list sheet (tools/admin-css), under the old handle.
             'forms-list'           => [
-                'src' => WPUF_ASSET_URI . '/css/forms-list.min.css',
+                'src' => WPUF_ASSET_URI . '/css/admin/forms-list-react.css',
+                'rtl' => true,
             ],
             'account'              => [
                 'src' => WPUF_ASSET_URI . '/css/frontend/account.css',
@@ -349,11 +351,6 @@ class Assets {
                 'src'       => WPUF_ASSET_URI . '/vendor/vue/vue' . $this->suffix . '.js',
                 'in_footer' => true,
                 'version'   => '2.2.4',
-            ],
-            'vue-3'                    => [
-                'src'       => WPUF_ASSET_URI . '/vendor/vue-3/vue.esm-browser.js',
-                'in_footer' => true,
-                'version'   => '3.4.19',
             ],
             'vuex'                     => [
                 'src'       => WPUF_ASSET_URI . '/vendor/vuex/vuex' . $this->suffix . '.js',
@@ -525,10 +522,6 @@ class Assets {
             'headway-script'         => [
                 'src' => WPUF_ASSET_URI . '/vendor/headway.js',
                 'deps' => [ 'jquery' ],
-            ],
-            'forms-list'         => [
-                'src'       => WPUF_ASSET_URI . '/js/forms-list.min.js',
-                'in_footer' => true,
             ],
         ];
 

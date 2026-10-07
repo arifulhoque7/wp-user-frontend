@@ -1,10 +1,10 @@
 Class names of the removed Vue settings view
 (admin/form-builder/views/post-form-settings.php, task 5.1c).
 
-tailwind.config.js scans this file so the Tailwind 3 sheet
-assets/css/admin/form-builder.css keeps the utilities that view contributed
-(the classic post edit screen and Pro markup still load that sheet). Remove a
-class here only after checking nothing prints it.
+tailwind.config.js scans this file. The admin Tailwind 3 sheet it was kept
+for (admin/form-builder.css) is no longer built, but the frontend sheets from the
+same config still pick up some of these classes, so remove a class here only
+after checking nothing prints it.
 
 !wpuf--m-4
 !wpuf-border-gray-50

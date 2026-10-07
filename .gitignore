@@ -72,8 +72,6 @@ assets/css/frontend-forms.css
 assets/css/registration-forms.css
 assets/css/wpuf-form-builder.css
 # vite / tailwind generated CSS (bare .min.css is not caught by *.min.css.*)
-assets/css/admin/form-builder.css
-assets/css/forms-list.min.css
 assets/css/frontend-subscriptions.min.css
 assets/css/frontend/account.css
 # user-directory React bundle (built by npm run build:user-directory)

@@ -169,7 +169,6 @@ class Admin_Form {
             add_action( 'wpuf_form_builder_settings_tabs_post', [ $this, 'add_settings_tabs' ] );
             add_filter( 'wpuf_form_fields_section_before', [ $this, 'add_post_field_section' ] );
 
-            add_filter( 'wpuf_form_builder_js_deps', [ $this, 'js_dependencies' ] );
             add_filter( 'wpuf_form_builder_js_root_mixins', [ $this, 'js_root_mixins' ] );
             add_filter( 'wpuf_form_builder_js_builder_stage_mixins', [ $this, 'js_builder_stage_mixins' ] );
             add_filter( 'wpuf_form_builder_js_field_options_mixins', [ $this, 'js_field_options_mixins' ] );

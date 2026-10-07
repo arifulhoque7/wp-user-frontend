@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     }
 </style>
 
-<div id="wpuf-ai-form-builder" class="wpuf-h-100vh !wpuf-pl-0 wpuf-py-0" style="background-color: #FFFFFF;">
+<div id="wpuf-ai-form-builder" style="background-color: #FFFFFF;">
     <noscript>
         <strong>
             <?php esc_html_e( "We're sorry but this page doesn't work properly without JavaScript. Please enable it to continue.", 'wp-user-frontend' ); ?>
