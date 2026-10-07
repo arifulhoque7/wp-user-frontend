@@ -118,13 +118,15 @@ export const addRouteGuard = ( guard ) => ( context ? context.addGuard( guard ) 
 export const onRouteQuery = ( listener ) => ( context ? context.onQuery( listener ) : () => {} );
 
 /**
- * Open another admin route: in the app a hash change, else the old URL.
+ * Open another admin route: a hash change when the route runs in the app,
+ * else the old URL (outside the app, or a route that is still its own page;
+ * one navigation instead of a hash change and a redirect).
  *
  * @param {string} path    App route path (`/post-forms/12/edit`).
- * @param {string} pageUrl URL used outside the app.
+ * @param {string} pageUrl Old page URL.
  */
 export const openRoute = ( path, pageUrl ) => {
-    if ( context ) {
+    if ( context && context.isAppRoute( path ) ) {
         context.navigate( path );
 
         return;

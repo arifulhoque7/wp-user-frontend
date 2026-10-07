@@ -298,7 +298,7 @@ class Admin_Form_Handler {
      * @return void
      */
     public function admin_notices() {
-        if ( ! empty( $_GET['page'] ) && 'wpuf-post-forms' === $_GET['page'] ) {
+        if ( wpuf_is_admin_screen( 'wpuf-post-forms' ) ) {
             if ( ! empty( $_GET['trashed'] ) ) {
                 $trashed = sanitize_text_field( wp_unslash( $_GET['trashed'] ) );
                 $notice = sprintf(
@@ -338,7 +338,7 @@ class Admin_Form_Handler {
             }
         }
 
-        if ( ! empty( $_GET['page'] ) && 'wpuf-profile-forms' === $_GET['page'] ) {
+        if ( wpuf_is_admin_screen( 'wpuf-profile-forms' ) ) {
             if ( ! empty( $_GET['trashed'] ) ) {
                 $trashed = sanitize_text_field( wp_unslash( $_GET['trashed'] ) );
 

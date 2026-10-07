@@ -121,7 +121,11 @@ class AppPage {
      * @return void
      */
     public function load() {
-        $globals = [];
+        $globals  = [];
+        $styles   = wp_styles();
+        $baseline = $styles->queue;
+        $global   = $this->resolved_styles();
+        $queue    = $baseline;
 
         foreach ( $this->screens->all() as $screen ) {
             if ( ! $screen->in_app() || ! current_user_can( $screen->capability() ) ) {
@@ -129,13 +133,17 @@ class AppPage {
             }
 
             $notices = $this->notice_callbacks();
-            $before  = $this->resolved_styles();
+            // Each screen loads on the page's own style queue, so a sheet two
+            // screens enqueue belongs to both (printed only on their routes;
+            // each screen's Tailwind base differs).
+            $styles->queue = $baseline;
             $screen->load_in_app();
-            // Stylesheets this screen brought (its React sheet and their deps):
-            // printed only on its routes, each screen's Tailwind base differs.
-            foreach ( array_diff( $this->resolved_styles(), $before ) as $handle ) {
+
+            foreach ( array_diff( $this->resolved_styles(), $global ) as $handle ) {
                 $this->style_owners[ $handle ][] = $screen->slug();
             }
+
+            $queue = array_merge( $queue, $styles->queue );
             // A screen's load step may remove admin notices for its own page
             // (wpuf_remove_admin_notices); other routes still show them.
             $this->restore_notice_callbacks( $notices );
@@ -143,6 +151,8 @@ class AppPage {
             // Per screen: the post and registration lists use the same global names.
             $globals[ $screen->slug() ] = (array) $screen->app_globals();
         }
+
+        $styles->queue = array_values( array_unique( $queue ) );
 
         wp_enqueue_script( self::HANDLE );
         wp_set_script_translations( self::HANDLE, 'wp-user-frontend', WPUF_ROOT . '/languages' );
@@ -296,6 +306,18 @@ class AppPage {
         }
 
         return '';
+    }
+
+    /**
+     * Screen slug of the route the app page opened with (an old page redirect),
+     * or '' (e.g. a hash route the server cannot see).
+     *
+     * @since WPUF_SINCE
+     *
+     * @return string
+     */
+    public function initial_screen() {
+        return $this->initial_screen;
     }
 
     /**

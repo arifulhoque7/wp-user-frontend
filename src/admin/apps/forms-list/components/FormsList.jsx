@@ -18,6 +18,7 @@ import TableSkeleton from './TableSkeleton';
 import EmptyState from './EmptyState';
 import CreateButtons from './CreateButtons';
 import TemplatePicker from './TemplatePicker';
+import { inApp, openRoute } from '../../../app/client';
 
 const FormsList = ( {
     postType = 'wpuf_forms',
@@ -36,6 +37,8 @@ const FormsList = ( {
     const postCounts = wpuf_forms_list.post_counts || {};
 
     const newFormUrl = window.wpuf_admin_script.admin_url + 'admin.php?page=wpuf-' + formType + '-forms&action=add-new';
+    // Route base of this list in the admin app (task 5d).
+    const routeBase = 'profile' === formType ? '/registration-forms' : '/post-forms';
 
     const { forms, loading, error, pagination, fetchForms } = useFormsFetch( { postType } );
     const { copiedKey, copyToClipboard } = useClipboard();
@@ -123,7 +126,11 @@ const FormsList = ( {
         return `${ window.wpuf_admin_script.admin_url }admin.php?${ params.toString() }`;
     }, [ pageSlug ] );
 
-    const editUrl = useCallback( ( formId ) => buildAdminUrl( formId, 'edit' ), [ buildAdminUrl ] );
+    // In the admin app the builder is a route of the same page.
+    const editUrl = useCallback(
+        ( formId ) => ( inApp() ? `#${ routeBase }/${ formId }/edit` : buildAdminUrl( formId, 'edit' ) ),
+        [ buildAdminUrl, routeBase ]
+    );
 
     // Row action handler
     const handleAction = useCallback( async ( action, form ) => {
@@ -198,7 +205,7 @@ const FormsList = ( {
         const $modal = $ ? $( '.wpuf-form-template-modal' ) : null;
 
         if ( ! $modal || ! $modal.length ) {
-            window.location.href = newFormUrl;
+            openRoute( `${ routeBase }/new`, newFormUrl );
             return;
         }
 
@@ -212,7 +219,7 @@ const FormsList = ( {
         $( 'body' ).addClass( 'wpuf-modal-open' );
         $( 'body' ).css( 'overflow', 'hidden' );
         $( '#wpbody-content .wrap' ).hide();
-    }, [ newFormUrl, templateData ] );
+    }, [ newFormUrl, routeBase, templateData ] );
 
     // AI Form Builder handler
     const openAIFormBuilder = useCallback( ( event ) => {
@@ -231,8 +238,8 @@ const FormsList = ( {
             _wpnonce: wpuf_forms_list.template_nonce,
         } );
 
-        window.location.href = window.wpuf_admin_script.admin_url + 'admin.php?' + params.toString();
-    }, [ aiConfigured, formType ] );
+        openRoute( `${ routeBase }/ai`, window.wpuf_admin_script.admin_url + 'admin.php?' + params.toString() );
+    }, [ aiConfigured, formType, routeBase ] );
 
     // Shortcode getter with Pro filter
     const getShortcode = useCallback( ( formId ) => {

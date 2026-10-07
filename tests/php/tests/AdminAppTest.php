@@ -75,12 +75,20 @@ class AdminAppTest extends WP_UnitTestCase {
         }
     }
 
-    public function test_old_page_requests_stay_pages_while_their_route_is_not_in_the_app() {
-        // The post forms list is not in the app yet (task 5d.4).
+    public function test_builder_requests_stay_pages_while_the_builder_is_not_in_the_app() {
+        // The builders are not in the app yet (task 5d.5); the list is.
         $forms = wpuf()->platform()->get( Registry::class )->get( 'wpuf-post-forms' );
 
         $this->assertInstanceOf( Screen::class, $forms );
-        $this->assertSame( '', $forms->app_route_for_request() );
+        $this->assertSame( '/post-forms', $forms->app_route_for_request() );
+
+        $_GET['action'] = 'edit';
+        $_GET['id']     = '12';
+        $this->assertSame( '', $forms->app_route_for_request(), 'builder stays its own page' );
+
+        $_GET['action'] = 'add-new';
+        $this->assertSame( '', $forms->app_route_for_request(), 'new form stays its own page' );
+        unset( $_GET['action'], $_GET['id'] );
     }
 
     public function test_menu_rows_point_at_app_routes_only_when_in_app() {
@@ -89,14 +97,17 @@ class AdminAppTest extends WP_UnitTestCase {
         $submenu['wp-user-frontend'] = [ [ 'Post Forms', 'manage_options', 'wpuf-post-forms' ], [ 'Tools', 'manage_options', 'wpuf_tools' ] ]; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
 
         $this->app()->point_menu_rows_at_app();
-        $this->assertSame( 'wpuf-post-forms', $submenu['wp-user-frontend'][0][2], 'page mode keeps the row' );
+        $this->assertSame( 'admin.php?page=wp-user-frontend#/post-forms', $submenu['wp-user-frontend'][0][2] );
+        $this->assertSame( 'wpuf_tools', $submenu['wp-user-frontend'][1][2], 'rows without a route stay' );
+
+        $submenu['wp-user-frontend'][0][2] = 'wpuf-post-forms'; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
 
         add_filter(
             'wpuf_admin_app_routes',
             function ( $routes ) {
                 foreach ( $routes as $i => $route ) {
                     if ( 'post-forms' === $route['id'] ) {
-                        $routes[ $i ]['mode'] = 'app';
+                        $routes[ $i ]['mode'] = 'page';
                     }
                 }
 
@@ -105,8 +116,7 @@ class AdminAppTest extends WP_UnitTestCase {
         );
 
         $this->app()->point_menu_rows_at_app();
-        $this->assertSame( 'admin.php?page=wp-user-frontend#/post-forms', $submenu['wp-user-frontend'][0][2] );
-        $this->assertSame( 'wpuf_tools', $submenu['wp-user-frontend'][1][2] );
+        $this->assertSame( 'wpuf-post-forms', $submenu['wp-user-frontend'][0][2], 'page mode keeps the row' );
     }
 
     public function test_a_screen_load_cannot_remove_notices_for_the_other_routes() {
@@ -139,12 +149,13 @@ class AdminAppTest extends WP_UnitTestCase {
         $this->assertStringContainsString( 'wpuf-admin-app', $this->app()->body_class( '' ) );
     }
 
-    public function test_settings_and_subscriptions_run_in_the_app() {
+    public function test_settings_subscriptions_and_lists_run_in_the_app() {
         $modes = wp_list_pluck( $this->app()->routes(), 'mode', 'id' );
 
         $this->assertSame( 'app', $modes['settings'] );
         $this->assertSame( 'app', $modes['subscriptions'] );
-        $this->assertSame( 'page', $modes['post-forms'] );
+        $this->assertSame( 'app', $modes['post-forms'] );
+        $this->assertSame( 'page', $modes['post-form-edit'] );
     }
 
     public function test_old_settings_and_subscriptions_requests_map_to_their_routes() {

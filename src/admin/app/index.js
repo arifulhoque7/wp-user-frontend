@@ -322,6 +322,7 @@ const render = async () => {
         params,
         query,
         navigate,
+        isAppRoute,
         getQuery,
         setQuery,
         addGuard,
@@ -384,6 +385,19 @@ const onHashChange = async ( event ) => {
 
     render();
 };
+
+/**
+ * Whether a path opens a route inside the app (not a page-mode route).
+ *
+ * @param {string} path Route path, query allowed.
+ *
+ * @return {boolean} In the app.
+ */
+function isAppRoute( path ) {
+    const found = match( path.replace( /^#/, '' ).split( '?' )[ 0 ] );
+
+    return !! found && 'page' !== found.route.mode;
+}
 
 /**
  * Go to a route.
