@@ -92,11 +92,33 @@ const compile = async ( css, from ) =>
 
 const skip = ( rule ) => rule.parent && 'atrule' === rule.parent.type && /keyframes/.test( rule.parent.name );
 
+/**
+ * Scope the utilities to the screen's body class with zero specificity.
+ *
+ * Text colour utilities also get an `html … a.text-…` selector (0,1,2):
+ * WordPress paints links blue on hover and focus with `a:hover` / `a:focus`
+ * (0,1,1; the admin colour scheme prints after this sheet), which beat the
+ * plain class (0,1,0), so a clicked tab or link stayed admin blue. The link
+ * keeps its own colour; the screen's own `hover:` / `focus:` utilities (0,2,0)
+ * still win (owner 2026-10-07: no blue hover or focus on the React screens).
+ *
+ * @param {Object} layer Utilities layer.
+ * @param {string} scope Body class selector.
+ */
 function scopeUtilities( layer, scope ) {
     layer.walkRules( ( rule ) => {
-        if ( ! skip( rule ) ) {
-            rule.selectors = rule.selectors.map( ( selector ) => `:where(${ scope }) ${ selector.trim() }` );
+        if ( skip( rule ) ) {
+            return;
         }
+
+        const colors = rule.some( ( decl ) => 'decl' === decl.type && 'color' === decl.prop );
+
+        rule.selectors = rule.selectors.flatMap( ( selector ) => {
+            const trimmed = selector.trim();
+            const scoped = `:where(${ scope }) ${ trimmed }`;
+
+            return colors && /^\.text-[^\s:>+~]+$/.test( trimmed ) ? [ scoped, `html :where(${ scope }) a${ trimmed }` ] : [ scoped ];
+        } );
     } );
 }
 

@@ -174,7 +174,7 @@ const SubscriptionsApp = () => {
             <PageFooter>
                 { createInterpolateElement(
                     __( 'Use the <a>classic UI</a>.', 'wp-user-frontend' ),
-                    { a: <a href={ adminUrl + 'edit.php?post_type=wpuf_subscription' } /> }
+                    { a: <a href={ adminUrl + 'edit.php?post_type=wpuf_subscription' } className="text-gray-500 underline hover:text-gray-700 focus:text-gray-700" /> }
                 ) }
             </PageFooter>
         </PageShell>
