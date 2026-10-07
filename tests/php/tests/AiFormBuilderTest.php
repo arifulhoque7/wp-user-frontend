@@ -127,4 +127,27 @@ class AiFormBuilderTest extends WP_UnitTestCase {
 
         $wp_rest_server = null; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
     }
+
+    public function test_generate_without_a_key_fails_without_a_provider_request() {
+        update_option( 'wpuf_ai', [ 'ai_provider' => 'openai', 'ai_model' => 'gpt-4o-mini', 'openai_api_key' => '' ] );
+
+        $requests = 0;
+        $count    = function ( $pre ) use ( &$requests ) {
+            ++$requests;
+            return $pre;
+        };
+        add_filter( 'pre_http_request', $count );
+
+        $request = new WP_REST_Request( 'POST', '/wpuf/v1/ai-form-builder/generate' );
+        $request->set_param( 'prompt', 'Create a contact form' );
+        $result = wpuf()->platform()->get( RestController::class )->generate_form( $request );
+
+        remove_filter( 'pre_http_request', $count );
+        delete_option( 'wpuf_ai' );
+
+        $this->assertWPError( $result );
+        $this->assertSame( 'generation_failed', $result->get_error_code() );
+        $this->assertStringContainsString( 'No API key', $result->get_error_message() );
+        $this->assertSame( 0, $requests );
+    }
 }

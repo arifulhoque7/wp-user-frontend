@@ -47,6 +47,7 @@ test.afterAll(async () => {
  * @Test_AI0014 : Chat text is rendered as text (no markup from the AI reply)
  * @Test_AI0015 : Integration post form (WooCommerce): its prompts, sent to the API, kept on Regenerate
  * @Test_AI0016 : Integration registration form (Dokan, Pro): Pro prompts, profile form created
+ * @Test_AI0017 : Key removed after the builder opened: Generate shows the "Oops..." dialog, no provider request
  **/
 
 test.describe('AI Form Builder', () => {
@@ -55,7 +56,12 @@ test.describe('AI Form Builder', () => {
         await ai.openFromList('post');
         await expect(page.locator(ai.S.configModal)).toBeVisible();
         await expect(page.locator(ai.S.configModal)).toContainText('AI Provider Not Configured');
-        await page.keyboard.press('Escape');
+
+        // "Go to Settings" lands on the AI section of the React settings screen.
+        await page.locator(ai.S.configModal).getByRole('button', { name: 'Go to Settings' }).click();
+        await page.waitForURL(/page=wpuf-settings/);
+        await expect(page).toHaveURL(/tab=integrations&sub=wpuf_ai/);
+        await expect(page.getByText('AI Provider', { exact: true }).first()).toBeVisible({ timeout: 30000 });
         ai.configureMock(AI_MOCK_KEY);
     });
 
@@ -280,5 +286,24 @@ test.describe('AI Form Builder', () => {
 
         const formId = await ai.editInBuilder();
         expect(ai.storedForm(formId).post_type).toBe('wpuf_profile');
+    });
+
+    test('AI0017 : Key removed after the builder opened: Generate shows the "Oops..." dialog, no provider request', { tag: ['@Lite', '@Test_AI0017'] }, async () => {
+        await ai.open();
+        ai.configureMock('');
+
+        try {
+            await page.locator(ai.S.description).fill('Create a contact form');
+            await page.locator(ai.S.generateButton).click();
+
+            await expect(page.locator(ai.S.errorDialog)).toBeVisible({ timeout: 30000 });
+            await expect(page.locator(ai.S.errorDialog)).toContainText('Oops...');
+            await expect(page.locator(ai.S.errorDialog)).toContainText('No API key is set for the selected AI provider');
+            expect(ai.mockCalls(), 'no provider request without a key').toBe(0);
+            await page.locator(ai.S.dialogAction).click();
+            await expect(page.locator(ai.S.inputHeading)).toBeVisible();
+        } finally {
+            ai.configureMock(AI_MOCK_KEY);
+        }
     });
 });

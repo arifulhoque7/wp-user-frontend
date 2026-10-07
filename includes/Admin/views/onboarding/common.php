@@ -207,7 +207,7 @@ $revisiting    = in_array( 'common', $progress['completed'], true );
                         /* translators: 1: gateway names, for example "PayPal", 2: opening link tag, 3: closing link tag */
                         esc_html__( 'Bank transfer starts taking payments as soon as you finish here. %1$s still needs its API keys, so add them in %2$sPayment settings%3$s before you go live.', 'wp-user-frontend' ),
                         esc_html( implode( ', ', $needs_setup_labels ) ),
-                        '<a href="' . esc_url( admin_url( 'admin.php?page=wpuf-settings' ) ) . '" target="_blank" rel="noopener">',
+                        '<a href="' . esc_url( admin_url( 'admin.php?page=wpuf-settings#wpuf_payment' ) ) . '" target="_blank" rel="noopener">',
                         '</a>'
                     );
                     ?>

@@ -175,7 +175,7 @@ class Admin_Form_Builder {
         $provider_key  = $ai_provider . '_api_key';
         $ai_api_key    = isset( $ai_settings[ $provider_key ] ) ? $ai_settings[ $provider_key ] : '';
         $ai_configured = ! empty( $ai_provider ) && ! empty( $ai_api_key ) && ! empty( $ai_model );
-        $ai_settings_url = admin_url( 'admin.php?page=wpuf-settings#/ai' );
+        $ai_settings_url = admin_url( 'admin.php?page=wpuf-settings#wpuf_ai' );
 
         $wpuf_form_builder = apply_filters(
             'wpuf_form_builder_localize_script',

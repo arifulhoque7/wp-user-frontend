@@ -405,6 +405,19 @@ class RestController extends WP_REST_Controller {
             );
         }
 
+        // No key for the provider: say so instead of sending a request the provider rejects.
+        $stored_ai    = get_option( 'wpuf_ai', [] );
+        $stored_ai    = is_array( $stored_ai ) ? $stored_ai : [];
+        $key_provider = ! empty( $provider ) && is_string( $provider ) ? $provider : ( $stored_ai['ai_provider'] ?? 'openai' );
+
+        if ( empty( $stored_ai[ $key_provider . '_api_key' ] ) ) {
+            return new WP_Error(
+                'generation_failed',
+                __( 'No API key is set for the selected AI provider. Add one in the AI settings.', 'wp-user-frontend' ),
+                [ 'status' => 400 ]
+            );
+        }
+
         try {
             // Add integration to conversation context
             if ( ! empty( $integration ) ) {

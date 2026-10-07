@@ -74,7 +74,7 @@ class Paypal_Gateway extends Payment_Gateway {
         $this->gateway_url       = 'https://www.paypal.com/webscr/?';
         $this->test_mode         = 'test' === wpuf_get_option( 'paypal_test_mode', 'wpuf_payment' );
         $this->webhook_id        = wpuf_get_option( 'paypal_webhook_id', 'wpuf_payment' );
-        $this->settings_url      = admin_url( 'admin.php?page=wpuf-settings&tab=wpuf_payment' );
+        $this->settings_url      = admin_url( 'admin.php?page=wpuf-settings#wpuf_payment' );
         $this->setup_guide_url   = 'https://wedevs.com/docs/wp-user-frontend-pro/settings/paypal-payement-gateway/';
     }
 

@@ -56,6 +56,7 @@ test.describe('React Settings Screen Tests', () => {
      * @Test_SR0021 : Legacy fallback — "Classic view" renders the classic screen
      * @Test_SR0022 : Legacy emergency override (?wpuf_settings_ui=legacy) works
      * @Test_SR0023 : Switch back from classic to the React screen
+     * @Test_SR0032 : Section links (#wpuf_ai, #/ai, ?tab=wpuf_payment, ...) open the tab and sub-tab of that section
      **/
 
     test('@Test_SR0001 : App mounts; skeleton replaced by UI', async () => {
@@ -332,5 +333,24 @@ test.describe('React Settings Screen — Pro Tests', () => {
         await expect(page.getByText('Form Background Color', { exact: false }).first()).toBeVisible();
         await expect(page.getByText('Button Text Color', { exact: false }).first()).toBeVisible();
         await expect(page.locator(Selectors.settingsReact.colorPicker).first()).toBeVisible();
+    });
+
+    test('@Test_SR0032 : Section links open the tab and sub-tab of that section', async () => {
+        const links: [string, RegExp][] = [
+            ['#wpuf_ai', /tab=integrations&sub=wpuf_ai$/],
+            ['#/ai', /tab=integrations&sub=wpuf_ai$/],
+            ['#wpuf_payment', /tab=payments&sub=wpuf_payment$/],
+            ['&tab=wpuf_payment', /tab=payments&sub=wpuf_payment$/],
+            ['#wpuf_profile', /tab=login_registration&sub=wpuf_profile$/],
+            ['#wpuf_general', /tab=general&sub=wpuf_general$/],
+            ['#wpuf_frontend_posting', /tab=frontend_posting&sub=wpuf_frontend_posting$/],
+            ['#/settings', /tab=general$/],
+        ];
+
+        for (const [suffix, expected] of links) {
+            await page.goto(`${settings.wpufSettingsPage}${suffix}`);
+            await expect(settings.root).toBeVisible();
+            await expect(page, suffix).toHaveURL(expected);
+        }
     });
 });

@@ -539,8 +539,8 @@ function wpuf_help_related_articles( $articles ) {
                             'Navigate to %2$sSettings%3$s → %4$sLogin/Registration%5$s tab. In this page, you will find several useful settings related to WPUF login. You can override default registration and login forms with WPUF login & registration feature if you want. To do this, check the %6$sLogin/Registration override option%7$s. You can also specify the login page. WPUF automatically adds the default login page that it has created. If you manually create one, use the following shortcode – %8$s. Simply, create a new page and put the above shortcode. Finally, publish the page and add it to the Login Page option in the settings.',
                             'wp-user-frontend'
                         ),
-                        esc_url( admin_url( 'admin.php?page=wpuf-settings' ) ),
-                        '<a href="' . esc_url( admin_url( 'admin.php?page=wpuf-settings' ) ) . '" target="_blank">',
+                        esc_url( admin_url( 'admin.php?page=wpuf-settings#wpuf_profile' ) ),
+                        '<a href="' . esc_url( admin_url( 'admin.php?page=wpuf-settings#wpuf_profile' ) ) . '" target="_blank">',
                         '</a>',
                         '<strong>',
                         '</strong>',

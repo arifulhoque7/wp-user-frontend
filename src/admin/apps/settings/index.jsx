@@ -91,8 +91,24 @@ const SettingsApp = () => {
             return;
         }
         const params = new URLSearchParams( window.location.search );
-        const urlTab = params.get( 'tab' );
-        const urlSub = params.get( 'sub' );
+        let urlTab = params.get( 'tab' );
+        let urlSub = params.get( 'sub' );
+
+        // Links from the classic screen point at a section, by hash
+        // (`#wpuf_ai`, `#/ai`) or as `?tab=wpuf_payment`: open the tab that
+        // holds that section, on that section.
+        const hash = window.location.hash.replace( /^#\/?/, '' );
+        const target = ( urlTab && ! ia.find( ( t ) => t.id === urlTab ) && urlTab ) || ( ! urlTab && hash ) || '';
+        if ( target ) {
+            const section = target.startsWith( 'wpuf_' ) || target === 'n8n' ? target : `wpuf_${ target }`;
+            const owner = ia.find( ( t ) => Array.isArray( t.sections ) && t.sections.includes( section ) );
+            if ( owner ) {
+                urlTab = owner.id;
+                urlSub = section;
+            } else if ( ia.find( ( t ) => t.id === target ) ) {
+                urlTab = target;
+            }
+        }
 
         const restoredTab = ( urlTab && ia.find( ( t ) => t.id === urlTab ) ) || ia[ 0 ];
         setActiveTab( restoredTab.id );

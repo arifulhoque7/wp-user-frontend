@@ -1165,7 +1165,7 @@ class Admin_Subscription {
                                     'For subscriptions to work correctly, please ensure the payment gateway and related settings are properly configured in the <a href="%s">Payment Settings</a>',
                                     'wp-user-frontend'
                                 ),
-                                admin_url( 'admin.php?page=wpuf-settings' )
+                                admin_url( 'admin.php?page=wpuf-settings#wpuf_payment' )
                             ),
                         ],
                     ],

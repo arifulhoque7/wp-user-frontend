@@ -26,7 +26,7 @@ class Paypal {
         $this->webhook_id = wpuf_get_option( 'paypal_webhook_id', 'wpuf_payment' );
 
         // Initialize URL properties
-        $this->settings_url = admin_url( 'admin.php?page=wpuf-settings&tab=wpuf_payment' );
+        $this->settings_url = admin_url( 'admin.php?page=wpuf-settings#wpuf_payment' );
         $this->setup_guide_url = 'https://wedevs.com/docs/wp-user-frontend-pro/settings/paypal-payement-gateway/';
         $this->paypal_icon_url = WPUF_ASSET_URI . '/images/wpuf_paypal.png';
 
