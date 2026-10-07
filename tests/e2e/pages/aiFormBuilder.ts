@@ -95,9 +95,9 @@ export class AiFormBuilderPage extends Base {
 
     /** Whether WPUF Pro is active on the site under test. */
     proActive(): boolean {
+        // By class, not folder: a dev checkout is `wpuf-pro`, the release zip `wp-user-frontend-pro`.
         try {
-            aiWp(['plugin', 'is-active', 'wpuf-pro']);
-            return true;
+            return /PRO_ACTIVE/.test(aiWp(['eval', "echo class_exists( 'WP_User_Frontend_Pro' ) ? 'PRO_ACTIVE' : 'PRO_OFF';"], true));
         } catch {
             return false;
         }

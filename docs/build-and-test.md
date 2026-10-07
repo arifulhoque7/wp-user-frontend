@@ -79,6 +79,16 @@ import). Tailwind scans sources only, so a full build is deterministic (no CSS d
 - Pro: `node tools/make-pot.mjs` links each React string to its bundle (`assets/js/<bundle>.js`;
   core reads `.min.js` as `.js` for translations).
 
+## Release build check (local)
+
+Generated assets are gitignored, so a release only works if CI builds every React part. Check it locally before tagging:
+
+1. Clean clones of free and Pro (siblings), then the free steps of `deploy-org.yml`: `pnpm install --frozen-lockfile`, `pnpm build`, `pnpm exec grunt release`, `composer install --no-dev --optimize-autoloader`, `node bin/verify-build.mjs --release`, then `rsync -a --exclude-from=.distignore ./ <pkg>/wp-user-frontend/` (that folder is the wp.org package).
+2. Pro steps of `release.yml`: `composer install --no-dev -o`, the user-directory composer install (with the transient advisory / stability relax), `npm install && npm run build`, the user-directory `npm install && npm run build`, `npx grunt --force`, `npx grunt zip-all --force`, then the workflow's own "Verify built assets" block on `dist/` (on macOS drop `globstar` and use `dist/wp-user-frontend-pro-*`: bash 3.2 has no `**`).
+3. Install the package and one plan zip on a fresh site with the AI mock (`tests/e2e/wp/wpuf-ai-mock.php` in mu-plugins) and run, with Pro on and off:
+   `QA_BASE_URL=http://site.test WPUF_E2E_WP_PATH=/path/to/site npx playwright test tests/releaseSmokeTest.spec.ts tests/aiFormBuilderTest.spec.ts --project=e2e`
+   `releaseSmokeTest` (RS0001-RS0005) fails when a React screen does not mount, logs a JS error or a plugin asset returns 4xx/5xx.
+
 ## Before Committing
 1. `composer phpcs` on changed PHP files.
 2. Relevant `pnpm run build:*` for changed Vue entry point.
