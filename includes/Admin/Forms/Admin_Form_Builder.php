@@ -31,6 +31,16 @@ class Admin_Form_Builder {
     private $settings = [];
 
     /**
+     * The builder created for the current request (the builder screen, or the
+     * builder boot of the React admin app).
+     *
+     * @since WPUF_SINCE
+     *
+     * @var Admin_Form_Builder|null
+     */
+    public static $current = null;
+
+    /**
      * Class contructor
      *
      * @since 2.5
@@ -50,6 +60,7 @@ class Admin_Form_Builder {
             // [ [ 'name' => 'wpuf_form', 'type' => 'profile' ], [ 'name' => 'wpuf_form', 'type' => 'registration' ] ]
         ];
         $this->settings = wp_parse_args( $settings, $defaults );
+        self::$current  = $this;
         // Set the form as the global $post: builder code in free and pro
         // (Post_Form, Fields_Manager) reads it on this screen.
         $post = get_post( $this->settings['post_id'] ); // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
@@ -75,8 +86,34 @@ class Admin_Form_Builder {
      * @return void
      */
     public function admin_enqueue_scripts() {
-        global $post;
+        $this->enqueue_builder_assets();
 
+        // React form builder bundle, registered in the shared Assets registry (task 2.5b).
+        wp_enqueue_script( 'wpuf-form-builder-react' );
+        wp_set_script_translations( 'wpuf-form-builder-react', 'wp-user-frontend', WPUF_ROOT . '/languages' );
+        wpuf()->platform()->get( BootPayload::class )->attach( 'form_builder', 'wpuf-form-builder-react' );
+
+        $data = $this->localize_data();
+
+        wp_localize_script( 'wpuf-form-builder-react', 'wpuf_form_builder', $data['wpuf_form_builder'] );
+        // Develop printed the single-instance field list as its own global; scripts
+        // that read window.wpuf_single_objects keep working.
+        wp_localize_script( 'wpuf-form-builder-react', 'wpuf_single_objects', $data['wpuf_single_objects'] );
+        // Retired Vue mixin filters still fire (deprecated when an outside plugin
+        // listens) and window.wpuf_mixins stays defined (4.4g).
+        wp_localize_script( 'wpuf-form-builder-react', 'wpuf_mixins', $data['wpuf_mixins'] );
+    }
+
+    /**
+     * Enqueue the builder's libraries and fire the builder enqueue hooks, in
+     * develop's order. Pro, modules and add-ons enqueue their builder assets on
+     * these hooks.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return void
+     */
+    public function enqueue_builder_assets() {
         wp_enqueue_style( 'wpuf-font-awesome' );
         wp_enqueue_style( 'wpuf-sweetalert2' );
         wp_enqueue_style( 'wpuf-selectize' );
@@ -103,11 +140,27 @@ class Admin_Form_Builder {
         wp_enqueue_script( 'wpuf-admin' );
         wp_enqueue_script( 'zxcvbn' );
         wp_enqueue_script( 'password-strength-meter' );
-        /**
-         * Unique fields list. Only 1 field can be added in a form.
-         */
-        $single_objects[] = 'profile_photo';
+        wp_enqueue_script( 'wp-color-picker' );
 
+        // The stage's rich text previews are a static TinyMCE mockup: they need the
+        // editor and skin styles, which the Vue text-editor template enqueued.
+        wp_enqueue_style( 'editor-css', includes_url( 'css/editor.css' ), [], get_bloginfo( 'version' ) );
+        wp_enqueue_style( 'skin-css', includes_url( 'js/tinymce/skins/lightgray/skin.min.css' ), [], get_bloginfo( 'version' ) );
+
+        do_action( 'wpuf_form_builder_enqueue_after_mixins' );
+        do_action( 'wpuf_form_builder_enqueue_after_components' );
+
+        do_action( 'wpuf_form_builder_enqueue_after_main_instance' );
+    }
+
+    /**
+     * Unique fields: only one of each can be added to a form.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return array
+     */
+    public static function single_objects() {
         $single_objects = apply_filters(
             'wpuf_single_form_field',
             [
@@ -130,31 +183,29 @@ class Admin_Form_Builder {
                 'signature_field',
             ]
         );
-        $taxonomy_terms = array_keys( get_taxonomies() );
-        $single_objects = array_merge( $single_objects, $taxonomy_terms );
-        wp_enqueue_script( 'wp-color-picker' );
 
-        // The stage's rich text previews are a static TinyMCE mockup: they need the
-        // editor and skin styles, which the Vue text-editor template enqueued.
-        wp_enqueue_style( 'editor-css', includes_url( 'css/editor.css' ), [], get_bloginfo( 'version' ) );
-        wp_enqueue_style( 'skin-css', includes_url( 'js/tinymce/skins/lightgray/skin.min.css' ), [], get_bloginfo( 'version' ) );
+        return array_merge( $single_objects, array_keys( get_taxonomies() ) );
+    }
 
-        do_action( 'wpuf_form_builder_enqueue_after_mixins' );
-        do_action( 'wpuf_form_builder_enqueue_after_components' );
+    /**
+     * The data the builder reads: `wpuf_form_builder`, `wpuf_single_objects`
+     * and `wpuf_mixins`. Printed by the builder screen, and returned over REST
+     * by the React admin app's builder boot (Builder\BuilderBoot).
+     *
+     * @since WPUF_SINCE
+     *
+     * @return array { wpuf_form_builder, wpuf_single_objects, wpuf_mixins }
+     */
+    public function localize_data() {
+        global $post;
 
-        do_action( 'wpuf_form_builder_enqueue_after_main_instance' );
-
-        // React form builder bundle, registered in the shared Assets registry (task 2.5b).
-        wp_enqueue_script( 'wpuf-form-builder-react' );
-        wp_set_script_translations( 'wpuf-form-builder-react', 'wp-user-frontend', WPUF_ROOT . '/languages' );
-        wpuf()->platform()->get( BootPayload::class )->attach( 'form_builder', 'wpuf-form-builder-react' );
+        $single_objects = self::single_objects();
 
         /*
          * Data required for building the form
          */
         wpuf_require_once( WPUF_ROOT . '/admin/form-builder/class-wpuf-form-builder-field-settings.php' );
         wpuf_require_once( WPUF_ROOT . '/includes/Free/Pro_Prompt.php' );
-
         $lock_icon = WPUF_ASSET_URI . '/images/crown-circle.svg';
         $free_icon = WPUF_ASSET_URI . '/images/free-circle.svg';
 
@@ -237,20 +288,21 @@ class Admin_Form_Builder {
             $wpuf_form_builder['settings_items'] = self::kses_setting_texts( $wpuf_form_builder['settings_items'] );
         }
         $wpuf_form_builder['wpuf_single_objects'] = $single_objects;
-        wp_localize_script( 'wpuf-form-builder-react', 'wpuf_form_builder', $wpuf_form_builder );
-        // Develop printed the single-instance field list as its own global; scripts
-        // that read window.wpuf_single_objects keep working.
-        wp_localize_script( 'wpuf-form-builder-react', 'wpuf_single_objects', array_values( $single_objects ) );
+
         // Retired Vue mixin filters still fire (deprecated when an outside plugin
-        // listens) and window.wpuf_mixins stays defined (4.4g).
-        $retired     = wpuf()->platform()->get( HookDeprecations::class );
-        $wpuf_mixins = [
-            'root'          => $retired->filter( 'wpuf_form_builder_js_root_mixins', [] ),
-            'builder_stage' => $retired->filter( 'wpuf_form_builder_js_builder_stage_mixins', [] ),
-            'form_fields'   => $retired->filter( 'wpuf_form_builder_js_form_fields_mixins', [] ),
-            'field_options' => $retired->filter( 'wpuf_form_builder_js_field_options_mixins', [] ),
+        // listens).
+        $retired = wpuf()->platform()->get( HookDeprecations::class );
+
+        return [
+            'wpuf_form_builder'   => $wpuf_form_builder,
+            'wpuf_single_objects' => array_values( $single_objects ),
+            'wpuf_mixins'         => [
+                'root'          => $retired->filter( 'wpuf_form_builder_js_root_mixins', [] ),
+                'builder_stage' => $retired->filter( 'wpuf_form_builder_js_builder_stage_mixins', [] ),
+                'form_fields'   => $retired->filter( 'wpuf_form_builder_js_form_fields_mixins', [] ),
+                'field_options' => $retired->filter( 'wpuf_form_builder_js_field_options_mixins', [] ),
+            ],
         ];
-        wp_localize_script( 'wpuf-form-builder-react', 'wpuf_mixins', $wpuf_mixins );
     }
 
     /**

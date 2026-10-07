@@ -8,6 +8,7 @@
 
 namespace WeDevs\Wpuf\Platform\REST\Controllers;
 
+use WeDevs\Wpuf\Builder\BuilderBoot;
 use WeDevs\Wpuf\Builder\FormSave;
 use WeDevs\Wpuf\Platform\Caps;
 use WeDevs\Wpuf\Platform\REST\RestController;
@@ -126,6 +127,27 @@ class FormsController extends RestController {
             ]
         );
 
+        // The builder's data for one form (the React admin app opens builders
+        // without a page load). Same permission as reading the form.
+        register_rest_route(
+            $this->namespace,
+            '/' . $this->rest_base . '/(?P<id>[\d]+)/builder',
+            [
+                'args' => [
+                    'id' => [
+                        'type'              => 'integer',
+                        'required'          => true,
+                        'sanitize_callback' => 'absint',
+                    ],
+                ],
+                [
+                    'methods'             => WP_REST_Server::READABLE,
+                    'callback'            => [ $this, 'get_builder' ],
+                    'permission_callback' => [ $this, 'get_item_permissions_check' ],
+                ],
+            ]
+        );
+
         foreach ( [ 'duplicate', 'trash', 'restore' ] as $action ) {
             register_rest_route(
                 $this->namespace,
@@ -146,6 +168,31 @@ class FormsController extends RestController {
                 ]
             );
         }
+    }
+
+    /**
+     * The builder's data for a form: `wpuf_form_builder`, `wpuf_single_objects`
+     * and `wpuf_mixins`, built as on the builder screen (Builder\BuilderBoot).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param WP_REST_Request $request Request
+     *
+     * @return \WP_REST_Response|\WP_Error
+     */
+    public function get_builder( $request ) {
+        $data = ( new BuilderBoot() )->boot( (int) $request['id'] );
+
+        if ( is_wp_error( $data ) ) {
+            return $data;
+        }
+
+        return rest_ensure_response(
+            [
+                'success' => true,
+                'data'    => $data,
+            ]
+        );
     }
 
     /**
