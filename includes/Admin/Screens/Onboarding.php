@@ -1,0 +1,163 @@
+<?php
+/**
+ * Onboarding screen
+ *
+ * @package WP_User_Frontend
+ * @since WPUF_SINCE
+ */
+
+namespace WeDevs\Wpuf\Admin\Screens;
+
+use WeDevs\Wpuf\Admin\Onboarding as Wizard;
+
+/**
+ * The setup wizard (`index.php?page=wpuf-onboarding`, Admin\Onboarding) as the
+ * full-screen admin app route `#/onboarding/:step`, like FlyHR's: React app
+ * src/admin/apps/onboarding on the shared components, steps saved through
+ * wpuf/v1/onboarding.
+ *
+ * @since WPUF_SINCE
+ */
+class Onboarding extends Screen {
+
+    /**
+     * Menu slug
+     *
+     * @since WPUF_SINCE
+     *
+     * @return string
+     */
+    public function slug() {
+        return Wizard::PAGE_SLUG;
+    }
+
+    /**
+     * Who may run it: as the wizard page.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return string
+     */
+    public function capability() {
+        return 'manage_options';
+    }
+
+    /**
+     * The page always opens the app route.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return void
+     */
+    public function render() {}
+
+    /**
+     * Admin app routes: the wizard, and one step of it.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return array[]
+     */
+    public function app_routes() {
+        $route = [
+            'title'       => __( 'Set up User Frontend', 'wp-user-frontend' ),
+            'app'         => 'onboarding',
+            'boot'        => 'onboarding',
+            'in_app'      => true,
+            'container'   => 'wpuf-onboarding-root',
+            'bodyClasses' => [ 'wpuf-onboarding-open' ],
+        ];
+
+        return [
+            array_merge(
+                $route,
+                [
+                    'id'   => 'onboarding',
+                    'path' => '/onboarding',
+                    'page' => 'index.php?page=' . Wizard::PAGE_SLUG,
+                ]
+            ),
+            array_merge(
+                $route,
+                [
+                    'id'   => 'onboarding-step',
+                    'path' => '/onboarding/:step',
+                    'page' => 'index.php?page=' . Wizard::PAGE_SLUG . '&step=:step',
+                ]
+            ),
+        ];
+    }
+
+    /**
+     * `?step=` opens that step.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return string
+     */
+    public function app_route_for_request() {
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only route selection.
+        $step = isset( $_GET['step'] ) ? sanitize_key( wp_unslash( $_GET['step'] ) ) : '';
+
+        return $step ? '/onboarding/' . $step : '/onboarding';
+    }
+
+    /**
+     * "Run Onboarding Again" (Tools) wipes the last run before the hop.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return void
+     */
+    public function load_before_redirect() {
+        $wizard = $this->wizard();
+
+        if ( $wizard ) {
+            $wizard->maybe_restart();
+        }
+    }
+
+    /**
+     * On the app page: the wizard app and its sheet.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return void
+     */
+    public function load_in_app() {
+        wp_enqueue_style( 'wpuf-onboarding-react' );
+        wp_enqueue_script( 'wpuf-onboarding-react' );
+        wp_set_script_translations( 'wpuf-onboarding-react', 'wp-user-frontend', WPUF_ROOT . '/languages' );
+    }
+
+    /**
+     * Window globals: the wizard state when the page opens on it (else the
+     * app fetches it from wpuf/v1/onboarding when the route opens).
+     *
+     * @since WPUF_SINCE
+     *
+     * @return array
+     */
+    public function app_globals() {
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only route selection.
+        $route  = isset( $_GET['wpuf_route'] ) ? sanitize_text_field( wp_unslash( $_GET['wpuf_route'] ) ) : '';
+        $wizard = $this->wizard();
+
+        return [
+            'wpufOnboarding' => [
+                'state' => $wizard && 0 === strpos( $route, '/onboarding' ) ? $wizard->get_state() : null,
+            ],
+        ];
+    }
+
+    /**
+     * The wizard service.
+     *
+     * @return Wizard|null
+     */
+    private function wizard() {
+        $admin = wpuf()->admin;
+
+        return is_object( $admin ) && $admin->onboarding instanceof Wizard ? $admin->onboarding : null;
+    }
+}

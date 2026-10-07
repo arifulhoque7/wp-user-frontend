@@ -5,6 +5,7 @@ import { Selectors } from '../pages/selectors';
 import { Users } from '../utils/testData';
 import { configureSpecFailFast } from '../utils/specFailFast';
 import { wpCli } from '../utils/wpEnvCli';
+import { aiWp } from '../pages/aiFormBuilder';
 
 let browser: Browser;
 let context: BrowserContext;
@@ -79,7 +80,8 @@ function restoreSiteState() {
 }
 
 test.beforeAll(async () => {
-    browser = await chromium.launch();
+    // HEADED=1 shows the browser (this spec launches its own).
+    browser = await chromium.launch({ headless: ! process.env.HEADED });
     context = await browser.newContext();
     page = await context.newPage();
 
@@ -87,6 +89,13 @@ test.beforeAll(async () => {
     login = new BasicLoginPage(page);
 
     snapshotSiteState();
+
+    // The one-time welcome would sit over the first admin app page.
+    try {
+        aiWp([ 'user', 'meta', 'update', Users.adminUsername, 'wpuf_welcome_seen', '1' ]);
+    } catch {
+        // Older builds have no welcome.
+    }
 
     await login.basicLogin(Users.adminUsername, Users.adminPassword);
 
@@ -138,7 +147,7 @@ test.describe('Onboarding Wizard Tests', () => {
      * @Test_ONB0028 : Admin is validating no wizard screen ships a raster image
      * @Test_ONB0029 : Admin is validating plugin icons render at icon size
      * @Test_ONB0030 : Admin is validating required fields are marked accessibly
-     * @Test_ONB0031 : Admin is validating behaviour comes from an enqueued script
+     * @Test_ONB0031 : Admin is validating the wizard runs from its app and the gateway picker follows payments
      * @Test_ONB0032 : Admin is validating the wizard fits common desktop widths
      * @Test_ONB0033 : Admin is validating a card is always offered for every gateway
      * @Test_ONB0034 : Admin is validating each gateway says whether it is ready to use
@@ -482,41 +491,28 @@ test.describe('Onboarding Wizard Tests', () => {
         expect(marks.srWords, 'every marker needs its screen-reader word').toBe(marks.marks);
     });
 
-    test('ONB0031 : Admin is validating behaviour comes from an enqueued script', { tag: ['@Basic'] }, async () => {
+    test('ONB0031 : Admin is validating the wizard runs from its app and the gateway picker follows payments', { tag: ['@Basic'] }, async () => {
         await onboarding.gotoWizard('common');
 
         const scripts = await onboarding.getScriptReport();
 
-        expect(scripts.externalFiles, 'the wizard script should be enqueued').toContain('wpuf-onboarding.js');
-        expect(scripts.inlineBehaviourBlocks, 'no step should carry inline behaviour').toBe(0);
+        expect(scripts.externalFiles, 'the wizard app should be enqueued').toContain('onboarding.js');
 
-        // Proves the enqueued file is actually wired up, not merely present: this
-        // show/hide is one of the behaviours that moved into it.
-        const gateway = await page.evaluate(() => {
-            const toggle = document.getElementById('wpuf-onboarding-enable-payment') as HTMLInputElement | null;
-            const field = document.getElementById('wpuf-onboarding-gateway-field') as HTMLElement | null;
+        // The gateway picker only exists while payments are on (a feature an
+        // earlier scenario may have switched off).
+        const toggle = page.locator(Selectors.onboarding.common.enablePayments);
 
-            if (!toggle || !field) {
-                return null;
-            }
-
-            toggle.checked = false;
-            toggle.dispatchEvent(new Event('change'));
-            const hidden = field.style.display === 'none';
-
-            toggle.checked = true;
-            toggle.dispatchEvent(new Event('change'));
-
-            return { hidden, shownAgain: field.style.display !== 'none' };
-        });
-
-        // The gateway picker only exists while payments are switched on. When it is
-        // not rendered the checks above already prove the file is enqueued and that
-        // nothing is inline, so there is no reason to skip the whole scenario.
-        if (gateway !== null) {
-            expect(gateway.hidden).toBeTruthy();
-            expect(gateway.shownAgain).toBeTruthy();
+        if (await toggle.count() === 0) {
+            return;
         }
+
+        const field = page.locator('#wpuf-onboarding-gateway-field');
+
+        await onboarding.setCheckboxIfPresent(Selectors.onboarding.common.enablePayments, false);
+        await expect(field).toHaveCount(0);
+
+        await onboarding.setCheckboxIfPresent(Selectors.onboarding.common.enablePayments, true);
+        await expect(field).toBeVisible();
     });
 
     test('ONB0032 : Admin is validating the wizard fits common desktop widths', { tag: ['@Basic'] }, async () => {

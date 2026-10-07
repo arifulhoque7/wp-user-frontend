@@ -21,11 +21,21 @@ class Admin_Welcome {
      * @return void
      */
     public function register_menu() {
-        add_dashboard_page(
+        $hook = add_dashboard_page(
             __( 'Welcome to WP User Frontend', 'wp-user-frontend' ),
             __( 'Welcome to WP User Frontend', 'wp-user-frontend' ), 'manage_options', 'wpuf-welcome',
             [ $this, 'welcome_page' ]
         );
+
+        // The page opens the admin app route #/welcome (Admin\Screens\Welcome).
+        if ( $hook ) {
+            add_action(
+                'load-' . $hook,
+                function () {
+                    wpuf()->platform()->get( Screens\Registry::class )->load( Screens\Welcome::SLUG );
+                }
+            );
+        }
     }
 
     /**
@@ -56,11 +66,12 @@ class Admin_Welcome {
     }
 
     /**
-     * Render the welcome page
+     * Render the welcome page: the admin app route #/welcome opens instead
+     * (Admin\Screens\Welcome).
+     *
+     * @since WPUF_SINCE Renders nothing; was views/welcome-page.php
      *
      * @return void
      */
-    public function welcome_page() {
-        require_once WPUF_ROOT . '/views/welcome-page.php';
-    }
+    public function welcome_page() {}
 }

@@ -76,6 +76,8 @@ class Assets implements Hookable {
         $ai_form_builder_asset = $this->react_asset( 'ai-form-builder', [ 'wp-element', 'wp-i18n', 'wp-hooks', 'wpuf-admin-runtime', 'wpuf-admin-ui' ] );
         $admin_app_asset       = $this->react_asset( 'admin-app', [ 'wp-element', 'wp-hooks', 'wp-i18n', 'wpuf-admin-runtime' ] );
         $reg_promo_asset       = $this->react_asset( 'registration-promo', [ 'wp-element', 'wp-i18n', 'wpuf-admin-runtime', 'wpuf-admin-ui' ] );
+        $onboarding_asset      = $this->react_asset( 'onboarding', [ 'wp-element', 'wp-i18n', 'wpuf-admin-runtime', 'wpuf-admin-ui' ] );
+        $welcome_asset         = $this->react_asset( 'welcome', [ 'wp-element', 'wp-i18n', 'wpuf-admin-runtime', 'wpuf-admin-ui' ] );
         // The shared React admin layer (design.md D24): screens and Pro get
         // these as dependencies through the `@wpuf/*` / plugin-ui externals.
         $admin_runtime_asset = $this->react_asset( 'admin-runtime', [ 'wp-api-fetch', 'wp-element', 'wp-hooks', 'wp-url' ] );
@@ -133,6 +135,20 @@ class Assets implements Hookable {
                 'version'   => $reg_promo_asset['version'],
                 'in_footer' => true,
             ],
+            // Setup wizard (Admin\Screens\Onboarding).
+            'onboarding-react'          => [
+                'src'       => WPUF_ASSET_URI . '/js/react/onboarding.js',
+                'deps'      => $onboarding_asset['dependencies'],
+                'version'   => $onboarding_asset['version'],
+                'in_footer' => true,
+            ],
+            // Welcome page and one-time welcome (Admin\Screens\Welcome).
+            'welcome'                   => [
+                'src'       => WPUF_ASSET_URI . '/js/react/welcome.js',
+                'deps'      => $welcome_asset['dependencies'],
+                'version'   => $welcome_asset['version'],
+                'in_footer' => true,
+            ],
             // AI form builder, under the Vue app's handle (Admin\Screens\AiFormBuilder).
             'ai-form-builder'           => [
                 'src'       => WPUF_ASSET_URI . '/js/react/ai-form-builder.js',
@@ -162,6 +178,12 @@ class Assets implements Hookable {
                 'src'     => WPUF_ASSET_URI . '/css/subscriptions.css',
                 'version' => $this->react_asset( 'subscriptions', [] )['version'],
                 // subscriptions-rtl.css (built by tools/admin-css) on RTL sites.
+                'rtl'     => true,
+            ],
+            // Setup wizard and welcome sheet (tools/admin-css).
+            'onboarding-react'    => [
+                'src'     => WPUF_ASSET_URI . '/css/admin/onboarding-react.css',
+                'version' => $this->react_asset( 'onboarding', [] )['version'],
                 'rtl'     => true,
             ],
             // AI form builder sheet (tools/admin-css), under the Vue app's handle.

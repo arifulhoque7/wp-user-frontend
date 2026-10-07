@@ -8,9 +8,10 @@ import { Base } from './base';
 /**
  * Guided onboarding wizard.
  *
- * The wizard renders its own document rather than sitting inside the WP admin
- * chrome, so there is no admin sidebar on these screens. Anything that needs the
- * sidebar (menu visibility) is asserted from a normal admin page instead.
+ * The wizard is the admin app route #/onboarding/:step (React), full screen:
+ * the WordPress chrome is hidden there. Anything that needs the sidebar (menu
+ * visibility) is asserted from a normal admin page instead. Steps save over
+ * wpuf/v1/onboarding/{step} and move on without a page load.
  */
 export class OnboardingPage extends Base {
 
@@ -29,9 +30,41 @@ export class OnboardingPage extends Base {
     /*************** @Navigation *********************/
     /************************************************/
 
+    /** A wpuf/v1/onboarding request (pretty or ?rest_route= permalinks). */
+    private isWizardCall( url: string, visit: boolean ): boolean {
+        const decoded = decodeURIComponent( url );
+
+        if ( ! decoded.includes( 'wpuf/v1/onboarding/' ) ) {
+            return false;
+        }
+
+        return /\/onboarding\/[a-z_]+\/visit/.test( decoded ) === visit;
+    }
+
+    /**
+     * Open a step and wait until the app has recorded the visit (the ready step
+     * finishes the run on that visit).
+     */
     async gotoWizard(step: string = '') {
         const url = step ? `${this.wizardUrl}&step=${step}` : this.wizardUrl;
+        const visited = this.page.waitForResponse(
+            response => this.isWizardCall( response.url(), true ) && response.request().method() === 'POST',
+            { timeout: 30000 }
+        ).catch( () => null );
+
         await this.navigateToURL(url);
+        await this.page.locator(Selectors.onboarding.chrome.stepRail).waitFor( { timeout: 30000 } );
+        await visited;
+        await this.settle();
+    }
+
+    /** Let the step's entrance (text and panel reveals) finish before measuring. */
+    async settle() {
+        await this.page.evaluate( () => Promise.all(
+            document.getAnimations()
+                .filter( animation => Number.isFinite( Number( animation.effect?.getComputedTiming().endTime ) ) )
+                .map( animation => animation.finished.catch( () => null ) )
+        ) ).catch( () => {} );
     }
 
     async gotoTools() {
@@ -57,7 +90,7 @@ export class OnboardingPage extends Base {
     /************************************************/
 
     async wizardIsOpen(): Promise<boolean> {
-        return await this.page.locator(Selectors.onboarding.chrome.stepRail).count() > 0;
+        return await this.page.locator(Selectors.onboarding.chrome.stepRail).waitFor( { timeout: 30000 } ).then( () => true ).catch( () => false );
     }
 
     async getRailLabels(): Promise<string[]> {
@@ -93,15 +126,21 @@ export class OnboardingPage extends Base {
         } );
     }
 
+    /** Save the step: wait for its save call, then for the next step to open. */
     async continueStep() {
-        await this.validateAndClick(Selectors.onboarding.chrome.continueButton);
+        const saved = this.page.waitForResponse(
+            response => this.isWizardCall( response.url(), false ) && response.request().method() === 'POST',
+            { timeout: 120000 }
+        );
 
-        await this.waitForLoading();
+        await this.validateAndClick(Selectors.onboarding.chrome.continueButton);
+        await saved;
+        await this.page.waitForLoadState( 'networkidle' ).catch( () => {} );
     }
 
     async skipStep() {
         await this.validateAndClick(Selectors.onboarding.chrome.skipLink);
-        await this.waitForLoading();
+        await this.page.waitForLoadState( 'networkidle' ).catch( () => {} );
     }
 
     /**************************************************/
@@ -130,13 +169,17 @@ export class OnboardingPage extends Base {
             const shouldBeOn = wanted.includes( feature );
 
             if ( await box.isChecked() !== shouldBeOn ) {
-                await box.setChecked( shouldBeOn );
+                await box.click();
 
                 // Unticking a User Directory that is running asks first (owner
                 // decision, 4.7): confirm, or the step keeps it on.
-                const confirmOff = this.page.locator( '//button[@data-confirm-off-yes]' );
-                if ( ! shouldBeOn && await confirmOff.isVisible().catch( () => false ) ) {
-                    await confirmOff.click();
+                if ( ! shouldBeOn ) {
+                    const confirmOff = this.page.getByRole( 'button', { name: 'Turn it off' } );
+
+                    if ( await confirmOff.waitFor( { timeout: 1500 } ).then( () => true ).catch( () => false ) ) {
+                        await confirmOff.click();
+                        await confirmOff.waitFor( { state: 'hidden' } );
+                    }
                 }
             }
         }
@@ -206,15 +249,22 @@ export class OnboardingPage extends Base {
      * a previously-active Pro build had stored.
      */
     async getLayoutPickerState(): Promise<{ total: number; disabled: number; checked: string | null; previewLabel: string }> {
+        const change = this.page.locator( Selectors.onboarding.registration.layoutChange );
+
+        // The picker folds away; "Change" opens it.
+        if ( await change.count() > 0 && await change.getAttribute( 'aria-expanded' ) !== 'true' ) {
+            await change.click();
+        }
+
         return await this.page.evaluate( () => {
             const radios = Array.from(
-                document.querySelectorAll( 'input[name="wpuf_login_form_layout"]' )
-            ) as HTMLInputElement[];
+                document.querySelectorAll( '.wpuf-onboarding-layouts [role="radio"]' )
+            ) as HTMLButtonElement[];
 
             return {
                 total: radios.length,
                 disabled: radios.filter( radio => radio.disabled ).length,
-                checked: radios.find( radio => radio.checked )?.value ?? null,
+                checked: radios.find( radio => radio.getAttribute( 'aria-checked' ) === 'true' )?.dataset.value ?? null,
                 previewLabel: ( document.querySelector( '#wpuf-onboarding-layout-name' )?.textContent || '' ).trim(),
             };
         } );
@@ -231,7 +281,18 @@ export class OnboardingPage extends Base {
             return 0;
         }
 
-        return await select.locator( 'option' ).count();
+        // A plugin-ui select: its options exist while the list is open.
+        await select.click();
+
+        const options = this.page.locator( '[role="option"]' ).filter( { visible: true } );
+
+        await options.first().waitFor( { timeout: 5000 } ).catch( () => {} );
+
+        const count = await options.count();
+
+        await this.page.keyboard.press( 'Escape' );
+
+        return count;
     }
 
     /**************************************************/
@@ -382,31 +443,29 @@ export class OnboardingPage extends Base {
      * How the required controls on the current step are marked.
      */
     async getRequiredMarkers(): Promise<{ marks: number; srWords: number; requiredControls: number }> {
-        return await this.page.evaluate( () => ( {
-            marks: document.querySelectorAll( '.wpuf-onboarding-required' ).length,
-            srWords: document.querySelectorAll( '.wpuf-onboarding-required + .screen-reader-text' ).length,
-            requiredControls: document.querySelectorAll( '[required][aria-required="true"]' ).length,
-        } ) );
-    }
-
-    /**
-     * Whether the step's behaviour comes from an enqueued file rather than inline
-     * markup. The localised settings object is data and does not count.
-     */
-    async getScriptReport(): Promise<{ externalFiles: string[]; inlineBehaviourBlocks: number }> {
         return await this.page.evaluate( () => {
-            const inline = Array.from( document.querySelectorAll( 'script:not([src])' ) )
-                .map( tag => tag.textContent || '' )
-                // wp_localize_script emits a var assignment; anything else is behaviour.
-                .filter( body => body.trim() && ! /^\s*(var|window)\s+\w+\s*=/.test( body.trim() ) );
+            const marks = Array.from( document.querySelectorAll( '.wpuf-onboarding-required' ) );
 
             return {
-                externalFiles: Array.from( document.querySelectorAll( 'script[src]' ) )
-                    .map( tag => ( tag as HTMLScriptElement ).src.split( '/' ).pop()!.split( '?' )[0] )
-                    .filter( name => name.indexOf( 'onboarding' ) !== -1 ),
-                inlineBehaviourBlocks: inline.length,
+                marks: marks.length,
+                srWords: document.querySelectorAll( '.wpuf-onboarding-required + .screen-reader-text' ).length,
+                // Each marked label names the control it belongs to.
+                requiredControls: marks.filter( mark => {
+                    const target = mark.closest( 'label' )?.getAttribute( 'for' );
+
+                    return !! target && !! document.getElementById( target );
+                } ).length,
             };
         } );
+    }
+
+    /** The wizard's enqueued script files. */
+    async getScriptReport(): Promise<{ externalFiles: string[] }> {
+        return await this.page.evaluate( () => ( {
+            externalFiles: Array.from( document.querySelectorAll( 'script[src]' ) )
+                .map( tag => ( tag as HTMLScriptElement ).src.split( '/' ).pop()!.split( '?' )[0] )
+                .filter( name => name.indexOf( 'onboarding' ) !== -1 ),
+        } ) );
     }
 
     /**

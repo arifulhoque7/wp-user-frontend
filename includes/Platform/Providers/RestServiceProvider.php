@@ -13,6 +13,7 @@ use WeDevs\Wpuf\Api\Settings;
 use WeDevs\Wpuf\Api\Subscription;
 use WeDevs\Wpuf\Builder\FormSave;
 use WeDevs\Wpuf\Platform\REST\Controllers\FormsController;
+use WeDevs\Wpuf\Platform\REST\Controllers\OnboardingController;
 use WeDevs\Wpuf\Platform\REST\Manager;
 use WeDevs\Wpuf\Platform\ServiceProvider;
 use WeDevs\Wpuf\Platform\Stores\FormStore;
@@ -57,6 +58,14 @@ class RestServiceProvider extends ServiceProvider {
             FormsController::class,
             function ( $container ) {
                 return new FormsController( $container->get( FormStore::class ), $container->get( FormSave::class ) );
+            }
+        );
+
+        // wpuf/v1/onboarding (setup wizard steps).
+        $this->share_tagged(
+            OnboardingController::class,
+            function () {
+                return new OnboardingController();
             }
         );
 

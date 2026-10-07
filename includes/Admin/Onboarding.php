@@ -11,7 +11,10 @@ use WeDevs\Wpuf\Platform\Stores\Stores;
  * post form, registration, user directory, payments, the settings that have
  * to be right before anything else works, and the companion plugins.
  *
- * Rendered as a standalone screen using the User Directory design system.
+ * The wizard itself is the admin app route `#/onboarding/:step`
+ * (Admin\Screens\Onboarding, React app src/admin/apps/onboarding); its steps
+ * save through wpuf/v1/onboarding (Platform\REST\Controllers\
+ * OnboardingController), which runs the step handlers below.
  *
  * @since WPUF_SINCE
  */
@@ -43,13 +46,6 @@ class Onboarding {
     const COMPLETED_OPTION = 'wpuf_onboarding_completed';
 
     /**
-     * Current step key
-     *
-     * @var string
-     */
-    protected $step = '';
-
-    /**
      * All the steps of the wizard
      *
      * @var array
@@ -57,14 +53,26 @@ class Onboarding {
     protected $steps = [];
 
     /**
+     * Submitted values of the step being saved (slashed, like $_POST)
+     *
+     * @var array
+     */
+    protected $input = [];
+
+    /**
      * Boot the wizard
      *
      * @since WPUF_SINCE
+     *
+     * @param bool $hooks Hook into the admin (false: the REST controller's copy)
      */
-    public function __construct() {
+    public function __construct( $hooks = true ) {
+        if ( ! $hooks ) {
+            return;
+        }
+
         add_action( 'admin_menu', [ $this, 'register_page' ] );
         add_action( 'admin_head', [ $this, 'hide_menu_link' ] );
-        add_action( 'admin_init', [ $this, 'render' ], 1 );
 
         // Ahead of Setup_Wizard::redirect_to_page(), which runs at 9999, so a
         // first install lands here rather than in the legacy three step wizard.
@@ -74,22 +82,6 @@ class Onboarding {
         add_action( 'admin_menu', [ $this, 'hide_menus_for_unpicked_features' ], 999 );
     }
 
-    /**
-     * Mark the label of a control that has to be answered
-     *
-     * The asterisk is not the only signal: it carries a screen-reader word too, so
-     * the requirement is not communicated by colour alone (WCAG 1.4.1).
-     *
-     * @since WPUF_SINCE
-     *
-     * @return void
-     */
-    public static function required_mark() {
-        printf(
-            '<span class="wpuf-onboarding-required" aria-hidden="true">*</span><span class="screen-reader-text">%s</span>',
-            esc_html__( 'required', 'wp-user-frontend' )
-        );
-    }
 
     /**
      * Menu slugs belonging to each feature offered in the first step
@@ -231,13 +223,23 @@ class Onboarding {
      * @return void
      */
     public function register_page() {
-        add_dashboard_page(
+        $hook = add_dashboard_page(
             __( 'WPUF Onboarding', 'wp-user-frontend' ),
             __( 'WPUF Onboarding', 'wp-user-frontend' ),
             'manage_options',
             self::PAGE_SLUG,
             '__return_null'
         );
+
+        // The page opens the admin app route (Admin\Screens\Onboarding).
+        if ( $hook ) {
+            add_action(
+                'load-' . $hook,
+                function () {
+                    wpuf()->platform()->get( Screens\Registry::class )->load( self::PAGE_SLUG );
+                }
+            );
+        }
     }
 
     /**
@@ -401,237 +403,10 @@ class Onboarding {
         return in_array( $feature, $this->get_features(), true );
     }
 
-    /**
-     * Render the wizard and stop WordPress from rendering the admin screen
-     *
-     * @since WPUF_SINCE
-     *
-     * @return void
-     */
-    public function render() {
-        // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-        $page = isset( $_GET['page'] ) ? sanitize_text_field( wp_unslash( $_GET['page'] ) ) : '';
 
-        if ( self::PAGE_SLUG !== $page ) {
-            return;
-        }
 
-        if ( ! current_user_can( 'manage_options' ) ) {
-            wp_die( esc_html__( 'You do not have permission to run the setup.', 'wp-user-frontend' ) );
-        }
 
-        $this->maybe_restart();
 
-        $this->steps = $this->get_steps();
-
-        // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-        $requested  = isset( $_GET['step'] ) ? sanitize_text_field( wp_unslash( $_GET['step'] ) ) : '';
-        $this->step = isset( $this->steps[ $requested ] ) ? $requested : current( array_keys( $this->steps ) );
-
-        if ( ! empty( $_POST['wpuf_onboarding_save'] ) && ! empty( $this->steps[ $this->step ]['handler'] ) ) {
-            check_admin_referer( 'wpuf-onboarding' );
-
-            call_user_func( $this->steps[ $this->step ]['handler'] );
-
-            // A handler can change which steps exist; the features step does.
-            $this->steps = $this->get_steps();
-
-            $this->mark_done( $this->step );
-
-            $next = $this->get_next_step_link();
-
-            // Only a finished run earns the confetti, not a click on the rail.
-            if ( 'ready' === $this->get_next_step_key() ) {
-                $next = add_query_arg( 'celebrate', '1', $next );
-            }
-
-            wp_safe_redirect( $next );
-            exit;
-        }
-
-        $this->set_last_seen( $this->step );
-
-        remove_action( 'admin_print_styles', 'print_emoji_styles' );
-
-        $this->render_header();
-        $this->render_content();
-        $this->render_footer();
-
-        exit;
-    }
-
-    /**
-     * Wizard document head, logo and step rail
-     *
-     * @since WPUF_SINCE
-     *
-     * @return void
-     */
-    protected function render_header() {
-        wp_enqueue_style( 'wpuf-onboarding' );
-        wp_enqueue_script( 'wpuf-onboarding' );
-
-        // The confetti needs a URL, and the wizard's markup carries no inline
-        // script to put one in, so it arrives as data instead.
-        wp_localize_script(
-            'wpuf-onboarding',
-            'wpufOnboarding',
-            [
-                'confettiIcon' => esc_url_raw( WPUF_ASSET_URI . '/images/onboarding/icon.svg' ),
-            ]
-        );
-
-        $steps        = $this->steps;
-        $current      = $this->step;
-        $current_idx  = array_search( $current, array_keys( $steps ), true );
-        $step_keys    = array_keys( $steps );
-        $progress     = $this->get_progress();
-        $exit_url     = admin_url( 'admin.php?page=wpuf_tools&tab=tools' );
-        ?>
-        <!DOCTYPE html>
-        <html <?php language_attributes(); ?>>
-        <head>
-            <meta name="viewport" content="width=device-width" />
-            <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-            <title><?php esc_html_e( 'User Frontend &rsaquo; Onboarding', 'wp-user-frontend' ); ?></title>
-            <?php wp_print_styles( 'wpuf-onboarding' ); ?>
-        </head>
-        <body class="wpuf-onboarding-body">
-            <div class="wpuf-onboarding-topbar">
-                <img src="<?php echo esc_url( WPUF_ASSET_URI . '/images/onboarding-logo.svg' ); ?>" alt="<?php esc_attr_e( 'User Frontend', 'wp-user-frontend' ); ?>" />
-                <a class="wpuf-onboarding-exit" href="<?php echo esc_url( $exit_url ); ?>">
-                    <?php esc_html_e( 'Exit setup', 'wp-user-frontend' ); ?>
-                </a>
-            </div>
-
-            <div class="wpuf-onboarding-head">
-                <h1><?php esc_html_e( 'Set up User Frontend', 'wp-user-frontend' ); ?></h1>
-
-                    <nav aria-label="<?php esc_attr_e( 'Progress', 'wp-user-frontend' ); ?>">
-                        <ol class="wpuf-onboarding-steps">
-                            <?php
-                            $rail = $steps;
-
-                            // The picker is answered once and then out of the way.
-                            if ( 'features' !== $current ) {
-                                unset( $rail['features'] );
-                            }
-
-                            $rail_keys  = array_keys( $rail );
-                            $rail_last  = count( $rail_keys ) - 1;
-
-                            foreach ( $rail_keys as $index => $key ) :
-                                $step_idx = array_search( $key, $step_keys, true );
-                                $state    = '';
-
-                                if ( $key === $current ) {
-                                    $state = 'is-active';
-                                } elseif ( $step_idx < $current_idx || in_array( $key, $progress['completed'], true ) ) {
-                                    $state = 'is-done';
-                                }
-                                ?>
-                                <li class="<?php echo esc_attr( $state ); ?>">
-                                    <a class="wpuf-step-marker" href="<?php echo esc_url( $this->get_step_link( $key ) ); ?>">
-                                        <?php
-                                        // Every marker carries the same tick, as the User Directory
-                                        // wizard does. A step not yet reached draws it in white on
-                                        // white, so it reads as an empty circle; a step reached fills
-                                        // emerald and the tick shows. No digits, so the rail cannot
-                                        // renumber itself when a step drops out of the flow.
-                                        ?>
-                                        <svg width="9" height="7" viewBox="0 0 9 7" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                            <path d="M1 3.4001L3.4 5.8001L7.6 1.6001" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                        </svg>
-                                    </a>
-                                    <span class="wpuf-step-label"><?php echo esc_html( $rail[ $key ]['label'] ); ?></span>
-                                    <?php if ( $index !== $rail_last ) : ?>
-                                        <span class="wpuf-step-line"></span>
-                                    <?php endif; ?>
-                                </li>
-                            <?php endforeach; ?>
-                        </ol>
-                    </nav>
-            </div>
-        <?php
-    }
-
-    /**
-     * Render the current step view
-     *
-     * @since WPUF_SINCE
-     *
-     * @return void
-     */
-    protected function render_content() {
-        $view = WPUF_INCLUDES . '/Admin/views/onboarding/' . $this->steps[ $this->step ]['view'] . '.php';
-
-        echo '<div class="wpuf-onboarding-content">';
-
-        if ( file_exists( $view ) ) {
-            include $view;
-        }
-
-        echo '</div>';
-    }
-
-    /**
-     * Close the document
-     *
-     * @since WPUF_SINCE
-     *
-     * @return void
-     */
-    protected function render_footer() {
-        // The wizard builds its own document, so there is no wp_footer() to hang
-        // enqueued scripts off. They are printed explicitly instead.
-        wp_print_scripts( 'wpuf-onboarding' );
-        ?>
-        </body>
-        </html>
-        <?php
-    }
-
-    /**
-     * Render the fixed action bar of a step
-     *
-     * @since WPUF_SINCE
-     *
-     * @param array $args
-     *
-     * @return void
-     */
-    public function action_bar( $args = [] ) {
-        $args = wp_parse_args(
-            $args, [
-                'next_label' => __( 'Save & Continue', 'wp-user-frontend' ),
-                'show_prev'  => true,
-                'show_skip'  => true,
-            ]
-        );
-        ?>
-        <div class="wpuf-onboarding-footer">
-            <div class="wpuf-onboarding-footer-inner">
-                <div class="wpuf-onboarding-footer-left">
-                    <?php if ( $args['show_prev'] && $this->get_prev_step_link() ) : ?>
-                        <a class="wpuf-onboarding-btn-white" href="<?php echo esc_url( $this->get_prev_step_link() ); ?>">
-                            <?php esc_html_e( 'Previous', 'wp-user-frontend' ); ?>
-                        </a>
-                    <?php endif; ?>
-                </div>
-                <div class="wpuf-onboarding-footer-right">
-                    <?php if ( $args['show_skip'] ) : ?>
-                        <a class="wpuf-onboarding-skip" href="<?php echo esc_url( $this->get_next_step_link() ); ?>">
-                            <?php esc_html_e( 'Skip this step', 'wp-user-frontend' ); ?>
-                        </a>
-                    <?php endif; ?>
-                    <button type="submit" name="wpuf_onboarding_save" value="1" class="wpuf-onboarding-btn-primary">
-                        <?php echo esc_html( $args['next_label'] ); ?>
-                    </button>
-                </div>
-            </div>
-        </div>
-        <?php
-    }
 
     /**
      * Link of a given step
@@ -652,15 +427,17 @@ class Onboarding {
     }
 
     /**
-     * Key of the step that follows the current one
+     * Key of the step that follows a step
      *
      * @since WPUF_SINCE
      *
+     * @param string $step
+     *
      * @return string empty when this is the last step
      */
-    public function get_next_step_key() {
-        $keys  = array_keys( $this->steps );
-        $index = array_search( $this->step, $keys, true );
+    public function get_next_step_key( $step ) {
+        $keys  = array_keys( $this->steps ? $this->steps : $this->get_steps() );
+        $index = array_search( $step, $keys, true );
 
         if ( false === $index || ! isset( $keys[ $index + 1 ] ) ) {
             return '';
@@ -669,41 +446,7 @@ class Onboarding {
         return $keys[ $index + 1 ];
     }
 
-    /**
-     * Link of the next step
-     *
-     * @since WPUF_SINCE
-     *
-     * @return string
-     */
-    public function get_next_step_link() {
-        $keys  = array_keys( $this->steps );
-        $index = array_search( $this->step, $keys, true );
 
-        if ( false === $index || ! isset( $keys[ $index + 1 ] ) ) {
-            return admin_url( 'admin.php?page=wp-user-frontend' );
-        }
-
-        return $this->get_step_link( $keys[ $index + 1 ] );
-    }
-
-    /**
-     * Link of the previous step
-     *
-     * @since WPUF_SINCE
-     *
-     * @return string
-     */
-    public function get_prev_step_link() {
-        $keys  = array_keys( $this->steps );
-        $index = array_search( $this->step, $keys, true );
-
-        if ( false === $index || ! isset( $keys[ $index - 1 ] ) ) {
-            return '';
-        }
-
-        return $this->get_step_link( $keys[ $index - 1 ] );
-    }
 
     /**
      * Whether a full run has been finished
@@ -723,7 +466,7 @@ class Onboarding {
      *
      * @return void
      */
-    protected function maybe_restart() {
+    public function maybe_restart() {
         // phpcs:ignore WordPress.Security.NonceVerification.Recommended
         if ( empty( $_GET['restart'] ) ) {
             return;
@@ -849,6 +592,413 @@ class Onboarding {
     }
 
     /**
+     * Save a step: run its handler with the submitted values, mark it done
+     *
+     * @since WPUF_SINCE
+     *
+     * @param string $step   Step key
+     * @param array  $values Submitted values (unslashed)
+     *
+     * @return array|\WP_Error next (step key, '' after the last one) and celebrate
+     */
+    public function run_step( $step, $values ) {
+        $this->steps = $this->get_steps();
+
+        if ( ! isset( $this->steps[ $step ] ) ) {
+            return new \WP_Error( 'wpuf_onboarding_unknown_step', __( 'This setup step does not exist.', 'wp-user-frontend' ), [ 'status' => 404 ] );
+        }
+
+        // The handlers read slashed values, as they arrived in $_POST before.
+        $this->input = wp_slash( is_array( $values ) ? $values : [] );
+
+        if ( ! empty( $this->steps[ $step ]['handler'] ) && is_callable( $this->steps[ $step ]['handler'] ) ) {
+            call_user_func( $this->steps[ $step ]['handler'] );
+        }
+
+        $this->input = [];
+
+        // A handler can change which steps exist; the features step does.
+        $this->steps = $this->get_steps();
+
+        $this->mark_done( $step );
+
+        $next = $this->get_next_step_key( $step );
+
+        return [
+            'next'      => $next,
+            // Only a finished run earns the confetti, not a click on the rail.
+            'celebrate' => 'ready' === $next,
+        ];
+    }
+
+    /**
+     * The admin opened a step: remember it, and a visit to the last step
+     * finishes the run
+     *
+     * @since WPUF_SINCE
+     *
+     * @param string $step Step key
+     *
+     * @return void
+     */
+    public function visit( $step ) {
+        if ( ! array_key_exists( $step, $this->get_steps() ) ) {
+            return;
+        }
+
+        $this->set_last_seen( $step );
+
+        // Whoever runs the wizard has seen what the plugin does: no welcome.
+        update_user_meta( get_current_user_id(), Screens\Welcome::SEEN_META, 1 );
+    }
+
+    /**
+     * Everything the wizard page shows, step by step
+     *
+     * @since WPUF_SINCE
+     *
+     * @return array
+     */
+    public function get_state() {
+        $this->steps = $this->get_steps();
+
+        $steps = [];
+
+        foreach ( $this->steps as $key => $step ) {
+            $steps[] = [
+                'key'   => $key,
+                'label' => isset( $step['label'] ) ? wp_strip_all_tags( $step['label'] ) : $key,
+            ];
+        }
+
+        $progress = $this->get_progress();
+
+        return [
+            'steps'    => $steps,
+            'progress' => [
+                'completed' => array_values( (array) $progress['completed'] ),
+                'last_step' => (string) $progress['last_step'],
+            ],
+            'is_pro'   => wpuf_is_pro_active(),
+            'urls'     => [
+                'exit'     => admin_url( 'admin.php?page=wpuf_tools&tab=tools' ),
+                'tools'    => admin_url( 'admin.php?page=wpuf_tools&tab=tools' ),
+                'settings' => admin_url( 'admin.php?page=wpuf-settings' ),
+                'payment'  => admin_url( 'admin.php?page=wpuf-settings#wpuf_payment' ),
+                'pro'      => \WeDevs\Wpuf\Free\Pro_Prompt::get_pro_url(),
+            ],
+            'images'   => [
+                'logo'     => WPUF_ASSET_URI . '/images/onboarding-logo.svg',
+                'icon'     => WPUF_ASSET_URI . '/images/onboarding/icon.svg',
+                'proBadge' => WPUF_ASSET_URI . '/images/pro-badge.svg',
+            ],
+            'data'     => [
+                'features'     => $this->features_state(),
+                'post_form'    => $this->post_form_state(),
+                'registration' => $this->registration_state(),
+                'common'       => $this->common_state(),
+                'plugins'      => $this->plugins_state(),
+                'ready'        => $this->ready_state(),
+            ],
+        ];
+    }
+
+    /**
+     * A page list as select options, "create" first
+     *
+     * @param string $create_label
+     * @param array  $pages        page id => label
+     *
+     * @return array[]
+     */
+    private function page_options( $create_label, $pages ) {
+        $options = [
+            [
+                'value' => 'create',
+                'label' => $create_label,
+            ],
+        ];
+
+        foreach ( $pages as $page_id => $label ) {
+            $options[] = [
+                'value' => (string) $page_id,
+                'label' => wp_strip_all_tags( $label ),
+            ];
+        }
+
+        return $options;
+    }
+
+    /**
+     * The stored page of a select, or "create" when it is not offered
+     *
+     * @param int     $page_id
+     * @param array[] $options
+     *
+     * @return string
+     */
+    private function page_choice( $page_id, $options ) {
+        $value = (string) absint( $page_id );
+
+        return in_array( $value, wp_list_pluck( $options, 'value' ), true ) ? $value : 'create';
+    }
+
+    /**
+     * Step 1 data
+     *
+     * @return array
+     */
+    private function features_state() {
+        $features = [];
+
+        foreach ( $this->get_feature_definitions() as $key => $feature ) {
+            $features[] = [
+                'key'  => $key,
+                'name' => isset( $feature['name'] ) ? wp_strip_all_tags( $feature['name'] ) : $key,
+                'desc' => isset( $feature['desc'] ) ? wp_strip_all_tags( $feature['desc'] ) : '',
+            ];
+        }
+
+        return [
+            'definitions'      => $features,
+            'picked'           => array_values( $this->get_features() ),
+            'directory_in_use' => $this->is_directory_active(),
+        ];
+    }
+
+    /**
+     * Post form step data
+     *
+     * @return array
+     */
+    private function post_form_state() {
+        $templates = wpuf_get_post_form_templates();
+        $templates = is_array( $templates ) ? $templates : [];
+        $existing  = absint( wpuf_get_option( 'default_post_form', 'wpuf_frontend_posting', 0 ) );
+        $options   = [];
+
+        foreach ( $templates as $key => $template ) {
+            $options[] = [
+                'value' => (string) $key,
+                'label' => wp_strip_all_tags( $template->get_title() ),
+                'desc'  => wp_strip_all_tags( $template->get_description() ),
+            ];
+        }
+
+        $options[] = [
+            'value' => 'skip',
+            'label' => __( 'Do not create a form', 'wp-user-frontend' ),
+            'desc'  => __( 'Keep your current form and build one later.', 'wp-user-frontend' ),
+        ];
+
+        // A site that already has a default form opens on "do not create a
+        // form" rather than silently offering to replace it; a site with none
+        // starts on the standard template, or the first one this build has.
+        $selected = $existing ? 'skip' : 'post_form_template_post';
+
+        if ( 'skip' !== $selected && ! array_key_exists( $selected, $templates ) ) {
+            $first    = key( $templates );
+            $selected = null !== $first ? (string) $first : 'skip';
+        }
+
+        return [
+            'templates'        => $options,
+            'selected'         => $selected,
+            'existing'         => $existing ? [
+                'title' => wp_strip_all_tags( get_the_title( $existing ) ),
+                'url'   => admin_url( 'admin.php?page=wpuf-post-forms&action=edit&id=' . $existing ),
+            ] : null,
+            'enable_post_edit' => wpuf_is_checkbox_or_toggle_on( wpuf_get_option( 'enable_post_edit', 'wpuf_dashboard', 'yes' ) ),
+            'enable_post_del'  => wpuf_is_checkbox_or_toggle_on( wpuf_get_option( 'enable_post_del', 'wpuf_dashboard', 'yes' ) ),
+        ];
+    }
+
+    /**
+     * Login and registration step data
+     *
+     * @return array
+     */
+    private function registration_state() {
+        $is_pro  = wpuf_is_pro_active();
+        $layouts = wpuf_get_login_layout_options();
+        $layouts = ! empty( $layouts ) && is_array( $layouts ) ? $layouts : [];
+        $layout  = wpuf_get_option( 'wpuf_login_form_layout', 'wpuf_profile', 'layout1' );
+
+        // A stored layout this build does not ship (Pro gone) falls back to
+        // the basic one; free always shows the basic one.
+        $first   = key( $layouts );
+        $default = array_key_exists( 'layout1', $layouts ) ? 'layout1' : ( null !== $first ? (string) $first : '' );
+
+        if ( ! $is_pro || ! array_key_exists( $layout, $layouts ) ) {
+            $layout = $default;
+        }
+
+        $layout_options = [];
+
+        foreach ( $layouts as $key => $option ) {
+            $layout_options[] = [
+                'value' => (string) $key,
+                'label' => isset( $option['label'] ) ? wp_strip_all_tags( $option['label'] ) : (string) $key,
+                'image' => isset( $option['image'] ) ? esc_url_raw( $option['image'] ) : '',
+            ];
+        }
+
+        $login = $this->page_options(
+            __( 'Create a new Login page', 'wp-user-frontend' ),
+            $this->get_pages_for_shortcode( 'wpuf-login', __( 'UF Login Page', 'wp-user-frontend' ) )
+        );
+
+        // Free and Pro register different registration shortcodes.
+        $reg = $this->page_options(
+            $is_pro ? __( 'Create a new Registration page and form', 'wp-user-frontend' ) : __( 'Create a new Registration page', 'wp-user-frontend' ),
+            $this->get_pages_for_shortcode( $is_pro ? 'wpuf_profile' : 'wpuf-registration', __( 'UF Registration Page', 'wp-user-frontend' ) )
+        );
+
+        $account = $this->page_options(
+            __( 'Create a new Account page', 'wp-user-frontend' ),
+            $this->get_pages_for_shortcode( 'wpuf_account', __( 'UF Account Page', 'wp-user-frontend' ) )
+        );
+
+        $account_page = absint( wpuf_get_option( 'account_page', 'wpuf_my_account', 0 ) );
+
+        // The setting is often empty though the page exists: offer that page
+        // rather than a second one.
+        if ( ! $account_page ) {
+            $account_page = $this->find_page_with_shortcode( 'wpuf_account' );
+        }
+
+        return [
+            'login_pages'   => $login,
+            'login_page'    => $this->page_choice( wpuf_get_option( 'login_page', 'wpuf_profile', 0 ), $login ),
+            'reg_pages'     => $reg,
+            'reg_page'      => $this->page_choice( wpuf_get_option( 'reg_override_page', 'wpuf_profile', 0 ), $reg ),
+            'account_pages' => $account,
+            'account_page'  => $this->page_choice( $account_page, $account ),
+            'autologin'     => wpuf_is_checkbox_or_toggle_on( wpuf_get_option( 'autologin_after_registration', 'wpuf_profile', 'on' ) ),
+            'layouts'       => $layout_options,
+            'layout'        => $layout,
+        ];
+    }
+
+    /**
+     * Settings step data
+     *
+     * @return array
+     */
+    private function common_state() {
+        $admin_bar   = wpuf_get_option( 'show_admin_bar', 'wpuf_general', [ 'administrator', 'editor', 'author', 'contributor' ] );
+        $admin_bar   = is_array( $admin_bar ) ? $admin_bar : [ $admin_bar ];
+        $progress    = $this->get_progress();
+        $revisiting  = in_array( 'common', $progress['completed'], true );
+        $active_ways = wpuf_get_option( 'active_gateways', 'wpuf_payment', [] );
+        $active_ways = is_array( $active_ways ) ? $active_ways : [];
+        $gateways    = [];
+
+        foreach ( $this->get_gateway_cards() as $id => $card ) {
+            $id = (string) $id;
+
+            $gateways[] = [
+                'id'           => $id,
+                'label'        => ! empty( $card['admin_label'] ) ? wp_strip_all_tags( $card['admin_label'] ) : $id,
+                'icon'         => ! empty( $card['icon'] ) ? esc_url_raw( $card['icon'] ) : '',
+                'is_pro'       => ! empty( $card['is_pro_preview'] ),
+                'needs_module' => ! empty( $card['needs_module'] ),
+                'needs_setup'  => ! empty( $card['needs_setup'] ),
+                'hint'         => ! empty( $card['hint'] ) ? wp_strip_all_tags( $card['hint'] ) : '',
+                // Bank needs no credentials, so a first run lands on it.
+                'selected'     => 'bank' === $id
+                    ? ( ! $revisiting || in_array( $id, $active_ways, true ) )
+                    : in_array( $id, $active_ways, true ),
+            ];
+        }
+
+        return [
+            'hide_admin_bar'     => $revisiting ? [ 'administrator' ] === array_values( $admin_bar ) : true,
+            'wants_registration' => $this->wants( 'registration' ),
+            'wants_payments'     => $this->wants( 'payments' ),
+            'gateways'           => $gateways,
+        ];
+    }
+
+    /**
+     * Plugins step data
+     *
+     * @return array
+     */
+    private function plugins_state() {
+        $items  = [];
+        $errors = get_option( self::PLUGIN_ERRORS_OPTION, [] );
+        $errors = is_array( $errors ) ? $errors : [];
+        $failed = [];
+
+        foreach ( $this->get_pending_plugins() as $slug => $plugin ) {
+            $items[] = [
+                'slug'      => (string) $slug,
+                'name'      => wp_strip_all_tags( $plugin['name'] ),
+                'desc'      => isset( $plugin['desc'] ) ? wp_strip_all_tags( $plugin['desc'] ) : '',
+                'logo'      => ! empty( $plugin['logo'] ) ? WPUF_ASSET_URI . '/images/' . $plugin['logo'] : '',
+                'installed' => ! empty( $plugin['installed'] ),
+            ];
+        }
+
+        foreach ( $errors as $name => $message ) {
+            $failed[] = [
+                'name'    => wp_strip_all_tags( (string) $name ),
+                'message' => wp_strip_all_tags( (string) $message ),
+            ];
+        }
+
+        return [
+            'items'       => $items,
+            'can_install' => current_user_can( 'install_plugins' ),
+            'errors'      => $failed,
+        ];
+    }
+
+    /**
+     * Ready step data
+     *
+     * @return array
+     */
+    private function ready_state() {
+        $progress   = $this->get_progress();
+        $revisiting = in_array( 'ready', $progress['completed'], true );
+        $share      = $revisiting ? wpuf_get_option( 'share_wpuf_essentials', 'wpuf_general', 'off' ) : 'on';
+
+        if ( $this->wants( 'post_form' ) ) {
+            $cta = [ admin_url( 'admin.php?page=wpuf-post-forms' ), __( 'Open my post forms', 'wp-user-frontend' ) ];
+        } elseif ( $this->wants( 'registration' ) && wpuf_is_pro_active() ) {
+            $cta = [ admin_url( 'admin.php?page=wpuf-profile-forms' ), __( 'Open my registration forms', 'wp-user-frontend' ) ];
+        } elseif ( $this->wants( 'registration' ) ) {
+            $cta = [ admin_url( 'admin.php?page=wpuf-settings#wpuf_profile' ), __( 'Open login & registration settings', 'wp-user-frontend' ) ];
+        } elseif ( $this->wants( 'user_directory' ) ) {
+            $cta = [ admin_url( 'admin.php?page=wpuf_userlisting' ), __( 'Open my user directories', 'wp-user-frontend' ) ];
+        } else {
+            $cta = [ admin_url( 'admin.php?page=wp-user-frontend' ), __( 'Go to User Frontend', 'wp-user-frontend' ) ];
+        }
+
+        $checklist = [];
+
+        foreach ( $this->get_checklist() as $item ) {
+            $checklist[] = [
+                'label' => wp_strip_all_tags( $item['label'] ),
+                'done'  => ! empty( $item['done'] ),
+                'url'   => esc_url_raw( $item['url'] ),
+                'link'  => wp_strip_all_tags( $item['link'] ),
+            ];
+        }
+
+        return [
+            'checklist' => $checklist,
+            'share'     => wpuf_is_checkbox_or_toggle_on( $share ),
+            'cta'       => [
+                'url'   => $cta[0],
+                'label' => $cta[1],
+            ],
+        ];
+    }
+
+    /**
      * Whether a checkbox of the current step was submitted
      *
      * @since WPUF_SINCE
@@ -858,9 +1008,7 @@ class Onboarding {
      * @return bool
      */
     protected function posted( $key ) {
-        // Nonce is verified in render() before any handler runs.
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing
-        return ! empty( $_POST[ $key ] );
+        return ! empty( $this->input[ $key ] );
     }
 
     /**
@@ -874,14 +1022,28 @@ class Onboarding {
      * @return string
      */
     protected function posted_value( $key, $fallback = '' ) {
-        // Nonce is verified in render() before any handler runs.
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing
-        if ( ! isset( $_POST[ $key ] ) ) {
+        if ( ! isset( $this->input[ $key ] ) || ! is_scalar( $this->input[ $key ] ) ) {
             return $fallback;
         }
 
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing
-        return sanitize_text_field( wp_unslash( $_POST[ $key ] ) );
+        return sanitize_text_field( wp_unslash( $this->input[ $key ] ) );
+    }
+
+    /**
+     * A submitted list of keys of the current step
+     *
+     * @since WPUF_SINCE
+     *
+     * @param string $key
+     *
+     * @return string[]
+     */
+    protected function posted_keys( $key ) {
+        if ( empty( $this->input[ $key ] ) ) {
+            return [];
+        }
+
+        return array_map( 'sanitize_key', wp_unslash( array_filter( (array) $this->input[ $key ], 'is_scalar' ) ) );
     }
 
     /**
@@ -894,9 +1056,7 @@ class Onboarding {
     public function save_features() {
         $allowed = array_keys( $this->get_feature_definitions() );
 
-        // Nonce is verified in render() before any handler runs.
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing
-        $picked = isset( $_POST['features'] ) ? array_map( 'sanitize_key', wp_unslash( (array) $_POST['features'] ) ) : [];
+        $picked = $this->posted_keys( 'features' );
 
         $picked = array_values( array_intersect( $allowed, $picked ) );
 
@@ -1333,9 +1493,7 @@ class Onboarding {
             return;
         }
 
-        // Nonce is verified in render() before any handler runs.
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing
-        $picked = isset( $_POST['active_gateways'] ) ? array_map( 'sanitize_key', wp_unslash( (array) $_POST['active_gateways'] ) ) : [];
+        $picked = $this->posted_keys( 'active_gateways' );
 
         $allowed  = array_keys( wpuf_get_gateways() );
         $gateways = array_values( array_intersect( $allowed, $picked ) );
@@ -1426,9 +1584,7 @@ class Onboarding {
         $plugins = $this->get_recommended_plugins();
         $errors  = [];
 
-        // Nonce is verified in render() before any handler runs.
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing
-        $picked = isset( $_POST['plugins'] ) ? array_map( 'sanitize_key', wp_unslash( (array) $_POST['plugins'] ) ) : [];
+        $picked = $this->posted_keys( 'plugins' );
 
         if ( ! $picked || ! current_user_can( 'install_plugins' ) ) {
             delete_option( self::PLUGIN_ERRORS_OPTION );
@@ -1711,7 +1867,8 @@ class Onboarding {
     }
 
     /**
-     * Last step: the diagnostics opt-in, then off to the dashboard
+     * Last step: the diagnostics opt-in (the page then opens the screen the
+     * admin picked)
      *
      * @since WPUF_SINCE
      *
@@ -1732,13 +1889,6 @@ class Onboarding {
             } else {
                 wpuf()->tracker->insights->optout();
             }
-        }
-
-        $redirect = $this->posted_value( 'redirect_to' );
-
-        if ( $redirect ) {
-            wp_safe_redirect( $redirect );
-            exit;
         }
     }
 

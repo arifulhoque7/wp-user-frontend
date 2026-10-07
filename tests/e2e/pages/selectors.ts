@@ -2254,6 +2254,22 @@ export const Selectors = {
     /***** Onboarding Wizard Selectors ***/
     /*************************************/
 
+    // Welcome page (#/welcome) and the one-time welcome over the admin app.
+    welcome: {
+        root: '//div[@id="wpuf-welcome-root"]',
+        heading: '//div[@id="wpuf-welcome-root"]//h1',
+        createFormButton: '//div[@id="wpuf-welcome-root"]//button[normalize-space()="Create Your First Form"]',
+        setupButton: '//div[@id="wpuf-welcome-root"]//button[normalize-space()="Run the Setup Wizard"]',
+        sections: '//div[@id="wpuf-welcome-root"]//section[contains(@class,"wpuf-welcome-section")]',
+        sectionLinks: '//div[@id="wpuf-welcome-root"]//section[contains(@class,"wpuf-welcome-section")]//a',
+        proCard: '//div[@id="wpuf-welcome-root"]//section[contains(@class,"wpuf-welcome-pro")]',
+        videoButton: '//div[@id="wpuf-welcome-root"]//button[contains(@class,"wpuf-welcome-video")]',
+        videoFrame: '//iframe[contains(@src,"youtube-nocookie.com/embed/")]',
+        intro: '//div[contains(@class,"wpuf-intro")][@role="dialog"]',
+        introHeading: '//h1[@id="wpuf-intro-title"]',
+        introButton: '//button[contains(@class,"wpuf-intro-button")]',
+    },
+
     onboarding: {
         // Entry point on User Frontend > Tools
         entry: {
@@ -2264,66 +2280,67 @@ export const Selectors = {
 
         // Shared chrome
         chrome: {
-            wizardBody: '//body[contains(@class,"wpuf-onboarding-body")]',
+            // The wizard is the admin app route #/onboarding/:step (full screen).
+            wizardBody: '//body[contains(@class,"wpuf-onboarding-open")]',
             heading: '//div[contains(@class,"wpuf-onboarding-head")]//h1',
             stepRail: '//ol[contains(@class,"wpuf-onboarding-steps")]',
             railItems: '//ol[contains(@class,"wpuf-onboarding-steps")]/li',
             railLabels: '//ol[contains(@class,"wpuf-onboarding-steps")]//span[contains(@class,"wpuf-step-label")]',
             activeStep: '//ol[contains(@class,"wpuf-onboarding-steps")]/li[contains(@class,"is-active")]//span[contains(@class,"wpuf-step-label")]',
             doneMarkers: '//ol[contains(@class,"wpuf-onboarding-steps")]/li[contains(@class,"is-done")]',
-            markerCheckIcon: '//ol[contains(@class,"wpuf-onboarding-steps")]//a[contains(@class,"wpuf-step-marker")]/svg',
+            markerCheckIcon: '//ol[contains(@class,"wpuf-onboarding-steps")]//*[contains(@class,"wpuf-step-marker")]/*[name()="svg"]',
             exitLink: '//a[contains(@class,"wpuf-onboarding-exit")]',
-            // The step's own submit: a hidden confirm box on the first step also has a primary button.
-            continueButton: '//button[@name="wpuf_onboarding_save"]',
-            skipLink: '//a[contains(@class,"wpuf-onboarding-skip")]',
-            previousButton: '//a[contains(@class,"wpuf-onboarding-btn-white")]',
-            nonceField: '//input[@name="_wpnonce"]',
+            // The step's own submit in the fixed action bar.
+            continueButton: '//div[contains(@class,"wpuf-onboarding-footer")]//button[@data-action="next"]',
+            skipLink: '//div[contains(@class,"wpuf-onboarding-footer")]//button[@data-action="skip"]',
+            previousButton: '//div[contains(@class,"wpuf-onboarding-footer")]//button[@data-action="previous"]',
         },
 
         // Step 1: what you need
         features: {
-            cards: '//div[contains(@class,"wpuf-onboarding-grid")]//label[contains(@class,"wpuf-onboarding-card")]',
-            postFormCheckbox: '//input[@name="features[]"][@value="post_form"]',
-            registrationCheckbox: '//input[@name="features[]"][@value="registration"]',
-            userDirectoryCheckbox: '//input[@name="features[]"][@value="user_directory"]',
-            paymentsCheckbox: '//input[@name="features[]"][@value="payments"]',
+            cards: '//div[contains(@class,"wpuf-onboarding-grid")]//*[contains(@class,"wpuf-onboarding-card")]',
+            postFormCheckbox: '//*[@role="checkbox"][@data-name="features"][@data-value="post_form"]',
+            registrationCheckbox: '//*[@role="checkbox"][@data-name="features"][@data-value="registration"]',
+            userDirectoryCheckbox: '//*[@role="checkbox"][@data-name="features"][@data-value="user_directory"]',
+            paymentsCheckbox: '//*[@role="checkbox"][@data-name="features"][@data-value="payments"]',
         },
 
         // Step 2: post form
         postForm: {
-            templateSelect: '//select[@name="post_form_template"]',
-            enablePostEdit: '//input[@name="enable_post_edit"]',
-            enablePostDelete: '//input[@name="enable_post_del"]',
+            templateSelect: '//*[@id="wpuf-onboarding-template"]',
+            enablePostEdit: '//*[@data-name="enable_post_edit"]//*[@role="switch"]',
+            enablePostDelete: '//*[@data-name="enable_post_del"]//*[@role="switch"]',
         },
 
         // Step 3: login and registration
         registration: {
-            loginPageSelect: '//select[@name="login_page"]',
-            regPageSelect: '//select[@name="reg_page"]',
-            accountPageSelect: '//select[@name="account_page"]',
-            autologinCheckbox: '//input[@name="autologin_after_registration"]',
-            loginLayoutRadio: '//input[@name="wpuf_login_form_layout"]',
+            loginPageSelect: '//*[@id="wpuf-onboarding-login-page"]',
+            regPageSelect: '//*[@id="wpuf-onboarding-reg-page"]',
+            accountPageSelect: '//*[@id="wpuf-onboarding-account-page"]',
+            autologinCheckbox: '//*[@data-name="autologin_after_registration"]//*[@role="switch"]',
+            layoutChange: '//button[@data-action="change-layout"]',
+            loginLayoutRadio: '//*[contains(@class,"wpuf-onboarding-layouts")]//*[@role="radio"]',
             proBadge: '//img[contains(@class,"wpuf-onboarding-pro-badge")]',
         },
 
         // Step 4: settings
         common: {
-            installPages: '//input[@name="install_wpuf_pages"]',
-            hideAdminBar: '//input[@name="hide_admin_bar"]',
-            addLogoutMenu: '//input[@name="add_logout_menu"]',
-            enablePayments: '//input[@name="enable_payment"]',
+            installPages: '//*[@data-name="install_wpuf_pages"]//*[@role="switch"]',
+            hideAdminBar: '//*[@data-name="hide_admin_bar"]//*[@role="switch"]',
+            addLogoutMenu: '//*[@data-name="add_logout_menu"]//*[@role="switch"]',
+            enablePayments: '//*[@data-name="enable_payment"]//*[@role="switch"]',
             gatewayGrid: '//div[contains(@class,"wpuf-onboarding-grid") and contains(@class,"is-thirds")]',
             gatewayCards: '//div[contains(@class,"is-thirds")]/*[contains(@class,"wpuf-onboarding-card")]',
             gatewayIcons: '//div[contains(@class,"is-thirds")]//span[contains(@class,"wpuf-onboarding-card-icon")]',
             gatewayProCard: '//div[contains(@class,"is-thirds")]//a[contains(@class,"is-pro")]',
             gatewayProBadge: '//div[contains(@class,"is-thirds")]//img[contains(@class,"wpuf-onboarding-pro-badge")]',
-            bankGateway: '//input[@name="active_gateways[]"][@value="bank"]',
-            paypalGateway: '//input[@name="active_gateways[]"][@value="paypal"]',
+            bankGateway: '//*[@role="checkbox"][@data-name="active_gateways"][@data-value="bank"]',
+            paypalGateway: '//*[@role="checkbox"][@data-name="active_gateways"][@data-value="paypal"]',
         },
 
         // Step 5: plugins
         plugins: {
-            pluginCards: '//label[contains(@class,"wpuf-onboarding-card")][.//input[@name="plugins[]"]]',
+            pluginCards: '//*[@role="checkbox"][@data-name="plugins"]',
             errorBadge: '//span[contains(@class,"wpuf-onboarding-badge") and contains(@class,"is-error")]',
         },
 
@@ -2331,8 +2348,8 @@ export const Selectors = {
         ready: {
             checklist: '//ul[contains(@class,"wpuf-onboarding-checklist")]',
             checklistRows: '//ul[contains(@class,"wpuf-onboarding-checklist")]/li',
-            shareCheckbox: '//input[@name="share_essentials"]',
-            finishButton: '//button[@name="wpuf_onboarding_save"]',
+            shareCheckbox: '//*[@data-name="share_essentials"]//*[@role="switch"]',
+            finishButton: '//div[contains(@class,"wpuf-onboarding-footer")]//button[@data-action="next"]',
         },
     },
 

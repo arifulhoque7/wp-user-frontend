@@ -261,8 +261,11 @@ class Admin_Installer {
         // phpcs:ignore WordPress.Security.NonceVerification.Recommended
         $page = isset( $_GET['page'] ) ? sanitize_text_field( wp_unslash( $_GET['page'] ) ) : '';
 
-        // The setup screens keep control of where the admin goes next.
-        if ( ! in_array( $page, [ 'wpuf-setup', Onboarding::PAGE_SLUG ], true ) ) {
+        // The setup screens keep control of where the admin goes next, and so
+        // does a REST caller (the onboarding wizard saves its steps over REST).
+        $is_rest = defined( 'REST_REQUEST' ) && REST_REQUEST;
+
+        if ( ! $is_rest && ! in_array( $page, [ 'wpuf-setup', Onboarding::PAGE_SLUG ], true ) ) {
             wp_safe_redirect( admin_url( 'admin.php?page=wpuf-settings&wpuf_page_installed=1' ) );
 
             exit;
