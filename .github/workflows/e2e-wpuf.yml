@@ -62,7 +62,7 @@ jobs:
           - group: registration
             files: tests/regFormTestPro.spec.ts tests/regFormSettingsTestPro.spec.ts tests/frontendLoginTest.spec.ts tests/mailpoetRegistrationTestPro.spec.ts
           - group: fields-subscription
-            files: tests/fieldOptionSettingsTest.spec.ts tests/subscriptionTest.spec.ts
+            files: tests/fieldOptionSettingsTest.spec.ts tests/subscriptionTest.spec.ts tests/aiFormBuilderTest.spec.ts
 
     steps:
       # Setup PHP

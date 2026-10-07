@@ -1,6 +1,6 @@
 import * as dotenv from 'dotenv';
 dotenv.config({ quiet: true });
-import { execFileSync } from 'child_process';
+import { execFileSync, execSync } from 'child_process';
 import { expect, type Page } from '@playwright/test';
 import { Base } from './base';
 import { Selectors } from './selectors';
@@ -13,14 +13,28 @@ export const AI_MOCK_KEY = 'sk-wpuf-e2e-mock';
  * WP-CLI on the site under test: wp-env by default, or a local WordPress root
  * when WPUF_E2E_WP_PATH is set (e.g. a Herd site with the mock in mu-plugins).
  */
-export function aiWp(args: string[]): string {
+export function aiWp(args: string[], loadPlugins = false): string {
     const wpPath = process.env.WPUF_E2E_WP_PATH;
 
     if (wpPath) {
         return execFileSync('wp', [`--path=${wpPath}`, ...args], { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] });
     }
 
-    return wpCli(args.map((arg) => `'${arg.replace(/'/g, `'\\''`)}'`).join(' '));
+    const quoted = args.map((arg) => `'${arg.replace(/'/g, `'\\''`)}'`).join(' ');
+
+    if (!loadPlugins) {
+        return wpCli(quoted);
+    }
+
+    // Reads that need WPUF (and the integrations) loaded; wpCli() skips plugins.
+    const container = (process.env.QA_BASE_URL || '').includes(':8888') ? 'cli' : 'tests-cli';
+    return execSync(`npx @wordpress/env run ${container} wp ${quoted}`, { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'], cwd: process.env.WPUF_E2E_WP_ENV_DIR || process.cwd() });
+}
+
+/** The JSON a `wp eval` printed (wp-env adds its own status lines around it). */
+function evalJson<T>(out: string): T {
+    const line = out.split('\n').map((row) => row.trim()).find((row) => row.startsWith('[') || row.startsWith('{')) || 'null';
+    return JSON.parse(line.replace(/✔.*$/, '').trim()) as T;
 }
 
 /**
@@ -89,14 +103,14 @@ export class AiFormBuilderPage extends Base {
 
     /** Fields stored for a form: [ { template, label, required } ]. */
     storedFields(formId: number): { template: string; label: string; required: string }[] {
-        const out = aiWp(['eval', `echo wp_json_encode( array_map( function ( $f ) { return [ 'template' => $f['template'], 'label' => $f['label'], 'required' => $f['required'] ?? '' ]; }, wpuf_get_form_fields( ${formId} ) ) );`]);
-        return JSON.parse(out.trim());
+        const out = aiWp(['eval', `echo PHP_EOL, wp_json_encode( array_map( function ( $f ) { return [ 'template' => $f['template'], 'label' => $f['label'], 'required' => $f['required'] ?? '' ]; }, wpuf_get_form_fields( ${formId} ) ) ), PHP_EOL;`], true);
+        return evalJson(out);
     }
 
     /** Post type and AI meta of a form. */
     storedForm(formId: number): { post_type: string; ai: string; title: string } {
-        const out = aiWp(['eval', `$p = get_post( ${formId} ); echo wp_json_encode( [ 'post_type' => $p->post_type, 'title' => $p->post_title, 'ai' => get_post_meta( ${formId}, 'wpuf_ai_generated', true ) ] );`]);
-        return JSON.parse(out.trim());
+        const out = aiWp(['eval', `$p = get_post( ${formId} ); echo PHP_EOL, wp_json_encode( [ 'post_type' => $p->post_type, 'title' => $p->post_title, 'ai' => get_post_meta( ${formId}, 'wpuf_ai_generated', true ) ] ), PHP_EOL;`], true);
+        return evalJson(out);
     }
 
     /** Open the post forms list (or the registration list) and click "AI Form Builder". */
@@ -131,8 +145,8 @@ export class AiFormBuilderPage extends Base {
 
     /** Integration ids the server reports as active for a form type (REST, same as the app). */
     activeIntegrations(formType: 'post' | 'profile'): string[] {
-        const out = aiWp(['eval', `wp_set_current_user( 1 ); $r = new WP_REST_Request( 'GET', '/wpuf/v1/ai-form-builder/integrations' ); $r->set_param( 'form_type', '${formType}' ); $d = rest_do_request( $r )->get_data(); echo wp_json_encode( array_values( array_map( function ( $i ) { return $i['id']; }, array_filter( $d['integrations'] ?? [], function ( $i ) { return ! empty( $i['enabled'] ); } ) ) ) );`]);
-        return JSON.parse(out.trim());
+        const out = aiWp(['eval', `wp_set_current_user( 1 ); $r = new WP_REST_Request( 'GET', '/wpuf/v1/ai-form-builder/integrations' ); $r->set_param( 'form_type', '${formType}' ); $d = rest_do_request( $r )->get_data(); echo PHP_EOL, wp_json_encode( array_values( array_map( function ( $i ) { return $i['id']; }, array_filter( $d['integrations'] ?? [], function ( $i ) { return ! empty( $i['enabled'] ); } ) ) ) ), PHP_EOL;`], true);
+        return evalJson(out);
     }
 
     /** Pick an integration in the "Form Type (Optional)" select by its label. */
