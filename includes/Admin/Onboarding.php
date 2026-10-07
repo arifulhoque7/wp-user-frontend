@@ -1181,11 +1181,10 @@ class Onboarding {
 
         if ( 'create' === $reg_choice ) {
             if ( $is_pro ) {
-                $data = apply_filters( 'wpuf_pro_page_install', $profile );
-
-                if ( is_array( $data ) && isset( $data['profile_options'] ) && is_array( $data['profile_options'] ) ) {
-                    $profile = $data['profile_options'];
-                }
+                // Reuses the registration page the site has (as "create" does
+                // for the login page); Pro builds one only when there is none.
+                $data    = $installer->install_registration_page( $profile );
+                $profile = $data['profile_options'];
             } else {
                 // Free ships its own registration form on [wpuf-registration], so a
                 // site without Pro still gets a working sign-up page. Only building

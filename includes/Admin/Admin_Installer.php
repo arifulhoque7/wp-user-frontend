@@ -216,16 +216,9 @@ class Admin_Installer {
             $profile_options['login_page'] = $login_page;
         }
 
-        $data = apply_filters( 'wpuf_pro_page_install', $profile_options );
-
-        if ( is_array( $data ) ) {
-            if ( isset( $data['profile_options'] ) && is_array( $data['profile_options'] ) ) {
-                $profile_options = $data['profile_options'];
-            }
-            if ( isset( $data['reg_page'] ) ) {
-                $reg_page = $data['reg_page'];
-            }
-        }
+        $data            = $this->install_registration_page( $profile_options );
+        $profile_options = $data['profile_options'];
+        $reg_page        = $data['reg_page'];
 
         if ( $login_page && $reg_page ) {
             $profile_options['register_link_override'] = 'on';
@@ -557,12 +550,9 @@ HTML;
             Stores::settings()->write_section( 'wpuf_my_account', $account_options );
         }
 
-        // Pro builds the registration page from its own form via this filter.
-        $data = apply_filters( 'wpuf_pro_page_install', $profile_options );
-
-        if ( is_array( $data ) && isset( $data['profile_options'] ) && is_array( $data['profile_options'] ) ) {
-            $profile_options = $data['profile_options'];
-        }
+        // Pro builds the registration page from its own form.
+        $data            = $this->install_registration_page( $profile_options );
+        $profile_options = $data['profile_options'];
 
         // Free has a registration form of its own, [wpuf-registration], so a site
         // without Pro still gets a working sign-up page rather than none at all.
@@ -713,6 +703,56 @@ HTML;
         }
 
         return $this->create_page( $page_title, $post_content );
+    }
+
+    /**
+     * Pro's registration page and form (`wpuf_pro_page_install`), unless the site
+     * already has one
+     *
+     * Pro builds a new registration form and page on every call, so activation,
+     * the setup wizard and the Tools button each used to add another copy. A
+     * usable `reg_override_page`, or any page already holding a Pro registration
+     * form, is reused instead and the filter does not run. Without a listener
+     * (free) nothing changes.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param array $profile_options The `wpuf_profile` section
+     *
+     * @return array `profile_options` (array) and `reg_page` (int|false)
+     */
+    public function install_registration_page( $profile_options ) {
+        $profile_options = is_array( $profile_options ) ? $profile_options : [];
+
+        if ( ! has_filter( 'wpuf_pro_page_install' ) ) {
+            return [
+                'profile_options' => $profile_options,
+                'reg_page'        => false,
+            ];
+        }
+
+        $marker   = '[wpuf_profile type="registration"';
+        $existing = isset( $profile_options['reg_override_page'] ) ? absint( $profile_options['reg_override_page'] ) : 0;
+
+        if ( ! $this->post_is_usable( $existing ) || false === strpos( (string) get_post_field( 'post_content', $existing ), $marker ) ) {
+            $existing = $this->find_page_with_marker( $marker );
+        }
+
+        if ( $existing ) {
+            $profile_options['reg_override_page'] = $existing;
+
+            return [
+                'profile_options' => $profile_options,
+                'reg_page'        => $existing,
+            ];
+        }
+
+        $data = apply_filters( 'wpuf_pro_page_install', $profile_options );
+
+        return [
+            'profile_options' => is_array( $data ) && isset( $data['profile_options'] ) && is_array( $data['profile_options'] ) ? $data['profile_options'] : $profile_options,
+            'reg_page'        => is_array( $data ) && ! empty( $data['reg_page'] ) ? $data['reg_page'] : false,
+        ];
     }
 
     /**
