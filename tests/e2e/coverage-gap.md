@@ -38,7 +38,7 @@
 | 12 | Content / menu / taxonomy restriction | 🟡 field-visibility only | **P0** |
 | 13 | User dashboard & account page | 🟡 posts edit/delete | P1 (profile/subscription/billing) |
 | 14 | Frontend login / lost-password / social login | 🟡 `[wpuf-login]` + lost-pass built (`FL0001`–`FL0006`) | P2 (reset-link completion, social) |
-| 15 | AI form builder & AI Review | 🔴 enable-only | P2 |
+| 15 | AI form builder & AI Review | 🟡 builder covered (AI0001-AI0016, mock provider), AI Review open | P2 |
 | 16 | Pro modules (directory, PM, SMS, reports, analytics, QR, BuddyPress, PMPro, comments, SEO, Zapier) | 🔴 | P2 |
 | 17 | Integrations (Elementor, Events Calendar, ACF, n8n) | 🔴 | P2 |
 | 18 | reCaptcha / Turnstile / Math captcha (functional) | 🟡 Math enforced (`PF0027`); reCaptcha/Turnstile 🔴 | P1 |
@@ -402,9 +402,13 @@ the form.
 
 **Covered:** `LS0027`/`LS0028` enable Google AI / OpenAI keys only.
 
+**Covered (2026-10-07):** `tests/aiFormBuilderTest.spec.ts` AI0001-AI0016 (not configured modal, input stage, generate, chat
+Accept / Reject / checkpoints, canned answers without a request, Regenerate, Edit with Builder stored fields, provider error,
+refusal, registration form, free-only Pro-field dialog, XSS-safe chat, WooCommerce / Dokan integrations) against the mock
+provider `wp/wpuf-ai-mock.php`; parity PAR0040 (develop Vue vs React store the same form).
+
 **Gaps:**
-- 🔴 **AI form generation** — prompt → generated form → fields present. `includes/AI_Manager.php`,
-  `../wpuf-pro/includes/AI`.
+- 🟡 **AI form generation with a real provider** — only the mock answers in tests (by design: no live LLM in CI).
 - 🔴 **AI Review** (`../wpuf-pro/includes/AI_Review`, REST `REST_API_Controller.php`) — submit → AI
   review verdict. Best mocked (don't call live LLM in CI).
 

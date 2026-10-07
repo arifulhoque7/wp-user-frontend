@@ -109,6 +109,16 @@ Two areas need external services configured or they fail regardless of code:
 Both are QA-environment config, not WPUF bugs. Failures here mean "configure the service,"
 not "fix the code."
 
+**AI form builder** — no real provider in tests. `wp/wpuf-ai-mock.php` (mu-plugin, mapped by
+`.wp-env.json`; on a Herd site copy it into `wp-content/mu-plugins/`) answers the OpenAI /
+Anthropic / Google calls ONLY when the stored key is `sk-wpuf-e2e-mock`
+(`AiFormBuilderPage.configureMock()` sets it and `restore()` puts the old `wpuf_ai` back).
+Prompts pick the answer: "mock-error" (provider 500), "not-a-form" (refusal), "pro-fields"
+(phone + date), chat "website" / "date" / "remove the message"; integrations add
+" (<id>)" to the title. Run against a local site with
+`QA_BASE_URL=http://site.test WPUF_E2E_WP_PATH=/path/to/site`. AI0015 / AI0016 need
+WooCommerce / Dokan active, AI0013 needs Pro off.
+
 ## React screens: locator patterns
 
 The builders, forms lists, subscriptions and settings screens are React on

@@ -2394,4 +2394,48 @@ export const Selectors = {
         settingsTextInputs: '#wpuf-settings-root input[type="text"][id]',
         settingsSaveButton: '#wpuf-settings-root button:has-text("Save")',
     },
+
+    /*****************************************************/
+    /************** @AI Form Builder (React) *************/
+    /*****************************************************/
+    aiFormBuilder: {
+        root: '#wpuf-ai-form-builder',
+        // Forms list entry points
+        listButton: 'button:has-text("AI Form Builder")',
+        configModal: '[data-wpuf-vue-dialog="card"]',
+        // Stage 1
+        inputHeading: 'h2:has-text("Create Form with AI")',
+        description: 'textarea[aria-label="Describe your form"]',
+        counter: 'text=/\\d+\\/300 Characters/',
+        promptButtons: '#wpuf-ai-form-builder button[aria-pressed]',
+        activePrompt: '#wpuf-ai-form-builder button[aria-pressed="true"]',
+        integrationSelect: '#wpuf-ai-integration',
+        selectItem: '[data-slot="select-item"]',
+        generateButton: 'button:has-text("Generate Form")',
+        // Stage 2
+        processingHeading: 'text=Generating your form...',
+        // Stage 3
+        successHeading: 'h1:has-text("AI Form Builder")',
+        previewTitle: '.wpuf-form-title',
+        previewFields: '.wpuf-form-fields .wpuf-form-field',
+        previewField: (template: string) => `.wpuf-form-fields [data-field-template="${template}"]`,
+        chatInput: 'textarea[aria-label="Message"]',
+        sendButton: 'button[aria-label="Send"]',
+        userMessages: '.wpuf-message-user',
+        aiMessages: '.wpuf-message-ai',
+        acceptButton: '.wpuf-btn-accept',
+        rejectButton: '.wpuf-btn-reject',
+        acceptedStatus: '.wpuf-accepted-status',
+        restoreButton: '.wpuf-btn-restore',
+        regenerateButton: '.wpuf-btn-regenerate',
+        editInBuilderButton: '.wpuf-btn-edit-builder',
+        // Dialogs (shared ConfirmDialog)
+        dialog: '[data-wpuf-vue-dialog]',
+        dialogAction: '[data-wpuf-vue-dialog] [data-slot="alert-dialog-action"]',
+        dialogCancel: '[data-wpuf-vue-dialog] [data-slot="alert-dialog-cancel"]',
+        regenerateDialog: '.wpuf-ai-regenerate-dialog',
+        proFieldsDialog: '.wpuf-ai-pro-fields-dialog',
+        proFieldItems: '.wpuf-ai-pro-fields-dialog .wpuf-pro-field-item',
+        errorDialog: '.wpuf-ai-error-dialog',
+    },
 };
