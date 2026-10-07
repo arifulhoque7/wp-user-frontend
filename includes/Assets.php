@@ -393,9 +393,11 @@ class Assets {
                 'in_footer' => true,
                 'version'   => '3.3.7',
             ],
+            // Shim of the removed Vue builder (no file): keeps its other deps for
+            // code that enqueues it, but no longer pulls in Vue / Vuex.
             'form-builder-mixins'      => [
                 'src'       => WPUF_ASSET_URI . '/js/wpuf-form-builder-mixins.js',
-                'deps'      => $form_builder_js_deps,
+                'deps'      => array_values( array_diff( $form_builder_js_deps, [ 'wpuf-vue', 'wpuf-vuex' ] ) ),
                 'in_footer' => true,
             ],
             'form-builder-components'  => [
@@ -431,7 +433,7 @@ class Assets {
             ],
             'form-builder-wpuf-forms'  => [
                 'src'       => WPUF_ASSET_URI . '/js/wpuf-form-builder-wpuf-forms.js',
-                'deps'      => [ 'jquery', 'underscore', 'wpuf-vue', 'wpuf-vuex' ],
+                'deps'      => [ 'jquery', 'underscore' ],
                 'in_footer' => true,
             ],
             'registration-forms'       => [
