@@ -36,6 +36,7 @@ const APP = `${Urls.baseUrl}/wp-admin/admin.php?page=wp-user-frontend`;
  * @Test_APP0014 : AI form builder in the app: list button -> AI route -> generate -> Edit with Builder -> builder route, no page load; old AI URLs (with nonce) land on the route
  * @Test_APP0015 : List row action buttons in the app: Edit (builder route, no page load), Duplicate, Trash, Restore, Delete Permanently, bulk Move to trash; registration Edit (Pro)
  * @Test_APP0016 : Pro without a valid license: Registration Forms stays Pro's preview page (no app route, no way round it); the free routes still run in the app
+ * @Test_APP0017 : License (Pro) is the app route #/license: old URL lands there, the key is masked (never in the page), a site without an active key gets the key form
  */
 
 test.beforeAll(async () => {
@@ -565,5 +566,40 @@ test.describe('Admin app', () => {
         await page.goto(`${APP}#/post-forms`);
         await page.reload();
         expect(await registrationRoute(), 'license restored').toBe('app');
+    });
+
+    test('APP0017 : License page in the app (Pro)', { tag: ['@Pro', '@Test_APP0017'] }, async () => {
+        test.skip(!(await appOn()), 'admin app is off');
+        test.skip(!process.env.WPUF_E2E_WP_PATH, 'needs WP-CLI on the site');
+
+        const row = page.locator('#toplevel_page_wp-user-frontend a', { hasText: 'License' }).first();
+        test.skip(!((await row.getAttribute('href').catch(() => '')) || '').includes('#/license'), 'license route needs Pro');
+
+        // The stored license stays in this process; it is never printed.
+        const saved = aiWp(['option', 'get', 'wpuf_license', '--format=json']).trim();
+        const key = (JSON.parse(saved) as { key?: string }).key || '';
+        const card = page.locator('.wpuf-license-card');
+        const serverCalls: string[] = [];
+        page.on('request', (request) => { if (/appsero/i.test(request.url())) serverCalls.push(request.url()); });
+
+        await page.goto(`${Urls.baseUrl}/wp-admin/admin.php?page=wpuf_updates`);
+        await expect(page).toHaveURL(/page=wp-user-frontend#\/license/);
+        await expect(card.locator('[data-license-status="active"]')).toBeVisible({ timeout: 30000 });
+        await expect(card.locator('[data-license-key-hint]')).toHaveText(new RegExp(`${key.slice(-4)}$`));
+        expect(key.length, 'test site has a license').toBeGreaterThan(8);
+        expect(await page.content(), 'the key is never in the page').not.toContain(key);
+
+        aiWp(['eval', '$l = get_option( "wpuf_license" ); $l["status"] = "deactivate"; update_option( "wpuf_license", $l );']);
+
+        try {
+            await page.reload();
+            await expect(card.locator('[data-license-status="inactive"]')).toBeVisible({ timeout: 30000 });
+            await expect(card.locator('#wpuf-license-key')).toBeVisible();
+            await card.getByRole('button', { name: 'Activate' }).click();
+            await expect(card.locator('[data-license-error]')).toHaveText('Enter your license key.');
+            expect(serverCalls, 'no license server call for an empty key').toEqual([]);
+        } finally {
+            aiWp(['option', 'update', 'wpuf_license', saved, '--format=json']);
+        }
     });
 });
