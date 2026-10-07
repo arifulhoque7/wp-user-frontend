@@ -141,11 +141,17 @@ class AppPage {
                 $styles->queue = $baseline;
                 $group_globals = call_user_func( $load );
 
-                foreach ( array_diff( $this->resolved_styles(), $global ) as $handle ) {
+                $owned = array_values( array_diff( $this->resolved_styles(), $global ) );
+
+                foreach ( $owned as $handle ) {
                     $this->style_owners[ $handle ][] = $group;
                 }
 
-                $queue = array_merge( $queue, $styles->queue );
+                // The group's print order: two screens can print the same sheets
+                // in a different order (the shell re-sorts them per route).
+                $this->style_order[ $group ] = $owned;
+
+                $queue = $this->merge_queue( $queue, $styles->queue );
                 // A screen's load step may remove admin notices for its own page
                 // (wpuf_remove_admin_notices); other routes still show them.
                 $this->restore_notice_callbacks( $notices );
@@ -155,7 +161,7 @@ class AppPage {
             }
         }
 
-        $styles->queue = array_values( array_unique( $queue ) );
+        $styles->queue = $queue;
 
         wp_enqueue_script( self::HANDLE );
         wp_set_script_translations( self::HANDLE, 'wp-user-frontend', WPUF_ROOT . '/languages' );
@@ -170,6 +176,7 @@ class AppPage {
                 'initialRoute' => $this->initial_route(),
                 'globals'      => $globals,
                 'styles'       => $this->style_owners,
+                'styleOrder'   => $this->style_order,
                 'pageUrl'      => admin_url( 'admin.php?page=' . self::SLUG ),
             ]
         );
@@ -193,6 +200,13 @@ class AppPage {
      * @var array
      */
     private $style_owners = [];
+
+    /**
+     * Print order of each load group's stylesheets (group => handles).
+     *
+     * @var array
+     */
+    private $style_order = [];
 
     /**
      * Inline styles of held stylesheets (handle => CSS).
@@ -278,6 +292,33 @@ class AppPage {
                 unset( $styles->registered[ $handle ]->extra['after'] );
             }
         }
+    }
+
+    /**
+     * Add a group's style queue to the page's: each new handle goes right after
+     * the handle before it in the group's queue, so the sheets print in the
+     * order the screen's own page printed them (same-specificity rules of
+     * different sheets depend on that order).
+     *
+     * @param string[] $queue Page queue so far
+     * @param string[] $group Group queue
+     *
+     * @return string[]
+     */
+    private function merge_queue( array $queue, array $group ) {
+        $previous = null;
+
+        foreach ( $group as $handle ) {
+            if ( ! in_array( $handle, $queue, true ) ) {
+                $at = null === $previous ? false : array_search( $previous, $queue, true );
+
+                array_splice( $queue, false === $at ? count( $queue ) : $at + 1, 0, [ $handle ] );
+            }
+
+            $previous = $handle;
+        }
+
+        return $queue;
     }
 
     /**

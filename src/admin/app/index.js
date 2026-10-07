@@ -209,7 +209,44 @@ const activateStyles = ( group ) => {
         } );
     } );
 
+    sortGroupStyles( group );
+
     return Promise.all( loads );
+};
+
+/**
+ * Put a group's stylesheets in the order its own page printed them, in the
+ * slots they already take (their order against other sheets stays). Two
+ * screens can print the same sheets in a different order, and rules of the
+ * same specificity follow that order.
+ *
+ * @param {string} group Load group.
+ */
+const sortGroupStyles = ( group ) => {
+    const order = ( ( app.styleOrder || {} )[ group ] || [] )
+        .map( ( handle ) => [ `${ handle }-css`, `${ handle }-rtl-css`, `${ handle }-inline-css` ].map( ( id ) => document.getElementById( id ) ).filter( Boolean ) )
+        .filter( ( nodes ) => nodes.length );
+    const slots = order
+        .map( ( nodes ) => nodes[ 0 ] )
+        .slice()
+        .sort( ( a, b ) => ( a.compareDocumentPosition( b ) & window.Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1 ) );
+
+    if ( order.every( ( nodes, index ) => nodes[ 0 ] === slots[ index ] ) ) {
+        return;
+    }
+
+    // Mark the slots, then move each group of nodes (sheet, RTL sheet, inline
+    // style) into its slot in order.
+    const markers = slots.map( ( node ) => {
+        const marker = document.createComment( 'wpuf-style-slot' );
+
+        node.before( marker );
+
+        return marker;
+    } );
+
+    order.forEach( ( nodes, index ) => markers[ index ].after( ...nodes ) );
+    markers.forEach( ( marker ) => marker.remove() );
 };
 
 const container = () => document.getElementById( 'wpuf-admin-app' );
