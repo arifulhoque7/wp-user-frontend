@@ -81,7 +81,9 @@ class BootPayload {
      * @return void
      */
     public function attach( $screen, $handle ) {
-        if ( isset( $this->printed[ $screen ] ) ) {
+        // On the admin app page the app prints every screen's data once
+        // (attach_app()); the shell hands each route its screen's data.
+        if ( isset( $this->printed[ $screen ] ) || isset( $this->printed['app'] ) || ( function_exists( 'wpuf_is_admin_app' ) && wpuf_is_admin_app() ) ) {
             return;
         }
 
@@ -98,8 +100,8 @@ class BootPayload {
      *
      * @since WPUF_SINCE
      *
-     * @param string $handle Shell script handle
-     * @param array  $app    Routes, initial route, globals, page URL
+     * @param string $handle Script printed before every screen bundle (the runtime)
+     * @param array  $app    Routes, initial route, globals, styles, page URL
      *
      * @return void
      */

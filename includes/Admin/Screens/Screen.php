@@ -143,6 +143,18 @@ abstract class Screen {
     }
 
     /**
+     * Query arguments of the old page request that the app page needs too
+     * (they decide how the screen loads there), kept on the redirect.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return array
+     */
+    public function app_redirect_args() {
+        return [];
+    }
+
+    /**
      * Window globals the screen's routes read, printed on the app page
      * (name => value), e.g. `[ 'wpuf_forms_list' => [ ... ] ]`.
      *
@@ -152,6 +164,21 @@ abstract class Screen {
      */
     public function app_globals() {
         return [];
+    }
+
+    /**
+     * Load step of the screen's old page before it redirects to the app route:
+     * the same as on its own page by default, so actions its load listeners
+     * handle (bulk, row, template actions) keep working. A screen whose load
+     * only prepares its own display returns nothing here: the app page loads
+     * it again, and one-time display state must not be used up on the hop.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return void
+     */
+    public function load_before_redirect() {
+        $this->load();
     }
 
     /**

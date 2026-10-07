@@ -21,6 +21,7 @@ import ErrorBoundary from './components/settings/ErrorBoundary';
 // Register the store.
 import './stores-react/settings';
 import { STORE_NAME } from './stores-react/settings/constants';
+import { addRouteGuard, getRouteQuery, inApp, registerScreen, setRouteQuery } from '../../app/client';
 
 // apiFetch is externalized to WordPress core's window.wp.apiFetch, which already
 // has the REST root URL + nonce middleware configured (via the wp-api-fetch
@@ -90,14 +91,15 @@ const SettingsApp = () => {
         if ( didInit.current || ! ia.length ) {
             return;
         }
-        const params = new URLSearchParams( window.location.search );
-        let urlTab = params.get( 'tab' );
-        let urlSub = params.get( 'sub' );
+        const query = getRouteQuery();
+        let urlTab = query.tab || null;
+        let urlSub = query.sub || null;
 
         // Links from the classic screen point at a section, by hash
         // (`#wpuf_ai`, `#/ai`) or as `?tab=wpuf_payment`: open the tab that
-        // holds that section, on that section.
-        const hash = window.location.hash.replace( /^#\/?/, '' );
+        // holds that section, on that section. In the admin app the old
+        // fragment arrives as the route's `hash` query.
+        const hash = ( inApp() ? query.hash || '' : window.location.hash ).replace( /^#?\/?/, '' );
         const target = ( urlTab && ! ia.find( ( t ) => t.id === urlTab ) && urlTab ) || ( ! urlTab && hash ) || '';
         if ( target ) {
             const section = target.startsWith( 'wpuf_' ) || target === 'n8n' ? target : `wpuf_${ target }`;
@@ -127,15 +129,19 @@ const SettingsApp = () => {
         if ( ! didInit.current || ! activeTab ) {
             return;
         }
-        const params = new URLSearchParams( window.location.search );
-        params.set( 'tab', activeTab );
-        if ( activeSub ) {
-            params.set( 'sub', activeSub );
-        } else {
-            params.delete( 'sub' );
-        }
-        window.history.replaceState( null, '', `${ window.location.pathname }?${ params.toString() }` );
+        setRouteQuery( { tab: activeTab, sub: activeSub || null, hash: null } );
     }, [ activeTab, activeSub ] );
+
+    // In the admin app, leaving the route with unsaved edits asks first (the
+    // same dialog as switching tabs).
+    const dirtyRef = useRef( isDirty );
+    dirtyRef.current = isDirty;
+    const [ pendingLeave, setPendingLeave ] = useState( null );
+
+    useEffect(
+        () => addRouteGuard( () => ( dirtyRef.current ? new Promise( ( resolve ) => setPendingLeave( { resolve } ) ) : true ) ),
+        []
+    );
 
     // Warn before leaving the page with unsaved changes.
     useEffect( () => {
@@ -414,17 +420,34 @@ const SettingsApp = () => {
                     onContinue={ () => setPendingTab( null ) }
                 />
             ) }
+
+            { pendingLeave && (
+                <UnsavedChanges
+                    onDiscard={ () => {
+                        discard();
+                        pendingLeave.resolve( true );
+                        setPendingLeave( null );
+                    } }
+                    onContinue={ () => {
+                        pendingLeave.resolve( false );
+                        setPendingLeave( null );
+                    } }
+                />
+            ) }
         </PageShell>
     );
 };
 
-const container = document.getElementById( 'wpuf-settings-root' );
-
-if ( container ) {
+// On its own page it mounts into #wpuf-settings-root; in the admin app the
+// shell mounts it on the settings route (task 5d).
+registerScreen( 'settings', [ 'wpuf-settings-root' ], ( container ) => {
     const root = createRoot( container );
+
     root.render(
         <WpufProviders host>
             <SettingsApp />
         </WpufProviders>
     );
-}
+
+    return () => root.unmount();
+} );

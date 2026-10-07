@@ -3,8 +3,8 @@
  * DESCRIPTION: Renders the subscription management interface with URL-based navigation
  */
 import { createRoot } from '@wordpress/element';
-import { useSelect, useDispatch } from '@wordpress/data';
-import { useState, useCallback, useEffect, createInterpolateElement } from '@wordpress/element';
+import { useSelect, useDispatch, dispatch as dataDispatch } from '@wordpress/data';
+import { useState, useCallback, useEffect, useRef, createInterpolateElement } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { SlotFillProvider } from '@wordpress/components';
 import { doAction } from '@wordpress/hooks';
@@ -24,6 +24,7 @@ import './stores-react/notice';
 import './stores-react/component';
 import './stores-react/quickEdit';
 import './stores-react/router';
+import { addRouteGuard, getRouteQuery, onRouteQuery, registerScreen } from '../../app/client';
 
 // Import styles
 
@@ -53,6 +54,24 @@ const SubscriptionsApp = () => {
     const { setIsUnsavedPopupOpen, setIsDirty } = useDispatch('wpuf/subscriptions');
 
     const [pendingStatus, setPendingStatus] = useState(null);
+    // A route change of the admin app waiting for the unsaved popup's answer.
+    const pendingLeave = useRef(null);
+    const dirtyRef = useRef(isDirty);
+    dirtyRef.current = isDirty;
+
+    useEffect(
+        () => addRouteGuard(() => {
+            if (!dirtyRef.current) {
+                return true;
+            }
+
+            return new Promise((resolve) => {
+                pendingLeave.current = resolve;
+                setIsUnsavedPopupOpen(true);
+            });
+        }),
+        [setIsUnsavedPopupOpen]
+    );
 
     // Determine view based on URL params
     const action = params.action || 'list';
@@ -93,6 +112,11 @@ const SubscriptionsApp = () => {
     const handleDiscardChanges = useCallback(() => {
         setIsDirty(false);
         setIsUnsavedPopupOpen(false);
+        if (pendingLeave.current) {
+            pendingLeave.current(true);
+            pendingLeave.current = null;
+            return;
+        }
         // A sidebar click goes to that status; the form's Cancel goes back to
         // the list it came from (develop goToList).
         if ('__new' === pendingStatus) {
@@ -108,6 +132,10 @@ const SubscriptionsApp = () => {
     // Handle continue editing from unsaved popup
     const handleContinueEditing = useCallback(() => {
         setIsUnsavedPopupOpen(false);
+        if (pendingLeave.current) {
+            pendingLeave.current(false);
+            pendingLeave.current = null;
+        }
         // Staying: forget where the cancelled navigation was going.
         setPendingStatus(null);
     }, [setIsUnsavedPopupOpen]);
@@ -181,10 +209,15 @@ const SubscriptionsApp = () => {
     );
 };
 
-const container = document.getElementById('wpuf-subscription-page');
-
-if (container) {
+// On its own page it mounts into #wpuf-subscription-page; in the admin app the
+// shell mounts it on the subscriptions route (task 5d).
+registerScreen('subscriptions', ['wpuf-subscription-page'], (container) => {
+    // The route's query is the source of truth on every mount, and back /
+    // forward inside the route follow it.
+    dataDispatch('wpuf/subscriptions-router').setUrlParams(getRouteQuery());
+    const stopFollowing = onRouteQuery((query) => dataDispatch('wpuf/subscriptions-router').setUrlParams(query));
     const root = createRoot(container);
+
     root.render(
         // host: the form views are still legacy markup until 4.1b (design.md D25).
         <WpufProviders host>
@@ -193,4 +226,9 @@ if (container) {
             </SlotFillProvider>
         </WpufProviders>
     );
-}
+
+    return () => {
+        stopFollowing();
+        root.unmount();
+    };
+});

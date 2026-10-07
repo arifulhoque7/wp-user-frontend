@@ -15,14 +15,25 @@ use WeDevs\Wpuf\Admin\Screens\Screen;
  */
 class AdminAppTest extends WP_UnitTestCase {
 
+    /**
+     * Script and style queues before the test (the app page load enqueues the
+     * screens' bundles).
+     *
+     * @var array
+     */
+    private $queues = [];
+
     public function set_up() {
         parent::set_up();
         wp_set_current_user( self::factory()->user->create( [ 'role' => 'administrator' ] ) );
+        $this->queues = [ wp_scripts()->queue, wp_styles()->queue ];
     }
 
     public function tear_down() {
         remove_all_filters( 'wpuf_admin_app_enabled' );
         remove_all_filters( 'wpuf_admin_app_routes' );
+        wp_scripts()->queue = $this->queues[0];
+        wp_styles()->queue  = $this->queues[1];
         parent::tear_down();
     }
 
@@ -50,7 +61,7 @@ class AdminAppTest extends WP_UnitTestCase {
         $this->assertStringNotContainsString( '#', $url );
     }
 
-    public function test_routes_list_every_react_screen_in_page_mode_until_moved() {
+    public function test_routes_list_every_react_screen_with_its_mode() {
         $routes = wp_list_pluck( $this->app()->routes(), 'mode', 'id' );
 
         foreach ( [ 'post-forms', 'post-form-new', 'post-form-edit', 'post-forms-ai', 'subscriptions', 'settings' ] as $id ) {
@@ -65,25 +76,26 @@ class AdminAppTest extends WP_UnitTestCase {
     }
 
     public function test_old_page_requests_stay_pages_while_their_route_is_not_in_the_app() {
-        $settings = wpuf()->platform()->get( Registry::class )->get( 'wpuf-settings' );
+        // The post forms list is not in the app yet (task 5d.4).
+        $forms = wpuf()->platform()->get( Registry::class )->get( 'wpuf-post-forms' );
 
-        $this->assertInstanceOf( Screen::class, $settings );
-        $this->assertSame( '', $settings->app_route_for_request() );
+        $this->assertInstanceOf( Screen::class, $forms );
+        $this->assertSame( '', $forms->app_route_for_request() );
     }
 
     public function test_menu_rows_point_at_app_routes_only_when_in_app() {
         global $submenu;
 
-        $submenu['wp-user-frontend'] = [ [ 'Settings', 'manage_options', 'wpuf-settings' ], [ 'Tools', 'manage_options', 'wpuf_tools' ] ]; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+        $submenu['wp-user-frontend'] = [ [ 'Post Forms', 'manage_options', 'wpuf-post-forms' ], [ 'Tools', 'manage_options', 'wpuf_tools' ] ]; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
 
         $this->app()->point_menu_rows_at_app();
-        $this->assertSame( 'wpuf-settings', $submenu['wp-user-frontend'][0][2], 'page mode keeps the row' );
+        $this->assertSame( 'wpuf-post-forms', $submenu['wp-user-frontend'][0][2], 'page mode keeps the row' );
 
         add_filter(
             'wpuf_admin_app_routes',
             function ( $routes ) {
                 foreach ( $routes as $i => $route ) {
-                    if ( 'settings' === $route['id'] ) {
+                    if ( 'post-forms' === $route['id'] ) {
                         $routes[ $i ]['mode'] = 'app';
                     }
                 }
@@ -93,7 +105,7 @@ class AdminAppTest extends WP_UnitTestCase {
         );
 
         $this->app()->point_menu_rows_at_app();
-        $this->assertSame( 'admin.php?page=wp-user-frontend#/settings', $submenu['wp-user-frontend'][0][2] );
+        $this->assertSame( 'admin.php?page=wp-user-frontend#/post-forms', $submenu['wp-user-frontend'][0][2] );
         $this->assertSame( 'wpuf_tools', $submenu['wp-user-frontend'][1][2] );
     }
 
@@ -125,5 +137,38 @@ class AdminAppTest extends WP_UnitTestCase {
         $this->assertFalse( has_action( 'in_admin_header', 'wpuf_remove_admin_notices' ), 'page-only header callback dropped' );
         $this->assertTrue( wp_script_is( AppPage::HANDLE, 'enqueued' ) );
         $this->assertStringContainsString( 'wpuf-admin-app', $this->app()->body_class( '' ) );
+    }
+
+    public function test_settings_and_subscriptions_run_in_the_app() {
+        $modes = wp_list_pluck( $this->app()->routes(), 'mode', 'id' );
+
+        $this->assertSame( 'app', $modes['settings'] );
+        $this->assertSame( 'app', $modes['subscriptions'] );
+        $this->assertSame( 'page', $modes['post-forms'] );
+    }
+
+    public function test_old_settings_and_subscriptions_requests_map_to_their_routes() {
+        $registry = wpuf()->platform()->get( Registry::class );
+
+        $_GET['tab'] = 'payments';
+        $_GET['sub'] = 'wpuf_payment';
+        $this->assertSame( '/settings?tab=payments&sub=wpuf_payment', $registry->get( 'wpuf-settings' )->app_route_for_request() );
+        unset( $_GET['tab'], $_GET['sub'] );
+
+        $_GET['action'] = 'edit';
+        $_GET['id']     = '42';
+        $this->assertSame( '/subscriptions?action=edit&id=42', $registry->get( 'wpuf_subscription' )->app_route_for_request() );
+        unset( $_GET['action'], $_GET['id'] );
+    }
+
+    public function test_classic_settings_stay_a_page_and_the_override_travels() {
+        $settings = wpuf()->platform()->get( Registry::class )->get( 'wpuf-settings' );
+
+        $_GET['wpuf_settings_ui'] = 'legacy';
+        $this->assertSame( '', $settings->app_route_for_request(), 'classic request renders the classic screen' );
+
+        $_GET['wpuf_settings_ui'] = 'react';
+        $this->assertSame( [ 'wpuf_settings_ui' => 'react' ], $settings->app_redirect_args() );
+        unset( $_GET['wpuf_settings_ui'] );
     }
 }

@@ -177,7 +177,7 @@ class Registry {
         };
 
         add_filter( 'wp_redirect', $spy, PHP_INT_MAX );
-        $screen->load();
+        $screen->load_before_redirect();
         remove_filter( 'wp_redirect', $spy, PHP_INT_MAX );
 
         if ( $redirect ) {
@@ -185,7 +185,7 @@ class Registry {
             exit;
         }
 
-        wp_safe_redirect( self::app_redirect_url( $screen->app_route_for_request() ) );
+        wp_safe_redirect( add_query_arg( array_map( 'rawurlencode', $screen->app_redirect_args() ), self::app_redirect_url( $screen->app_route_for_request() ) ) );
         exit;
     }
 

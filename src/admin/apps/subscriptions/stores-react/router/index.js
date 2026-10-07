@@ -3,6 +3,7 @@
  * DESCRIPTION: Enables URL-based navigation for the subscriptions app
  */
 import { registerStore, dispatch } from '@wordpress/data';
+import { getRouteQuery, inApp, setRouteQuery } from '../../../../app/client';
 
 /**
  * Default state for router store
@@ -85,8 +86,9 @@ const selectors = {
 		if (state.params && Object.keys(state.params).length > 0) {
 			return state.params;
 		}
-		// Initial load - read from URL directly
-		return parseUrlParams(window.location.search);
+		// Initial load - read the route query (the admin app's hash route, or
+		// the page's query string on its own page).
+		return getRouteQuery();
 	},
 
 	/**
@@ -111,35 +113,18 @@ const selectors = {
  */
 function reducer(state = DEFAULT_STATE, action) {
 	switch (action.type) {
-		case 'NAVIGATE':
-			// Update URL without reloading page
-			const url = new URL(window.location.href);
+		case 'NAVIGATE': {
+			// Update the URL without reloading the page: the admin app's hash
+			// route query, or the page's query string ('page' is kept).
+			setRouteQuery(action.params, { replace: action.replace });
 
-			// Update/add new params and remove ones set to null/undefined
-			// Existing params (like 'page') are preserved automatically
-			Object.entries(action.params).forEach(([key, value]) => {
-				if (value !== null && value !== undefined && value !== '') {
-					url.searchParams.set(key, value);
-				} else if (value === null || value === undefined) {
-					url.searchParams.delete(key);
-				}
-			});
-
-			// Update browser URL
-			if (action.replace) {
-				window.history.replaceState({}, '', url.toString());
-			} else {
-				window.history.pushState({}, '', url.toString());
-			}
-
-			// Store the complete URL params (not just the action params)
-			// This ensures all params are available in the state for the selector
-			const allParams = parseUrlParams(url.search);
-
+			// Store the complete params (not just the action params) so the
+			// selector has all of them.
 			return {
 				...state,
-				params: allParams,
+				params: getRouteQuery(),
 			};
+		}
 
 		case 'SET_URL_PARAMS':
 			return {
@@ -168,8 +153,13 @@ const STORE_NAME = 'wpuf/subscriptions-router';
 
 registerStore(STORE_NAME, storeConfig);
 
-// Listen for popstate events (browser back/forward)
+// Browser back/forward on the screen's own page. In the admin app the shell
+// reports query changes of the route instead (index.jsx, onRouteQuery).
 window.addEventListener('popstate', () => {
+	if (inApp()) {
+		return;
+	}
+
 	const params = parseUrlParams(window.location.search);
 	dispatch(STORE_NAME).setUrlParams(params);
 });

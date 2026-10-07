@@ -165,43 +165,51 @@ const syncPage = ( route ) => {
     if ( notices ) {
         notices.hidden = ! route.notices || '' === notices.innerHTML.trim();
     }
-
-    activateStyles( route.screen );
 };
 
 /**
- * Turn the active screen's stylesheet placeholders into links, and switch off
- * other screens' sheets (each screen's Tailwind base differs).
+ * Stylesheets of the active screen on, other screens' sheets off (each
+ * screen's Tailwind base differs). Held sheets arrive as placeholders and
+ * become links the first time their screen opens.
  *
  * @param {string} screen Screen slug.
  *
- * @return {Promise} Resolves when the screen's sheets have loaded.
+ * @return {Promise} Resolves when the screen's new sheets have loaded.
  */
 const activateStyles = ( screen ) => {
     const loads = [];
 
     document.querySelectorAll( 'template[data-wpuf-route-style]' ).forEach( ( placeholder ) => {
         const owners = ( placeholder.dataset.screens || '' ).split( ' ' );
-        const id = placeholder.dataset.id;
-        let link = document.getElementById( id );
-        const active = owners.includes( screen );
 
-        if ( active && ! link ) {
-            link = document.createElement( 'link' );
-            link.rel = 'stylesheet';
-            link.id = id;
-            link.href = placeholder.dataset.href;
-            link.media = placeholder.dataset.media || 'all';
-            loads.push( new Promise( ( resolve ) => {
-                link.addEventListener( 'load', resolve, { once: true } );
-                link.addEventListener( 'error', resolve, { once: true } );
-            } ) );
-            placeholder.after( link );
+        if ( ! owners.includes( screen ) || document.getElementById( placeholder.dataset.id ) ) {
+            return;
         }
 
-        if ( link ) {
-            link.disabled = ! active;
-        }
+        const link = document.createElement( 'link' );
+
+        link.rel = 'stylesheet';
+        link.id = placeholder.dataset.id;
+        link.href = placeholder.dataset.href;
+        link.media = placeholder.dataset.media || 'all';
+        loads.push( new Promise( ( resolve ) => {
+            link.addEventListener( 'load', resolve, { once: true } );
+            link.addEventListener( 'error', resolve, { once: true } );
+        } ) );
+        placeholder.after( link, ...[ ...placeholder.content.childNodes ].map( ( node ) => node.cloneNode( true ) ) );
+    } );
+
+    Object.entries( app.styles || {} ).forEach( ( [ handle, owners ] ) => {
+        const on = owners.includes( screen );
+
+        [ `${ handle }-css`, `${ handle }-rtl-css`, `${ handle }-inline-css` ].forEach( ( id ) => {
+            const node = document.getElementById( id );
+
+            // `disabled` switches a fetched sheet (link or inline style) off and on.
+            if ( node ) {
+                node.disabled = ! on;
+            }
+        } );
     } );
 
     return Promise.all( loads );
@@ -304,6 +312,7 @@ const render = async () => {
     const element = document.createElement( 'div' );
 
     element.id = route.container || `wpuf-route-${ route.id }`;
+    element.className = route.containerClass || '';
     container().append( element );
 
     current = { route, params, query, key, cleanup: null };
@@ -463,7 +472,10 @@ window.wpufAdminScreens = { push: ( [ id, api ] ) => registerScreen( id, api ) }
  */
 const start = () => {
     let initial = app.initialRoute || '';
-    const legacyHash = window.location.hash && ! window.location.hash.startsWith( '#/' ) ? window.location.hash.slice( 1 ) : '';
+    // With a server route (old page redirect) any fragment came from the old
+    // URL: old pages never used hash routes, so it is a section hash
+    // (`#wpuf_ai`, `#/ai`) for the screen.
+    const legacyHash = initial && window.location.hash ? window.location.hash.slice( 1 ) : '';
 
     if ( initial && legacyHash ) {
         initial += `${ initial.includes( '?' ) ? '&' : '?' }hash=${ encodeURIComponent( legacyHash ) }`;

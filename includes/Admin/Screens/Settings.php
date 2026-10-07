@@ -222,16 +222,69 @@ class Settings extends Screen {
     public function app_routes() {
         return [
             [
-                'id'        => 'settings',
-                'path'      => '/settings',
-                'title'     => __( 'Settings', 'wp-user-frontend' ),
-                'app'       => 'settings',
-                'boot'      => 'settings',
-                'menuLink'  => true,
-                'container' => 'wpuf-settings-root',
-                'notices'   => true,
-                'page'      => 'admin.php?page=wpuf-settings',
+                'id'             => 'settings',
+                'path'           => '/settings',
+                'title'          => __( 'Settings', 'wp-user-frontend' ),
+                'app'            => 'settings',
+                'boot'           => 'settings',
+                'in_app'         => ! $this->is_legacy(),
+                'menuLink'       => true,
+                'container'      => 'wpuf-settings-root',
+                'containerClass' => 'px-[20px]',
+                'notices'        => true,
+                'page'           => 'admin.php?page=wpuf-settings',
             ],
         ];
+    }
+
+    /**
+     * The React settings load only enqueues the screen and builds its data
+     * (the one-time "new screen" notice included): nothing for the redirect
+     * hop to do; the app page loads it.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return void
+     */
+    public function load_before_redirect() {}
+
+    /**
+     * The per-request screen override (`?wpuf_settings_ui=react|legacy`)
+     * decides how the app page loads settings, so it travels with the redirect.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return array
+     */
+    public function app_redirect_args() {
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only view override.
+        $mode = isset( $_GET['wpuf_settings_ui'] ) ? sanitize_key( wp_unslash( $_GET['wpuf_settings_ui'] ) ) : '';
+
+        return $mode ? [ 'wpuf_settings_ui' => $mode ] : [];
+    }
+
+    /**
+     * App route of a settings page request: `/settings` with its tab and
+     * sub-tab, or '' in classic mode (the classic screen renders as before).
+     *
+     * @since WPUF_SINCE
+     *
+     * @return string
+     */
+    public function app_route_for_request() {
+        if ( $this->is_legacy() ) {
+            return '';
+        }
+
+        // phpcs:disable WordPress.Security.NonceVerification.Recommended -- read-only view state.
+        $query = array_filter(
+            [
+                'tab' => isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : '',
+                'sub' => isset( $_GET['sub'] ) ? sanitize_key( wp_unslash( $_GET['sub'] ) ) : '',
+            ]
+        );
+        // phpcs:enable WordPress.Security.NonceVerification.Recommended
+
+        return '/settings' . ( $query ? '?' . http_build_query( $query ) : '' );
     }
 }

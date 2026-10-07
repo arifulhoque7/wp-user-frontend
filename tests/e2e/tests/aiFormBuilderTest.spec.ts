@@ -63,7 +63,7 @@ test.describe('AI Form Builder', () => {
 
         // "Go to Settings" lands on the AI section of the React settings screen.
         await page.locator(ai.S.configModal).getByRole('button', { name: 'Go to Settings' }).click();
-        await page.waitForURL(/page=wpuf-settings/);
+        await page.waitForURL(/page=(wpuf-settings|wp-user-frontend)/);
         await expect(page).toHaveURL(/tab=integrations&sub=wpuf_ai/);
         await expect(page.getByText('AI Provider', { exact: true }).first()).toBeVisible({ timeout: 30000 });
         ai.configureMock(AI_MOCK_KEY);
@@ -320,7 +320,7 @@ test.describe('AI Form Builder', () => {
             await expect(page.locator(ai.S.configModal)).toBeVisible();
             await expect(page.locator(ai.S.configModal)).toContainText('AI Provider Not Configured');
             await page.locator(ai.S.configModal).getByRole('button', { name: 'Go to Settings' }).click();
-            await page.waitForURL(/page=wpuf-settings/);
+            await page.waitForURL(/page=(wpuf-settings|wp-user-frontend)/);
             await expect(page).toHaveURL(/tab=integrations&sub=wpuf_ai/);
             await expect(page.getByText('AI Provider', { exact: true }).first()).toBeVisible({ timeout: 30000 });
         } finally {

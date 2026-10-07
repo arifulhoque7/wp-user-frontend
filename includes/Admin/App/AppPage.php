@@ -129,7 +129,13 @@ class AppPage {
             }
 
             $notices = $this->notice_callbacks();
+            $before  = $this->resolved_styles();
             $screen->load_in_app();
+            // Stylesheets this screen brought (its React sheet and their deps):
+            // printed only on its routes, each screen's Tailwind base differs.
+            foreach ( array_diff( $this->resolved_styles(), $before ) as $handle ) {
+                $this->style_owners[ $handle ][] = $screen->slug();
+            }
             // A screen's load step may remove admin notices for its own page
             // (wpuf_remove_admin_notices); other routes still show them.
             $this->restore_notice_callbacks( $notices );
@@ -141,21 +147,155 @@ class AppPage {
         wp_enqueue_script( self::HANDLE );
         wp_set_script_translations( self::HANDLE, 'wp-user-frontend', WPUF_ROOT . '/languages' );
 
+        // Before every screen bundle (they all depend on the runtime), so a
+        // screen knows it runs in the app when it loads.
+        wp_enqueue_script( 'wpuf-admin-runtime' );
         $this->boot->attach_app(
-            self::HANDLE,
+            'wpuf-admin-runtime',
             [
                 'routes'       => $this->routes(),
                 'initialRoute' => $this->initial_route(),
                 'globals'      => $globals,
+                'styles'       => $this->style_owners,
                 'pageUrl'      => admin_url( 'admin.php?page=' . self::SLUG ),
             ]
         );
 
+        $this->initial_screen = $this->screen_of_route( $this->initial_route() );
+
+        add_action( 'admin_print_styles', [ $this, 'hold_inline_styles' ], 1 );
+        add_filter( 'style_loader_tag', [ $this, 'route_style_tag' ], 10, 4 );
         add_filter( 'admin_body_class', [ $this, 'body_class' ] );
         add_filter( 'admin_footer_text', '__return_empty_string', 99 );
         add_filter( 'update_footer', '__return_empty_string', 99 );
         add_action( 'admin_notices', [ $this, 'start_notices' ], PHP_INT_MIN );
         add_action( 'all_admin_notices', [ $this, 'end_notices' ], PHP_INT_MAX );
+    }
+
+    /**
+     * Screens that brought each stylesheet handle (handle => slugs).
+     *
+     * @var array
+     */
+    private $style_owners = [];
+
+    /**
+     * Inline styles of held stylesheets (handle => CSS).
+     *
+     * @var array
+     */
+    private $held_inline = [];
+
+    /**
+     * Screen of the route the page opens with ('' when unknown).
+     *
+     * @var string
+     */
+    private $initial_screen = '';
+
+    /**
+     * Whether a stylesheet waits for its route (owned by screens, none of them
+     * the initial route's).
+     *
+     * @param string $handle Style handle
+     *
+     * @return bool
+     */
+    private function is_held( $handle ) {
+        $base = preg_replace( '/-rtl$/', '', $handle );
+
+        return isset( $this->style_owners[ $base ] ) && ! in_array( $this->initial_screen, $this->style_owners[ $base ], true );
+    }
+
+    /**
+     * Print a held stylesheet as an inert placeholder; the shell turns it into
+     * a link when one of its screens' routes opens (a `disabled` link would
+     * still be fetched).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param string $tag    Link tag
+     * @param string $handle Handle
+     * @param string $href   Stylesheet URL
+     * @param string $media  Media
+     *
+     * @return string
+     */
+    public function route_style_tag( $tag, $handle, $href = '', $media = 'all' ) {
+        if ( ! $this->is_held( $handle ) ) {
+            return $tag;
+        }
+
+        $base   = preg_replace( '/-rtl$/', '', $handle );
+        $inline = isset( $this->held_inline[ $base ] ) ? '<style id="' . esc_attr( $base ) . '-inline-css">' . $this->held_inline[ $base ] . '</style>' : '';
+
+        return sprintf(
+            '<template data-wpuf-route-style data-id="%1$s-css" data-href="%2$s" data-media="%3$s" data-screens="%4$s">%5$s</template>' . "\n",
+            esc_attr( $base ),
+            esc_url( $href ),
+            esc_attr( $media ),
+            esc_attr( implode( ' ', array_unique( $this->style_owners[ $base ] ) ) ),
+            $inline // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- inline CSS registered with wp_add_inline_style(), printed as WordPress would.
+        );
+    }
+
+    /**
+     * Move the inline CSS of held stylesheets into their placeholders (WordPress
+     * prints inline styles outside the link tag filter).
+     *
+     * @since WPUF_SINCE
+     *
+     * @return void
+     */
+    public function hold_inline_styles() {
+        $styles = wp_styles();
+
+        foreach ( array_keys( $this->style_owners ) as $handle ) {
+            if ( $this->is_held( $handle ) && ! empty( $styles->registered[ $handle ]->extra['after'] ) ) {
+                $this->held_inline[ $handle ] = implode( "\n", (array) $styles->registered[ $handle ]->extra['after'] );
+                unset( $styles->registered[ $handle ]->extra['after'] );
+            }
+        }
+    }
+
+    /**
+     * Enqueued stylesheets with their dependencies resolved.
+     *
+     * @return string[]
+     */
+    private function resolved_styles() {
+        $styles = clone wp_styles();
+
+        $styles->to_do = [];
+        $styles->done  = [];
+        $styles->all_deps( $styles->queue );
+
+        return $styles->to_do;
+    }
+
+    /**
+     * Screen slug of a route path ('' when none matches).
+     *
+     * @param string $route Route path with optional query
+     *
+     * @return string
+     */
+    private function screen_of_route( $route ) {
+        $path = strtok( (string) $route, '?' );
+
+        if ( ! $path ) {
+            return '';
+        }
+
+        foreach ( $this->routes() as $item ) {
+            $pattern = '#^' . preg_replace( '#/:[A-Za-z_]+#', '/[^/]+', $item['path'] ) . '/?$#';
+
+            if ( preg_match( $pattern, $path ) ) {
+                return $item['screen'];
+            }
+        }
+
+        return '';
     }
 
     /**

@@ -74,15 +74,39 @@ class Subscriptions extends Screen {
     public function app_routes() {
         return [
             [
-                'id'        => 'subscriptions',
-                'path'      => '/subscriptions',
-                'title'     => __( 'Subscriptions', 'wp-user-frontend' ),
-                'app'       => 'subscriptions',
-                'boot'      => 'subscriptions',
-                'menuLink'  => true,
-                'container' => 'wpuf-subscription-page',
-                'page'      => 'admin.php?page=wpuf_subscription',
+                'id'             => 'subscriptions',
+                'path'           => '/subscriptions',
+                'title'          => __( 'Subscriptions', 'wp-user-frontend' ),
+                'app'            => 'subscriptions',
+                'boot'           => 'subscriptions',
+                'in_app'         => true,
+                'menuLink'       => true,
+                'container'      => 'wpuf-subscription-page',
+                'containerClass' => 'px-[20px]',
+                'page'           => 'admin.php?page=wpuf_subscription',
             ],
         ];
+    }
+
+    /**
+     * App route of a subscriptions page request: `/subscriptions` with its
+     * view (list status and page, edit or new).
+     *
+     * @since WPUF_SINCE
+     *
+     * @return string
+     */
+    public function app_route_for_request() {
+        $query = [];
+
+        // phpcs:disable WordPress.Security.NonceVerification.Recommended -- read-only view state.
+        foreach ( [ 'action', 'id', 'post_status', 'p' ] as $key ) {
+            if ( isset( $_GET[ $key ] ) && '' !== $_GET[ $key ] ) {
+                $query[ $key ] = sanitize_key( wp_unslash( $_GET[ $key ] ) );
+            }
+        }
+        // phpcs:enable WordPress.Security.NonceVerification.Recommended
+
+        return '/subscriptions' . ( $query ? '?' . http_build_query( $query ) : '' );
     }
 }
