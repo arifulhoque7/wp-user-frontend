@@ -73,6 +73,7 @@ class Assets implements Hookable {
         $settings_asset        = $this->react_asset( 'settings-react', [ 'wp-element', 'wp-data', 'wp-api-fetch', 'wp-i18n', 'wp-hooks', 'wp-components' ] );
         $subscriptions_asset   = $this->react_asset( 'subscriptions', [ 'wp-element', 'wp-data', 'wp-api-fetch', 'wp-i18n', 'wp-hooks', 'wp-components', 'wp-primitives' ] );
         $form_builder_asset    = $this->react_asset( 'form-builder', [] );
+        $ai_form_builder_asset = $this->react_asset( 'ai-form-builder', [ 'wp-element', 'wp-i18n', 'wp-hooks', 'wpuf-admin-runtime', 'wpuf-admin-ui' ] );
         // The shared React admin layer (design.md D24): screens and Pro get
         // these as dependencies through the `@wpuf/*` / plugin-ui externals.
         $admin_runtime_asset = $this->react_asset( 'admin-runtime', [ 'wp-api-fetch', 'wp-element', 'wp-hooks', 'wp-url' ] );
@@ -116,6 +117,13 @@ class Assets implements Hookable {
                 'version'   => $form_builder_asset['version'],
                 'in_footer' => true,
             ],
+            // AI form builder, under the Vue app's handle (Admin\Screens\AiFormBuilder).
+            'ai-form-builder'           => [
+                'src'       => WPUF_ASSET_URI . '/js/react/ai-form-builder.js',
+                'deps'      => $ai_form_builder_asset['dependencies'],
+                'version'   => $ai_form_builder_asset['version'],
+                'in_footer' => true,
+            ],
         ];
     }
 
@@ -138,6 +146,12 @@ class Assets implements Hookable {
                 'src'     => WPUF_ASSET_URI . '/css/subscriptions.css',
                 'version' => $this->react_asset( 'subscriptions', [] )['version'],
                 // subscriptions-rtl.css (built by tools/admin-css) on RTL sites.
+                'rtl'     => true,
+            ],
+            // AI form builder sheet (tools/admin-css), under the Vue app's handle.
+            'ai-form-builder'     => [
+                'src'     => WPUF_ASSET_URI . '/css/ai-form-builder-react.css',
+                'version' => $this->react_asset( 'ai-form-builder', [] )['version'],
                 'rtl'     => true,
             ],
         ];

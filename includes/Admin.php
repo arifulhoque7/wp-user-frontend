@@ -223,75 +223,13 @@ class Admin {
      * Enqueue scripts for AI form builder page
      *
      * @since 4.0.0
+     * @since WPUF_SINCE Forwards to Admin\Screens\AiFormBuilder::enqueue() (React app).
      *
      * @param string $form_type Form type ('post' or 'profile')
      * @return void
      */
     public function enqueue_ai_form_builder_scripts( $form_type = 'post' ) {
-        wp_enqueue_script( 'wpuf-ai-form-builder' );
-        wp_enqueue_style( 'wpuf-ai-form-builder' );
-
-        // Get AI settings
-        $ai_settings = get_option( 'wpuf_ai', [] );
-
-        // Determine if we should expose API key status based on user capabilities
-        $show_api_status = current_user_can( wpuf_admin_role() );
-
-        // Get AI Manager instance for templates
-        $ai_manager = wpuf()->ai_manager;
-
-        // Prepare localization data
-        $localize_data = [
-            'version'              => WPUF_VERSION,
-            'assetUrl'             => WPUF_ASSET_URI,
-            'siteUrl'              => site_url(),
-            'nonce'                => wp_create_nonce( 'wp_rest' ),
-            'rest_url'             => esc_url_raw( rest_url() ),
-            'endpoints'            => [
-                'generate'     => esc_url_raw( rest_url( 'wpuf/v1/ai-form-builder/generate' ) ),
-                'createForm'   => esc_url_raw( rest_url( 'wpuf/v1/ai-form-builder/create-form' ) ),
-                'integrations' => esc_url_raw( rest_url( 'wpuf/v1/ai-form-builder/integrations' ) ),
-            ],
-            'formType'             => $form_type, // Pass form type to frontend
-            'provider'             => $ai_settings['ai_provider'] ?? 'openai',
-            'model'                => $ai_settings['ai_model'] ?? 'gpt-3.5-turbo',
-            'hasApiKey'            => $show_api_status ? ! empty( $ai_settings['ai_api_key'] ) : null,
-            'isProActive'          => class_exists( 'WP_User_Frontend_Pro' ),
-            'temperature'          => floatval( $ai_settings['temperature'] ?? 0.7 ),
-            'maxTokens'            => intval( $ai_settings['max_tokens'] ?? 2000 ),
-            'promptTemplates'      => $ai_manager->get_all_prompt_templates(),
-            'promptAIInstructions' => $ai_manager->get_all_prompt_ai_instructions(),
-            'i18n' => [
-                'errorTitle' => __( 'Error', 'wp-user-frontend' ),
-                'errorMessage' => __( 'Something went wrong. Please try again.', 'wp-user-frontend' ),
-                'invalidRequest' => __( 'Invalid Request', 'wp-user-frontend' ),
-                'nonFormRequest' => __( 'I can only help with form creation. Try: "Create a contact form"', 'wp-user-frontend' ),
-                'proFieldWarning' => __( 'Pro Feature Required', 'wp-user-frontend' ),
-                'proFieldMessage' => __( 'This field type requires WP User Frontend Pro. You can continue without it or upgrade to Pro for full functionality.', 'wp-user-frontend' ),
-                'continueWithoutPro' => __( 'Continue without Pro', 'wp-user-frontend' ),
-                'upgradeToPro' => __( 'Upgrade to Pro', 'wp-user-frontend' ),
-                'tryAgain' => __( 'Try Again', 'wp-user-frontend' ),
-                'close' => __( 'Close', 'wp-user-frontend' ),
-            ],
-        ];
-
-        /**
-         * Filter the AI Form Builder localization data.
-         *
-         * Allows external code to modify or enrich the data passed to the frontend,
-         * including custom templates, stages, prompts, or form details.
-         *
-         * @since 4.2.1
-         *
-         * @param array $localize_data Localization data array to be passed to wp_localize_script.
-         */
-        $localize_data = apply_filters( 'wpuf_ai_form_builder_localize_data', $localize_data );
-
-        wp_localize_script(
-            'wpuf-ai-form-builder',
-            'wpufAIFormBuilder',
-            $localize_data
-        );
+        wpuf()->platform()->get( Admin\Screens\AiFormBuilder::class )->enqueue( $form_type );
     }
 
     /**

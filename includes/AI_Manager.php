@@ -42,7 +42,7 @@ class AI_Manager {
      * Initialize hooks
      */
     private function init_hooks() {
-        add_action( 'rest_api_init', [ $this, 'init_rest_api' ] );
+        // The REST routes register through the platform (Platform\Providers\AiServiceProvider, REST\Manager).
         add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_scripts' ] );
         add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_scripts' ] );
     }
@@ -60,6 +60,9 @@ class AI_Manager {
 
     /**
      * Initialize REST API
+     *
+     * @since WPUF_SINCE No longer hooked: REST\Manager registers the same
+     *                   controller (AiServiceProvider). Kept for direct callers.
      */
     public function init_rest_api() {
         // Register REST API routes for AI form builder
