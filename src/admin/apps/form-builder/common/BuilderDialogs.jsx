@@ -41,15 +41,7 @@ function Markup( { html, style } ) {
  * @return {Promise<boolean>} Settles on close.
  */
 export function showOops( message ) {
-    return dialogs.alert( {
-        title: <span style={ { color: PRIMARY } }>{ __( 'Oops...', 'wp-user-frontend' ) }</span>,
-        message,
-        icon: 'oops',
-        showClose: true,
-        confirmText: __( 'OK', 'wp-user-frontend' ),
-        width: '560px',
-        padding: '16px',
-    } );
+    return dialogs.oops( message );
 }
 
 /**

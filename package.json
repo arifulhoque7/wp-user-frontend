@@ -12,7 +12,7 @@
   "private": true,
   "scripts": {
     "release": "grunt release",
-    "build": "pnpm run build:css && pnpm run build:admin && pnpm run build:frontend-subscriptions && pnpm run build:ai-form-builder && pnpm run build:account && pnpm run build:admin-css && pnpm run build:user-directory && pnpm run build:blocks && pnpm run build:legacy && pnpm run build:css && pnpm run build:sanitize && pnpm run build:verify",
+    "build": "pnpm run build:css && pnpm run build:admin && pnpm run build:frontend-subscriptions && pnpm run build:account && pnpm run build:admin-css && pnpm run build:user-directory && pnpm run build:blocks && pnpm run build:legacy && pnpm run build:css && pnpm run build:sanitize && pnpm run build:verify",
     "build:verify": "node bin/verify-build.mjs",
     "build:sanitize": "node bin/sanitize-dist.mjs",
     "build:blocks": "wp-scripts build --config webpack.config.js",
@@ -21,6 +21,7 @@
     "build:admin": "wp-scripts build --config webpack.admin.config.js",
     "dev:admin": "wp-scripts start --config webpack.admin.config.js",
     "build:form-builder": "WPUF_ENTRY=form-builder wp-scripts build --config webpack.admin.config.js",
+    "build:ai-form-builder": "WPUF_ENTRY=ai-form-builder wp-scripts build --config webpack.admin.config.js && node tools/admin-css/build.mjs ai-form-builder",
     "dev:form-builder": "WPUF_ENTRY=form-builder wp-scripts start --config webpack.admin.config.js",
     "build:forms-list-react": "WPUF_ENTRY=forms-list-react wp-scripts build --config webpack.admin.config.js",
     "dev:forms-list-react": "WPUF_ENTRY=forms-list-react wp-scripts start --config webpack.admin.config.js",
@@ -31,12 +32,12 @@
     "build:admin-css": "node tools/admin-css/build.mjs",
     "build:settings-css": "node tools/admin-css/build.mjs settings",
     "build:frontend-subscriptions": "ENTRY=frontend-subscriptions vite build",
-    "build:ai-form-builder": "ENTRY=ai-form-builder vite build",
     "build:user-directory": "cd modules/user-directory && npm ci && npm run build",
     "dev:user-directory": "cd modules/user-directory && npm ci && npm run dev",
     "build:css": "grunt tailwind && grunt tailwind-minify",
     "build:account": "ENTRY=account vite build",
     "test:form-builder": "jest --config src/admin/apps/form-builder/jest.config.js",
+    "test:ai-form-builder": "jest --config src/admin/apps/ai-form-builder/jest.config.js",
     "test:shared": "jest --config src/admin/shared/jest.config.js"
   },
   "devDependencies": {

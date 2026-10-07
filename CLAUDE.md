@@ -127,7 +127,7 @@ Simple array-based container with magic `__get()`. Services accessed via `wpuf()
 ### Frontend Architecture
 - **Vue 3** (primary) for modern admin and frontend components, with Pinia state management and Vue Router
 - **jQuery** (legacy) for form builder and older frontend interactions
-- **Vite** builds the three Vue apps that remain (frontend-subscriptions, ai-form-builder, account); the admin lists, builders, subscriptions and settings are React apps built with wp-scripts (`webpack.admin.config.js`)
+- **Vite** builds the two Vue apps that remain (frontend-subscriptions, account); the admin lists, builders, subscriptions, settings and the AI form builder are React apps built with wp-scripts (`webpack.admin.config.js`)
 - **Grunt** for legacy build tasks (LESS compilation, Tailwind CSS, release packaging)
 - **Tailwind CSS 3** with DaisyUI component library and scoped preflight
 - **LESS** (legacy) for older stylesheets

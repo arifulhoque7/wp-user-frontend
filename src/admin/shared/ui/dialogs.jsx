@@ -50,6 +50,35 @@ const dialogs = {
     alert: ( options ) => add( { type: 'confirm', options: { tone: 'primary', confirmText: undefined, ...( options || {} ), cancelText: false, alert: true } } ),
 
     /**
+     * Develop's "Oops..." alert (the builder's refused drops and single-instance
+     * fields, the AI builder's failed generation): oops picture, green title,
+     * corner close, OK. `options` overrides any ConfirmDialog prop.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param {*}      message   Message.
+     * @param {Object} [options] ConfirmDialog props (confirmText, children, className...).
+     *
+     * @return {Promise<boolean>} Settles on close.
+     */
+    oops: ( message, options ) => add( {
+        type: 'confirm',
+        options: {
+            tone: 'primary',
+            title: <span style={ { color: '#059669' } }>{ __( 'Oops...', 'wp-user-frontend' ) }</span>,
+            message,
+            icon: 'oops',
+            showClose: true,
+            confirmText: __( 'OK', 'wp-user-frontend' ),
+            width: '560px',
+            padding: '16px',
+            ...( options || {} ),
+            cancelText: false,
+            alert: true,
+        },
+    } ),
+
+    /**
      * A custom dialog: `render( { close } )` returns the dialog element, built on
      * the shared Modal or ConfirmDialog with `open`; `close( value )` resolves.
      *

@@ -73,6 +73,18 @@ const ENTRIES = {
         rtl: true,
         pui: true,
     },
+    // AI form builder (5c): the shared Tailwind 3 base its Vue sheet had
+    // (tailwind.config.js scoped preflight covers #wpuf-ai-form-builder) and
+    // the plugin-ui part for the shared wrappers and dialogs.
+    'ai-form-builder': {
+        input: 'src/ai-form-builder.css',
+        pre: 'src/base-v3/subscriptions.pre.css',
+        post: 'src/base-v3/subscriptions.post.css',
+        scope: '.wpuf-admin-react',
+        output: 'assets/css/ai-form-builder-react.css',
+        rtl: true,
+        pui: true,
+    },
 };
 
 const compile = async ( css, from ) =>

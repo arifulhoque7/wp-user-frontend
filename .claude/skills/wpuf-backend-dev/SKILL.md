@@ -165,7 +165,7 @@ class MyController extends WP_REST_Controller {
 ### API Namespace
 
 -   **Base namespace:** `wpuf/v1`
--   **Current controllers:** `Api\Subscription`, `Api\FormList`, `AI\RestController` (registered via `AI_Manager`)
+-   **Current controllers:** `Api\Subscription`, `Api\FormList`, `AI\RestController` (shared by `Platform\Providers\AiServiceProvider`, registered by `REST\Manager`)
 
 ### Registering a Controller
 
@@ -559,7 +559,7 @@ Run this mental checklist on every line you write:
 -   `includes/API.php` — REST API bootstrap
 -   `includes/Api/Subscription.php` — Subscription REST controller
 -   `includes/Api/FormList.php` — Form list REST controller
--   `includes/AI/RestController.php` — AI form builder REST controller (registered via `AI_Manager`)
+-   `includes/AI/RestController.php` — AI form builder REST controller (frozen routes, registered by `REST\Manager` through `AiServiceProvider`)
 -   `includes/Assets.php` — Script/style registration
 -   `includes/Free/Free_Loader.php` — Free-only features (conditional on Pro absence)
 -   `includes/Integrations.php` — Third-party integrations (Dokan, WC Vendors, ACF, n8n)

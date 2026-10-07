@@ -12,7 +12,7 @@ WPUF_ENTRY=form-builder pnpm run build:admin  # one app (form-builder | forms-li
 pnpm run build:forms-list-react     # Build forms list module (alias of WPUF_ENTRY=forms-list-react)
 pnpm run build:subscriptions         # Build admin subscriptions module
 pnpm run build:frontend-subscriptions # Build frontend subscriptions module
-pnpm run build:ai-form-builder       # Build AI form builder module
+pnpm run build:ai-form-builder       # React AI form builder: wp-scripts entry + Tailwind 4 sheet
 pnpm run build:account               # Build account module
 pnpm run build:user-directory        # Build user directory module
 pnpm run build:css                   # Compile Tailwind CSS via Grunt

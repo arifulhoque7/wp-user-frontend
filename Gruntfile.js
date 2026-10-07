@@ -3,7 +3,6 @@ module.exports = function( grunt) {
     const tailwindFileMap = {
         'admin/form-builder/views/form-builder-v4.1.php': 'admin/form-builder.css',
         'templates/account.php': 'frontend/account.css',
-        'ai-form-builder': 'ai-form-builder.css',
     }
 
     var pkg = grunt.file.readJSON('package.json');
@@ -102,11 +101,10 @@ module.exports = function( grunt) {
                 ]
             },
 
-            aiFormBuilderVue: {
+            aiFormBuilderReact: {
                 files: [
-                    'assets/js/ai-form-builder.js',
-                    'assets/js/components/**/*.vue',
-                    'assets/js/stores/**/*.js',
+                    'src/admin/apps/ai-form-builder/**/*.{js,jsx}',
+                    'tools/admin-css/src/ai-form-builder.css',
                 ],
                 tasks: [
                     'shell:npm_build_ai_form_builder'
@@ -129,17 +127,6 @@ module.exports = function( grunt) {
                 }
             },
 
-            aiFormBuilder: {
-                files: [
-                    'src/css/ai-form-builder.css',
-                    'assets/**/*.{js,jsx,ts,tsx,vue,html}',
-                    'includes/Admin/**/*.php',
-                ],
-                tasks: ['shell:tailwind:src/css/ai-form-builder.css:assets/css/ai-form-builder.css'],
-                options: {
-                    spawn: false
-                }
-            },
 
             userDirectory: {
                 files: [
@@ -318,7 +305,6 @@ module.exports = function( grunt) {
         const cssFiles = [
             { input: 'assets/css/forms-list.css', output: 'assets/css/forms-list.min.css' },
             { input: 'assets/css/frontend-subscriptions.css', output: 'assets/css/frontend-subscriptions.min.css' },
-            { input: 'assets/css/ai-form-builder.css', output: 'assets/css/ai-form-builder.min.css' },
             { input: 'assets/css/admin/subscriptions.css', output: 'assets/css/admin/subscriptions.min.css' }
         ];
 

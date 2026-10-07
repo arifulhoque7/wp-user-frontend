@@ -40,13 +40,12 @@ Applies to the builders, forms lists, subscriptions, settings and onboarding onl
 
 ### Vite (remaining Vue apps)
 
-3 entry points defined in `vite.config.mjs` (the admin subscriptions and forms list are React apps now, built with wp-scripts; Pro has no Vite):
+2 entry points defined in `vite.config.mjs` (the admin subscriptions, forms list and AI form builder are React apps now, built with wp-scripts; Pro has no Vite):
 
 | Entry | Source | Output |
 |---|---|---|
 | `frontend-subscriptions` | `./assets/js/frontend-subscriptions.js` | `assets/js/frontend-subscriptions.min.js` |
 | `account` | `./assets/js/account.js` | `assets/js/account.min.js` |
-| `ai-form-builder` | `./assets/js/ai-form-builder.js` | `assets/js/ai-form-builder.min.js` |
 
 Build commands:
 
@@ -55,7 +54,7 @@ npm run build                        # Full build (all modules + user-directory 
 npm run build:forms-list             # Single: ENTRY=forms-list vite build
 npm run build:subscriptions          # Single: ENTRY=subscriptions vite build
 npm run build:frontend-subscriptions # Single: ENTRY=frontend-subscriptions vite build
-npm run build:ai-form-builder        # Single: ENTRY=ai-form-builder vite build
+npm run build:ai-form-builder        # React AI form builder (wp-scripts entry + Tailwind 4 sheet)
 npm run build:account                # Single: ENTRY=account vite build
 npm run build:user-directory         # Build user directory module (Webpack)
 npm run dev:user-directory           # Dev watch mode for user directory module
@@ -110,8 +109,7 @@ assets/js/
 ├── subscriptions.js          # Vue entry: admin subscriptions
 ├── frontend-subscriptions.js # Vue entry: frontend packs page
 ├── forms-list.js             # Vue entry: forms listing
-├── account.js                # Vue entry: user account
-└── ai-form-builder.js        # Vue entry: AI form builder
+└── account.js                # Vue entry: user account
 ```
 
 ## jQuery (Legacy)

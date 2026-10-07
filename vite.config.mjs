@@ -6,10 +6,9 @@ const require = createRequire(import.meta.url);
 
 const entries = {
     'frontend-subscriptions': './assets/js/frontend-subscriptions.js',
-    // React replaces the Vue admin subscriptions (webpack.subscriptions.config.js)
-    // and forms list (admin/forms-list/webpack.config.js) apps.
+    // React replaces the Vue admin subscriptions, forms list and AI form
+    // builder apps (webpack.admin.config.js).
     'account': './assets/js/account.js',
-    'ai-form-builder': './assets/js/ai-form-builder.js',
 };
 
 export default defineConfig(() => {

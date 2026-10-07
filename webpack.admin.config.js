@@ -1,6 +1,6 @@
 /**
  * One wp-scripts config for the React admin apps (builder, forms list,
- * subscriptions, settings).
+ * subscriptions, settings, AI form builder).
  *
  * Sources live in src/admin/apps/<app> (task 3.5). Output: assets/js/react/<name>.js + .asset.php
  * (minified, but not named .min.js: translate.wordpress.org and `wp i18n make-pot` skip
@@ -20,6 +20,7 @@ const entries = {
     'forms-list-react': './src/admin/apps/forms-list/index.jsx',
     subscriptions: './src/admin/apps/subscriptions/index.jsx',
     'settings-react': './src/admin/apps/settings/index.jsx',
+    'ai-form-builder': './src/admin/apps/ai-form-builder/index.jsx',
 };
 
 // The shared layer (design.md D24): bundles @wpuf/* sources and plugin-ui,
