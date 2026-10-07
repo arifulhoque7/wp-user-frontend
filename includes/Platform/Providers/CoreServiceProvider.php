@@ -9,6 +9,7 @@
 namespace WeDevs\Wpuf\Platform\Providers;
 
 use WeDevs\Wpuf\Admin\Assets;
+use WeDevs\Wpuf\Admin\App\AppPage;
 use WeDevs\Wpuf\Admin\BootPayload;
 use WeDevs\Wpuf\Admin\Screens\Registry;
 use WeDevs\Wpuf\Builder\HookBridge;
@@ -60,6 +61,14 @@ class CoreServiceProvider extends ServiceProvider {
             BootPayload::class,
             function () {
                 return new BootPayload();
+            }
+        );
+
+        // The single React admin app page (one page, hash routes; task 5d).
+        $this->share_tagged(
+            AppPage::class,
+            function ( $container ) {
+                return new AppPage( $container->get( Registry::class ), $container->get( BootPayload::class ) );
             }
         );
 

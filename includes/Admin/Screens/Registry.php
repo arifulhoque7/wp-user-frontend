@@ -107,6 +107,12 @@ class Registry {
             return;
         }
 
+        if ( $this->redirects_to_app( $screen ) ) {
+            $this->load_and_redirect( $screen );
+
+            return;
+        }
+
         $screen->load();
 
         $body_class = $screen->body_class();
@@ -126,6 +132,76 @@ class Registry {
             // Nothing is lost when a screen does not print the wrapper.
             add_action( 'admin_footer', [ $this, 'print_notices' ] );
         }
+    }
+
+    /**
+     * Screens of the admin app, in registration order.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return Screen[]
+     */
+    public function all() {
+        return array_values( $this->screens );
+    }
+
+    /**
+     * Whether an old page request of this screen goes to the admin app.
+     *
+     * @param Screen $screen Screen
+     *
+     * @return bool
+     */
+    private function redirects_to_app( Screen $screen ) {
+        return function_exists( 'wpuf_admin_app_enabled' ) && wpuf_admin_app_enabled() && '' !== $screen->app_route_for_request();
+    }
+
+    /**
+     * Old page of a screen that runs in the admin app: its load step runs as
+     * before (form actions, template and bulk handlers keep working), then the
+     * request goes to the app route. A redirect made by a load listener (e.g.
+     * to the new form's builder) wins.
+     *
+     * @param Screen $screen Screen
+     *
+     * @return void
+     */
+    private function load_and_redirect( Screen $screen ) {
+        $redirect = null;
+        $spy      = function ( $location ) use ( &$redirect ) {
+            if ( $location ) {
+                $redirect = $location;
+            }
+
+            return $location;
+        };
+
+        add_filter( 'wp_redirect', $spy, PHP_INT_MAX );
+        $screen->load();
+        remove_filter( 'wp_redirect', $spy, PHP_INT_MAX );
+
+        if ( $redirect ) {
+            // The listener already sent its Location header; stop here.
+            exit;
+        }
+
+        wp_safe_redirect( self::app_redirect_url( $screen->app_route_for_request() ) );
+        exit;
+    }
+
+    /**
+     * URL of the app page that opens a route. The route travels in the query
+     * (`wpuf_route`), not the fragment, so a fragment of the old URL (e.g.
+     * `#wpuf_ai` on settings links) survives the redirect.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param string $route Route path with optional `?query`.
+     *
+     * @return string
+     */
+    public static function app_redirect_url( $route ) {
+        return add_query_arg( 'wpuf_route', rawurlencode( (string) $route ), admin_url( 'admin.php?page=' . \WeDevs\Wpuf\Admin\App\AppPage::SLUG ) );
     }
 
     /**

@@ -7,6 +7,8 @@ use WeDevs\Wpuf\Frontend\Payment;
 
 // Include modules functions
 require_once WPUF_INCLUDES . '/functions/modules.php';
+// Single React admin app helpers
+require_once WPUF_INCLUDES . '/functions/admin-app.php';
 
 /**
  * Start output buffering

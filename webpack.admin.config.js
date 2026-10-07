@@ -21,6 +21,8 @@ const entries = {
     subscriptions: './src/admin/apps/subscriptions/index.jsx',
     'settings-react': './src/admin/apps/settings/index.jsx',
     'ai-form-builder': './src/admin/apps/ai-form-builder/index.jsx',
+    // Shell of the single React admin app (task 5d).
+    'admin-app': './src/admin/app/index.js',
 };
 
 // The shared layer (design.md D24): bundles @wpuf/* sources and plugin-ui,

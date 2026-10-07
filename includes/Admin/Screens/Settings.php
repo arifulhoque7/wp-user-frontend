@@ -210,4 +210,28 @@ class Settings extends Screen {
     private function is_legacy() {
         return function_exists( 'wpuf_settings_use_legacy' ) && wpuf_settings_use_legacy();
     }
+
+    /**
+     * Admin app route of the React settings screen (task 5d). The classic
+     * screen stays a page.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return array[]
+     */
+    public function app_routes() {
+        return [
+            [
+                'id'        => 'settings',
+                'path'      => '/settings',
+                'title'     => __( 'Settings', 'wp-user-frontend' ),
+                'app'       => 'settings',
+                'boot'      => 'settings',
+                'menuLink'  => true,
+                'container' => 'wpuf-settings-root',
+                'notices'   => true,
+                'page'      => 'admin.php?page=wpuf-settings',
+            ],
+        ];
+    }
 }

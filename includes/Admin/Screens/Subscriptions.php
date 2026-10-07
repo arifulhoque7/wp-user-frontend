@@ -63,4 +63,26 @@ class Subscriptions extends Screen {
     public function render() {
         wpuf_require_once( WPUF_INCLUDES . '/Admin/views/subscriptions.php' );
     }
+
+    /**
+     * Admin app route of the subscriptions screen (task 5d).
+     *
+     * @since WPUF_SINCE
+     *
+     * @return array[]
+     */
+    public function app_routes() {
+        return [
+            [
+                'id'        => 'subscriptions',
+                'path'      => '/subscriptions',
+                'title'     => __( 'Subscriptions', 'wp-user-frontend' ),
+                'app'       => 'subscriptions',
+                'boot'      => 'subscriptions',
+                'menuLink'  => true,
+                'container' => 'wpuf-subscription-page',
+                'page'      => 'admin.php?page=wpuf_subscription',
+            ],
+        ];
+    }
 }

@@ -74,6 +74,7 @@ class Assets implements Hookable {
         $subscriptions_asset   = $this->react_asset( 'subscriptions', [ 'wp-element', 'wp-data', 'wp-api-fetch', 'wp-i18n', 'wp-hooks', 'wp-components', 'wp-primitives' ] );
         $form_builder_asset    = $this->react_asset( 'form-builder', [] );
         $ai_form_builder_asset = $this->react_asset( 'ai-form-builder', [ 'wp-element', 'wp-i18n', 'wp-hooks', 'wpuf-admin-runtime', 'wpuf-admin-ui' ] );
+        $admin_app_asset       = $this->react_asset( 'admin-app', [ 'wp-element', 'wp-hooks', 'wp-i18n', 'wpuf-admin-runtime' ] );
         // The shared React admin layer (design.md D24): screens and Pro get
         // these as dependencies through the `@wpuf/*` / plugin-ui externals.
         $admin_runtime_asset = $this->react_asset( 'admin-runtime', [ 'wp-api-fetch', 'wp-element', 'wp-hooks', 'wp-url' ] );
@@ -115,6 +116,13 @@ class Assets implements Hookable {
                 'src'       => WPUF_ASSET_URI . '/js/react/form-builder.js',
                 'deps'      => $form_builder_asset['dependencies'],
                 'version'   => $form_builder_asset['version'],
+                'in_footer' => true,
+            ],
+            // Shell of the single React admin app (Admin\App\AppPage, task 5d).
+            'admin-app'                 => [
+                'src'       => WPUF_ASSET_URI . '/js/react/admin-app.js',
+                'deps'      => $admin_app_asset['dependencies'],
+                'version'   => $admin_app_asset['version'],
                 'in_footer' => true,
             ],
             // AI form builder, under the Vue app's handle (Admin\Screens\AiFormBuilder).

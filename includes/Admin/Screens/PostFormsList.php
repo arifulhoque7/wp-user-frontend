@@ -141,4 +141,58 @@ class PostFormsList extends Screen {
         // phpcs:ignore WordPress.Security.NonceVerification
         return ! empty( $_GET['action'] ) ? sanitize_text_field( wp_unslash( $_GET['action'] ) ) : null;
     }
+
+    /**
+     * Admin app routes: the post forms list, the builder and the AI form
+     * builder (task 5d). Not in the app yet: they open their pages.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return array[]
+     */
+    public function app_routes() {
+        return [
+            [
+                'id'        => 'post-forms',
+                'path'      => '/post-forms',
+                'title'     => __( 'Post Forms', 'wp-user-frontend' ),
+                'app'       => 'forms-list',
+                'boot'      => 'post_forms',
+                'menuLink'  => true,
+                'container' => 'wpuf-post-forms-list-table-view',
+                'notices'   => true,
+                'page'      => 'admin.php?page=wpuf-post-forms',
+            ],
+            [
+                'id'       => 'post-form-new',
+                'path'     => '/post-forms/new',
+                'app'      => 'form-builder',
+                'boot'     => 'form_builder',
+                'menuPath' => '/post-forms',
+                'page'     => 'admin.php?page=wpuf-post-forms&action=add-new',
+            ],
+            [
+                'id'          => 'post-form-edit',
+                'path'        => '/post-forms/:id/edit',
+                'title'       => __( 'Edit Form', 'wp-user-frontend' ),
+                'app'         => 'form-builder',
+                'boot'        => 'form_builder',
+                'menuPath'    => '/post-forms',
+                'container'   => 'wpuf-form-builder-app',
+                'bodyClasses' => [ 'wpuf-builder-screen' ],
+                'page'        => 'admin.php?page=wpuf-post-forms&action=edit&id=:id',
+            ],
+            [
+                'id'          => 'post-forms-ai',
+                'path'        => '/post-forms/ai',
+                'title'       => __( 'AI Form Builder', 'wp-user-frontend' ),
+                'app'         => 'ai-form-builder',
+                'boot'        => 'wpuf-ai-form-generation',
+                'menuPath'    => '/post-forms',
+                'container'   => 'wpuf-ai-form-builder',
+                'bodyClasses' => [ 'wpuf-ai-form-builder-page' ],
+                'page'        => 'admin.php?action=post_form_template&template=ai_form&_wpnonce=' . wp_create_nonce( 'wpuf_create_from_template' ),
+            ],
+        ];
+    }
 }

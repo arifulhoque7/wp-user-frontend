@@ -89,4 +89,41 @@ class BootPayload {
 
         wp_add_inline_script( $handle, 'window.wpufAdmin = ' . wp_json_encode( $this->data( $screen ) ) . ';', 'before' );
     }
+
+    /**
+     * Print the admin app's boot data before its shell: the app data plus every
+     * screen's boot data (`wpuf_admin_boot` / `wpuf_admin_boot_{screen}` fire
+     * as on the screens' own pages). The shell sets `window.wpufAdmin` to the
+     * active route's screen data on every route change.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param string $handle Shell script handle
+     * @param array  $app    Routes, initial route, globals, page URL
+     *
+     * @return void
+     */
+    public function attach_app( $handle, array $app ) {
+        if ( isset( $this->printed['app'] ) ) {
+            return;
+        }
+
+        $this->printed['app'] = true;
+
+        $screens = [];
+
+        foreach ( $app['routes'] as $route ) {
+            $id = isset( $route['boot'] ) ? $route['boot'] : $route['screen'];
+
+            if ( 'app' === $route['mode'] && ! isset( $screens[ $id ] ) ) {
+                $screens[ $id ] = $this->data( $id );
+            }
+        }
+
+        $data            = $this->data( 'app' );
+        $data['app']     = $app;
+        $data['screens'] = $screens;
+
+        wp_add_inline_script( $handle, 'window.wpufAdmin = ' . wp_json_encode( $data ) . ';', 'before' );
+    }
 }

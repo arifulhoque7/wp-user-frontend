@@ -93,4 +93,76 @@ abstract class Screen {
 
         return $plugin_page === $this->slug();
     }
+
+    /**
+     * Routes of the admin app (one page, hash routes) that show this screen.
+     * Each route: `id`, `path` (`/post-forms/:id/edit`), `title`, `app` (id
+     * the screen bundle registers with the shell), `boot` (BootPayload screen
+     * id), `in_app` (true once the route runs in the app; else `page`, the old
+     * URL with `:name` filled from the path, opens), `menu` (WPUF submenu slug
+     * it lights), `menuLink` (the menu row points at this route), `container`
+     * (old mount element id), `notices` (shows admin notices), `bodyClasses`.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return array[]
+     */
+    public function app_routes() {
+        return [];
+    }
+
+    /**
+     * Whether this screen runs inside the admin app. When not, its routes open
+     * its own page as before.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return bool
+     */
+    public function in_app() {
+        foreach ( $this->app_routes() as $route ) {
+            if ( ! empty( $route['in_app'] ) ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * The app route the current request of this screen's old page maps to,
+     * e.g. `/post-forms/12/edit` for `page=wpuf-post-forms&action=edit&id=12`,
+     * or '' when that route is not in the app (the page renders as before).
+     *
+     * @since WPUF_SINCE
+     *
+     * @return string
+     */
+    public function app_route_for_request() {
+        return '';
+    }
+
+    /**
+     * Window globals the screen's routes read, printed on the app page
+     * (name => value), e.g. `[ 'wpuf_forms_list' => [ ... ] ]`.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return array
+     */
+    public function app_globals() {
+        return [];
+    }
+
+    /**
+     * Load the screen on the app page: the same as on its own page by default
+     * (its load hooks fire with the same arguments).
+     *
+     * @since WPUF_SINCE
+     *
+     * @return void
+     */
+    public function load_in_app() {
+        $this->load();
+    }
 }
