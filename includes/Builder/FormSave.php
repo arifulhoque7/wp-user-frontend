@@ -106,6 +106,11 @@ class FormSave {
         $form_fields   = json_decode( $form_fields, true );
         $notifications = json_decode( $notifications, true );
 
+        // Post form selects develop's form post always stored (their first option).
+        if ( 'wpuf_forms' === get_post_type( $form_id ) ) {
+            $settings = Normalizers::post_form_selects( $settings );
+        }
+
         // Values develop's form post always stored (Pro): the registration new
         // user status, the post expiration values the screen shows, and the
         // multi-step bar type (its select's first option).

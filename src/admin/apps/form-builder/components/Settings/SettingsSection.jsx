@@ -7,10 +7,14 @@ import { orderedOptions } from './fields/settingOptions';
 import ProPreviewWrapper from './ProPreviewWrapper';
 import { useFieldVisibility, MUTUAL_EXCLUSIONS } from './useFieldDependencies';
 
-// Post expiration selects shown while nothing is stored (see resolveSettingValue).
-const EXPIRATION_SHOWN_SELECTS = {
-    expiration_time_type: 'day',
-    expired_post_status: 'draft',
+// Selects that show develop's first option while nothing is stored, keyed by
+// their setting path (see resolveSettingValue); the save stores the same
+// (Normalizers::post_expiration / post_form_selects, owner decisions 2026-10-08).
+const SHOWN_FIRST_OPTIONS = {
+    'expiration_settings.expiration_time_type': 'day',
+    'expiration_settings.expired_post_status': 'draft',
+    label_position: 'above',
+    choose_payment_option: 'force_pack_purchase',
 };
 
 /**
@@ -76,11 +80,12 @@ export function resolveSettingValue( settings, fieldName, fieldDef ) {
         return 'on';
     }
 
-    // Post expiration selects: develop's selectize showed its first option
-    // (Day(s), Draft) and the save stores those (Normalizers::post_expiration,
-    // owner decision 2026-10-08), so show them rather than "- Select -".
-    if ( 2 === path.length && 'expiration_settings' === path[ 0 ] && EXPIRATION_SHOWN_SELECTS[ key ] ) {
-        return EXPIRATION_SHOWN_SELECTS[ key ];
+    // Selects develop always stored with their first option (Day(s), Draft,
+    // Above Element, Mandatory Subscription): show that, not "- Select -".
+    const shownFirst = SHOWN_FIRST_OPTIONS[ path.join( '.' ) ];
+
+    if ( shownFirst ) {
+        return shownFirst;
     }
 
     return fieldDef.value || fieldDef.default || '';

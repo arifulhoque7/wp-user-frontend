@@ -33,6 +33,16 @@ describe( 'resolveSettingValue', () => {
         expect( resolveSettingValue( settings, 'expired_post_status', statusDef ) ).toBe( 'pending' );
     } );
 
+    test( 'Label Position and Choose Payment Option show develop\'s first option while nothing is stored', () => {
+        const labelDef = { name: 'wpuf_settings[label_position]', type: 'select', options: { above: 'Above Element', left: 'Left', right: 'Right', hidden: 'Hidden' } };
+        const payDef = { name: 'wpuf_settings[choose_payment_option]', type: 'select', options: { force_pack_purchase: 'Mandatory Subscription', enable_pay_per_post: 'Pay as you post' } };
+
+        expect( resolveSettingValue( {}, 'label_position', labelDef ) ).toBe( 'above' );
+        expect( resolveSettingValue( {}, 'choose_payment_option', payDef ) ).toBe( 'force_pack_purchase' );
+        expect( resolveSettingValue( { label_position: 'left' }, 'label_position', labelDef ) ).toBe( 'left' );
+        expect( resolveSettingValue( { choose_payment_option: 'enable_pay_per_post' }, 'choose_payment_option', payDef ) ).toBe( 'enable_pay_per_post' );
+    } );
+
     test( 'other selects keep showing nothing until a pick', () => {
         expect( resolveSettingValue( {}, 'post_permission', { name: 'wpuf_settings[post_permission]', type: 'select', options: { everyone: '-' } } ) ).toBe( '' );
     } );

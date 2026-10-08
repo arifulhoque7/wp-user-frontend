@@ -244,6 +244,16 @@ class FormStoreTest extends WP_UnitTestCase {
         $this->assertSame( [], Normalizers::multistep_progressbar_type( [] ) );
     }
 
+    public function test_post_form_selects_store_develops_first_option() {
+        $this->assertSame( [ 'label_position' => 'above', 'choose_payment_option' => 'force_pack_purchase' ], Normalizers::post_form_selects( [] ) );
+        // Picked values stay.
+        $this->assertSame(
+            [ 'label_position' => 'left', 'choose_payment_option' => 'enable_pay_per_post' ],
+            Normalizers::post_form_selects( [ 'label_position' => 'left', 'choose_payment_option' => 'enable_pay_per_post' ] )
+        );
+        $this->assertNull( Normalizers::post_form_selects( null ) );
+    }
+
     public function test_post_expiration_stores_the_values_the_builder_shows() {
         $shown = [
             'enable_post_expiration'  => 'on',

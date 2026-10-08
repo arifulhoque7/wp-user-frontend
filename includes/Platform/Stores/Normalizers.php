@@ -136,6 +136,42 @@ class Normalizers {
     }
 
     /**
+     * Post form selects whose first option develop always stored.
+     *
+     * Develop's builder posted these selectize selects, so a saved form always
+     * had their first option: Label Position `above`, Choose Payment Option
+     * `force_pack_purchase`. The frontend reads a missing Label Position as
+     * `left`, so a form saved in the React builder (which writes an untouched
+     * select only after a pick) showed its labels beside the inputs instead of
+     * above them. Missing keys get develop's first option; the builder shows the
+     * same (owner decision 2026-10-08); stored values stay as they are.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param array $settings Form settings
+     *
+     * @return array
+     */
+    public static function post_form_selects( $settings ) {
+        if ( ! is_array( $settings ) ) {
+            return $settings;
+        }
+
+        $first_options = [
+            'label_position'        => 'above',
+            'choose_payment_option' => 'force_pack_purchase',
+        ];
+
+        foreach ( $first_options as $key => $value ) {
+            if ( ! isset( $settings[ $key ] ) ) {
+                $settings[ $key ] = $value;
+            }
+        }
+
+        return $settings;
+    }
+
+    /**
      * Post expiration values the builder shows while nothing is stored.
      *
      * With no `expiration_settings` both builders show expiration on, 7, Day(s),
