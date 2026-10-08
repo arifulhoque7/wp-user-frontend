@@ -254,6 +254,18 @@ class FormStoreTest extends WP_UnitTestCase {
         $this->assertNull( Normalizers::post_form_selects( null ) );
     }
 
+    public function test_registration_form_selects_store_develops_first_option() {
+        $this->assertSame(
+            [ 'label_position' => 'above', 'reg_redirect_to' => 'same', 'profile_redirect_to' => 'same' ],
+            Normalizers::registration_form_selects( [] )
+        );
+        $result = Normalizers::registration_form_selects( [ 'reg_redirect_to' => 'url', 'label_position' => 'left' ] );
+        $this->assertSame( 'url', $result['reg_redirect_to'] );
+        $this->assertSame( 'left', $result['label_position'] );
+        $this->assertSame( 'same', $result['profile_redirect_to'] );
+        $this->assertNull( Normalizers::registration_form_selects( null ) );
+    }
+
     public function test_post_expiration_stores_the_values_the_builder_shows() {
         $shown = [
             'enable_post_expiration'  => 'on',

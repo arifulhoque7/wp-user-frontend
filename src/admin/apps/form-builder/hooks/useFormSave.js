@@ -8,6 +8,7 @@ import { openSaveValidationError } from '../common/BuilderDialogs';
 import { getLegacySettingsPayload } from '../common/LegacySlot';
 import { request, restPath } from '@wpuf/api';
 import { setPendingClean } from '../common/saveState';
+import { withShownFirstOptions } from '../components/Settings/shownFirstOptions';
 
 /**
  * Check if a toggle/checkbox value is considered "on".
@@ -128,13 +129,14 @@ function validatePaymentSettings( settings ) {
 export default function useFormSave() {
     const [ isSaving, setIsSaving ] = useState( false );
 
-    const { formFields, notifications, settings, formType } = useSelect( ( select ) => {
+    const { formFields, notifications, settings, formType, isDirty } = useSelect( ( select ) => {
         const store = select( STORE_NAME );
         return {
             formFields: store.getFormFields(),
             notifications: store.getNotifications(),
             settings: store.getSettings(),
             formType: store.getFormType(),
+            isDirty: store.getIsDirty(),
         };
     }, [] );
 
@@ -153,8 +155,12 @@ export default function useFormSave() {
             return;
         }
 
+        // Selects shown with develop's first option are stored (and validated) with
+        // it on an edited save; an untouched save changes nothing stored (G3).
+        const saveSettings = isDirty ? withShownFirstOptions( settings, ( window.wpuf_form_builder || {} ).settings_items ) : settings;
+
         // Client-side payment validation
-        const paymentError = validatePaymentSettings( settings );
+        const paymentError = validatePaymentSettings( saveSettings );
 
         if ( paymentError ) {
             openSaveValidationError( paymentError );
@@ -185,7 +191,8 @@ export default function useFormSave() {
                 form_data: formData,
                 form_fields: JSON.stringify( formFields ),
                 notifications: JSON.stringify( notifications ),
-                settings: JSON.stringify( settings ),
+                settings: JSON.stringify( saveSettings ),
+                touched: isDirty ? '1' : '',
                 legacy_settings: legacy.data,
                 legacy_settings_keys: JSON.stringify( legacy.keys ),
             },
@@ -223,7 +230,7 @@ export default function useFormSave() {
                     showToast( __( 'Something went wrong saving the form.', 'wp-user-frontend' ), 'error' );
                 }
             } );
-    }, [ isSaving, formFields, notifications, settings, markClean, setFormFields, setFormSettings, setCurrentPanel ] );
+    }, [ isSaving, formFields, notifications, settings, isDirty, markClean, setFormFields, setFormSettings, setCurrentPanel ] );
 
     return { isSaving, saveForm };
 }

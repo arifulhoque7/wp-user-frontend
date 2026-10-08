@@ -172,6 +172,42 @@ class Normalizers {
     }
 
     /**
+     * Registration form selects whose first option develop always stored.
+     *
+     * Develop's registration builder posted Label Position (`above`) and the
+     * after-registration / after-profile-update redirects (`same`); the frontend
+     * reads a missing Label Position as `left` and a missing redirect as "no
+     * message". Missing keys get develop's first option (owner decision
+     * 2026-10-08, QA story 15); stored values stay. The builder also fills the
+     * MailPoet 3 list (its first list) before the save.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param array $settings Form settings
+     *
+     * @return array
+     */
+    public static function registration_form_selects( $settings ) {
+        if ( ! is_array( $settings ) ) {
+            return $settings;
+        }
+
+        $first_options = [
+            'label_position'      => 'above',
+            'reg_redirect_to'     => 'same',
+            'profile_redirect_to' => 'same',
+        ];
+
+        foreach ( $first_options as $key => $value ) {
+            if ( ! isset( $settings[ $key ] ) ) {
+                $settings[ $key ] = $value;
+            }
+        }
+
+        return $settings;
+    }
+
+    /**
      * Post expiration values the builder shows while nothing is stored.
      *
      * With no `expiration_settings` both builders show expiration on, 7, Day(s),

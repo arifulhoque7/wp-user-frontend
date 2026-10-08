@@ -30,7 +30,8 @@ class FormSave {
      *
      * @param array $post_data Unslashed request body (`form_fields`, `notifications`,
      *                         `settings`, `integrations`, `legacy_settings`,
-     *                         `legacy_settings_keys`, all JSON / query strings)
+     *                         `legacy_settings_keys`, all JSON / query strings;
+     *                         `touched` '1' when the builder was edited)
      * @param array $form_data The builder's form fields (`wpuf_form_id`,
      *                         `form_settings_key`, `post_title`, `wpuf_settings`)
      *
@@ -106,8 +107,13 @@ class FormSave {
         $form_fields   = json_decode( $form_fields, true );
         $notifications = json_decode( $notifications, true );
 
+        // Edited save (the builder was changed): the values the screen shows while
+        // nothing is stored are stored, as develop's form post did. An untouched
+        // save changes nothing stored (G3); a new form has them from its creation.
+        $touched = ! empty( $post_data['touched'] );
+
         // Post form selects develop's form post always stored (their first option).
-        if ( 'wpuf_forms' === get_post_type( $form_id ) ) {
+        if ( $touched && 'wpuf_forms' === get_post_type( $form_id ) ) {
             $settings = Normalizers::post_form_selects( $settings );
         }
 
@@ -117,9 +123,13 @@ class FormSave {
         if ( class_exists( 'WP_User_Frontend_Pro' ) ) {
             if ( 'wpuf_profile' === get_post_type( $form_id ) ) {
                 $settings = Normalizers::registration_user_status( $settings );
+
+                if ( $touched ) {
+                    $settings = Normalizers::registration_form_selects( $settings );
+                }
             }
 
-            if ( 'wpuf_forms' === get_post_type( $form_id ) ) {
+            if ( $touched && 'wpuf_forms' === get_post_type( $form_id ) ) {
                 $settings = Normalizers::post_expiration( $settings );
             }
 

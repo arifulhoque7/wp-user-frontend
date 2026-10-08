@@ -169,6 +169,28 @@ class FormsRestTest extends WP_UnitTestCase {
         $this->assertSame( $response->get_data()['data']['form_settings'], get_post_meta( $rest_form, 'wpuf_form_settings', true ) );
     }
 
+    public function test_shown_first_options_stored_on_create_and_edited_save_only() {
+        wp_set_current_user( self::factory()->user->create( [ 'role' => 'administrator' ] ) );
+
+        // Untouched save of an existing form: nothing added (G3).
+        $form_id = $this->make_form();
+        $this->assertSame( 200, $this->post( $form_id, $this->payload( $form_id ) )->get_status() );
+        $this->assertArrayNotHasKey( 'label_position', get_post_meta( $form_id, 'wpuf_form_settings', true ) );
+
+        // Edited save: the select's shown first option is stored.
+        $this->assertSame( 200, $this->post( $form_id, array_merge( $this->payload( $form_id ), [ 'touched' => '1' ] ) )->get_status() );
+        $settings = get_post_meta( $form_id, 'wpuf_form_settings', true );
+        $this->assertSame( 'above', $settings['label_position'] );
+        $this->assertSame( 'force_pack_purchase', $settings['choose_payment_option'] );
+
+        // A new form has them from its creation.
+        $request = new WP_REST_Request( 'POST', '/wpuf/v1/admin/forms' );
+        $request->set_body_params( [ 'type' => 'wpuf_forms' ] );
+        $created = $this->server->dispatch( $request );
+        $this->assertSame( 201, $created->get_status() );
+        $this->assertSame( 'above', get_post_meta( $created->get_data()['data']['id'], 'wpuf_form_settings', true )['label_position'] );
+    }
+
     public function test_save_service_rejects_bad_payloads() {
         $form_id = $this->make_form();
         $saver   = new FormSave();

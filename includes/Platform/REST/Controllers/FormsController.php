@@ -13,6 +13,7 @@ use WeDevs\Wpuf\Builder\FormSave;
 use WeDevs\Wpuf\Platform\Caps;
 use WeDevs\Wpuf\Platform\REST\RestController;
 use WeDevs\Wpuf\Platform\Stores\FormStore;
+use WeDevs\Wpuf\Platform\Stores\Normalizers;
 use WP_REST_Request;
 use WP_REST_Server;
 
@@ -117,6 +118,7 @@ class FormsController extends RestController {
                         'integrations'         => $string,
                         'legacy_settings'      => $string,
                         'legacy_settings_keys' => $string,
+                        'touched'              => $string,
                     ],
                 ],
                 [
@@ -240,6 +242,8 @@ class FormsController extends RestController {
             return $this->error( 'not_created', __( 'The form could not be created.', 'wp-user-frontend' ), 500 );
         }
 
+        $this->store_shown_settings( $form_id, $type );
+
         $response = rest_ensure_response(
             [
                 'success' => true,
@@ -249,6 +253,34 @@ class FormsController extends RestController {
         $response->set_status( 201 );
 
         return $response;
+    }
+
+    /**
+     * A new form stores the values its builder shows while nothing is stored
+     * (the selects' first options, Pro's post expiration), as develop's first
+     * builder save did. Later saves store them only when the builder is edited
+     * (FormSave), so an untouched save changes nothing stored.
+     *
+     * @param int    $form_id Form id
+     * @param string $type    Form post type
+     *
+     * @return void
+     */
+    private function store_shown_settings( $form_id, $type ) {
+        $settings = get_post_meta( $form_id, 'wpuf_form_settings', true );
+        $settings = is_array( $settings ) ? $settings : [];
+
+        if ( 'wpuf_profile' === $type ) {
+            $settings = Normalizers::registration_form_selects( $settings );
+        } else {
+            $settings = Normalizers::post_form_selects( $settings );
+
+            if ( class_exists( 'WP_User_Frontend_Pro' ) ) {
+                $settings = Normalizers::post_expiration( $settings );
+            }
+        }
+
+        update_post_meta( $form_id, 'wpuf_form_settings', $settings );
     }
 
     /**
@@ -343,7 +375,7 @@ class FormsController extends RestController {
 
         $post_data = [];
 
-        foreach ( [ 'form_fields', 'notifications', 'settings', 'integrations', 'legacy_settings', 'legacy_settings_keys' ] as $key ) {
+        foreach ( [ 'form_fields', 'notifications', 'settings', 'integrations', 'legacy_settings', 'legacy_settings_keys', 'touched' ] as $key ) {
             if ( null !== $request[ $key ] ) {
                 $post_data[ $key ] = (string) $request[ $key ];
             }

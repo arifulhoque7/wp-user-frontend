@@ -6,16 +6,8 @@ import SettingsField from './SettingsField';
 import { orderedOptions } from './fields/settingOptions';
 import ProPreviewWrapper from './ProPreviewWrapper';
 import { useFieldVisibility, MUTUAL_EXCLUSIONS } from './useFieldDependencies';
+import { shownFirstOption } from './shownFirstOptions';
 
-// Selects that show develop's first option while nothing is stored, keyed by
-// their setting path (see resolveSettingValue); the save stores the same
-// (Normalizers::post_expiration / post_form_selects, owner decisions 2026-10-08).
-const SHOWN_FIRST_OPTIONS = {
-    'expiration_settings.expiration_time_type': 'day',
-    'expiration_settings.expired_post_status': 'draft',
-    label_position: 'above',
-    choose_payment_option: 'force_pack_purchase',
-};
 
 /**
  * The input name a settings row posts (develop's views).
@@ -81,8 +73,9 @@ export function resolveSettingValue( settings, fieldName, fieldDef ) {
     }
 
     // Selects develop always stored with their first option (Day(s), Draft,
-    // Above Element, Mandatory Subscription): show that, not "- Select -".
-    const shownFirst = SHOWN_FIRST_OPTIONS[ path.join( '.' ) ];
+    // Above Element, Mandatory Subscription, Same page, the first MailPoet
+    // list): show that, not "- Select -" (shownFirstOptions.js).
+    const shownFirst = shownFirstOption( path.join( '.' ), fieldDef );
 
     if ( shownFirst ) {
         return shownFirst;

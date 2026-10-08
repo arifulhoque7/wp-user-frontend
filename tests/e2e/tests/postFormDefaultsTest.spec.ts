@@ -13,6 +13,7 @@ import { configureSpecFailFast } from '../utils/specFailFast';
  * @TestScenario : [Post form defaults]
  * @Test_PFD0001 : An untouched builder save stores Label Position "above" and Choose Payment Option "force_pack_purchase"
  * @Test_PFD0002 : The form renders its labels above the inputs on the frontend
+ * @Test_PFD0003 : An untouched registration form save stores Label Position "above" and both redirects "same" (Pro, QA story 15)
  */
 
 let browser: Browser;
@@ -22,6 +23,7 @@ let api: WpufApi;
 
 const stamp = Date.now();
 let formId = 0;
+let regFormId = 0;
 let pageId = '';
 const user = { login: `pfd_e2e_${ stamp }`, pass: `Pfd-${ stamp }-${ Math.random().toString( 36 ).slice( 2 ) }` };
 let userId = '';
@@ -30,9 +32,9 @@ let userId = '';
 const cliValue = (out: string, re: RegExp): string => ( out.split( '\n' ).map( (l) => l.trim() ).find( (l) => re.test( l ) ) || '' );
 
 // One stored form setting; a missing key reads as '' (wp-cli fails on it).
-const setting = (key: string): string => {
+const setting = (key: string, id: number = formId): string => {
     try {
-        return cliValue( wpCli( `post meta pluck ${ formId } wpuf_form_settings ${ key }` ), /^[a-z_]+$/ );
+        return cliValue( wpCli( `post meta pluck ${ id } wpuf_form_settings ${ key }` ), /^[a-z_]+$/ );
     } catch ( e ) {
         return '';
     }
@@ -47,9 +49,9 @@ test.beforeAll(async () => {
 
 test.afterAll(async () => {
     // The form's field rows (wpuf_input children) first: `post delete` leaves them.
-    if ( formId ) {
+    for ( const fid of [ formId, regFormId ].filter( Boolean ) ) {
         try {
-            const fields = cliValue( wpCli( `post list --post_type=wpuf_input --post_parent=${ formId } --post_status=any --format=ids` ), /^[\d ]+$/ );
+            const fields = cliValue( wpCli( `post list --post_type=wpuf_input --post_parent=${ fid } --post_status=any --format=ids` ), /^[\d ]+$/ );
             if ( fields ) {
                 wpCli( `post delete ${ fields } --force` );
             }
@@ -57,7 +59,7 @@ test.afterAll(async () => {
             // No fields.
         }
     }
-    for ( const id of [ pageId, formId ? String( formId ) : '' ] ) {
+    for ( const id of [ pageId, formId ? String( formId ) : '', regFormId ? String( regFormId ) : '' ] ) {
         if ( id ) {
             try {
                 wpCli( `post delete ${ id } --force` );
@@ -85,8 +87,8 @@ test.describe('Post form defaults', () => {
         expect( created.status() ).toBe( 201 );
         formId = ( await created.json() ).data.id;
 
-        // What the React builder sends for a blank form with only a Post Title added:
-        // untouched selects are not in the settings.
+        // What the React builder sends for a blank form with only a Post Title added
+        // (an edited save, so `touched`): untouched selects are not in the settings.
         const title = `PFD e2e ${ stamp }`;
         const saved = await api.post( `/admin/forms/${ formId }`, {
             form_data: new URLSearchParams( { wpuf_form_id: String( formId ), form_settings_key: 'wpuf_form_settings', post_title: title } ).toString(),
@@ -98,6 +100,7 @@ test.describe('Post form defaults', () => {
             } ] ),
             notifications: '[]',
             settings: JSON.stringify( { post_type: 'post', post_status: 'publish', redirect_to: 'post', submit_text: 'Create Post' } ),
+            touched: '1',
         } );
         expect( saved.ok() ).toBeTruthy();
 
@@ -120,5 +123,31 @@ test.describe('Post form defaults', () => {
 
         await page.goto( `${ Urls.baseUrl }/?page_id=${ pageId }`, { waitUntil: 'load' } );
         await expect( page.locator( 'form.wpuf-form-add ul.wpuf-form' ) ).toHaveClass( /form-label-above/ );
+    });
+    test('PFD0003 : An untouched registration form save stores Label Position "above" and both redirects "same"', { tag: [ '@Pro', '@Test_PFD0003' ] }, async () => {
+        // What the React builder sends for a registration form with only an E-mail
+        // field added and no setting touched (Normalizers::registration_form_selects).
+        const created = await api.post( '/admin/forms', { type: 'wpuf_profile' } );
+        test.skip( 400 === created.status(), 'Pro is not active' );
+        expect( created.status() ).toBe( 201 );
+        regFormId = ( await created.json() ).data.id;
+
+        const saved = await api.post( `/admin/forms/${ regFormId }`, {
+            form_data: new URLSearchParams( { wpuf_form_id: String( regFormId ), form_settings_key: 'wpuf_form_settings', post_title: `PFD reg e2e ${ stamp }` } ).toString(),
+            form_fields: JSON.stringify( [ {
+                template: 'user_email', name: 'user_email', label: 'E-mail', required: 'yes', is_meta: 'no', input_type: 'email',
+                width: 'large', css: '', placeholder: '', default: '', size: 40, help: '',
+                wpuf_cond: { condition_status: 'no', cond_field: [], cond_operator: [ '=' ], cond_option: [ '- Select -' ], cond_logic: 'all' },
+                wpuf_visibility: { selected: 'everyone', choices: [] },
+            } ] ),
+            notifications: '[]',
+            settings: JSON.stringify( { role: 'subscriber' } ),
+            touched: '1',
+        } );
+        expect( saved.ok() ).toBeTruthy();
+
+        expect( setting( 'label_position', regFormId ) ).toBe( 'above' );
+        expect( setting( 'reg_redirect_to', regFormId ) ).toBe( 'same' );
+        expect( setting( 'profile_redirect_to', regFormId ) ).toBe( 'same' );
     });
 });
