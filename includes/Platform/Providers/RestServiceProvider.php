@@ -15,6 +15,7 @@ use WeDevs\Wpuf\Builder\FormSave;
 use WeDevs\Wpuf\Platform\REST\Controllers\FormsController;
 use WeDevs\Wpuf\Platform\REST\Controllers\OnboardingController;
 use WeDevs\Wpuf\Platform\REST\Controllers\ToolsController;
+use WeDevs\Wpuf\Platform\REST\Controllers\TransactionsController;
 use WeDevs\Wpuf\Platform\REST\Manager;
 use WeDevs\Wpuf\Platform\ServiceProvider;
 use WeDevs\Wpuf\Platform\Stores\FormStore;
@@ -75,6 +76,14 @@ class RestServiceProvider extends ServiceProvider {
             ToolsController::class,
             function () {
                 return new ToolsController();
+            }
+        );
+
+        // wpuf/v1/admin/transactions (User Frontend > Transactions).
+        $this->share_tagged(
+            TransactionsController::class,
+            function () {
+                return new TransactionsController();
             }
         );
 

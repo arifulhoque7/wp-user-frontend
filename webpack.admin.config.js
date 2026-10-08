@@ -28,6 +28,7 @@ const entries = {
     welcome: './src/admin/apps/welcome/index.jsx',
     help: './src/admin/apps/help/index.jsx',
     tools: './src/admin/apps/tools/index.jsx',
+    transactions: './src/admin/apps/transactions/index.jsx',
 };
 
 // The shared layer (design.md D24): bundles @wpuf/* sources and plugin-ui,

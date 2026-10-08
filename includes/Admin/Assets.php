@@ -83,6 +83,7 @@ class Assets implements Hookable {
         $welcome_asset         = $this->react_asset( 'welcome', [ 'wp-element', 'wp-i18n', 'wpuf-admin-runtime', 'wpuf-admin-ui' ] );
         $help_asset            = $this->react_asset( 'help', [ 'wp-element', 'wp-i18n', 'wpuf-admin-runtime', 'wpuf-admin-ui' ] );
         $tools_asset           = $this->react_asset( 'tools', [ 'wp-element', 'wp-i18n', 'wpuf-admin-runtime', 'wpuf-admin-ui' ] );
+        $transactions_asset    = $this->react_asset( 'transactions', [ 'wp-element', 'wp-i18n', 'wpuf-admin-runtime', 'wpuf-admin-ui' ] );
         // The shared React admin layer (design.md D24): screens and Pro get
         // these as dependencies through the `@wpuf/*` / plugin-ui externals.
         $admin_runtime_asset = $this->react_asset( 'admin-runtime', [ 'wp-api-fetch', 'wp-element', 'wp-hooks', 'wp-url' ] );
@@ -166,6 +167,13 @@ class Assets implements Hookable {
                 'src'       => WPUF_ASSET_URI . '/js/react/tools.js',
                 'deps'      => $tools_asset['dependencies'],
                 'version'   => $tools_asset['version'],
+                'in_footer' => true,
+            ],
+            // Transactions (Admin\Screens\Transactions).
+            'transactions'              => [
+                'src'       => WPUF_ASSET_URI . '/js/react/transactions.js',
+                'deps'      => $transactions_asset['dependencies'],
+                'version'   => $transactions_asset['version'],
                 'in_footer' => true,
             ],
             // AI form builder, under the Vue app's handle (Admin\Screens\AiFormBuilder).
