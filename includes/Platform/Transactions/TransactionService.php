@@ -415,6 +415,13 @@ class TransactionService {
         $pending = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = 'wpuf_order' AND post_status IN ('publish','pending')" );
         // phpcs:enable
 
+        $tx = is_object( $tx ) ? $tx : (object) [
+            'rows_all'  => 0,
+            'completed' => 0,
+            'income'    => 0,
+            'tax'       => 0,
+        ];
+
         return [
             'all'       => (int) $tx->rows_all + $pending,
             'completed' => (int) $tx->completed,
