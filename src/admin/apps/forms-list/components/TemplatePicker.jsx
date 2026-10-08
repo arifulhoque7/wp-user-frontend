@@ -437,7 +437,7 @@ export default function TemplatePicker( { open, onClose, data, onAI } ) {
             <div className="shrink-0 border-0 border-b border-solid border-gray-200 bg-white">
                 <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-6 px-8 py-4">
                     <div>
-                        <h2 id="wpuf-template-picker-title" className="m-0 p-0 text-xl font-semibold leading-7 text-gray-900">{ data.title }</h2>
+                        <h2 id="wpuf-template-picker-title" className="m-0 p-0 text-2xl font-bold leading-8 text-gray-900">{ data.title }</h2>
                         <p id="wpuf-template-picker-description" className="m-0 mt-1 p-0 text-sm text-gray-500">
                             { __( 'Select from a pre-defined template to get started quickly, or start from a blank form to build your own from scratch', 'wp-user-frontend' ) }
                         </p>
@@ -477,14 +477,14 @@ export default function TemplatePicker( { open, onClose, data, onAI } ) {
                                             type="button"
                                             aria-pressed={ active }
                                             data-category={ item.slug }
-                                            className={ `flex w-full cursor-pointer items-center justify-between rounded-md border-0 px-3 py-2 text-start text-sm focus:outline-hidden focus:shadow-none focus-visible:ring-2 focus-visible:ring-primary/30 ${ active ? 'bg-white font-medium text-primary shadow-sm' : 'bg-transparent text-gray-700 hover:bg-white hover:text-primary' }` }
+                                            className={ `flex w-full cursor-pointer items-center justify-between rounded-md border-0 px-3 py-2.5 text-start text-sm font-medium focus:outline-hidden focus:shadow-none focus-visible:ring-2 focus-visible:ring-primary/30 ${ active ? 'bg-primary text-white' : 'bg-transparent text-gray-700 hover:bg-gray-100 hover:text-gray-900' }` }
                                             onClick={ () => {
                                                 setSearch( '' );
                                                 setCategory( item.slug );
                                             } }
                                         >
                                             <span>{ item.label }</span>
-                                            <span className={ `rounded-full px-2 py-0.5 text-xs ${ active ? 'bg-primary/10 font-semibold text-primary' : 'text-gray-500' }` }>
+                                            <span className={ `rounded-full px-2 py-0.5 text-xs ${ active ? 'bg-white/20 font-semibold text-white' : 'text-gray-500' }` }>
                                                 { counts[ item.slug ] || 0 }
                                             </span>
                                         </button>

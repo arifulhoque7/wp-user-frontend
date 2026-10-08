@@ -81,6 +81,7 @@ const SubscriptionDetails = ( { subscription, onFieldChange, currentTab: externa
 			<div className="mt-4 border-0 border-b border-solid border-gray-200 pb-2">
 				<Tabs
 					variant="toolbar"
+					className="border-0! shadow-none!"
 					label={ __( 'Subscription sections', 'wp-user-frontend' ) }
 					value={ currentTab }
 					onChange={ setCurrentTab }

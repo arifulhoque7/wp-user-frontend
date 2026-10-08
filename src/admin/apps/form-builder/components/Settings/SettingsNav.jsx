@@ -38,15 +38,15 @@ export default function SettingsNav( { activeTab, onTabChange } ) {
                             <h2
                                 id={ isClickableHeader ? `${ topKey }-menu` : undefined }
                                 onClick={ isClickableHeader ? () => onTabChange( topKey ) : undefined }
-                                className={ `group/sidebar-item m-0 flex items-center w-full rounded-md wpuf-transition-all duration-200 ease-in-out ${ isClickableHeader ? 'py-2 px-2.5 text-sm! font-medium hover:bg-gray-100 hover:cursor-pointer' : 'px-2.5 pt-3 pb-1 text-xs! font-semibold uppercase tracking-wide' } ${ isHeaderActive ? 'bg-primary/10 active_settings_tab text-primary' : 'text-gray-500' }` }
+                                className={ `group/sidebar-item m-0 flex items-center w-full rounded-md wpuf-transition-all duration-200 ease-in-out ${ isClickableHeader ? 'py-2.5 px-3 gap-3 text-sm! font-medium hover:bg-gray-100 hover:cursor-pointer' : 'gap-2 px-3 pt-3 pb-1 text-xs! font-semibold uppercase tracking-wide' } ${ isHeaderActive ? 'bg-primary! active_settings_tab text-white! hover:bg-primary!' : 'text-gray-500' }` }
                             >
                                 { topItem.icon && (
                                     <span
-                                        className={ `inline-flex [&>svg]:w-4 [&>svg]:h-4 ${ isHeaderActive ? 'icon-primary' : '[&_.custom-stroke]:stroke-gray-400' }` }
+                                        className={ `inline-flex [&>svg]:w-4 [&>svg]:h-4 ${ isHeaderActive ? 'icon-white' : '[&_.custom-stroke]:stroke-gray-400' }` }
                                         dangerouslySetInnerHTML={ { __html: topItem.icon } }
                                     />
                                 ) }
-                                <span className="ml-2">{ topItem.label }</span>
+                                <span>{ topItem.label }</span>
                             </h2>
                         </div>
 
@@ -61,19 +61,19 @@ export default function SettingsNav( { activeTab, onTabChange } ) {
                                             <li
                                                 key={ subKey }
                                                 onClick={ () => onTabChange( subKey ) }
-                                                className={ `group/sidebar-item m-0 py-2 px-2.5 hover:cursor-pointer rounded-md wpuf-transition-all duration-200 ease-in-out items-center flex justify-between ${ isActive ? 'bg-primary/10 active_settings_tab' : 'hover:bg-gray-100' }` }
+                                                className={ `group/sidebar-item m-0 py-2.5 px-3 hover:cursor-pointer rounded-md wpuf-transition-all duration-200 ease-in-out items-center flex justify-between ${ isActive ? 'bg-primary active_settings_tab' : 'hover:bg-gray-100' }` }
                                                 data-settings={ subKey }
                                             >
                                                 <a
-                                                    className={ `text-sm wpuf-transition-all duration-200 ease-in-out focus:shadow-none focus:outline-hidden flex items-center ${ isActive ? 'text-primary! font-medium' : 'text-gray-600 group-hover/sidebar-item:text-gray-900' }` }
+                                                    className={ `text-sm font-medium wpuf-transition-all duration-200 ease-in-out focus:shadow-none focus:outline-hidden flex items-center gap-3 ${ isActive ? 'text-white!' : 'text-gray-700 group-hover/sidebar-item:text-gray-900!' }` }
                                                 >
                                                     { subItem.icon && (
                                                         <span
-                                                            className={ `inline-flex [&>svg]:w-4 [&>svg]:h-4 ${ isActive ? 'icon-primary' : '[&_.custom-stroke]:stroke-gray-400 group-hover/sidebar-item:[&_.custom-stroke]:stroke-gray-600' }` }
+                                                            className={ `inline-flex [&>svg]:w-4 [&>svg]:h-4 ${ isActive ? 'icon-white' : '[&_.custom-stroke]:stroke-gray-400 group-hover/sidebar-item:[&_.custom-stroke]:stroke-gray-600' }` }
                                                             dangerouslySetInnerHTML={ { __html: subItem.icon } }
                                                         />
                                                     ) }
-                                                    <span className="ml-2">{ subItem.label }</span>
+                                                    <span>{ subItem.label }</span>
                                                 </a>
                                                 { ! isProActive && BADGE_MENUS.includes( subKey ) && (
                                                     <span>

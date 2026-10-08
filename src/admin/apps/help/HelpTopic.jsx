@@ -14,7 +14,7 @@ import { ExternalLink, FileText } from 'lucide-react';
  */
 export default function HelpTopic( { topic } ) {
     return (
-        <article className="rounded-[10px] border border-solid border-gray-200 bg-white p-5 shadow-sm" data-topic={ topic.id } aria-labelledby={ `wpuf-help-${ topic.id }` }>
+        <article className="rounded-[10px] border border-solid border-gray-200 bg-white p-6 shadow-sm" data-topic={ topic.id } aria-labelledby={ `wpuf-help-${ topic.id }` }>
             <h2 id={ `wpuf-help-${ topic.id }` } className="m-0 mb-3 text-base font-semibold text-gray-900">{ topic.title }</h2>
 
             { /* Plugin's own translated text from views/help/<id>.php, through wp_kses_post. */ }

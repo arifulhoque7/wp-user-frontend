@@ -140,32 +140,38 @@ const SubscriptionBox = ({ subscription, onEdit, onChanged }) => {
 		const items = [];
 		if (subscription.post_status !== 'trash') {
 			items.push({
+				action: 'edit',
 				icon: pencil,
 				title: __('Edit', 'wp-user-frontend'),
 				onClick: handleEdit,
 			});
 			items.push({
+				action: 'quick-edit',
 				icon: pencil,
 				title: __('Quick Edit', 'wp-user-frontend'),
 				onClick: handleQuickEdit,
 			});
 			items.push({
+				action: subscription.post_status === 'publish' ? 'draft' : 'publish',
 				icon: subscription.post_status === 'publish' ? closeSmall : check,
 				title: subscription.post_status === 'publish' ? __('Draft', 'wp-user-frontend') : __('Publish', 'wp-user-frontend'),
 				onClick: handleToggleStatus,
 			});
 			items.push({
+				action: 'trash',
 				icon: trash,
 				title: __('Trash', 'wp-user-frontend'),
 				onClick: () => setConfirming('trash'),
 			});
 		} else {
 			items.push({
+				action: 'restore',
 				icon: check,
 				title: __('Restore', 'wp-user-frontend'),
 				onClick: handleRestore,
 			});
 			items.push({
+				action: 'delete',
 				icon: trash,
 				title: __('Delete Permanently', 'wp-user-frontend'),
 				onClick: () => setConfirming('delete'),
@@ -174,10 +180,11 @@ const SubscriptionBox = ({ subscription, onEdit, onChanged }) => {
 		return applyFilters( 'wpuf.subscription.boxMenuItems', items, subscription );
 	};
 
-	// The filter keeps its item shape ({ icon, title, onClick }); the menu shows
-	// the titles like develop (no icons).
+	// The filter keeps its item shape ({ icon, title, onClick }); built-in items
+	// carry an `action`, which picks the menu's icon.
 	const menuItems = getMenuItems().map((item, index) => ({
 		key: `${index}-${item.title}`,
+		action: item.action,
 		label: item.title,
 		onClick: item.onClick,
 		disabled: busy,

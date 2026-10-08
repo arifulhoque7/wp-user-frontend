@@ -36,11 +36,11 @@ export default function HelpPage( { context } ) {
         <PageShell>
             <PageHeader utm="wpuf-help" helpUrl={ help.docsUrl } helpLabel={ __( 'View all documentation', 'wp-user-frontend' ) } />
 
-            <div className="wpuf-help mt-9 pb-10">
+            <div className="wpuf-help mt-6 pb-10">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                        <h1 className="m-0 p-0 text-xl font-semibold leading-none text-gray-900">{ __( 'Help', 'wp-user-frontend' ) }</h1>
-                        <p className="m-0 mt-2 text-sm text-gray-500">{ __( 'Guides for every part of User Frontend, and where to get help.', 'wp-user-frontend' ) }</p>
+                        <h1 className="m-0 p-0 text-2xl font-bold leading-8 text-gray-900">{ __( 'Help', 'wp-user-frontend' ) }</h1>
+                        <p className="m-0 mt-1 text-sm text-gray-500">{ __( 'Guides for every part of User Frontend, and where to get help.', 'wp-user-frontend' ) }</p>
                     </div>
                     <Button variant="secondary" onClick={ () => window.open( help.docsUrl, '_blank', 'noopener' ) }>
                         <ExternalLink size={ 16 } aria-hidden="true" />
@@ -50,7 +50,7 @@ export default function HelpPage( { context } ) {
 
                 <HelpNewsletter newsletter={ help.newsletter || {} } />
 
-                <div className="mt-6 grid gap-6 lg:grid-cols-[280px_1fr]">
+                <div className="mt-6 grid gap-6 lg:grid-cols-[240px_1fr]">
                     <HelpTopicNav topics={ topics } current={ topic?.id } onOpen={ open } />
                     { topic && <HelpTopic topic={ topic } /> }
                 </div>

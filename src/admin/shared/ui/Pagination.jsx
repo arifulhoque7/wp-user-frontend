@@ -61,7 +61,7 @@ export default function Pagination( { currentPage, onPageChange, variant = 'simp
 
         return (
             <footer data-wpuf-ui="" className={ cn( 'flex flex-wrap items-center justify-between gap-3 border-0 border-t border-solid border-gray-200 px-4 py-3 text-sm text-gray-500', className ) }>
-                <span className="text-xs">
+                <span className="text-[13px]">
                     { sprintf(
                         /* translators: 1: first item number, 2: last item number, 3: total items */
                         __( 'Showing %1$d–%2$d of %3$d', 'wp-user-frontend' ),
@@ -73,7 +73,7 @@ export default function Pagination( { currentPage, onPageChange, variant = 'simp
                 <div className="flex flex-wrap items-center gap-3">
                     { onPerPageChange && (
                         <label className="flex items-center gap-2">
-                            <span className="text-xs whitespace-nowrap">{ __( 'Rows per page', 'wp-user-frontend' ) }</span>
+                            <span className="text-[13px] whitespace-nowrap">{ __( 'Rows per page', 'wp-user-frontend' ) }</span>
                             <PuiSelect value={ String( perPage ) } onValueChange={ ( next ) => onPerPageChange( parseInt( String( next ), 10 ) ) }>
                                 <SelectTrigger
                                     aria-label={ __( 'Rows per page', 'wp-user-frontend' ) }
@@ -93,7 +93,7 @@ export default function Pagination( { currentPage, onPageChange, variant = 'simp
                         <button type="button" className={ step } onClick={ () => go( currentPage - 1 ) } disabled={ currentPage <= 1 } aria-label={ __( 'Previous page', 'wp-user-frontend' ) }>
                             <Chevron dir="prev" className="size-3.5" />
                         </button>
-                        <span className="min-w-20 px-2 text-center text-xs font-medium text-gray-900">
+                        <span className="min-w-20 px-2 text-center text-[13px] font-medium text-gray-900">
                             { sprintf(
                                 /* translators: 1: current page, 2: number of pages */
                                 __( '%1$d of %2$d', 'wp-user-frontend' ),

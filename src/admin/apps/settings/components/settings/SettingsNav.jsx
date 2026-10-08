@@ -56,10 +56,10 @@ export default function SettingsNav( { ia, activeTab, onSelect, search, onSearch
                         type="button"
                         key={ tab.id }
                         onClick={ () => onSelect( tab.id ) }
-                        className={ `focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/40 flex w-full items-center rounded-md px-2.5 py-2 text-left text-sm ${
+                        className={ `focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/40 flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium ${
                             activeTab === tab.id
-                                ? 'bg-primary/10 text-primary font-medium'
-                                : 'text-gray-600 hover:bg-gray-100! hover:text-gray-900!'
+                                ? 'bg-primary! text-white!'
+                                : 'text-gray-700 hover:bg-gray-100! hover:text-gray-900!'
                         }` }
                     >
                         <NavIcon tabId={ tab.id } />

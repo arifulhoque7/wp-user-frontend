@@ -39,9 +39,9 @@ export default function HelpTopicNav( { topics, current, onOpen } ) {
                                 onClick={ () => onOpen( topic.id ) }
                                 aria-current={ active ? 'page' : undefined }
                                 data-topic={ topic.id }
-                                className={ `wpuf-help-topic flex w-full cursor-pointer items-center gap-3 rounded-md border-0 px-3 py-2 text-start text-sm transition-colors ${ active ? 'bg-emerald-50 font-semibold text-primary' : 'bg-transparent font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900' }` }
+                                className={ `wpuf-help-topic flex w-full cursor-pointer items-center gap-3 rounded-md border-0 px-3 py-2.5 text-start text-sm font-medium transition-colors ${ active ? 'bg-primary text-white' : 'bg-transparent text-gray-700 hover:bg-gray-100 hover:text-gray-900' }` }
                             >
-                                <Icon size={ 18 } aria-hidden="true" className={ active ? 'text-primary' : 'text-gray-400' } />
+                                <Icon size={ 18 } aria-hidden="true" className={ active ? 'text-white' : 'text-gray-400' } />
                                 { topic.label }
                             </button>
                         </li>

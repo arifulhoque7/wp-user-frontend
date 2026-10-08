@@ -209,7 +209,7 @@ export default function SettingsSection( { sectionKey, sectionData } ) {
             <div className="wpuf-settings-section">
                 { sectionEntries.map( ( [ subKey, subSection ] ) => {
                     // One card per sub-section: header strip + body (FlyHR settings).
-                    const classList = 'wpuf-settings-body mb-5 rounded-[10px] border border-gray-200 bg-white shadow-sm';
+                    const classList = 'wpuf-settings-body mb-6 rounded-[10px] border border-gray-200 bg-white shadow-sm';
 
                     return (
                         <div
@@ -218,7 +218,7 @@ export default function SettingsSection( { sectionKey, sectionData } ) {
                             data-settings-body={ sectionKey }
                         >
                             { ( subSection.label || subSection.desc ) && (
-                                <div className="border-0 border-b border-solid border-gray-200 px-5 py-4">
+                                <div className="border-0 border-b border-solid border-gray-200 px-6 py-4">
                                     { subSection.label && (
                                         <p className="text-base font-semibold text-gray-900 m-0 leading-6">
                                             { subSection.label }
@@ -231,7 +231,7 @@ export default function SettingsSection( { sectionKey, sectionData } ) {
                                     ) }
                                 </div>
                             ) }
-                            <div className="px-5 pb-5 [&>.wpuf-input-container:first-child]:mt-5">
+                            <div className="px-6 pb-6 [&>.wpuf-input-container:first-child]:mt-6">
                                 { subSection.fields && Object.entries( subSection.fields ).map( ( [ fieldName, fieldDef ] ) => {
                                     const inputName = settingName( fieldName, fieldDef );
                                     const settingValue = resolveSettingValue( settings, fieldName, fieldDef );
@@ -269,7 +269,7 @@ export default function SettingsSection( { sectionKey, sectionData } ) {
     return (
         <div className="wpuf-settings-section">
             <div
-                className="wpuf-settings-body mb-5 rounded-[10px] border border-gray-200 bg-white px-5 pb-5 shadow-sm"
+                className="wpuf-settings-body mb-6 rounded-[10px] border border-gray-200 bg-white px-6 pb-6 shadow-sm"
                 data-settings-body={ sectionKey }
             >
                 { Object.entries( filteredData ).map( ( [ fieldName, fieldDef ] ) => {

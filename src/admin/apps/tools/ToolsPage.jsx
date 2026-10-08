@@ -61,9 +61,9 @@ export default function ToolsPage( { context } ) {
         <PageShell>
             <PageHeader utm="wpuf-tools" />
 
-            <div className="wpuf-tools mt-9 pb-10">
-                <h1 className="m-0 p-0 text-xl font-semibold leading-none text-gray-900">{ __( 'Tools', 'wp-user-frontend' ) }</h1>
-                <p className="m-0 mt-2 text-sm text-gray-500">{ __( 'Set up pages, move forms between sites, find shortcodes and clean up plugin data.', 'wp-user-frontend' ) }</p>
+            <div className="wpuf-tools mt-6 pb-10">
+                <h1 className="m-0 p-0 text-2xl font-bold leading-8 text-gray-900">{ __( 'Tools', 'wp-user-frontend' ) }</h1>
+                <p className="m-0 mt-1 text-sm text-gray-500">{ __( 'Set up pages, move forms between sites, find shortcodes and clean up plugin data.', 'wp-user-frontend' ) }</p>
 
                 <div className="mt-6 rounded-[10px] border border-solid border-gray-200 bg-white shadow-sm">
                     <div className="border-0 border-b border-solid border-gray-200 px-4 pt-3 pb-2">

@@ -155,9 +155,9 @@ const SubscriptionsApp = () => {
                 allCount={allCount}
                 onAddSubscription={handleAddSubscription}
             />
-            <div className={`flex items-start gap-6 pt-4 px-[20px] ${isUnsavedPopupOpen ? 'blur-sm' : ''}`}>
+            <div className={`flex items-start gap-6 pt-6 px-[20px] ${isUnsavedPopupOpen ? 'blur-sm' : ''}`}>
                 {/* Left Sidebar */}
-                <div className="w-56 shrink-0">
+                <div className="w-60 shrink-0">
                     <SidebarMenu
                         currentSubscriptionStatus={status}
                         allCount={allCount}

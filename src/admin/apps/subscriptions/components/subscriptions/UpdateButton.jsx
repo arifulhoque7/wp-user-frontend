@@ -4,6 +4,7 @@
  * the keyboard). Busy while a save runs.
  */
 import { __ } from '@wordpress/i18n';
+import { ChevronDown, Save } from 'lucide-react';
 import { ActionMenu, Button } from '@wpuf/components';
 
 const UpdateButton = ( {
@@ -19,11 +20,10 @@ const UpdateButton = ( {
 			{ key: 'draft', label: __( 'Save as Draft', 'wp-user-frontend' ), onClick: onSaveDraft, disabled: isUpdating },
 		] }
 		trigger={
-			<Button busy={ isUpdating } className="min-w-[122px] justify-between">
+			<Button size="lg" busy={ isUpdating }>
+				{ ! isUpdating && <Save size={ 16 } strokeWidth={ 2 } aria-hidden="true" /> }
 				{ buttonText }
-				<svg className="rotate-180 w-3 h-3 ml-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
-					<path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5 5 1 1 5" />
-				</svg>
+				<ChevronDown size={ 16 } strokeWidth={ 2 } className="-me-1 opacity-80" aria-hidden="true" />
 			</Button>
 		}
 	/>

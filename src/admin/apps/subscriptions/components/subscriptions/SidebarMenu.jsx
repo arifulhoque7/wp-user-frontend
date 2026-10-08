@@ -40,8 +40,8 @@ const SidebarMenu = ( {
 									}
 								} }
 								className={
-									'm-0 justify-between items-center group flex gap-x-3 rounded-md py-2 px-2.5 text-sm leading-5 hover:cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/30' +
-									( isActive ? ' bg-primary/10 text-primary font-medium' : ' text-gray-600 hover:text-gray-900 hover:bg-gray-100' )
+									'm-0 justify-between items-center group flex gap-x-3 rounded-md py-2.5 px-3 text-sm font-medium leading-5 hover:cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/30' +
+									( isActive ? ' bg-primary text-white' : ' text-gray-700 hover:text-gray-900 hover:bg-gray-100' )
 								}
 							>
 								{ item.label }
@@ -49,7 +49,7 @@ const SidebarMenu = ( {
 									<span
 										className={
 											'text-xs leading-4 px-2 py-0.5 rounded-full w-max h-max border' +
-											( isActive ? ' border-primary/40' : ' border-gray-200' )
+											( isActive ? ' border-white/40 text-white' : ' border-gray-200 text-gray-500' )
 										}
 									>
 										{ count }

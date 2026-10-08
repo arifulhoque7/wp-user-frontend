@@ -310,8 +310,8 @@ const SettingsApp = () => {
             ) : null }
 
             { /* Title row over both columns (FlyHR settings). */ }
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
-                <h2 className="mt-0 mb-0 text-xl! font-semibold leading-7 text-gray-900">
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+                <h2 className="mt-0 mb-0 text-2xl! font-bold leading-8 text-gray-900">
                     { searching
                         ? __( 'Search results', 'wp-user-frontend' )
                         : ( currentTab ? currentTab.title : '' ) }

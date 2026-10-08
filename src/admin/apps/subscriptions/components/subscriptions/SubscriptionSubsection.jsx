@@ -3,12 +3,25 @@
  * DESCRIPTION: Renders a collapsible section with fields inside
  */
 import { Accordion, ProBadge } from '@wpuf/components';
+import { CalendarClock, CreditCard, Eye, FileText, Gauge, Layers, Palette, Settings2, Tags } from 'lucide-react';
 import SubscriptionField from './SubscriptionField';
 import ProTooltip from './ProTooltip';
 import { SubscriptionAfterSubsection } from '../../slots';
 
 // develop: the first subsection of each tab starts open.
 const OPEN_BY_DEFAULT = [ 'overview', 'content_limit', 'payment_details' ];
+
+// Section icon tiles (modern card look); unknown sections get the generic one.
+const ICONS = {
+	overview: FileText,
+	access_and_visibility: Eye,
+	post_expiration: CalendarClock,
+	content_limit: Gauge,
+	taxonomy_restriction: Tags,
+	payment_details: CreditCard,
+	design_elements: Palette,
+	additional: Layers,
+};
 
 const SubscriptionSubsection = ( { subSection, fields, subscription, onFieldChange } ) => {
 	const wpufSubscriptions = window.wpufSubscriptions || {};
@@ -18,6 +31,10 @@ const SubscriptionSubsection = ( { subSection, fields, subscription, onFieldChan
 			variant="card"
 			title={ subSection.label }
 			description={ subSection.sub_label }
+			icon={ ( () => {
+				const Icon = ICONS[ subSection.id ] || Settings2;
+				return <Icon size={ 16 } strokeWidth={ 2 } aria-hidden="true" />;
+			} )() }
 			badge={
 				// develop always renders this span (8px gap even without a badge).
 				<span className="pro-icon-title relative group ml-2">

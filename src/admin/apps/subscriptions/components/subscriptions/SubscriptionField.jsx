@@ -6,6 +6,7 @@ import { useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { useSelect, useDispatch } from '@wordpress/data';
 import { applyFilters } from '@wordpress/hooks';
+import { Minus, Plus } from 'lucide-react';
 import { DateTime, HelpTip, MultiSelect, NumberInput, ProBadge, Select, TextInput, Textarea, Toggle } from '@wpuf/components';
 import ProTooltip from './ProTooltip';
 
@@ -125,6 +126,19 @@ const SubscriptionField = ( { field, fieldId, subscription, onFieldChange } ) =>
 	const value = getFieldValue();
 
 	// Handle field value change
+	// Stepper buttons beside a number field: one `step` up or down, not below `min`.
+	const stepNumber = ( delta ) => {
+		const step = parseFloat( field.step ) || 1;
+		const decimals = ( String( field.step || '' ).split( '.' )[ 1 ] || '' ).length;
+		let next = ( parseFloat( value ) || 0 ) + ( delta * step );
+
+		if ( undefined !== field.min && '' !== field.min && next < parseFloat( field.min ) ) {
+			next = parseFloat( field.min );
+		}
+
+		handleChange( decimals ? next.toFixed( decimals ) : String( next ) );
+	};
+
 	const handleChange = ( newValue ) => {
 		onFieldChange( field, newValue );
 
@@ -171,7 +185,7 @@ const SubscriptionField = ( { field, fieldId, subscription, onFieldChange } ) =>
 	const invalid = error ? 'border-red-500 focus-visible:border-red-500' : '';
 
 	return (
-		<div className="grid grid-cols-3 gap-4 p-4">
+		<div className="grid grid-cols-3 gap-6 px-6 py-3">
 			{/* Label */}
 			{ field.label && (
 				<div className="flex items-center text-sm leading-6 text-gray-600">
@@ -216,18 +230,33 @@ const SubscriptionField = ( { field, fieldId, subscription, onFieldChange } ) =>
 				) }
 
 				{ field.type === 'input-number' && (
-					<NumberInput
-						id={ field.name }
-						name={ field.name }
-						value={ asText( value ) }
-						placeholder={ field.placeholder || '' }
-						min={ field.min }
-						step={ field.step }
-						onChange={ handleChange }
-						disabled={ isPro }
-						aria-invalid={ error ? 'true' : undefined }
-						className={ invalid }
-					/>
+					<div className="inline-flex items-center gap-2">
+						{ [ -1, 1 ].map( ( delta ) => (
+							<button
+								key={ delta }
+								type="button"
+								className={ `inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-md border border-solid border-gray-300 bg-white text-gray-600 hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50 ${ delta < 0 ? 'order-first' : 'order-last' }` }
+								onClick={ () => stepNumber( delta ) }
+								disabled={ isPro }
+								aria-label={ delta < 0 ? __( 'Decrease', 'wp-user-frontend' ) : __( 'Increase', 'wp-user-frontend' ) }
+								aria-controls={ field.name }
+							>
+								{ delta < 0 ? <Minus size={ 16 } strokeWidth={ 2 } aria-hidden="true" /> : <Plus size={ 16 } strokeWidth={ 2 } aria-hidden="true" /> }
+							</button>
+						) ) }
+						<NumberInput
+							id={ field.name }
+							name={ field.name }
+							value={ asText( value ) }
+							placeholder={ field.placeholder || '' }
+							min={ field.min }
+							step={ field.step }
+							onChange={ handleChange }
+							disabled={ isPro }
+							aria-invalid={ error ? 'true' : undefined }
+							className={ `w-28 text-center ${ invalid || '' }` }
+						/>
+					</div>
 				) }
 
 				{ field.type === 'textarea' && (

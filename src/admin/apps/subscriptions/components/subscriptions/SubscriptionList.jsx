@@ -166,8 +166,8 @@ const SubscriptionList = () => {
 			</div>
 			{ count > perPage && (
 				<Pagination
-					variant="summary"
-					className="mt-16"
+					variant="footer"
+					className="mt-6 rounded-[10px] border border-solid border-gray-200 bg-white shadow-sm"
 					currentPage={ currentPage }
 					total={ count }
 					perPage={ perPage }

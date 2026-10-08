@@ -72,8 +72,8 @@ export default function FormSettings() {
     return (
         <div className="wpuf-settings-container mx-4 mt-3 mb-6">
             { /* Title row over both columns, actions on the right (FlyHR settings). */ }
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
-                <h2 className="text-xl! font-semibold m-0 leading-7 text-gray-900">
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+                <h2 className="text-2xl! font-bold m-0 leading-8 text-gray-900">
                     { activeSettingsTitle }
                 </h2>
                 { /* Cancel + Save buttons */ }

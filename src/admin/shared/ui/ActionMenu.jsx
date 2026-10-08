@@ -6,6 +6,36 @@
  */
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, cn } from '@wedevs/plugin-ui';
 import { __ } from '@wordpress/i18n';
+import { Check, Copy, Eye, FileText, Pencil, RotateCcw, Send, Trash2, X, Zap } from 'lucide-react';
+
+// Default item icons by key / action (FlyHR row menus); an item's own `icon` wins.
+const ICONS = {
+    edit: Pencil,
+    'quick-edit': Zap,
+    quick_edit: Zap,
+    duplicate: Copy,
+    copy: Copy,
+    view: Eye,
+    preview: Eye,
+    publish: Send,
+    draft: FileText,
+    restore: RotateCcw,
+    accept: Check,
+    approve: Check,
+    reject: X,
+    trash: Trash2,
+    delete: Trash2,
+};
+
+const itemIcon = ( item ) => {
+    if ( item.icon ) {
+        return item.icon;
+    }
+
+    const Icon = ICONS[ item.key || item.action ];
+
+    return Icon ? <Icon size={ 16 } strokeWidth={ 2 } className="shrink-0" aria-hidden="true" /> : null;
+};
 
 const Dots = ( { vertical } ) => (
     <svg className="size-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -37,7 +67,7 @@ export default function ActionMenu( { items, label, vertical = false, align = 'e
                     <Dots vertical={ vertical } />
                 </DropdownMenuTrigger>
             ) }
-            <DropdownMenuContent align={ align } className="w-40 p-1 bg-white rounded-md shadow-lg ring-1 ring-black/5 border-0">
+            <DropdownMenuContent align={ align } className="min-w-44 p-1 bg-white rounded-lg shadow-lg ring-1 ring-black/5 border-0">
                 { items.map( ( item ) => (
                     <DropdownMenuItem
                         key={ item.key || item.action || item.label }
@@ -46,11 +76,11 @@ export default function ActionMenu( { items, label, vertical = false, align = 'e
                         className={ cn(
                             'flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm cursor-pointer',
                             item.destructive
-                                ? 'text-red-600 data-highlighted:bg-red-600 data-highlighted:text-white'
-                                : 'text-gray-900 data-highlighted:bg-primary data-highlighted:text-white'
+                                ? 'text-red-600 data-highlighted:bg-red-50 data-highlighted:text-red-700'
+                                : 'text-gray-700 data-highlighted:bg-gray-100 data-highlighted:text-gray-900'
                         ) }
                     >
-                        { item.icon }
+                        { itemIcon( item ) }
                         { item.label }
                     </DropdownMenuItem>
                 ) ) }

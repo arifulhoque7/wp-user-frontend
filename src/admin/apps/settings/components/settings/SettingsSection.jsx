@@ -195,10 +195,10 @@ export default function SettingsSection( { sectionId, tabTitle } ) {
     const showTitle = title && title.toLowerCase() !== ( tabTitle || '' ).toLowerCase();
 
     return (
-        <section className="mb-5 rounded-[10px] border border-gray-200 bg-white p-5 shadow-sm" data-settings-section={ sectionId }>
+        <section className="mb-6 rounded-[10px] border border-gray-200 bg-white p-6 shadow-sm" data-settings-section={ sectionId }>
             { showTitle ? (
                 <>
-                    <h3 className="-mx-5 -mt-5 mb-5 border-0 border-b border-solid border-gray-200 px-5 py-4 text-base! font-semibold leading-6 text-gray-900">
+                    <h3 className="-mx-6 -mt-6 mb-6 border-0 border-b border-solid border-gray-200 px-6 py-4 text-base! font-semibold leading-6 text-gray-900">
                         { title }
                     </h3>
                 </>

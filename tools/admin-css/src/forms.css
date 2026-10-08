@@ -44,6 +44,11 @@
     filter: brightness(0) invert(39%) sepia(74%) saturate(2338%) hue-rotate(141deg) brightness(93%) contrast(96%);
 }
 
+/* Turns a nav icon (SVG/IMG of any colour) white on the solid primary active item. */
+@utility icon-white {
+    filter: brightness(0) invert(1);
+}
+
 @utility min-w-btn-cancel {
     min-width: 101px;
 }

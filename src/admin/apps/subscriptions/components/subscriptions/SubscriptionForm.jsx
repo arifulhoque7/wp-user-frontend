@@ -185,14 +185,28 @@ const SubscriptionForm = ( { mode = 'add-new', subscriptionId = null } ) => {
 	}
 
 	return (
-		<div className="px-12">
-			<h3 className="text-base font-semibold mb-0">
-				{ mode === 'edit'
-					? __( 'Edit Subscription', 'wp-user-frontend' )
-					: __( 'New Subscription', 'wp-user-frontend' ) }
-			</h3>
+		<div>
+			{/* Title row with the actions on the right (FlyHR page header) */}
+			<div className="flex flex-wrap items-center justify-between gap-4">
+				<h3 className="text-base font-semibold m-0">
+					{ mode === 'edit'
+						? __( 'Edit Subscription', 'wp-user-frontend' )
+						: __( 'New Subscription', 'wp-user-frontend' ) }
+				</h3>
+				<div className="flex items-center gap-3">
+					<Button variant="secondary" size="lg" onClick={ handleCancel } disabled={ isUpdating }>
+						{ __( 'Cancel', 'wp-user-frontend' ) }
+					</Button>
+					<UpdateButton
+						buttonText={ mode === 'edit' ? __( 'Update', 'wp-user-frontend' ) : __( 'Save', 'wp-user-frontend' ) }
+						isUpdating={ isUpdating }
+						onPublish={ () => save( 'publish' ) }
+						onSaveDraft={ () => save( 'draft' ) }
+					/>
+				</div>
+			</div>
 
-			{ 'edit' === mode && <InfoCard subscription={ subscription } /> }
+			<InfoCard subscription={ subscription } mode={ mode } />
 
 			{/* Subscription details with tabs */}
 			<SubscriptionDetails
@@ -207,18 +221,6 @@ const SubscriptionForm = ( { mode = 'add-new', subscriptionId = null } ) => {
 				fillProps={ { subscription, mode, onFieldChange: handleFieldChange } }
 			/>
 
-			{/* Action buttons (develop: Update menu on the right, Cancel before it) */}
-			<div className="flex flex-row-reverse gap-[10px] mt-8 text-end">
-				<UpdateButton
-					buttonText={ mode === 'edit' ? __( 'Update', 'wp-user-frontend' ) : __( 'Save', 'wp-user-frontend' ) }
-					isUpdating={ isUpdating }
-					onPublish={ () => save( 'publish' ) }
-					onSaveDraft={ () => save( 'draft' ) }
-				/>
-				<Button variant="secondary" onClick={ handleCancel } disabled={ isUpdating }>
-					{ __( 'Cancel', 'wp-user-frontend' ) }
-				</Button>
-			</div>
 		</div>
 	);
 };

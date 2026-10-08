@@ -34,20 +34,21 @@ export default function Accordion( { title, description, icon, badge, defaultOpe
 
     if ( 'card' === variant ) {
         return (
-            <div data-wpuf-ui="" className={ cn( 'border border-gray-200 rounded-lg mt-4 mb-4 bg-white', className ) }>
+            <div data-wpuf-ui="" className={ cn( 'border border-gray-200 rounded-[10px] mt-6 mb-6 bg-white shadow-sm', className ) }>
                 <h2 className="m-0">
                     <button
                         type="button"
                         aria-expanded={ open }
                         aria-controls={ panelId }
                         onClick={ toggle }
-                        className={ cn( 'flex items-center justify-between w-full px-5 py-3.5 text-sm font-semibold text-left rtl:text-right text-gray-900 bg-white gap-3 border-0 border-solid cursor-pointer focus-visible:ring-2 focus-visible:ring-primary/30', open ? 'rounded-t-lg border-b border-gray-200' : 'rounded-lg' ) }
+                        className={ cn( 'flex items-center justify-between w-full px-6 py-4 text-base! leading-6 font-semibold text-left rtl:text-right text-gray-900 bg-white gap-3 border-0 border-solid cursor-pointer focus-visible:ring-2 focus-visible:ring-primary/30', open ? 'rounded-t-[10px] border-b border-gray-200' : 'rounded-[10px]' ) }
                     >
-                        <span className="flex">
-                            { icon }
-                            { title }
-                            { description && <span className="relative m-0 p-0 ml-2 mt-[1px] italic text-[11px] text-gray-400">{ description }</span> }
-                            { badge }
+                        <span className="flex min-w-0 items-center gap-3">
+                            { icon && <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">{ icon }</span> }
+                            <span className="flex min-w-0 flex-col">
+                                <span className="flex items-center">{ title }{ badge }</span>
+                                { description && <span className="mt-0.5 text-[13px] font-normal text-gray-500">{ description }</span> }
+                            </span>
                         </span>
                         <svg className={ cn( 'w-3 h-3 shrink-0 text-gray-400', open ? 'rotate-180' : 'rotate-90' ) } aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
                             <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5 5 1 1 5" />
