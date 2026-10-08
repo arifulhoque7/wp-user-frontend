@@ -8,7 +8,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from '@wordpress/element';
 import { __, _n, sprintf } from '@wordpress/i18n';
 import { Button, DateTime, EmptyState, ErrorState, PageFooter, PageHeader, PageShell, Pagination, Select, Tabs, TextInput, dialogs, notify } from '@wpuf/components';
-import { Receipt, Search, X } from 'lucide-react';
+import { Receipt, Search, SearchX, X } from 'lucide-react';
 
 import { getTransactions, runAction } from './api';
 import SummaryCards from './SummaryCards';
@@ -184,7 +184,9 @@ export default function TransactionsPage( { context } ) {
     } else if ( ! rows.length ) {
         content = (
             <EmptyState
-                icon={ <Receipt size={ 28 } strokeWidth={ 1.5 } aria-hidden="true" /> }
+                size={ filtered ? 'card' : 'page' }
+                icon={ filtered ? SearchX : Receipt }
+                showPlus={ false }
                 title={ filtered ? __( 'No payments match these filters', 'wp-user-frontend' ) : __( 'No transactions found.', 'wp-user-frontend' ) }
                 description={ filtered ? '' : __( 'Payments for subscriptions and paid posts show up here.', 'wp-user-frontend' ) }
                 actions={ filtered ? <Button variant="secondary" onClick={ clearFilters }>{ __( 'Clear filters', 'wp-user-frontend' ) }</Button> : null }

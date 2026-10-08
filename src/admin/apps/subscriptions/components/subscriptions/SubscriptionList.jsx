@@ -7,17 +7,11 @@ import { useEffect, useMemo, useCallback } from '@wordpress/element';
 import { useSelect, useDispatch } from '@wordpress/data';
 import { __ } from '@wordpress/i18n';
 import { Button, EmptyState, ErrorState, Pagination, Skeleton } from '@wpuf/components';
+import { Inbox, Package, Plus } from 'lucide-react';
 import SubscriptionBox from './SubscriptionBox';
 import ListHeader from './ListHeader';
 import { SubscriptionListActions } from '../../slots';
 import { useSubscriptionNavigation } from '../../hooks';
-
-// develop's empty "All" icon (folder with a plus).
-const EmptyIcon = () => (
-	<svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-		<path vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-	</svg>
-);
 
 // Loading: the card grid's shape (ux-states.md "card grid skeleton"), no layout jump.
 const CardSkeleton = () => (
@@ -134,13 +128,13 @@ const SubscriptionList = () => {
 			<div className="pl-[48px]">
 				{ header }
 				<EmptyState
-					size="lg"
-					icon={ isAll ? <EmptyIcon /> : null }
-					title={ isAll ? __( 'No Subscription created yet!', 'wp-user-frontend' ) : null }
-					description={ emptyMessages[ currentSubscriptionStatus ] }
+					size={ isAll ? 'page' : 'card' }
+					icon={ isAll ? Package : Inbox }
+					title={ isAll ? __( 'No Subscription created yet!', 'wp-user-frontend' ) : emptyMessages[ currentSubscriptionStatus ] }
+					description={ isAll ? emptyMessages[ currentSubscriptionStatus ] : null }
 					actions={ isAll ? (
 						<Button onClick={ goToNew }>
-							<span className="dashicons dashicons-plus-alt" aria-hidden="true"></span>
+							<Plus size={ 16 } aria-hidden="true" />
 							{ __( 'Add Subscription', 'wp-user-frontend' ) }
 						</Button>
 					) : null }

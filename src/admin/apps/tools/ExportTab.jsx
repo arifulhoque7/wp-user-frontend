@@ -6,7 +6,7 @@
  */
 import { useEffect, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
-import { Button, MultiSelect, Radio, Skeleton, notify } from '@wpuf/components';
+import { Button, EmptyState, MultiSelect, Radio, Skeleton, notify } from '@wpuf/components';
 import { Download, FileText, UserPlus } from 'lucide-react';
 
 import { exportForms, getForms } from './api';
@@ -75,7 +75,7 @@ function ExportSection( { section } ) {
     return (
         <ToolCard icon={ section.icon } title={ section.title }>
             { null === forms && <Skeleton lines={ 3 } /> }
-            { forms && ! forms.length && <p className="m-0 text-sm text-gray-500">{ section.empty }</p> }
+            { forms && ! forms.length && <EmptyState size="card" icon={ section.icon } title={ section.empty } className="py-6" /> }
             { forms && forms.length > 0 && (
                 <>
                     <Radio

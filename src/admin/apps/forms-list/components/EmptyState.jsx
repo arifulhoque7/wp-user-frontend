@@ -1,26 +1,28 @@
 /**
  * EmptyState component — shown when there are no forms to display
- * (develop cases on the shared EmptyState; registration texts from develop's
- * Pro list).
+ * (FlyHR empty state on the shared EmptyState, develop's texts; registration
+ * texts from develop's Pro list).
  *
  * @since WPUF_SINCE
  */
 import { __ } from '@wordpress/i18n';
 import { EmptyState as SharedEmptyState } from '@wpuf/components';
+import { FileText, Inbox, SearchX, UserPlus } from 'lucide-react';
 import CreateButtons from './CreateButtons';
 
 const EmptyState = ( { type, formType = 'post', onAddNew, onAIFormBuilder } ) => {
     if ( type === 'search' ) {
-        return <SharedEmptyState size="compact" title={ __( 'No forms found matching your search!', 'wp-user-frontend' ) } />;
+        return <SharedEmptyState size="card" icon={ SearchX } title={ __( 'No forms found matching your search!', 'wp-user-frontend' ) } />;
     }
 
     if ( type === 'tab-empty' ) {
-        return <SharedEmptyState title={ __( 'No Items Here!', 'wp-user-frontend' ) } />;
+        return <SharedEmptyState size="card" icon={ Inbox } title={ __( 'No Items Here!', 'wp-user-frontend' ) } />;
     }
 
     return (
         <SharedEmptyState
-            image={ window.wpuf_admin_script.asset_url + '/images/form-blank-state.svg' }
+            size="page"
+            icon={ 'profile' === formType ? UserPlus : FileText }
             title={ 'profile' === formType
                 ? __( 'No Registration Forms Created Yet', 'wp-user-frontend' )
                 : __( 'No Post Forms Created Yet', 'wp-user-frontend' ) }
