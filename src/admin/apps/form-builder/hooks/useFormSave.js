@@ -4,7 +4,7 @@ import { __ } from '@wordpress/i18n';
 import { STORE_NAME } from '../store';
 import { fireBeforeSave, fireAfterSave } from '../extensions/hooks';
 import { showToast } from '../common/Toast';
-import { showAlert } from '../common/SwalModal';
+import { openSaveValidationError } from '../common/BuilderDialogs';
 import { getLegacySettingsPayload } from '../common/LegacySlot';
 import { request, restPath } from '@wpuf/api';
 import { setPendingClean } from '../common/saveState';
@@ -65,16 +65,19 @@ function hasFieldTemplate( formFields, templates, containers = /^(column|repeat)
  * @return {string|null} Error message or null if valid.
  */
 function validateRequiredFields( formFields, formType ) {
+    // Develop's messages: the builder's localized strings (markup).
+    const i18n = ( window.wpuf_form_builder || {} ).i18n || {};
+
     if ( formType === 'wpuf_forms' ) {
         if ( ! hasFieldTemplate( formFields, [ 'post_title', 'post_content', 'post_excerpt' ] ) ) {
-            return __( 'Form must contain at least a Post Title, Post Content, or Post Excerpt field.', 'wp-user-frontend' );
+            return i18n.any_of_three_needed || __( 'Form must contain at least a Post Title, Post Content, or Post Excerpt field.', 'wp-user-frontend' );
         }
     }
 
     if ( formType === 'wpuf_profile' ) {
         // Develop's registration check looked inside column fields only.
         if ( ! hasFieldTemplate( formFields, [ 'user_email' ], /^column_field$/ ) ) {
-            return __( 'Form must contain a User Email field.', 'wp-user-frontend' );
+            return i18n.email_needed || __( 'Form must contain a User Email field.', 'wp-user-frontend' );
         }
     }
 
@@ -146,7 +149,7 @@ export default function useFormSave() {
         const fieldsError = validateRequiredFields( formFields, formType );
 
         if ( fieldsError ) {
-            showAlert( { title: __( 'Form Validation Error!', 'wp-user-frontend' ), message: fieldsError } );
+            openSaveValidationError( fieldsError );
             return;
         }
 
@@ -154,7 +157,7 @@ export default function useFormSave() {
         const paymentError = validatePaymentSettings( settings );
 
         if ( paymentError ) {
-            showAlert( { title: __( 'Form Validation Error!', 'wp-user-frontend' ), message: paymentError } );
+            openSaveValidationError( paymentError );
             return;
         }
 

@@ -185,6 +185,23 @@ export function openValidationAlert( validator ) {
 }
 
 /**
+ * Develop's save refusal: "Post Form Validation Error!" (develop used that
+ * title for every form type) with the message as markup, e.g. the localized
+ * `any_of_three_needed` / `email_needed` strings.
+ *
+ * @param {string} html Message markup.
+ *
+ * @return {Promise<boolean>} Settles on close.
+ */
+export function openSaveValidationError( html ) {
+    return dialogs.alert( {
+        title: __( 'Post Form Validation Error!', 'wp-user-frontend' ),
+        message: <Markup html={ html } />,
+        confirmText: __( 'OK', 'wp-user-frontend' ),
+    } );
+}
+
+/**
  * A premium option in the field settings (SweetAlert's info icon, Cancel and
  * Upgrade to Pro).
  *
