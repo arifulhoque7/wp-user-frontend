@@ -8,6 +8,14 @@ import { useDispatch } from '@wordpress/data';
 import { Tabs } from '@wpuf/components';
 import SubscriptionSubsection from './SubscriptionSubsection';
 import { SubscriptionTabContent } from '../../slots';
+import { CreditCard, FileText, Settings2 } from 'lucide-react';
+
+// Section tab icons (FlyHR page tab bar).
+const TAB_ICONS = {
+	subscription_details: FileText,
+	payment_settings: CreditCard,
+	advanced_configuration: Settings2,
+};
 
 const SubscriptionDetails = ( { subscription, onFieldChange, currentTab: externalCurrentTab, onTabChange: externalOnTabChange } ) => {
 	const wpufSubscriptions = window.wpufSubscriptions || {};
@@ -77,15 +85,17 @@ const SubscriptionDetails = ( { subscription, onFieldChange, currentTab: externa
 
 	return (
 		<>
-			{/* Tab Navigation: FlyHR toolbar tabs on a full-width line */}
-			<div className="mt-4 border-0 border-b border-solid border-gray-200 pb-2">
+			{/* Tab Navigation: FlyHR page tab bar */}
+			<div className="mt-6">
 				<Tabs
-					variant="toolbar"
-					className="border-0! shadow-none!"
+					variant="pill"
 					label={ __( 'Subscription sections', 'wp-user-frontend' ) }
 					value={ currentTab }
 					onChange={ setCurrentTab }
-					tabs={ sections.map( ( section ) => ( { id: section.id, label: section.title } ) ) }
+					tabs={ sections.map( ( section ) => {
+						const Icon = TAB_ICONS[ section.id ] || Settings2;
+						return { id: section.id, label: section.title, icon: <Icon size={ 16 } strokeWidth={ 2 } aria-hidden="true" /> };
+					} ) }
 				/>
 			</div>
 

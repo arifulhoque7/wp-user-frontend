@@ -72,37 +72,39 @@ function CloseButton( { variant, onClick } ) {
 // (`width` / `padding` props): plugin-ui's own size classes are overridden
 // with arbitrary values tailwind-merge recognises.
 const LOOKS = {
+    // FlyHR dialog look with our colours: 10px radius, 24px padding, 24px bold
+    // title, 16px muted message, 40px actions.
     alert: {
-        content: 'flex w-[var(--wpuf-dialog-w)] max-w-[calc(100%-2rem)] flex-col items-center gap-0 rounded-[5px] bg-white p-[var(--wpuf-dialog-p)] text-center shadow-none ring-0 sm:max-w-[calc(100%-2rem)] data-[size=default]:sm:max-w-[calc(100%-2rem)]',
-        media: 'mb-[9.6px] mt-10 flex justify-center',
-        title: 'm-0 px-[30px] pt-6 text-[30px] font-semibold leading-9 text-black',
-        message: 'mx-[28.8px] mb-[5.4px] mt-[18px] text-lg font-normal text-[#545454]',
-        footer: 'mt-5 flex flex-wrap items-center justify-center',
-        cancel: 'm-[5px] h-auto rounded-[4px] border border-solid border-[#cbd5e1] bg-white px-[17.6px] py-[10px] text-base font-medium text-slate-700 hover:bg-gray-50',
-        confirm: 'm-[5px] h-auto rounded-[4px] border-0 px-[17.6px] py-[10px] text-base font-medium text-white',
-        danger: 'bg-[#ef4444] hover:bg-[#dc2626]',
-        primary: 'bg-[#059669] hover:bg-[#047857]',
+        content: 'flex w-[var(--wpuf-dialog-w)] max-w-[calc(100%-2rem)] flex-col items-center gap-0 rounded-[10px] bg-white p-6 text-center shadow-lg ring-0 sm:max-w-[calc(100%-2rem)] data-[size=default]:sm:max-w-[calc(100%-2rem)]',
+        media: 'mb-4 flex justify-center',
+        title: 'm-0 text-2xl font-bold leading-tight tracking-tight text-gray-900',
+        message: 'm-0 mt-2 text-base text-gray-500',
+        footer: 'mt-6 flex flex-wrap items-center justify-center gap-3',
+        cancel: 'h-10 rounded-md border border-solid border-gray-300 bg-white px-5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50',
+        confirm: 'h-10 rounded-md border-0 px-5 text-sm font-medium text-white shadow-sm',
+        danger: 'bg-red-600 hover:bg-red-700',
+        primary: 'bg-primary hover:bg-primaryHover',
     },
     panel: {
-        content: 'block w-full max-w-lg gap-0 rounded-lg bg-white p-6 text-left shadow-xl ring-0 sm:max-w-lg',
-        title: 'm-0 ml-4 text-base font-semibold leading-6 text-gray-900',
-        message: 'm-0 ml-4 mt-2 text-sm text-gray-500',
-        footer: 'mt-4 flex flex-row-reverse',
-        cancel: 'h-auto rounded-md border-0 bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50',
-        confirm: 'ml-3 h-auto rounded-md border-0 px-3 py-2 text-sm font-semibold text-white shadow-sm',
-        danger: 'bg-red-600 hover:bg-red-500',
-        primary: 'bg-[#059669] hover:bg-[#047857]',
+        content: 'block w-full max-w-lg gap-0 rounded-[10px] bg-white p-6 text-left shadow-lg ring-0 sm:max-w-lg',
+        title: 'm-0 ml-4 text-lg font-semibold leading-7 text-gray-900',
+        message: 'm-0 ml-4 mt-1 text-sm text-gray-500',
+        footer: 'mt-6 flex flex-row-reverse gap-3',
+        cancel: 'h-10 rounded-md border border-solid border-gray-300 bg-white px-5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50',
+        confirm: 'h-10 rounded-md border-0 px-5 text-sm font-medium text-white shadow-sm',
+        danger: 'bg-red-600 hover:bg-red-700',
+        primary: 'bg-primary hover:bg-primaryHover',
     },
     card: {
-        content: 'flex w-[576px] max-w-[calc(100%-2.5rem)] flex-col items-center gap-0 rounded-md bg-white p-8 text-center shadow-none ring-0 sm:max-w-[calc(100%-2.5rem)] data-[size=default]:sm:max-w-[calc(100%-2.5rem)]',
-        media: 'mb-8 flex justify-center',
-        title: 'm-0 mb-4 text-2xl font-medium text-gray-900',
-        message: 'm-0 mb-16 text-lg text-gray-400',
+        content: 'flex w-[576px] max-w-[calc(100%-2.5rem)] flex-col items-center gap-0 rounded-[10px] bg-white p-6 text-center shadow-lg ring-0 sm:max-w-[calc(100%-2.5rem)] data-[size=default]:sm:max-w-[calc(100%-2.5rem)]',
+        media: 'mb-6 flex justify-center',
+        title: 'm-0 mb-2 text-2xl font-bold leading-tight tracking-tight text-gray-900',
+        message: 'm-0 mb-6 text-base text-gray-500',
         footer: 'flex justify-center gap-3',
-        cancel: 'h-auto min-w-[101px] rounded-md border border-solid border-gray-300 bg-white px-6 py-3 text-lg font-normal text-gray-700 hover:bg-gray-50',
-        confirm: 'h-auto min-w-[158px] rounded-md border-0 px-6 py-3 text-lg font-normal text-white',
-        danger: 'bg-red-600 hover:bg-red-500',
-        primary: 'bg-emerald-700 hover:bg-emerald-800',
+        cancel: 'h-10 rounded-md border border-solid border-gray-300 bg-white px-5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50',
+        confirm: 'h-10 rounded-md border-0 px-5 text-sm font-medium text-white shadow-sm',
+        danger: 'bg-red-600 hover:bg-red-700',
+        primary: 'bg-primary hover:bg-primaryHover',
     },
 };
 
@@ -162,7 +164,7 @@ export default function ConfirmDialog( {
     let image = media;
 
     if ( ! image && 'alert' === variant && ICONS[ iconName ] && assetUrl ) {
-        image = <img src={ assetUrl + ICONS[ iconName ] } alt="" className={ 'oops' === iconName ? 'h-[110px] w-auto' : 'size-20' } />;
+        image = <img src={ assetUrl + ICONS[ iconName ] } alt="" className={ 'oops' === iconName ? 'h-20 w-auto' : 'size-14' } />;
     }
 
     const confirmButton = (

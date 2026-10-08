@@ -7,6 +7,7 @@
  */
 import { useEffect, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
+import { Code, Download, Upload, Wrench } from 'lucide-react';
 import { PageFooter, PageHeader, PageShell, Tabs, notify } from '@wpuf/components';
 
 import ExportTab from './ExportTab';
@@ -27,10 +28,10 @@ const MESSAGES = {
 };
 
 const TABS = [
-    { id: 'tools', label: __( 'Tools', 'wp-user-frontend' ) },
-    { id: 'import', label: __( 'Import', 'wp-user-frontend' ) },
-    { id: 'export', label: __( 'Export', 'wp-user-frontend' ) },
-    { id: 'shortcodes', label: __( 'Shortcodes', 'wp-user-frontend' ) },
+    { id: 'tools', label: __( 'Tools', 'wp-user-frontend' ), icon: <Wrench size={ 16 } strokeWidth={ 2 } aria-hidden="true" /> },
+    { id: 'import', label: __( 'Import', 'wp-user-frontend' ), icon: <Upload size={ 16 } strokeWidth={ 2 } aria-hidden="true" /> },
+    { id: 'export', label: __( 'Export', 'wp-user-frontend' ), icon: <Download size={ 16 } strokeWidth={ 2 } aria-hidden="true" /> },
+    { id: 'shortcodes', label: __( 'Shortcodes', 'wp-user-frontend' ), icon: <Code size={ 16 } strokeWidth={ 2 } aria-hidden="true" /> },
 ];
 
 /**
@@ -65,10 +66,11 @@ export default function ToolsPage( { context } ) {
                 <h1 className="m-0 p-0 text-2xl font-bold leading-8 text-gray-900">{ __( 'Tools', 'wp-user-frontend' ) }</h1>
                 <p className="m-0 mt-1 text-sm text-gray-500">{ __( 'Set up pages, move forms between sites, find shortcodes and clean up plugin data.', 'wp-user-frontend' ) }</p>
 
+                { /* FlyHR page tab bar over the content card */ }
+                <div className="mt-6">
+                    <Tabs variant="pill" tabs={ TABS } value={ tab } onChange={ open } label={ __( 'Tools sections', 'wp-user-frontend' ) } />
+                </div>
                 <div className="mt-6 rounded-[10px] border border-solid border-gray-200 bg-white shadow-sm">
-                    <div className="border-0 border-b border-solid border-gray-200 px-4 pt-3 pb-2">
-                        <Tabs variant="toolbar" tabs={ TABS } value={ tab } onChange={ open } label={ __( 'Tools sections', 'wp-user-frontend' ) } />
-                    </div>
                     <div className="p-6">
                         { 'tools' === tab && <ToolsTab tools={ tools } /> }
                         { 'import' === tab && <ImportTab /> }

@@ -339,7 +339,7 @@ const SettingsApp = () => {
                     { ! searching && currentTab && currentTab.subtabs && currentTab.sections.length > 1 ? (
                         <div className="mb-8" data-settings-subtabs="">
                             <Tabs
-                                variant="segmented"
+                                variant="pill"
                                 label={ currentTab.title }
                                 tabs={ currentTab.sections.map( ( sid ) => ( { id: sid, label: sectionTitle( sid ) } ) ) }
                                 value={ activeSub || currentTab.sections[ 0 ] }

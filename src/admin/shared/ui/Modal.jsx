@@ -24,13 +24,13 @@ export default function Modal( { open, onClose, title, hideTitle = false, titleC
             <DialogContent
                 showCloseButton={ false }
                 className={ cn(
-                    'gap-0 bg-white rounded-lg border border-gray-200 shadow max-w-none sm:max-w-none',
+                    'gap-0 bg-white rounded-[10px] border border-gray-200 shadow-lg max-w-none sm:max-w-none',
                     'w-1/3 min-w-[360px] p-6',
                     className
                 ) }
             >
                 { icon }
-                <DialogTitle className={ hideTitle ? 'sr-only' : titleClassName || 'm-0 mb-4 text-base font-semibold text-gray-900' }>{ title }</DialogTitle>
+                <DialogTitle className={ hideTitle ? 'sr-only' : titleClassName || 'm-0 mb-4 text-2xl font-bold leading-tight tracking-tight text-gray-900' }>{ title }</DialogTitle>
                 { children }
             </DialogContent>
         </Dialog>
