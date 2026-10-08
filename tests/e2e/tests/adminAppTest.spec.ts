@@ -32,7 +32,7 @@ const APP = `${Urls.baseUrl}/wp-admin/admin.php?page=wp-user-frontend`;
  * @Test_APP0010 : One builder after another: no stale form data, rootInit once per opened builder, old builder URL lands on the route
  * @Test_APP0011 : Unsaved builder changes ask before leaving the route; Continue stays, Discard leaves; save works in the app
  * @Test_APP0012 : The new form route creates a form and opens its builder; registration builder (Pro) opens in the app
- * @Test_APP0013 : Add New in the app: the template picker's Blank Form and a template each create a form and open its builder in the app
+ * @Test_APP0013 : Add New in the app: the template picker's Blank Form and a template each create a form and open its builder in the app without a page load
  * @Test_APP0014 : AI form builder in the app: list button -> AI route -> generate -> Edit with Builder -> builder route, no page load; old AI URLs (with nonce) land on the route
  * @Test_APP0015 : List row action buttons in the app: Edit (builder route, no page load), Duplicate, Trash, Restore, Delete Permanently, bulk Move to trash; registration Edit (Pro)
  * @Test_APP0016 : Pro without a valid license: Registration Forms stays Pro's preview page (no app route, no way round it); the free routes still run in the app
@@ -378,13 +378,17 @@ test.describe('Admin app', () => {
             expect(await page.evaluate(() => (window as unknown as { wpufNoReload?: boolean }).wpufNoReload), 'blank form without a page load').toBe(true);
             const blank = (await builderState()).id;
 
-            // A template: created by the server's template action, then its builder in the app.
+            // A template: created through the admin forms REST route, then its builder in the app (no page load).
             await page.goto(`${APP}${screen.list}`);
             await add.click();
             await expect(picker).toBeVisible();
-            await picker.locator(`[data-template="${screen.template}"] a`).first().click({ force: true });
+            await page.evaluate(() => { (window as unknown as { wpufNoReload: boolean }).wpufNoReload = true; });
+            const created = page.waitForResponse((r) => r.request().method() === 'POST' && /admin(\/|%2F)forms(\?|$)/.test(r.url()));
+            await picker.locator(`[data-template="${screen.template}"] a`).first().click();
+            expect((await created).status(), 'template form created by REST').toBe(201);
             await expect(page).toHaveURL(new RegExp(`page=wp-user-frontend#/${screen.route}/\\d+/edit$`), { timeout: 30000 });
             await expect(page.locator('#wpuf-form-builder input[name="post_title"]').first()).toBeVisible({ timeout: 30000 });
+            expect(await page.evaluate(() => (window as unknown as { wpufNoReload?: boolean }).wpufNoReload), 'template form without a page load').toBe(true);
             const state = await builderState();
             expect(state.id).not.toBe(blank);
             expect(state.fields, 'the template brought its fields').toBeGreaterThan(0);

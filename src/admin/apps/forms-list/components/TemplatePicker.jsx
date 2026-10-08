@@ -14,7 +14,10 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
-import { Button, ProBadge, TextInput } from '@wpuf/components';
+import { Loader2 } from 'lucide-react';
+import { Button, ProBadge, TextInput, notify } from '@wpuf/components';
+import { request, restPath } from '@wpuf/api';
+import { inApp, openRoute } from '../../../app/client';
 
 const PREVIEW_WIDTH = 460;
 const PREVIEW_GAP = 12;
@@ -186,12 +189,15 @@ function TemplatePreview( { preview, scrollRef, manualRef, onEnter, onLeave } ) 
  * @param {Function} props.onPreview Open / close the preview ( item|null, element ).
  * @param {Function} props.onKeyDown Arrow keys scroll the preview.
  * @param {boolean}  props.previewed The preview of this card is open.
+ * @param {Function} props.onCreate  Create from this card in the app ( item, event ).
+ * @param {string}   props.creating  Key of the card being created ('' when none).
  */
-function TemplateCard( { item, onPreview, onKeyDown, previewed } ) {
+function TemplateCard( { item, onPreview, onKeyDown, previewed, onCreate, creating } ) {
     const ref = useRef( null );
     const hasPreview = !! item.image;
     const hintId = `wpuf-template-hint-${ item.key }`;
     const dimmed = ! item.enabled && ! item.action;
+    const busy = creating === item.key;
 
     let action = null;
 
@@ -203,6 +209,8 @@ function TemplateCard( { item, onPreview, onKeyDown, previewed } ) {
                 href={ item.url }
                 className={ ACTION_CLASS }
                 aria-describedby={ hasPreview ? hintId : undefined }
+                onClick={ item.template ? ( event ) => onCreate( item, event ) : undefined }
+                aria-disabled={ creating ? 'true' : undefined }
                 { ...( item.is_pro ? { target: '_blank', rel: 'noopener noreferrer' } : {} ) }
             >
                 { item.actionLabel }
@@ -244,7 +252,16 @@ function TemplateCard( { item, onPreview, onKeyDown, previewed } ) {
                     <span className="absolute start-2 top-2 z-20 rounded-full border border-solid border-gray-200 bg-white px-2 py-0.5 text-xs font-medium text-gray-600">{ __( 'Not installed', 'wp-user-frontend' ) }</span>
                 ) }
 
-                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-white/80 p-4 text-center opacity-0 backdrop-blur-[1px] transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+                { busy && (
+                    <div className="wpuf-template-creating wpuf-fade-in absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-white/90 backdrop-blur-[2px] text-sm font-medium text-gray-700" role="status">
+                        <span className="flex size-12 items-center justify-center rounded-full bg-primary/10">
+                            <Loader2 className="size-6 animate-spin text-primary" aria-hidden="true" />
+                        </span>
+                        { __( 'Creating form…', 'wp-user-frontend' ) }
+                        <span className="wpuf-progress-indeterminate h-1 w-24 rounded-full bg-primary/15" aria-hidden="true" />
+                    </div>
+                ) }
+                <div className={ `absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-white/80 p-4 text-center opacity-0 backdrop-blur-[1px] transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 ${ creating ? 'pointer-events-none' : '' } ${ busy ? 'invisible' : '' }` }>
                     { action }
                     { ! action && (
                         <>
@@ -282,6 +299,43 @@ export default function TemplatePicker( { open, onClose, data, onAI } ) {
     const timer = useRef( null );
     const manualScroll = useRef( false );
     const returnFocus = useRef( null );
+    const [ creating, setCreating ] = useState( '' );
+
+    // Create from a template card through the admin forms REST route and open
+    // the builder in the app; the card's link (develop's page request) stays
+    // for a new tab and as the fallback.
+    const createFromTemplate = useCallback( async ( item, event ) => {
+        if ( ! inApp() || event.metaKey || event.ctrlKey || event.shiftKey || 0 !== event.button ) {
+            return;
+        }
+
+        event.preventDefault();
+
+        if ( creating ) {
+            return;
+        }
+
+        const profile = 'profile' === data.form_type;
+
+        setCreating( item.key );
+
+        try {
+            const created = await request( restPath( 'wpuf/v1', '/admin/forms' ), {
+                method: 'POST',
+                data: { type: profile ? 'wpuf_profile' : 'wpuf_forms', template: item.template },
+            } );
+            const id = created?.data?.id;
+
+            if ( ! id ) {
+                throw new Error( 'no id' );
+            }
+
+            openRoute( `/${ profile ? 'registration-forms' : 'post-forms' }/${ id }/edit`, item.url );
+        } catch ( error ) {
+            setCreating( '' );
+            notify( error?.message || __( 'The form could not be created.', 'wp-user-frontend' ), 'error' );
+        }
+    }, [ creating, data.form_type ] );
 
     const items = useMemo( () => {
         const list = [
@@ -319,7 +373,12 @@ export default function TemplatePicker( { open, onClose, data, onAI } ) {
                 actionLabel = __( 'Create Form', 'wp-user-frontend' );
             }
 
-            list.push( { ...template, actionLabel, action: !! ( template.url && actionLabel ) } );
+            list.push( {
+                ...template,
+                actionLabel,
+                action: !! ( template.url && actionLabel ),
+                template: template.enabled && ! template.is_pro ? template.key : '',
+            } );
         } );
 
         return list;
@@ -504,6 +563,8 @@ export default function TemplatePicker( { open, onClose, data, onAI } ) {
                                         onPreview={ showPreview }
                                         onKeyDown={ scrollPreview }
                                         previewed={ preview?.item.key === item.key }
+                                        onCreate={ createFromTemplate }
+                                        creating={ creating }
                                     />
                                 ) ) }
                             </div>

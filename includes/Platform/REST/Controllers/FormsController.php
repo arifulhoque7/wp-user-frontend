@@ -140,10 +140,15 @@ class FormsController extends RestController {
                     'callback'            => [ $this, 'create_item' ],
                     'permission_callback' => $this->permission( Caps::MANAGE_FORMS ),
                     'args'                => [
-                        'type' => [
+                        'type'     => [
                             'type'     => 'string',
                             'required' => true,
                             'enum'     => array_keys( BuilderBoot::SCREENS ),
+                        ],
+                        'template' => [
+                            'type'              => 'string',
+                            'required'          => false,
+                            'sanitize_callback' => 'sanitize_key',
                         ],
                     ],
                 ],
@@ -235,14 +240,24 @@ class FormsController extends RestController {
             return $this->error( 'invalid_type', __( 'Registration forms need WP User Frontend Pro.', 'wp-user-frontend' ), 400 );
         }
 
-        $title   = 'wpuf_profile' === $type ? 'Sample Registration Form' : 'Sample Form';
-        $form_id = wpuf_create_sample_form( $title, $type, true );
+        $template = (string) $request['template'];
 
-        if ( ! $form_id ) {
-            return $this->error( 'not_created', __( 'The form could not be created.', 'wp-user-frontend' ), 500 );
+        if ( '' !== $template ) {
+            $form_id = $this->create_from_template( $template, $type );
+
+            if ( is_wp_error( $form_id ) ) {
+                return $form_id;
+            }
+        } else {
+            $title   = 'wpuf_profile' === $type ? 'Sample Registration Form' : 'Sample Form';
+            $form_id = wpuf_create_sample_form( $title, $type, true );
+
+            if ( ! $form_id ) {
+                return $this->error( 'not_created', __( 'The form could not be created.', 'wp-user-frontend' ), 500 );
+            }
+
+            $this->store_shown_settings( $form_id, $type );
         }
-
-        $this->store_shown_settings( $form_id, $type );
 
         $response = rest_ensure_response(
             [
@@ -253,6 +268,54 @@ class FormsController extends RestController {
         $response->set_status( 201 );
 
         return $response;
+    }
+
+    /**
+     * A form from a template picker card, stored as the card's link did
+     * (`admin_action_post_form_template`, Pro's `wpuf_profile_form_template`).
+     * Post forms use the free template registry; other form types are created
+     * through the `wpuf_admin_form_from_template` filter (Pro hooks it for
+     * registration templates).
+     *
+     * @param string $template Template key
+     * @param string $type     Form post type
+     *
+     * @return int|\WP_Error Form id
+     */
+    private function create_from_template( $template, $type ) {
+        $form_id = null;
+
+        if ( 'wpuf_forms' === $type ) {
+            // The admin container only exists on wp-admin requests, not on REST ones.
+            $templates = wpuf()->admin ? wpuf()->admin->form_template : null;
+            $templates = $templates ? $templates : new \WeDevs\Wpuf\Admin\Forms\Post\Templates\Form_Template();
+            $form_id   = false === $templates->get_template_object( $template ) ? null : $templates->create_from_template( $template );
+        }
+
+        /**
+         * Create a form of this type from a template picker card.
+         *
+         * @since WPUF_SINCE
+         *
+         * @param int|false|\WP_Error|null $form_id  Form id; null when nothing created it yet
+         * @param string                   $template Template key
+         * @param string                   $type     Form post type
+         */
+        $form_id = apply_filters( 'wpuf_admin_form_from_template', $form_id, $template, $type );
+
+        if ( is_wp_error( $form_id ) ) {
+            return $form_id;
+        }
+
+        if ( null === $form_id ) {
+            return $this->error( 'invalid_template', __( 'This template is not available.', 'wp-user-frontend' ), 400 );
+        }
+
+        if ( ! $form_id ) {
+            return $this->error( 'not_created', __( 'The form could not be created.', 'wp-user-frontend' ), 500 );
+        }
+
+        return (int) $form_id;
     }
 
     /**

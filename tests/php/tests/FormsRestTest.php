@@ -191,6 +191,49 @@ class FormsRestTest extends WP_UnitTestCase {
         $this->assertSame( 'above', get_post_meta( $created->get_data()['data']['id'], 'wpuf_form_settings', true )['label_position'] );
     }
 
+    public function test_create_from_template_matches_the_template_link() {
+        wp_set_current_user( self::factory()->user->create( [ 'role' => 'administrator' ] ) );
+
+        $request = new WP_REST_Request( 'POST', '/wpuf/v1/admin/forms' );
+        $request->set_body_params( [ 'type' => 'wpuf_forms', 'template' => 'post_form_template_post' ] );
+        $created = $this->server->dispatch( $request );
+        $this->assertSame( 201, $created->get_status() );
+        $rest_form = $created->get_data()['data']['id'];
+
+        // The template link's path stores the same form.
+        $link_form = ( new \WeDevs\Wpuf\Admin\Forms\Post\Templates\Form_Template() )->create_from_template( 'post_form_template_post' );
+        $strip     = function ( $form_id ) {
+            return array_map(
+                function ( $field ) {
+                    unset( $field['id'] );
+                    return $field;
+                },
+                wpuf_get_form_fields( $form_id )
+            );
+        };
+
+        $this->assertSame( get_post( $link_form )->post_title, get_post( $rest_form )->post_title );
+        $this->assertSame( get_post_meta( $link_form, 'wpuf_form_settings', true ), get_post_meta( $rest_form, 'wpuf_form_settings', true ) );
+        $this->assertSame( $strip( $link_form ), $strip( $rest_form ) );
+        $this->assertNotEmpty( $strip( $rest_form ) );
+
+        // Unknown templates are refused, nothing created.
+        $count   = function () {
+            return count( get_posts( [ 'post_type' => 'wpuf_forms', 'post_status' => 'any', 'numberposts' => -1, 'fields' => 'ids' ] ) );
+        };
+        $before  = $count();
+        $request = new WP_REST_Request( 'POST', '/wpuf/v1/admin/forms' );
+        $request->set_body_params( [ 'type' => 'wpuf_forms', 'template' => 'no_such_template' ] );
+        $this->assertSame( 400, $this->server->dispatch( $request )->get_status() );
+        $this->assertSame( $before, $count() );
+
+        // Subscribers cannot create.
+        wp_set_current_user( self::factory()->user->create( [ 'role' => 'subscriber' ] ) );
+        $request = new WP_REST_Request( 'POST', '/wpuf/v1/admin/forms' );
+        $request->set_body_params( [ 'type' => 'wpuf_forms', 'template' => 'post_form_template_post' ] );
+        $this->assertSame( 403, $this->server->dispatch( $request )->get_status() );
+    }
+
     public function test_save_service_rejects_bad_payloads() {
         $form_id = $this->make_form();
         $saver   = new FormSave();

@@ -155,10 +155,33 @@ class Form_Template {
             return;
         }
 
+        $form_id = $this->create_from_template( $template_name );
+
+        if ( ! $form_id || is_wp_error( $form_id ) ) {
+            return;
+        }
+
+        wp_safe_redirect( admin_url( 'admin.php?page=wpuf-post-forms&action=edit&id=' . $form_id ) );
+
+        exit;
+    }
+
+    /**
+     * Create a post form from a template: the form with the template's title,
+     * settings and fields, as the template link did (also used by the admin
+     * forms REST route, so the React picker stays in the app).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param string $template_name Template key
+     *
+     * @return int|false|\WP_Error Form id, false for an unknown or empty template
+     */
+    public function create_from_template( $template_name ) {
         $template_object = $this->get_template_object( $template_name );
 
         if ( false === $template_object ) {
-            return;
+            return false;
         }
 
         $form_fields = $template_object->get_form_fields();
@@ -179,13 +202,11 @@ class Form_Template {
             ]
         );
 
-        if ( is_wp_error( $form_id ) || ! $form_fields ) {
-            return;
+        if ( is_wp_error( $form_id ) ) {
+            return $form_id;
         }
 
-        wp_safe_redirect( admin_url( 'admin.php?page=wpuf-post-forms&action=edit&id=' . $form_id ) );
-
-        exit;
+        return $form_fields ? (int) $form_id : false;
     }
 
     /**
