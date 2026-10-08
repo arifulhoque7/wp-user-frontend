@@ -3,8 +3,10 @@
  * (post + registration), full screen on the shared gray page.
  *
  * Replaces the PHP + jQuery modal (includes/Admin/template-parts/modal-v4.2.php):
- * same templates, links, search, categories and counts, from
- * `window.wpuf_form_templates` (Admin\Forms\Template_Picker). Each card shows
+ * same templates, links, search and categories, from
+ * `window.wpuf_form_templates` (Admin\Forms\Template_Picker). A category's
+ * count is the number of cards it shows (Blank and AI Forms included; the PHP
+ * modal left them out of the category count). Each card shows
  * the top of a screenshot of the created form; hovering or focusing a card
  * opens a preview that scrolls through the whole screenshot.
  *
