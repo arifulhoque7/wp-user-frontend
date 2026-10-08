@@ -173,8 +173,12 @@ const syncPage = ( route ) => {
  *
  * @return {Promise} Resolves when the group's new sheets have loaded.
  */
-const activateStyles = ( group ) => {
+let wantedGroup = null;
+let renderToken = 0;
+
+const activateStyles = async ( group ) => {
     const loads = [];
+    const added = [];
 
     document.querySelectorAll( 'template[data-wpuf-route-style]' ).forEach( ( placeholder ) => {
         const owners = ( placeholder.dataset.screens || '' ).split( ' ' );
@@ -188,12 +192,30 @@ const activateStyles = ( group ) => {
         link.rel = 'stylesheet';
         link.id = placeholder.dataset.id;
         link.href = placeholder.dataset.href;
-        link.media = placeholder.dataset.media || 'all';
+        // Not applied until every new sheet of the group has loaded (below):
+        // one sheet alone (e.g. Pro's unscoped Tailwind 3 base before Free's
+        // sheets) restyled the admin menu for a few frames.
+        link.media = 'print';
+        link.dataset.media = placeholder.dataset.media || 'all';
+        added.push( link );
         loads.push( new Promise( ( resolve ) => {
             link.addEventListener( 'load', resolve, { once: true } );
             link.addEventListener( 'error', resolve, { once: true } );
         } ) );
         placeholder.after( link, ...[ ...placeholder.content.childNodes ].map( ( node ) => node.cloneNode( true ) ) );
+    } );
+
+    // The new group's sheets first, the old group's off after: switching the
+    // old ones off before a lazy sheet arrived left the page (admin menu
+    // included) unstyled for a moment on a fast click.
+    await Promise.all( loads );
+
+    if ( group !== wantedGroup ) {
+        return false;
+    }
+
+    added.forEach( ( link ) => {
+        link.media = link.dataset.media;
     } );
 
     Object.entries( app.styles || {} ).forEach( ( [ handle, owners ] ) => {
@@ -211,7 +233,7 @@ const activateStyles = ( group ) => {
 
     sortGroupStyles( group );
 
-    return Promise.all( loads );
+    return true;
 };
 
 /**
@@ -291,6 +313,9 @@ const showNotFound = () => {
  * Show the route of the current hash.
  */
 const render = async () => {
+    // A newer navigation wins: a route still waiting for its sheets when the
+    // next click comes must not mount after it (fast clicks left two screens).
+    const token = ++renderToken;
     const { path, query } = readHash();
     const found = match( path );
 
@@ -343,7 +368,12 @@ const render = async () => {
 
     syncChrome( route );
     syncPage( route );
+    wantedGroup = group;
     await activateStyles( group );
+
+    if ( token !== renderToken ) {
+        return;
+    }
 
     const element = document.createElement( 'div' );
 

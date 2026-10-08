@@ -303,6 +303,27 @@ class PostFormsList extends Screen {
     }
 
     /**
+     * Stylesheets the forms' load hook enqueues for the builder (legacy
+     * field previews, jQuery widgets, Pro's unscoped Tailwind 3 base) that
+     * the React list never uses. The list route drops them: switched on with
+     * the list they restyled the admin menu for a moment on every visit.
+     */
+    const BUILDER_ONLY_STYLES = [
+        'jquery-ui',
+        'wpuf-selectize',
+        'wpuf-intlTelInput',
+        'wpuf-css-stars',
+        'wpuf-tax',
+        'wpuf-frontend-forms',
+        'wpuf-font-awesome',
+        'wpuf-toastr',
+        'wpuf-tooltip',
+        'wpuf-form-builder',
+        'wpuf-admin-form-builder',
+        'wpuf-admin-form-builder-pro',
+    ];
+
+    /**
      * App load groups: the list, and the builder (its own stylesheets; any
      * form's data comes over REST when its builder opens).
      *
@@ -314,9 +335,9 @@ class PostFormsList extends Screen {
         return [
             $this->slug()       => function () {
                 $this->load_in_app();
-                // The list page prints this handle without its file (the builder's
-                // sheet, Assets::use_react_forms_styles()): the builder group owns it.
-                wp_dequeue_style( 'wpuf-admin-form-builder' );
+                // Builder sheets belong to the builder group only (the list page
+                // printed `wpuf-admin-form-builder` without its file anyway).
+                array_map( 'wp_dequeue_style', self::BUILDER_ONLY_STYLES );
 
                 return $this->app_globals();
             },

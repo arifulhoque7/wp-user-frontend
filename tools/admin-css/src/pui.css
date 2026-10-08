@@ -98,14 +98,17 @@
 }
 
 /* Links on the React screens: WordPress draws a blue ring on `a:focus`
-   (admin color). No ring on a mouse click; keyboard focus gets the primary
+   (admin color), dialogs included (they render outside #wpbody-content).
+   No ring on a mouse click; keyboard focus gets the primary
    green outline (owner 2026-10-04: "no blue, only green"). */
-body.wpuf-admin-react #wpbody-content a:focus {
+body.wpuf-admin-react #wpbody-content a:focus,
+body.wpuf-admin-react [role="dialog"] a:focus {
     box-shadow: none;
     outline: 2px solid transparent;
 }
 
-body.wpuf-admin-react #wpbody-content a:focus-visible {
+body.wpuf-admin-react #wpbody-content a:focus-visible,
+body.wpuf-admin-react [role="dialog"] a:focus-visible {
     outline: 2px solid #059669;
     outline-offset: 2px;
     border-radius: 2px;

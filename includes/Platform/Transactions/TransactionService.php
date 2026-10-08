@@ -342,8 +342,29 @@ class TransactionService {
             'cost'     => $this->money( $row['cost'] ),
         ];
         $row['date']     = $row['created'] ? mysql2date( get_option( 'date_format' ), $row['created'] ) : '';
+        $row['gateway_logo'] = $this->gateway_logo( (string) $row['gateway'] );
 
         return $row;
+    }
+
+    /**
+     * The plugin's mark for a gateway label (PayPal, bank, else a card).
+     *
+     * @param string $gateway Gateway label
+     *
+     * @return string Image URL
+     */
+    private function gateway_logo( $gateway ) {
+        $gateway = strtolower( $gateway );
+        $file    = 'credit-card.svg';
+
+        if ( false !== strpos( $gateway, 'paypal' ) ) {
+            $file = 'paypal-mark.svg';
+        } elseif ( false !== strpos( $gateway, 'bank' ) || false !== strpos( $gateway, 'manual' ) ) {
+            $file = 'bank.svg';
+        }
+
+        return WPUF_ASSET_URI . '/images/' . $file;
     }
 
     /**

@@ -36,6 +36,13 @@ export const HOOKS = Object.freeze( {
     FORMS_LIST_SHORTCODE_RENDER: 'wpuf.formsList.shortcodeRender',
     FORMS_LIST_AI_FORM_BUILDER_AVAILABLE: 'wpuf.formsList.aiFormBuilderAvailable',
 
+    // Admin app shell: after a route mounted ({ route, params, query }).
+    ADMIN_ROUTE_CHANGED: 'wpuf.admin.routeChanged',
+
+    // AI form builder.
+    AI_FORM_BUILDER_INIT: 'wpuf.aiFormBuilder.init',
+    AI_FORM_BUILDER_CREATE_FORM_DATA: 'wpuf.aiFormBuilder.createFormData',
+
     // Subscriptions.
     SUBSCRIPTION_INIT: 'wpuf.subscription.init',
     SUBSCRIPTION_ITEMS_LOADED: 'wpuf.subscription.itemsLoaded',

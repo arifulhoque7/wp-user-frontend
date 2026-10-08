@@ -139,7 +139,12 @@ export default function TransactionsTable( { rows, selected, onSelect, sort, onS
                                 <span className="font-medium text-gray-900">{ row.amounts.cost }</span>
                                 { row.coupon && <span className="block text-xs text-gray-400">{ row.coupon.code }</span> }
                             </td>
-                            <td className={ TD + ' whitespace-nowrap text-gray-500' }>{ row.gateway || '–' }</td>
+                            <td className={ TD + ' whitespace-nowrap text-gray-500' }>
+                                <span className="inline-flex items-center gap-2">
+                                    { row.gateway_logo && <img src={ row.gateway_logo } alt="" className="h-4 w-5 object-contain" /> }
+                                    { row.gateway || '–' }
+                                </span>
+                            </td>
                             <td className={ TD }>
                                 <span className="text-gray-900">{ row.payer || '–' }</span>
                                 { row.payer_email && <span className="block text-xs text-gray-400">{ row.payer_email }</span> }
