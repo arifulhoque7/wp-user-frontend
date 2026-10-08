@@ -6292,6 +6292,19 @@ function wpuf_is_checkbox_or_toggle_on( $value ) {
 function wpuf_get_forms_counts_with_status( $post_type = 'wpuf_forms' ) {
     $post_counts = (array) wp_count_posts( $post_type );
 
+    // REST requests (the admin app list) run before the form post types are
+    // registered, and wp_count_posts() answers nothing for an unknown type.
+    if ( ! post_type_exists( $post_type ) ) {
+        global $wpdb;
+
+        $rows        = $wpdb->get_results( $wpdb->prepare( "SELECT post_status, COUNT( * ) AS num_posts FROM {$wpdb->posts} WHERE post_type = %s GROUP BY post_status", $post_type ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+        $post_counts = [];
+
+        foreach ( (array) $rows as $row ) {
+            $post_counts[ $row->post_status ] = (int) $row->num_posts;
+        }
+    }
+
     $post_statuses = apply_filters( 'wpuf_post_forms_list_table_post_statuses', [
         'all'     => __( 'All', 'wp-user-frontend' ),
         'publish' => __( 'Saved', 'wp-user-frontend' ),

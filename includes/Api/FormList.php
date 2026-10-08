@@ -153,6 +153,8 @@ class FormList extends RestController {
                     'current_page' => $page,
                     'per_page'     => $per_page,
                 ],
+                // The status tab counts, so the list can update them after an action.
+                'counts'     => wpuf_get_forms_counts_with_status( $post_type ),
             ]
         );
     }

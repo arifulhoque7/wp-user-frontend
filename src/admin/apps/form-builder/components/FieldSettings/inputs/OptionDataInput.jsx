@@ -21,6 +21,7 @@ import { RadioGroup, RadioGroupItem } from '@wedevs/plugin-ui';
 import { AIConfigModal, Checkbox, TextInput, dialogs } from '@wpuf/components';
 import SettingHelpText from './SettingHelpText';
 import { BUILDER_SLOTS, BuilderSlot } from '../../../slots';
+import { openRoute } from '../../../../../app/client';
 
 /**
  * Generate a random ID for option rows.
@@ -519,7 +520,8 @@ export default function OptionDataInput( { optionField, field } ) {
                 isOpen={ showAiConfigModal }
                 onClose={ () => setShowAiConfigModal( false ) }
                 onGoToSettings={ () => {
-                    window.location.href = window.wpuf_form_builder?.ai_settings_url || '';
+                    // In the admin app: the AI settings section (the leave guard still asks about unsaved edits).
+                    openRoute( '/settings?tab=wpuf_ai', window.wpuf_form_builder?.ai_settings_url || '' );
                 } }
             />
         </div>

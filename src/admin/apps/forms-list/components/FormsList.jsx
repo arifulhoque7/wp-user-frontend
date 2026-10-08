@@ -4,7 +4,8 @@
  * @since WPUF_SINCE
  */
 import { useState, useEffect, useCallback, useMemo, useRef } from '@wordpress/element';
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
+import { request, restPath } from '@wpuf/api';
 import { applyFilters } from '@wordpress/hooks';
 import { AIConfigModal, ErrorState, Pagination, Tabs, notify, useConfirm } from '@wpuf/components';
 
@@ -34,13 +35,15 @@ const FormsList = ( {
     const permalinkUrl = wpuf_forms_list.permalink_settings_url;
     const aiConfigured = wpuf_forms_list.ai_configured || false;
     const aiSettingsUrl = wpuf_forms_list.ai_settings_url || '';
-    const postCounts = wpuf_forms_list.post_counts || {};
+    const initialCounts = wpuf_forms_list.post_counts || {};
 
     const newFormUrl = window.wpuf_admin_script.admin_url + 'admin.php?page=wpuf-' + formType + '-forms&action=add-new';
     // Route base of this list in the admin app (task 5d).
     const routeBase = 'profile' === formType ? '/registration-forms' : '/post-forms';
 
-    const { forms, loading, error, pagination, fetchForms } = useFormsFetch( { postType } );
+    const { forms, loading, error, pagination, counts, fetchForms } = useFormsFetch( { postType } );
+    // The page-load counts until the list has answered once, then the live ones.
+    const postCounts = counts || initialCounts;
     const { copiedKey, copyToClipboard } = useClipboard();
     const [ confirm, confirmDialog ] = useConfirm();
 
@@ -110,8 +113,7 @@ const FormsList = ( {
         fetchForms( pagination.current_page, currentTab, searchTerm, perPage );
     }, [ pagination, currentTab, searchTerm, perPage, fetchForms ] );
 
-    // Build admin URL helper (the row actions are the server's nonce-checked
-    // list actions, as on develop: they redirect back with a notice).
+    // Builder page URL (edit, when the admin app is off).
     const buildAdminUrl = useCallback( ( formId, action ) => {
         const params = new URLSearchParams( {
             page: pageSlug,
@@ -131,6 +133,51 @@ const FormsList = ( {
         ( formId ) => ( inApp() ? `#${ routeBase }/${ formId }/edit` : buildAdminUrl( formId, 'edit' ) ),
         [ buildAdminUrl, routeBase ]
     );
+
+    // Row and bulk actions over the admin forms REST routes (same form store
+    // calls as the classic list actions), then the list reloads in place: no
+    // page load. A failed request shows its error and leaves the list as it is.
+    const MESSAGES = {
+        duplicate: [ __( 'Form duplicated.', 'wp-user-frontend' ), /* translators: %d: number of forms */ __( '%d forms duplicated.', 'wp-user-frontend' ) ],
+        trash: [ __( 'Form moved to the trash.', 'wp-user-frontend' ), /* translators: %d: number of forms */ __( '%d forms moved to the trash.', 'wp-user-frontend' ) ],
+        restore: [ __( 'Form restored.', 'wp-user-frontend' ), /* translators: %d: number of forms */ __( '%d forms restored.', 'wp-user-frontend' ) ],
+        delete: [ __( 'Form deleted permanently.', 'wp-user-frontend' ), /* translators: %d: number of forms */ __( '%d forms deleted permanently.', 'wp-user-frontend' ) ],
+    };
+
+    const [ acting, setActing ] = useState( false );
+
+    const runAction = useCallback( async ( action, ids ) => {
+        if ( ! MESSAGES[ action ] || acting ) {
+            return false;
+        }
+
+        setActing( true );
+
+        try {
+            for ( const id of ids ) {
+                await request(
+                    restPath( 'wpuf/v1', 'delete' === action ? `/admin/forms/${ id }` : `/admin/forms/${ id }/${ action }` ),
+                    { method: 'delete' === action ? 'DELETE' : 'POST' }
+                );
+            }
+        } catch ( requestError ) {
+            setActing( false );
+            notify( ( requestError && requestError.message ) || __( 'Something went wrong. Please try again.', 'wp-user-frontend' ), 'error' );
+
+            return false;
+        }
+
+        setActing( false );
+        setSelectedForms( [] );
+        notify( 1 === ids.length ? MESSAGES[ action ][ 0 ] : sprintf( MESSAGES[ action ][ 1 ], ids.length ) );
+
+        // The page may be empty now (last rows trashed or deleted): step back one.
+        const page = 'duplicate' !== action && ids.length >= forms.length && pagination.current_page > 1 ? pagination.current_page - 1 : pagination.current_page;
+
+        fetchForms( page, currentTab, searchTerm, perPage );
+
+        return true;
+    }, [ acting, forms, pagination, currentTab, searchTerm, perPage, fetchForms ] ); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Row action handler
     const handleAction = useCallback( async ( action, form ) => {
@@ -153,8 +200,8 @@ const FormsList = ( {
             }
         }
 
-        window.location.href = buildAdminUrl( form.ID, action );
-    }, [ buildAdminUrl, confirm, routeBase ] );
+        await runAction( action, [ form.ID ] );
+    }, [ buildAdminUrl, confirm, routeBase, runAction ] );
 
     // Bulk action handler (develop's bulk request to the server list action)
     const handleBulkAction = useCallback( async ( bulkAction ) => {
@@ -174,30 +221,8 @@ const FormsList = ( {
             }
         }
 
-        const params = new URLSearchParams( {
-            page: pageSlug,
-            _wpnonce: wpuf_forms_list.bulk_nonce,
-            _wp_http_referer: window.location.href,
-            action: bulkAction,
-            action2: bulkAction,
-            bulk_action: 'Apply',
-            paged: pagination.current_page.toString(),
-        } );
-
-        if ( searchTerm ) {
-            params.append( 's', searchTerm );
-        }
-
-        if ( currentTab === 'trash' ) {
-            params.append( 'post_status', 'trash' );
-        }
-
-        selectedForms.forEach( ( formId ) => {
-            params.append( 'post[]', formId.toString() );
-        } );
-
-        window.location.href = `${ window.wpuf_admin_script.admin_url }admin.php?${ params.toString() }`;
-    }, [ selectedForms, pageSlug, searchTerm, currentTab, pagination, confirm ] );
+        await runAction( bulkAction, [ ...selectedForms ] );
+    }, [ selectedForms, confirm, runAction ] );
 
     // Open the template picker (the PHP modal of an older Pro as fallback).
     const openModal = useCallback( ( event ) => {

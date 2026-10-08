@@ -64,7 +64,7 @@ export const parseJsonFromResponse = ( responseText ) => {
  * @param {Object} options
  * @param {string} options.postType Post type slug. Default 'wpuf_forms'.
  *
- * @return {Object} { forms, loading, error, pagination, fetchForms }
+ * @return {Object} { forms, loading, error, pagination, counts, fetchForms }
  */
 const useFormsFetch = ( { postType = 'wpuf_forms' } = {} ) => {
     const [ forms, setForms ] = useState( [] );
@@ -76,6 +76,8 @@ const useFormsFetch = ( { postType = 'wpuf_forms' } = {} ) => {
         per_page: PER_PAGE,
     } );
     const [ error, setError ] = useState( null );
+    // Status tab counts from the last list answer (null until one arrives).
+    const [ counts, setCounts ] = useState( null );
     const latest = useRef( 0 );
 
     const fetchForms = useCallback( async ( page = 1, status = 'any', search = '', perPage = PER_PAGE ) => {
@@ -101,6 +103,10 @@ const useFormsFetch = ( { postType = 'wpuf_forms' } = {} ) => {
 
             if ( requestId !== latest.current ) {
                 return;
+            }
+
+            if ( data.counts && 'object' === typeof data.counts ) {
+                setCounts( data.counts );
             }
 
             if ( data.success && data.result ) {
@@ -130,7 +136,7 @@ const useFormsFetch = ( { postType = 'wpuf_forms' } = {} ) => {
         }
     }, [ postType ] );
 
-    return { forms, loading, pagination, error, fetchForms };
+    return { forms, loading, pagination, error, counts, fetchForms };
 };
 
 export default useFormsFetch;

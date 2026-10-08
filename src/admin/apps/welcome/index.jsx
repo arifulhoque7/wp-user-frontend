@@ -9,7 +9,7 @@ import { createRoot, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { Button, Modal, PageHeader, PageShell, WpufProviders } from '@wpuf/components';
 
-import { registerScreen } from '../../app/client';
+import { openRoute, registerScreen } from '../../app/client';
 import { Reveal, RevealWords, afterWords } from '../onboarding/Reveal';
 import WelcomeIntro from './WelcomeIntro';
 
@@ -47,8 +47,8 @@ function Welcome() {
                                 { __( 'Let people post, sign up, manage their account and pay, all from the frontend of your site. Start with a form, or let the setup wizard build the pages for you.', 'wp-user-frontend' ) }
                             </Reveal>
                             <Reveal delay={ after + 120 } className="mt-6 flex flex-wrap items-center gap-3">
-                                <Button onClick={ () => ( window.location.href = page.urls?.postForms ) }>{ __( 'Create Your First Form', 'wp-user-frontend' ) }</Button>
-                                <Button variant="secondary" onClick={ () => ( window.location.href = page.urls?.onboarding ) }>{ __( 'Run the Setup Wizard', 'wp-user-frontend' ) }</Button>
+                                <Button onClick={ () => openRoute( '/post-forms', page.urls?.postForms ) }>{ __( 'Create Your First Form', 'wp-user-frontend' ) }</Button>
+                                <Button variant="secondary" onClick={ () => openRoute( '/onboarding/features', page.urls?.onboarding ) }>{ __( 'Run the Setup Wizard', 'wp-user-frontend' ) }</Button>
                                 <a href={ page.urls?.guide } target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-primary hover:underline">
                                     { __( 'Read the Full Guide', 'wp-user-frontend' ) } →
                                 </a>
