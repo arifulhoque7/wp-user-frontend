@@ -5,7 +5,7 @@ import { Save } from 'lucide-react';
 import { STORE_NAME } from '../../store';
 import useFormSave from '../../hooks/useFormSave';
 import LegacySlot, { getLegacySlots } from '../../common/LegacySlot';
-import { inApp } from '../../../../app/client';
+import { getRouteQuery, inApp } from '../../../../app/client';
 
 /**
  * Builder URL of another form of the same type: its app route in the admin
@@ -19,11 +19,15 @@ import { inApp } from '../../../../app/client';
 const formEditUrl = ( formType, id ) => {
     const profile = 'wpuf_profile' === formType || 'profile' === formType;
 
+    // Another form opens on the same builder tab and settings section.
+    const query = getRouteQuery();
+    const keep = 'settings' === query.tab ? `tab=settings${ query.section ? `&section=${ encodeURIComponent( query.section ) }` : '' }` : '';
+
     if ( inApp() ) {
-        return `#/${ profile ? 'registration' : 'post' }-forms/${ id }/edit`;
+        return `#/${ profile ? 'registration' : 'post' }-forms/${ id }/edit${ keep ? `?${ keep }` : '' }`;
     }
 
-    return `admin.php?page=wpuf-${ profile ? 'profile' : 'post' }-forms&action=edit&id=${ id }`;
+    return `admin.php?page=wpuf-${ profile ? 'profile' : 'post' }-forms&action=edit&id=${ id }${ keep ? `&${ keep }` : '' }`;
 };
 
 export default function Header( { activeTab, onTabChange } ) {

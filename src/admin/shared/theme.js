@@ -31,11 +31,11 @@ export const wpufTokens = Object.freeze( {
     ring: '#059669',
     // plugin-ui: rounded-md = radius - 2px (controls 6px), rounded-xl = radius + 4px (cards 12px).
     radius: '0.5rem',
-    // The screens' Tailwind 3 stack (v3-theme.css). The provider prints tokens
-    // inline on its root, so plugin-ui's default would reach a host screen's
-    // markup and change every `font-sans` there (builder, 4.4c). Both start
-    // with ui-sans-serif, system-ui: same system font for the wrappers.
-    fontSans: 'ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"',
+    // The app font (FlyHR's): Plus Jakarta Sans, bundled in assets/fonts and
+    // declared in the screens' stylesheets (src/pui.css). The provider prints
+    // tokens inline on its root, so this is what every `font-sans` inside a
+    // screen and its portals resolves to.
+    fontSans: '"Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
 } );
 
 export const wpufDarkTokens = wpufTokens;

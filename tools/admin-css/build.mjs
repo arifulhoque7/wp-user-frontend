@@ -354,6 +354,9 @@ async function build( name ) {
     }
     const target = join( plugin, entry.output );
 
+    // Bundled fonts (src/pui.css), relative to this stylesheet.
+    result = result.split( '__WPUF_FONTS__' ).join( relative( dirname( target ), join( plugin, 'assets/fonts' ) ).split( '\\' ).join( '/' ) );
+
     await mkdir( dirname( target ), { recursive: true } );
     await writeFile( target, result );
 

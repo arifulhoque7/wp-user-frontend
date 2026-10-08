@@ -5,6 +5,7 @@
  * hunting for the page or form in the admin menu.
  */
 import { __ } from '@wordpress/i18n';
+import { inApp } from '../../../../../../app/client';
 
 // Setting name => what its value points at.
 export const QUICK_LINKS = {
@@ -33,19 +34,41 @@ export const API_KEY_URLS = {
  */
 export const adminUrl = () => ( window.wpuf_settings || {} ).admin_url || ( window.ajaxurl || '' ).replace( 'admin-ajax.php', '' );
 
+/**
+ * A form's links: in the admin app its builder routes (the editor, the
+ * builder's Settings tab on its first section, a new form), else the
+ * classic builder pages.
+ *
+ * @param {string} type post | profile
+ *
+ * @return {Function} ( id ) => links.
+ */
+const formLinks = ( type ) => ( id ) => {
+    const route = 'profile' === type ? 'registration-forms' : 'post-forms';
+    const page = 'profile' === type ? 'wpuf-profile-forms' : 'wpuf-post-forms';
+    const app = `${ adminUrl() }admin.php?page=wp-user-frontend#/${ route }`;
+
+    if ( inApp() ) {
+        return [
+            id && { label: __( 'Edit form', 'wp-user-frontend' ), href: `${ app }/${ id }/edit` },
+            id && { label: __( 'Form settings', 'wp-user-frontend' ), href: `${ app }/${ id }/edit?tab=settings&section=general` },
+            { label: __( 'Add new form', 'wp-user-frontend' ), href: `${ app }/new` },
+        ];
+    }
+
+    return [
+        id && { label: __( 'Edit form', 'wp-user-frontend' ), href: `${ adminUrl() }admin.php?page=${ page }&action=edit&id=${ id }` },
+        { label: __( 'Add new form', 'wp-user-frontend' ), href: `${ adminUrl() }admin.php?page=${ page }&action=add-new` },
+    ];
+};
+
 const LINKS = {
     page: ( id ) => [
         id && { label: __( 'Edit page', 'wp-user-frontend' ), href: `${ adminUrl() }post.php?post=${ id }&action=edit` },
         { label: __( 'Add new page', 'wp-user-frontend' ), href: `${ adminUrl() }post-new.php?post_type=page` },
     ],
-    post_form: ( id ) => [
-        id && { label: __( 'Edit form', 'wp-user-frontend' ), href: `${ adminUrl() }admin.php?page=wpuf-post-forms&action=edit&id=${ id }` },
-        { label: __( 'Add new form', 'wp-user-frontend' ), href: `${ adminUrl() }admin.php?page=wpuf-post-forms&action=add-new` },
-    ],
-    profile_form: ( id ) => [
-        id && { label: __( 'Edit form', 'wp-user-frontend' ), href: `${ adminUrl() }admin.php?page=wpuf-profile-forms&action=edit&id=${ id }` },
-        { label: __( 'Add new form', 'wp-user-frontend' ), href: `${ adminUrl() }admin.php?page=wpuf-profile-forms&action=add-new` },
-    ],
+    post_form: formLinks( 'post' ),
+    profile_form: formLinks( 'profile' ),
 };
 
 /**
