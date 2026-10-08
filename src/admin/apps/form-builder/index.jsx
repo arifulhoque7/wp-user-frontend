@@ -264,16 +264,19 @@ function mountInApp( element, context ) {
     element.append( builderSkeleton() );
 
     const open = async () => {
-        const id = parseInt( context.params.id, 10 ) || 0;
+        let id = parseInt( context.params.id, 10 ) || 0;
 
+        // A new form: created over REST, then this mount takes its edit route
+        // (no remount, so one loading state).
         if ( ! id ) {
             const created = await request( restPath( 'wpuf/v1', '/admin/forms' ), { method: 'POST', data: { type } } );
 
-            if ( ! cancelled ) {
-                context.navigate( `${ ( ROUTES[ type ] || ROUTES.wpuf_forms ).base }/${ created.data.id }/edit`, { replace: true } );
+            if ( cancelled ) {
+                return;
             }
 
-            return;
+            id = parseInt( created.data.id, 10 );
+            context.navigate( `${ ( ROUTES[ type ] || ROUTES.wpuf_forms ).base }/${ id }/edit`, { replace: true, adopt: true } );
         }
 
         const body = await request( restPath( 'wpuf/v1', `/admin/forms/${ id }/builder` ) );

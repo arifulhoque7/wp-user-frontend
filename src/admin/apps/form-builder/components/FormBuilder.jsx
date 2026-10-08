@@ -10,6 +10,7 @@ import useDirtyState from '../hooks/useDirtyState';
 import { PageFooter, PageShell } from '@wpuf/components';
 import LegacySlot, { getLegacySlots } from '../common/LegacySlot';
 import { foldMenu, unfoldMenu } from '../skeleton';
+import { getRouteQuery, setRouteQuery } from '../../../app/client';
 
 export default function FormBuilder() {
     const { formType } = useSelect( ( select ) => {
@@ -18,7 +19,13 @@ export default function FormBuilder() {
         };
     }, [] );
 
-    const [ activeTab, setActiveTab ] = useState( 'form-editor' );
+    // The open tab lives in the URL (`?tab=settings`), so a reload or a shared
+    // link opens the same tab.
+    const [ activeTab, setActiveTab ] = useState( () => ( 'settings' === getRouteQuery().tab ? 'form-settings' : 'form-editor' ) );
+    const changeTab = ( tab ) => {
+        setActiveTab( tab );
+        setRouteQuery( 'form-settings' === tab ? { tab: 'settings' } : { tab: null, section: null } );
+    };
 
     useDirtyState();
 
@@ -33,7 +40,7 @@ export default function FormBuilder() {
 
     return (
         <PageShell className={ `wpuf-form-builder wpuf-form-builder-${ formType }` }>
-            <Header activeTab={ activeTab } onTabChange={ setActiveTab } />
+            <Header activeTab={ activeTab } onTabChange={ changeTab } />
 
             { activeTab === 'form-editor' && (
                 // One drag-and-drop context for the palette and the canvas (D16).

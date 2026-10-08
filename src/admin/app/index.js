@@ -463,9 +463,33 @@ function isAppRoute( path ) {
  * @param {string}  path            Route path (may include `?query`).
  * @param {Object}  options         Options.
  * @param {boolean} options.replace Replace the history entry.
+ * @param {boolean} options.adopt   The mounted screen takes the new route as
+ *                                  its own (same screen, e.g. a new form's
+ *                                  edit route): URL and current route change,
+ *                                  no remount. Needs `replace`.
  */
-function navigate( path, { replace = false } = {} ) {
+function navigate( path, { replace = false, adopt = false } = {} ) {
     const hash = path.startsWith( '#' ) ? path : `#${ path }`;
+
+    if ( replace && adopt && current ) {
+        const [ routePath, search = '' ] = hash.replace( /^#/, '' ).split( '?' );
+        const found = match( routePath );
+
+        if ( found && found.route.app === current.route.app ) {
+            window.history.replaceState( null, '', hash );
+            current = {
+                ...current,
+                route: found.route,
+                params: found.params,
+                query: Object.fromEntries( new URLSearchParams( search ) ),
+                key: `${ found.route.id }:${ JSON.stringify( found.params ) }`,
+            };
+            syncChrome( found.route );
+            syncPage( found.route );
+
+            return;
+        }
+    }
 
     if ( replace ) {
         window.history.replaceState( null, '', hash );

@@ -10,7 +10,7 @@ import LegacySlot, { getLegacySlots } from '../../common/LegacySlot';
 import ModulesEmptyState from './ModulesEmptyState';
 import useFormSave from '../../hooks/useFormSave';
 import { BuilderSlot, settingsSlotName } from '../../slots';
-import { inApp } from '../../../../app/client';
+import { getRouteQuery, inApp, setRouteQuery } from '../../../../app/client';
 
 /**
  * Main form settings component — mirrors post-form-settings.php Vue template.
@@ -40,7 +40,17 @@ export default function FormSettings() {
         return '';
     }, [ settingsTitles ] );
 
-    const [ activeTab, setActiveTab ] = useState( defaultTab );
+    // The open section lives in the URL (`?tab=settings&section=<key>`).
+    const [ activeTab, setActiveTabState ] = useState( () => {
+        const section = getRouteQuery().section;
+        const known = section && Object.values( settingsTitles ).some( ( top ) => top && top.sub_items && top.sub_items[ section ] );
+
+        return known ? section : defaultTab;
+    } );
+    const setActiveTab = ( section ) => {
+        setActiveTabState( section );
+        setRouteQuery( { tab: 'settings', section } );
+    };
 
     // Compute active settings title from settings_titles sub_items
     const activeSettingsTitle = useMemo( () => {
