@@ -84,6 +84,18 @@ const ENTRIES = {
         rtl: true,
         pui: true,
     },
+    // Help, Tools, Transactions, coupon promo (5e): the settings screen's
+    // Tailwind 3 base and the plugin-ui part; Pro's coupon screens add their
+    // own utilities (Pro tools/admin-css).
+    pages: {
+        input: 'src/pages.css',
+        pre: 'src/base-v3/settings.pre.css',
+        post: 'src/base-v3/settings.post.css',
+        scope: '.wpuf-admin-react',
+        output: 'assets/css/admin/pages-react.css',
+        rtl: true,
+        pui: true,
+    },
     // AI form builder (5c): the shared Tailwind 3 base its Vue sheet had
     // (tailwind.config.js scoped preflight covers #wpuf-ai-form-builder) and
     // the plugin-ui part for the shared wrappers and dialogs.

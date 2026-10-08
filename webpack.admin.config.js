@@ -26,6 +26,7 @@ const entries = {
     'registration-promo': './src/admin/apps/registration-promo/index.jsx',
     onboarding: './src/admin/apps/onboarding/index.jsx',
     welcome: './src/admin/apps/welcome/index.jsx',
+    help: './src/admin/apps/help/index.jsx',
 };
 
 // The shared layer (design.md D24): bundles @wpuf/* sources and plugin-ui,

@@ -78,6 +78,7 @@ class Assets implements Hookable {
         $reg_promo_asset       = $this->react_asset( 'registration-promo', [ 'wp-element', 'wp-i18n', 'wpuf-admin-runtime', 'wpuf-admin-ui' ] );
         $onboarding_asset      = $this->react_asset( 'onboarding', [ 'wp-element', 'wp-i18n', 'wpuf-admin-runtime', 'wpuf-admin-ui' ] );
         $welcome_asset         = $this->react_asset( 'welcome', [ 'wp-element', 'wp-i18n', 'wpuf-admin-runtime', 'wpuf-admin-ui' ] );
+        $help_asset            = $this->react_asset( 'help', [ 'wp-element', 'wp-i18n', 'wpuf-admin-runtime', 'wpuf-admin-ui' ] );
         // The shared React admin layer (design.md D24): screens and Pro get
         // these as dependencies through the `@wpuf/*` / plugin-ui externals.
         $admin_runtime_asset = $this->react_asset( 'admin-runtime', [ 'wp-api-fetch', 'wp-element', 'wp-hooks', 'wp-url' ] );
@@ -149,6 +150,13 @@ class Assets implements Hookable {
                 'version'   => $welcome_asset['version'],
                 'in_footer' => true,
             ],
+            // Help (Admin\Screens\Help).
+            'help'                      => [
+                'src'       => WPUF_ASSET_URI . '/js/react/help.js',
+                'deps'      => $help_asset['dependencies'],
+                'version'   => $help_asset['version'],
+                'in_footer' => true,
+            ],
             // AI form builder, under the Vue app's handle (Admin\Screens\AiFormBuilder).
             'ai-form-builder'           => [
                 'src'       => WPUF_ASSET_URI . '/js/react/ai-form-builder.js',
@@ -184,6 +192,12 @@ class Assets implements Hookable {
             'onboarding-react'    => [
                 'src'     => WPUF_ASSET_URI . '/css/admin/onboarding-react.css',
                 'version' => $this->react_asset( 'onboarding', [] )['version'],
+                'rtl'     => true,
+            ],
+            // Help, Tools, Transactions and the Coupons screens (tools/admin-css `pages`).
+            'admin-pages'         => [
+                'src'     => WPUF_ASSET_URI . '/css/admin/pages-react.css',
+                'version' => $this->react_asset( 'help', [] )['version'],
                 'rtl'     => true,
             ],
             // AI form builder sheet (tools/admin-css), under the Vue app's handle.

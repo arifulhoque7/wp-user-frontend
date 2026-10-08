@@ -4,7 +4,7 @@
  */
 // Output of `pnpm build`. React bundles also need their `.asset.php`
 // (dependencies + content hash, read by includes/Assets.php).
-export const react = [ 'form-builder', 'forms-list-react', 'settings-react', 'subscriptions', 'ai-form-builder', 'admin-runtime', 'admin-ui', 'admin-app', 'registration-promo', 'onboarding', 'welcome' ];
+export const react = [ 'form-builder', 'forms-list-react', 'settings-react', 'subscriptions', 'ai-form-builder', 'admin-runtime', 'admin-ui', 'admin-app', 'registration-promo', 'onboarding', 'welcome', 'help' ];
 export const built = [
     ...react.flatMap( ( name ) => [ `assets/js/react/${ name }.js`, `assets/js/react/${ name }.asset.php` ] ),
     'assets/js/account.min.js',
@@ -20,6 +20,8 @@ export const built = [
     'assets/css/admin/forms-list-react-rtl.css',
     'assets/css/admin/onboarding-react.css',
     'assets/css/admin/onboarding-react-rtl.css',
+    'assets/css/admin/pages-react.css',
+    'assets/css/admin/pages-react-rtl.css',
     'assets/css/ai-form-builder-react.css',
     'assets/css/ai-form-builder-react-rtl.css',
     'assets/css/elementor-frontend-forms.css',
