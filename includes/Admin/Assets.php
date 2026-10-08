@@ -69,7 +69,10 @@ class Assets implements Hookable {
      */
     public function scripts() {
         $forms_list_asset_file = WPUF_ROOT . '/assets/js/react/forms-list-react.asset.php';
-        $forms_list_asset      = file_exists( $forms_list_asset_file ) ? require $forms_list_asset_file : [ 'dependencies' => [], 'version' => WPUF_VERSION ];
+        $forms_list_asset      = file_exists( $forms_list_asset_file ) ? require $forms_list_asset_file : [
+			'dependencies' => [],
+			'version' => WPUF_VERSION,
+		];
         $settings_asset        = $this->react_asset( 'settings-react', [ 'wp-element', 'wp-data', 'wp-api-fetch', 'wp-i18n', 'wp-hooks', 'wp-components' ] );
         $subscriptions_asset   = $this->react_asset( 'subscriptions', [ 'wp-element', 'wp-data', 'wp-api-fetch', 'wp-i18n', 'wp-hooks', 'wp-components', 'wp-primitives' ] );
         $form_builder_asset    = $this->react_asset( 'form-builder', [] );
@@ -79,6 +82,7 @@ class Assets implements Hookable {
         $onboarding_asset      = $this->react_asset( 'onboarding', [ 'wp-element', 'wp-i18n', 'wpuf-admin-runtime', 'wpuf-admin-ui' ] );
         $welcome_asset         = $this->react_asset( 'welcome', [ 'wp-element', 'wp-i18n', 'wpuf-admin-runtime', 'wpuf-admin-ui' ] );
         $help_asset            = $this->react_asset( 'help', [ 'wp-element', 'wp-i18n', 'wpuf-admin-runtime', 'wpuf-admin-ui' ] );
+        $tools_asset           = $this->react_asset( 'tools', [ 'wp-element', 'wp-i18n', 'wpuf-admin-runtime', 'wpuf-admin-ui' ] );
         // The shared React admin layer (design.md D24): screens and Pro get
         // these as dependencies through the `@wpuf/*` / plugin-ui externals.
         $admin_runtime_asset = $this->react_asset( 'admin-runtime', [ 'wp-api-fetch', 'wp-element', 'wp-hooks', 'wp-url' ] );
@@ -157,6 +161,13 @@ class Assets implements Hookable {
                 'version'   => $help_asset['version'],
                 'in_footer' => true,
             ],
+            // Tools (Admin\Screens\Tools).
+            'tools'                     => [
+                'src'       => WPUF_ASSET_URI . '/js/react/tools.js',
+                'deps'      => $tools_asset['dependencies'],
+                'version'   => $tools_asset['version'],
+                'in_footer' => true,
+            ],
             // AI form builder, under the Vue app's handle (Admin\Screens\AiFormBuilder).
             'ai-form-builder'           => [
                 'src'       => WPUF_ASSET_URI . '/js/react/ai-form-builder.js',
@@ -197,7 +208,8 @@ class Assets implements Hookable {
             // Help, Tools, Transactions and the Coupons screens (tools/admin-css `pages`).
             'admin-pages'         => [
                 'src'     => WPUF_ASSET_URI . '/css/admin/pages-react.css',
-                'version' => $this->react_asset( 'help', [] )['version'],
+                // The sheet changes without the scripts: version it by its own file.
+                'version' => file_exists( WPUF_ROOT . '/assets/css/admin/pages-react.css' ) ? (string) filemtime( WPUF_ROOT . '/assets/css/admin/pages-react.css' ) : WPUF_VERSION,
                 'rtl'     => true,
             ],
             // AI form builder sheet (tools/admin-css), under the Vue app's handle.

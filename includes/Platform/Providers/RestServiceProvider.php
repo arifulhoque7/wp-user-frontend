@@ -14,6 +14,7 @@ use WeDevs\Wpuf\Api\Subscription;
 use WeDevs\Wpuf\Builder\FormSave;
 use WeDevs\Wpuf\Platform\REST\Controllers\FormsController;
 use WeDevs\Wpuf\Platform\REST\Controllers\OnboardingController;
+use WeDevs\Wpuf\Platform\REST\Controllers\ToolsController;
 use WeDevs\Wpuf\Platform\REST\Manager;
 use WeDevs\Wpuf\Platform\ServiceProvider;
 use WeDevs\Wpuf\Platform\Stores\FormStore;
@@ -66,6 +67,14 @@ class RestServiceProvider extends ServiceProvider {
             OnboardingController::class,
             function () {
                 return new OnboardingController();
+            }
+        );
+
+        // wpuf/v1/admin/tools/* (User Frontend > Tools).
+        $this->share_tagged(
+            ToolsController::class,
+            function () {
+                return new ToolsController();
             }
         );
 

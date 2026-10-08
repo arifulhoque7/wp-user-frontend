@@ -111,6 +111,35 @@ body.wpuf-admin-react #wpbody-content a:focus-visible {
     border-radius: 2px;
 }
 
+/* Other plugins' unscoped utility names on every admin page: WC Vendors'
+   wcv-admin.css has `.text-gray-600 { font-weight: 600; color: rgba(0,0,0,.65) }`,
+   printed after ours with the same specificity, so every gray-600 text of
+   the React screens turned bold and black. Put the utility back, with the
+   weight of a `font-*` class next to it. */
+body.wpuf-admin-react .text-gray-600 {
+    color: var(--color-gray-600, #4b5563);
+}
+
+body.wpuf-admin-react .text-gray-600:not([class*="font-"]) {
+    font-weight: inherit;
+}
+
+body.wpuf-admin-react .text-gray-600.font-normal {
+    font-weight: 400;
+}
+
+body.wpuf-admin-react .text-gray-600.font-medium {
+    font-weight: 500;
+}
+
+body.wpuf-admin-react .text-gray-600.font-semibold {
+    font-weight: 600;
+}
+
+body.wpuf-admin-react .text-gray-600.font-bold {
+    font-weight: 700;
+}
+
 /* Page look of every screen on the shared layer (design-tokens.md "Page
    background", owner 2026-10-04, FlyHR's admin page): WordPress admin gray
    page edge to edge (no #wpcontent left gutter; WordPress notices keep their

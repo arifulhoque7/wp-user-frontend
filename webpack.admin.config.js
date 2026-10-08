@@ -27,6 +27,7 @@ const entries = {
     onboarding: './src/admin/apps/onboarding/index.jsx',
     welcome: './src/admin/apps/welcome/index.jsx',
     help: './src/admin/apps/help/index.jsx',
+    tools: './src/admin/apps/tools/index.jsx',
 };
 
 // The shared layer (design.md D24): bundles @wpuf/* sources and plugin-ui,
