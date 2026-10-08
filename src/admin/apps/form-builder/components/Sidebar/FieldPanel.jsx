@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback } from '@wordpress/element';
 import { useSelect } from '@wordpress/data';
+import { __ } from '@wordpress/i18n';
 import { STORE_NAME } from '../../store';
 import { openProFieldAlert, openValidationAlert } from '../../common/BuilderDialogs';
 import { filterPanelSections } from '../../extensions/hooks';
@@ -77,6 +78,23 @@ export default function FieldPanel() {
                         ) ) }
                     </FieldGroup>
                 ) ) }
+            </div>
+
+            <div className="mt-12 p-6 rounded-lg shadow-md text-center border border-gray-50">
+                <h2 className="text-slate-600 text-xl font-bold mb-4">
+                    { __( 'Got an idea for a new field?', 'wp-user-frontend' ) }
+                </h2>
+                <p className="text-slate-600 mb-6">
+                    { __( 'We\'d love to hear it!', 'wp-user-frontend' ) }
+                </p>
+                <a
+                    className="wpuf-btn-primary"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    href="https://feedback.wedevs.com/b/user-frontend"
+                >
+                    { __( 'Share Your Idea', 'wp-user-frontend' ) }
+                </a>
             </div>
         </div>
     );
