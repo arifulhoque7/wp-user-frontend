@@ -37,7 +37,7 @@ export default function ColumnFieldPreview( { field } ) {
 
     return (
         <div
-            className={ `has-columns-${ columnsCount } wpuf-field-columns flex md:flex-row gap-4 p-4 w-full justify-between rounded-t-md border-t! border-r! border-l! border-dashed! border-transparent! group-hover:border-green-400! group-hover:cursor-pointer` }
+            className={ `has-columns-${ columnsCount } wpuf-field-columns flex md:flex-row gap-4 p-4 w-full justify-between rounded-t-md border-t! border-r! border-l! border-dashed! border-transparent! group-hover:border-primary/50! group-hover:cursor-pointer` }
         >
             { columns.map( ( column ) => (
                 <div
@@ -47,7 +47,7 @@ export default function ColumnFieldPreview( { field } ) {
                 >
                     <div
                         data-column={ column }
-                        className="border border-dashed border-green-400 bg-green-50 shadow-xs rounded-md p-1"
+                        className="border border-dashed border-primary/50 bg-primary/5 shadow-xs rounded-md p-1"
                     >
                         <ul className="wpuf-column-fields-sortable-list min-h-16 list-none m-0! p-0!">
                             { ( innerFields[ column ] || [] ).map( ( innerField, innerIndex ) => {
@@ -61,7 +61,7 @@ export default function ColumnFieldPreview( { field } ) {
                                         key={ innerField.id || innerIndex }
                                         className={ `m-0! p-0! rounded-t-md ${ innerField.name || '' } ${ innerField.css || '' } form-field-${ innerField.template } ${ innerField.template === 'custom_hidden_field' ? 'hidden-field' : '' }` }
                                     >
-                                        <div className="flex flex-col md:flex-row gap-2 p-4 border-transparent rounded-t-md border-t border-r border-l border-dashed border-emerald-400">
+                                        <div className="flex flex-col md:flex-row gap-2 p-4 border-transparent rounded-t-md border-t border-r border-l border-dashed border-primary/50">
                                             { ! ( innerIsFullWidth || innerIsProPreview ) && (
                                                 <div>
                                                     { ! isInvisible( innerField ) && (

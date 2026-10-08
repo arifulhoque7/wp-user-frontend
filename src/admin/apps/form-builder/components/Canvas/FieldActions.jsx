@@ -17,15 +17,15 @@ const ACTION_CLASSES = 'inline-flex h-7 items-center gap-1 px-2 text-xs font-med
  */
 const BAR_CLASSES = {
     column: 'wpuf-column-field-control-buttons opacity-0 group-hover/column-inner:opacity-100 rounded-b-lg bg-primary items-center transition duration-150 wpuf-ease-out flex justify-center',
-    repeat: 'wpuf-repeat-field-control-buttons opacity-0 group-hover/repeat-inner:opacity-100 rounded-b-lg bg-green-600 items-center transition duration-150 wpuf-ease-out flex justify-center',
+    repeat: 'wpuf-repeat-field-control-buttons opacity-0 group-hover/repeat-inner:opacity-100 rounded-b-lg bg-primary items-center transition duration-150 wpuf-ease-out flex justify-center',
 };
 const BAR_INNER_CLASSES = {
-    column: 'items-center text-green-200 flex justify-evenly p-1',
-    repeat: 'items-center text-green-200 flex justify-evenly',
+    column: 'items-center text-white/80 flex justify-evenly p-1',
+    repeat: 'items-center text-white/80 flex justify-evenly',
 };
 const INNER_ACTION_CLASSES = {
     column: 'hover:cursor-pointer hover:text-white flex mr-2',
-    repeat: 'px-2! px-3 py-2 text-sm font-medium rounded-md hover:bg-green-700 transition duration-150 wpuf-ease-out hover:transition-all',
+    repeat: 'px-2! px-3 py-2 text-sm font-medium rounded-md hover:bg-black/10 transition duration-150 wpuf-ease-out hover:transition-all',
 };
 
 export default function FieldActions( { field, index, container = { type: 'top' }, dragListeners, dragAttributes, showMove = true, variant = 'top' } ) {
@@ -130,7 +130,7 @@ export default function FieldActions( { field, index, container = { type: 'top' 
                 ? BAR_CLASSES[ variant ]
                 : `field-buttons absolute -top-3.5 right-4 z-20 rounded-md bg-primary! px-1 shadow-sm items-center transition duration-150 wpuf-ease-out flex group-hover:opacity-100 focus-within:opacity-100 ${ isEditing ? 'opacity-100' : 'opacity-0' }` }
         >
-            <div className={ isInner ? BAR_INNER_CLASSES[ variant ] : 'flex items-center text-green-100' }>
+            <div className={ isInner ? BAR_INNER_CLASSES[ variant ] : 'flex items-center text-white/85' }>
                 { ! failedValidation ? (
                     <>
                         { showMove && (
@@ -145,7 +145,7 @@ export default function FieldActions( { field, index, container = { type: 'top' 
                                 <button
                                     key={ delta }
                                     type="button"
-                                    className={ `inline-flex h-7 w-6 items-center justify-center border-0 bg-transparent p-0 text-green-100 ${ disabled ? 'opacity-40 cursor-not-allowed' : 'hover:text-white hover:cursor-pointer' }` }
+                                    className={ `inline-flex h-7 w-6 items-center justify-center border-0 bg-transparent p-0 text-white/85 ${ disabled ? 'opacity-40 cursor-not-allowed' : 'hover:text-white hover:cursor-pointer' }` }
                                     onClick={ ( e ) => handleStep( e, delta ) }
                                     disabled={ disabled }
                                     aria-label={ label }

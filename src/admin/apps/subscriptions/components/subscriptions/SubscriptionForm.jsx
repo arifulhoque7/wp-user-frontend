@@ -202,6 +202,8 @@ const SubscriptionForm = ( { mode = 'add-new', subscriptionId = null } ) => {
 						isUpdating={ isUpdating }
 						onPublish={ () => save( 'publish' ) }
 						onSaveDraft={ () => save( 'draft' ) }
+						publishDisabled={ 'edit' === mode && ! isDirty && 'publish' === subscription?.post_status }
+						draftDisabled={ 'edit' === mode && ! isDirty && 'draft' === subscription?.post_status }
 					/>
 				</div>
 			</div>

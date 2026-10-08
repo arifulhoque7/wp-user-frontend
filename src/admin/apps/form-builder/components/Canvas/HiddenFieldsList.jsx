@@ -30,7 +30,7 @@ export default function HiddenFieldsList() {
 
                     return (
                         <li key={ field.id } className="field-items group group/hidden-fields m-0! p-0! hover:cursor-pointer">
-                            <div className={ `flex rounded-t-lg border-t border-r border-l border-dashed group-hover/hidden-fields:border-primaryHover group-hover/hidden-fields:bg-green-50 ${ isEditing ? 'bg-green-50 border-primaryHover' : 'border-transparent' }` }>
+                            <div className={ `flex rounded-t-lg border-t border-r border-l border-dashed group-hover/hidden-fields:border-primaryHover group-hover/hidden-fields:bg-primary/5 ${ isEditing ? 'bg-primary/5 border-primaryHover' : 'border-transparent' }` }>
                                 <div className="bg-primary m-4 py-2 px-4 w-full rounded-lg">
                                     <strong>{ __( 'key', 'wp-user-frontend' ) }</strong>: { field.name } |{ ' ' }
                                     <strong>{ __( 'value', 'wp-user-frontend' ) }</strong>: { field.meta_value }

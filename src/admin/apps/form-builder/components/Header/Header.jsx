@@ -41,6 +41,7 @@ export default function Header( { activeTab, onTabChange } ) {
 
     const { updateField } = useDispatch( STORE_NAME );
     const { isSaving, saveForm } = useFormSave();
+    const isDirty = useSelect( ( select ) => select( STORE_NAME ).getIsDirty(), [] );
 
     const [ isTitleEditing, setIsTitleEditing ] = useState( false );
     const [ title, setTitle ] = useState( post.post_title || '' );
@@ -209,7 +210,9 @@ export default function Header( { activeTab, onTabChange } ) {
                         <button
                             onClick={ saveForm }
                             type="button"
-                            className="wpuf-btn-primary inline-flex h-10 items-center gap-2 leading-5 cursor-pointer px-5! py-0! text-sm! font-medium! shadow-sm"
+                            disabled={ ! isDirty }
+                            title={ isDirty ? undefined : __( 'No changes to save', 'wp-user-frontend' ) }
+                            className="wpuf-btn-primary inline-flex h-10 items-center gap-2 leading-5 cursor-pointer px-5! py-0! text-sm! font-medium! shadow-sm disabled:cursor-not-allowed! disabled:opacity-50!"
                         >
                             <Save size={ 16 } strokeWidth={ 2 } aria-hidden="true" />
                             { __( 'Save', 'wp-user-frontend' ) }

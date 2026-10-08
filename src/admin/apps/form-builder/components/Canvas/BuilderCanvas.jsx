@@ -32,7 +32,7 @@ export default function BuilderCanvas() {
 
     if ( ! formFields.length ) {
         return (
-            <div id="form-preview-stage" className={ `relative rounded-lg transition-colors ${ placeholder ? 'bg-green-50' : '' }` } { ...dropListProps( TOP, 0 ) }>
+            <div id="form-preview-stage" className={ `relative rounded-lg transition-colors ${ placeholder ? 'bg-primary/5' : '' }` } { ...dropListProps( TOP, 0 ) }>
                 { placeholder && <Indicator blocked={ placeholder.blocked } /> }
                 <EmptyState />
             </div>

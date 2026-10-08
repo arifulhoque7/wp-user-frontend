@@ -1,5 +1,5 @@
 import { useState, useEffect } from '@wordpress/element';
-import { useSelect } from '@wordpress/data';
+import { dispatch, select, useSelect } from '@wordpress/data';
 import { STORE_NAME } from '../store';
 import Header from './Header/Header';
 import Sidebar from './Sidebar/Sidebar';
@@ -28,6 +28,29 @@ export default function FormBuilder() {
     };
 
     useDirtyState();
+
+    // Fields that are not React state (legacy PHP slots: Pro module and
+    // integration settings) mark the form dirty when the user edits them, so
+    // Save (enabled only with changes) stays available for them.
+    useEffect( () => {
+        const onEdit = ( event ) => {
+            if ( ! event.isTrusted || ! event.target.closest || ! event.target.closest( '#wpuf-form-builder [data-wpuf-legacy-slot]' ) ) {
+                return;
+            }
+
+            if ( ! select( STORE_NAME ).getIsDirty() ) {
+                dispatch( STORE_NAME ).markDirty();
+            }
+        };
+
+        document.addEventListener( 'input', onEdit, true );
+        document.addEventListener( 'change', onEdit, true );
+
+        return () => {
+            document.removeEventListener( 'input', onEdit, true );
+            document.removeEventListener( 'change', onEdit, true );
+        };
+    }, [] );
 
     // The WordPress menu folds to its icon rail while the builder is open, so the
     // canvas gets the room (FlyForms builder layout); it opens again on leave

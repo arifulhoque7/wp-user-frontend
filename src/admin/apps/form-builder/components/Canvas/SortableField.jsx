@@ -96,15 +96,15 @@ export default function SortableField( { field, index, container = TOP_LEVEL, in
     const variant = 'top' === container.type ? 'top' : container.type;
 
     const classNames = ( 'column' === variant ? [
-        'relative m-0! p-0! group/column-inner hover:bg-green-50 transition duration-150 wpuf-ease-out column-field-items wpuf-el rounded-t-md',
+        'relative m-0! p-0! group/column-inner hover:bg-primary/5 transition duration-150 wpuf-ease-out column-field-items wpuf-el rounded-t-md',
         field.name,
         field.css,
         'form-field-' + field.template,
         field.width ? 'field-size-' + field.width : '',
         isHidden ? 'hidden-field' : '',
-        isEditing ? 'bg-green-50' : '',
+        isEditing ? 'bg-primary/5' : '',
     ] : 'repeat' === variant ? [
-        'relative m-0! p-0! group/repeat-inner hover:bg-green-50 transition duration-150 wpuf-ease-out repeat-field-items wpuf-el rounded-t-md',
+        'relative m-0! p-0! group/repeat-inner hover:bg-primary/5 transition duration-150 wpuf-ease-out repeat-field-items wpuf-el rounded-t-md',
         field.name,
         'form-field-' + field.template,
         field.width ? 'field-size-' + field.width : '',
@@ -116,7 +116,7 @@ export default function SortableField( { field, index, container = TOP_LEVEL, in
         'form-field-' + field.template,
         field.width ? 'field-size-' + field.width : '',
         isHidden ? 'hidden-field' : '',
-        'relative group rounded-lg hover:bg-emerald-50/50! transition duration-150 wpuf-ease-out m-0! p-0!',
+        'relative group rounded-lg hover:bg-primary/5! transition duration-150 wpuf-ease-out m-0! p-0!',
     ] ).filter( Boolean ).join( ' ' );
 
     return (

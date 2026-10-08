@@ -20,8 +20,8 @@ function previewKey( field ) {
  * badge, small label, named hover group.
  */
 const INNER_ROW = {
-    column: 'flex flex-col md:flex-row gap-2 p-4 border-transparent group-hover/column-inner:border-primary rounded-t-md border-t border-r border-l border-dashed border-emerald-400',
-    repeat: 'flex flex-col md:flex-row gap-2 p-4 border-transparent group-hover/repeat-inner:border-green-400 rounded-t-md border-t border-r border-l border-dashed border-green-400',
+    column: 'flex flex-col md:flex-row gap-2 p-4 border-transparent group-hover/column-inner:border-primary rounded-t-md border-t border-r border-l border-dashed border-primary/50',
+    repeat: 'flex flex-col md:flex-row gap-2 p-4 border-transparent group-hover/repeat-inner:border-primary/50 rounded-t-md border-t border-r border-l border-dashed border-primary/50',
 };
 
 export default function FieldPreview( { field, variant = 'top' } ) {

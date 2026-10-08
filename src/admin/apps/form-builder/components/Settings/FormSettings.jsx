@@ -21,6 +21,7 @@ export default function FormSettings() {
     const settings = useSelect( ( select ) => select( STORE_NAME ).getSettings(), [] );
     const { updateFormSetting } = useDispatch( STORE_NAME );
     const { isSaving, saveForm } = useFormSave();
+    const isDirty = useSelect( ( select ) => select( STORE_NAME ).getIsDirty(), [] );
     const settingsTitles = useMemo( () => {
         const titles = data.settings_titles || {};
         return applyFilters( 'wpuf.formBuilder.settingsTabs', titles );
@@ -97,8 +98,9 @@ export default function FormSettings() {
                     <button
                         type="button"
                         onClick={ saveForm }
-                        disabled={ isSaving }
-                        className="wpuf-btn-primary inline-flex items-center gap-2 leading-5 h-10 px-5! py-0! text-sm! font-medium! shadow-sm"
+                        disabled={ isSaving || ! isDirty }
+                        title={ isDirty ? undefined : __( 'No changes to save', 'wp-user-frontend' ) }
+                        className="wpuf-btn-primary inline-flex items-center gap-2 leading-5 h-10 px-5! py-0! text-sm! font-medium! shadow-sm disabled:cursor-not-allowed! disabled:opacity-50!"
                     >
                         <Save size={ 16 } strokeWidth={ 2 } aria-hidden="true" />
                         { isSaving

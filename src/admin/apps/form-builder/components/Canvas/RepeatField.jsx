@@ -30,7 +30,7 @@ export default function RepeatField( { field } ) {
             <hr className="mt-4" />
             <ul
                 { ...dropListProps( container, innerFields.length ) }
-                className={ `wpuf-repeat-fields-sortable-list relative min-h-16 list-none p-0 m-0 transition-colors ${ placeholder ? ( placeholder.blocked ? 'bg-red-50' : 'bg-green-50' ) : '' }` }
+                className={ `wpuf-repeat-fields-sortable-list relative min-h-16 list-none p-0 m-0 transition-colors ${ placeholder ? ( placeholder.blocked ? 'bg-red-50' : 'bg-primary/5' ) : '' }` }
             >
                 { placeholder && ! innerFields.length && <Indicator blocked={ placeholder.blocked } /> }
                 { innerFields.length === 0 && (

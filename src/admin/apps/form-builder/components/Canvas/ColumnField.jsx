@@ -17,7 +17,7 @@ function ColumnCell( { field, columnKey } ) {
     let tint = '';
 
     if ( placeholder ) {
-        tint = placeholder.blocked ? 'bg-red-50! border-red-400!' : 'bg-green-100! border-primary!';
+        tint = placeholder.blocked ? 'bg-red-50! border-red-400!' : 'bg-primary/10! border-primary!';
     }
 
     return (
@@ -27,7 +27,7 @@ function ColumnCell( { field, columnKey } ) {
         >
             <div
                 data-column={ columnKey }
-                className={ `border border-dashed border-green-400 bg-green-50 shadow-xs rounded-md p-1 transition-colors ${ tint }` }
+                className={ `border border-dashed border-primary/50 bg-primary/5 shadow-xs rounded-md p-1 transition-colors ${ tint }` }
             >
                 <ul { ...dropListProps( container, colFields.length ) } className="wpuf-column-fields-sortable-list relative min-h-16 list-none m-0! p-0!">
                     { placeholder && ! colFields.length && <Indicator blocked={ placeholder.blocked } /> }
@@ -63,7 +63,7 @@ export default function ColumnField( { field } ) {
 
     return (
         <div
-            className={ `has-columns-${ numColumns } wpuf-field-columns flex md:flex-row gap-4 p-4 w-full justify-between rounded-t-md border-t! border-r! border-l! border-dashed! border-transparent! group-hover:border-green-400! group-hover:cursor-pointer` }
+            className={ `has-columns-${ numColumns } wpuf-field-columns flex md:flex-row gap-4 p-4 w-full justify-between rounded-t-md border-t! border-r! border-l! border-dashed! border-transparent! group-hover:border-primary/50! group-hover:cursor-pointer` }
         >
             { columnKeys.map( ( columnKey ) => (
                 <ColumnCell key={ columnKey } field={ field } columnKey={ columnKey } />
