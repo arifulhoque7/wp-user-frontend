@@ -77,6 +77,7 @@ class Welcome extends Screen {
                 'app'            => 'welcome',
                 'boot'           => 'welcome',
                 'in_app'         => true,
+                'notices'        => true,
                 'container'      => 'wpuf-welcome-root',
                 'containerClass' => 'px-[20px]',
                 'page'           => 'index.php?page=' . self::SLUG,

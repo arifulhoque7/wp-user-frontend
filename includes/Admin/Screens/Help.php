@@ -71,6 +71,7 @@ class Help extends Screen {
                 'boot'           => 'help',
                 'in_app'         => true,
                 'menuLink'       => true,
+                'notices'        => true,
                 'container'      => 'wpuf-help-root',
                 'containerClass' => 'px-[20px]',
             ],

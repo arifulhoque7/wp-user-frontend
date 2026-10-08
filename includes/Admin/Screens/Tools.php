@@ -100,6 +100,7 @@ class Tools extends Screen {
                 'boot'           => 'tools',
                 'in_app'         => true,
                 'menuLink'       => true,
+                'notices'        => true,
                 'container'      => 'wpuf-tools-root',
                 'containerClass' => 'px-[20px]',
             ],

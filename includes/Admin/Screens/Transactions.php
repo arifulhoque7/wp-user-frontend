@@ -82,6 +82,7 @@ class Transactions extends Screen {
                 'boot'           => 'transactions',
                 'in_app'         => true,
                 'menuLink'       => true,
+                'notices'        => true,
                 'container'      => 'wpuf-transactions-root',
                 'containerClass' => 'px-[20px]',
             ],
