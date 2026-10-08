@@ -6,6 +6,7 @@
  */
 import { __ } from '@wordpress/i18n';
 import { Button } from '@wpuf/components';
+import { ExternalLink, FileText } from 'lucide-react';
 
 /**
  * @param {Object} props
@@ -21,7 +22,10 @@ export default function HelpTopic( { topic } ) {
 
             { topic.button?.url && (
                 <div className="mt-6">
-                    <Button onClick={ () => window.open( topic.button.url, '_blank', 'noopener' ) }>{ topic.button.label }</Button>
+                    <Button onClick={ () => window.open( topic.button.url, '_blank', 'noopener' ) }>
+                        { topic.button.label }
+                        <ExternalLink size={ 16 } aria-hidden="true" />
+                    </Button>
                 </div>
             ) }
 
@@ -32,7 +36,7 @@ export default function HelpTopic( { topic } ) {
                         { topic.articles.map( ( article ) => (
                             <li key={ article.url } className="m-0">
                                 <a href={ article.url } target="_blank" rel="noopener noreferrer" className="group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0 text-gray-400 group-hover:text-primary"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /><path d="M16 13H8M16 17H8M10 9H8" /></svg>
+                                    <FileText size={ 16 } aria-hidden="true" className="shrink-0 text-gray-400 group-hover:text-primary" />
                                     { article.title }
                                 </a>
                             </li>

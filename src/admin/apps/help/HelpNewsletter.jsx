@@ -7,6 +7,7 @@
 import { useRef, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { Button, TextInput, notify } from '@wpuf/components';
+import { Mail } from 'lucide-react';
 
 const EMAIL = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
@@ -43,9 +44,14 @@ export default function HelpNewsletter( { newsletter } ) {
 
     return (
         <section className="wpuf-help-newsletter mt-6 flex flex-wrap items-end justify-between gap-6 rounded-[10px] border border-solid border-emerald-100 bg-emerald-50/60 p-6">
-            <div className="max-w-md">
+            <div className="flex max-w-md items-start gap-4">
+                <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-lg bg-white text-primary shadow-sm">
+                    <Mail size={ 20 } aria-hidden="true" />
+                </span>
+                <div>
                 <h2 className="m-0 text-base font-semibold text-gray-900">{ __( 'Subscribe to Our Newsletter', 'wp-user-frontend' ) }</h2>
                 <p className="m-0 mt-1 text-sm text-gray-600">{ __( 'Regular tips, offers and news updates.', 'wp-user-frontend' ) }</p>
+                </div>
             </div>
             <form ref={ form } method="post" action={ newsletter.action } target="_blank" onSubmit={ submit } className="flex flex-wrap items-end gap-3">
                 <label className="block">

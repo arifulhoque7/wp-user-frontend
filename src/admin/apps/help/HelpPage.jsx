@@ -7,6 +7,7 @@
 import { useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { Button, PageFooter, PageHeader, PageShell } from '@wpuf/components';
+import { ExternalLink } from 'lucide-react';
 
 import HelpCards from './HelpCards';
 import HelpNewsletter from './HelpNewsletter';
@@ -42,7 +43,7 @@ export default function HelpPage( { context } ) {
                         <p className="m-0 mt-2 text-sm text-gray-500">{ __( 'Guides for every part of User Frontend, and where to get help.', 'wp-user-frontend' ) }</p>
                     </div>
                     <Button variant="secondary" onClick={ () => window.open( help.docsUrl, '_blank', 'noopener' ) }>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><path d="M15 3h6v6" /><path d="M10 14 21 3" /></svg>
+                        <ExternalLink size={ 16 } aria-hidden="true" />
                         { __( 'View all Documentations', 'wp-user-frontend' ) }
                     </Button>
                 </div>
