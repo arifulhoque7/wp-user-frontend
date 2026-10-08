@@ -15,14 +15,14 @@ export default function ProNote( { field } ) {
     // or nothing.
     if ( isPro && ! field.help_text ) {
         return field.label
-            ? <label className="text-sm text-gray-700 my-1.5 block">{ field.label }</label>
+            ? <label className="text-sm font-medium leading-5 text-gray-700 my-1.5 block">{ field.label }</label>
             : null;
     }
 
     return (
         <div>
             { field.label && (
-                <label className="text-sm text-gray-700 my-1.5 block">{ field.label }</label>
+                <label className="text-sm font-medium leading-5 text-gray-700 my-1.5 block">{ field.label }</label>
             ) }
             <p className="rounded-md border border-dashed border-gray-300 bg-gray-50 px-3 py-2 text-xs text-gray-500">
                 { field.help_text || __( 'This option is configured in WP User Frontend Pro.', 'wp-user-frontend' ) }

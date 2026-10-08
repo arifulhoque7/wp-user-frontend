@@ -208,22 +208,22 @@ export default function SuccessStage( { title, initialFields, initialMessages, s
         placeholder = __( 'Please wait while form is being generated...', 'wp-user-frontend' );
     }
 
-    const editButton = 'flex cursor-pointer items-center gap-2 rounded-lg border-0 bg-emerald-600 px-4 py-2 text-base leading-6 text-white transition-colors hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60';
+    const editButton = 'flex h-10 cursor-pointer items-center gap-2 rounded-md border-0 bg-primary px-5 text-sm font-medium leading-5 text-white shadow-sm transition-colors hover:bg-primaryHover disabled:cursor-not-allowed disabled:opacity-60';
 
     return (
-        <div className="wpuf-ai-form-wrapper relative min-h-screen w-full bg-[#F5F5F5] pb-20 font-sans md:pb-16 lg:pb-12">
+        <div className="wpuf-ai-form-wrapper relative min-h-screen w-full bg-[#f0f0f1] pb-20 font-sans md:pb-16 lg:pb-12">
             <div className="flex min-h-[calc(100vh-5rem)] flex-col">
                 <div className="flex h-full flex-col rounded-lg">
                     <div className="flex items-center justify-between px-6 pb-3 pt-6">
                         <div className="flex items-center gap-3">
                             <LogoBadge />
                             <div>
-                                <h1 className="m-0 p-0 text-2xl font-semibold text-gray-900">{ __( 'AI Form Builder', 'wp-user-frontend' ) }</h1>
-                                <p className="m-0 text-base leading-6 text-gray-500">{ __( 'Generate forms instantly with AI assistance', 'wp-user-frontend' ) }</p>
+                                <h1 className="m-0 p-0 text-2xl font-bold leading-8 text-gray-900">{ __( 'AI Form Builder', 'wp-user-frontend' ) }</h1>
+                                <p className="m-0 mt-0.5 text-sm text-gray-500">{ __( 'Generate forms instantly with AI assistance', 'wp-user-frontend' ) }</p>
                             </div>
                         </div>
                         <div className="flex gap-3">
-                            <button type="button" onClick={ () => setRegenerateOpen( true ) } className="wpuf-btn-regenerate flex cursor-pointer items-center gap-2 rounded-lg border border-[#E3E5E8] bg-white px-4 py-2 text-base leading-6 text-gray-500 transition-all hover:border-gray-400">
+                            <button type="button" onClick={ () => setRegenerateOpen( true ) } className="wpuf-btn-regenerate flex h-10 cursor-pointer items-center gap-2 rounded-md border border-solid border-gray-300 bg-white px-5 text-sm font-medium leading-5 text-gray-700 shadow-sm transition-all hover:bg-gray-50">
                                 { __( 'Regenerate', 'wp-user-frontend' ) }
                                 <RegenerateIcon />
                             </button>
@@ -236,7 +236,7 @@ export default function SuccessStage( { title, initialFields, initialMessages, s
 
                     <div ref={ container } className="wpuf-resizable-container relative flex flex-col gap-5 p-2 sm:p-5 lg:flex-row lg:gap-0">
                         <div
-                            className="wpuf-chat-box flex h-[calc(100vh-14rem)] min-w-0 shrink-0 flex-col overflow-hidden rounded-lg border border-slate-200 bg-slate-50 px-6 pt-6 shadow-md sm:h-[calc(100vh-10rem)] lg:rounded-r-none"
+                            className="wpuf-chat-box flex h-[calc(100vh-14rem)] min-w-0 shrink-0 flex-col overflow-hidden rounded-[10px] border border-solid border-gray-200 bg-gray-50 px-5 pt-5 shadow-sm sm:h-[calc(100vh-10rem)] lg:rounded-r-none"
                             style={ { width: large ? `${ chatWidth }%` : '100%' } }
                         >
                             <div ref={ scroller } className="wpuf-chat-scrollable max-h-[calc(100vh-300px)] flex-1 overflow-y-auto" aria-live="polite">
@@ -268,7 +268,7 @@ export default function SuccessStage( { title, initialFields, initialMessages, s
                                         aria-label={ __( 'Message', 'wp-user-frontend' ) }
                                         disabled={ locked }
                                         className={ cn(
-                                            'wpuf-chat-input max-h-[200px] min-h-[98px] w-full resize-none rounded-lg border border-[#E3E5E8] bg-white p-2 pr-16 text-base shadow-none outline-none focus:border-[#10B981] focus:shadow-[0_10px_15px_-3px_rgba(16,185,129,0.1),0_4px_6px_-2px_rgba(16,185,129,0.05)] focus:outline-none',
+                                            'wpuf-chat-input max-h-[200px] min-h-[88px] w-full resize-none rounded-md border border-solid border-gray-300 bg-white px-3 py-2.5 pr-14 text-sm shadow-none outline-none focus:border-primary focus:shadow-[0_10px_15px_-3px_rgba(16,185,129,0.1),0_4px_6px_-2px_rgba(16,185,129,0.05)] focus:outline-none',
                                             locked && 'cursor-not-allowed opacity-50'
                                         ) }
                                     />
@@ -277,7 +277,7 @@ export default function SuccessStage( { title, initialFields, initialMessages, s
                                         onClick={ send }
                                         disabled={ locked }
                                         aria-label={ __( 'Send', 'wp-user-frontend' ) }
-                                        className={ cn( 'wpuf-send-button absolute bottom-3 right-3 flex size-10 cursor-pointer items-center justify-center rounded-full border-0 bg-emerald-600 text-white transition-colors hover:bg-emerald-800', locked && 'cursor-not-allowed opacity-50' ) }
+                                        className={ cn( 'wpuf-send-button absolute bottom-2.5 right-2.5 flex size-9 cursor-pointer items-center justify-center rounded-full border-0 bg-primary text-white transition-colors hover:bg-primaryHover', locked && 'cursor-not-allowed opacity-50' ) }
                                     >
                                         <SendIcon />
                                     </button>
@@ -310,7 +310,7 @@ export default function SuccessStage( { title, initialFields, initialMessages, s
                         ) }
 
                         <div
-                            className={ cn( 'wpuf-form-preview relative flex h-[calc(100vh-12rem)] min-w-0 shrink-0 flex-col gap-6 rounded-lg border border-gray-200 bg-white p-4 shadow-md sm:h-[calc(100vh-10rem)] sm:p-6 lg:rounded-l-none lg:border-l-0 lg:p-8', chat.updating && 'wpuf-form-updating' ) }
+                            className={ cn( 'wpuf-form-preview relative flex h-[calc(100vh-12rem)] min-w-0 shrink-0 flex-col gap-6 rounded-[10px] border border-solid border-gray-200 bg-white p-4 shadow-sm sm:h-[calc(100vh-10rem)] sm:p-6 lg:rounded-l-none lg:border-l-0 lg:p-8', chat.updating && 'wpuf-form-updating' ) }
                             style={ { width: large ? `${ 100 - chatWidth }%` : '100%' } }
                         >
                             { chat.updating && (
@@ -320,9 +320,9 @@ export default function SuccessStage( { title, initialFields, initialMessages, s
                             ) }
                             { ( chat.localTitle || chat.fields.length > 0 ) && (
                                 <div className={ cn( 'shrink-0 pb-8', chat.updating && 'blur-[2px]' ) }>
-                                    { chat.localTitle && <h3 className="wpuf-form-title m-0 mb-2 text-center text-3xl font-bold leading-9 text-gray-900">{ chat.localTitle }</h3> }
+                                    { chat.localTitle && <h3 className="wpuf-form-title m-0 mb-1 text-center text-xl font-semibold leading-7 text-gray-900">{ chat.localTitle }</h3> }
                                     { chat.fields.length > 0 && (
-                                        <p className="m-0 text-center text-lg font-normal leading-6 text-gray-500">{ chat.description || __( 'Please complete all information below', 'wp-user-frontend' ) }</p>
+                                        <p className="m-0 text-center text-sm font-normal text-gray-500">{ chat.description || __( 'Please complete all information below', 'wp-user-frontend' ) }</p>
                                     ) }
                                 </div>
                             ) }
@@ -338,13 +338,13 @@ export default function SuccessStage( { title, initialFields, initialMessages, s
                                     </div>
                                 ) }
                                 { chat.fields.length > 0 && (
-                                    <div className="wpuf-form-fields flex flex-col gap-5">
+                                    <div className="wpuf-form-fields flex flex-col gap-4">
                                         { chat.fields.map( ( field, index ) => <PreviewField key={ field.id || index } field={ field } /> ) }
                                     </div>
                                 ) }
                             </div>
                             <div className="-mx-4 shrink-0 border-t border-gray-200 px-4 pt-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-                                <button type="button" onClick={ editInBuilder } disabled={ saving } className={ `wpuf-btn-edit-full w-full justify-center px-5 py-3 font-medium ${ editButton }` }>
+                                <button type="button" onClick={ editInBuilder } disabled={ saving } className={ `wpuf-btn-edit-full w-full justify-center ${ editButton }` }>
                                     { __( 'Edit with Builder', 'wp-user-frontend' ) }
                                     <PencilIcon />
                                 </button>

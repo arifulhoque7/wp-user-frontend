@@ -43,7 +43,7 @@ export default function FormBuilder() {
                          stage keeps develop's sizes; the inner edge borders stay as transparent. */ }
                     <div className="flex h-[calc(100vh-132px)] min-h-[480px] bg-white mx-4 mt-3 mb-4 rounded-lg ring-1 ring-gray-200 overflow-hidden">
                         { /* Three columns (FlyForms builder): field palette, canvas, field options. */ }
-                        <div className="w-[280px] xl:w-[300px] 2xl:w-[320px] shrink-0 h-full overflow-auto border-r border-gray-200 bg-gray-50/60">
+                        <div className="w-[280px] xl:w-[300px] 2xl:w-[320px] shrink-0 h-full overflow-auto border-r border-gray-200 bg-white">
                             <Sidebar panel="fields" />
                         </div>
                         <div className="min-w-0 flex-1 h-full px-6 py-5 overflow-auto">

@@ -104,11 +104,12 @@ export default function InputStage( { description, promptId, integration, genera
     ];
 
     return (
-        <div className="wpuf-ai-form-wrapper relative h-screen w-full overflow-hidden bg-white font-sans">
-            <div className="wpuf-ai-form-content absolute left-1/2 top-[93px] mx-4 h-auto min-h-[672px] w-full max-w-[720px] -translate-x-1/2 bg-white p-4 sm:mx-auto sm:p-6">
+        <div className="wpuf-ai-form-wrapper relative min-h-screen w-full overflow-hidden bg-[#f0f0f1] font-sans">
+            <div className="wpuf-ai-form-content mx-auto mt-16 mb-10 w-full max-w-[720px] px-4">
                 <div className="mb-6 text-center">
-                    <h2 className="m-0 mb-2 text-3xl font-semibold text-black">{ __( 'Create Form with AI', 'wp-user-frontend' ) }</h2>
-                    <p className="m-0 text-lg text-gray-500">{ __( 'Automatically generate smart, customizable forms using AI.', 'wp-user-frontend' ) }</p>
+                    <span className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary"><SparklesIcon /></span>
+                    <h2 className="m-0 mb-1 text-2xl font-bold leading-8 text-gray-900">{ __( 'Create Form with AI', 'wp-user-frontend' ) }</h2>
+                    <p className="m-0 text-sm text-gray-500">{ __( 'Automatically generate smart, customizable forms using AI.', 'wp-user-frontend' ) }</p>
                 </div>
 
                 <div className="mb-6">
@@ -119,16 +120,16 @@ export default function InputStage( { description, promptId, integration, genera
                         maxLength={ MAX_DESCRIPTION }
                         placeholder={ __( 'Describe your form', 'wp-user-frontend' ) }
                         aria-label={ __( 'Describe your form', 'wp-user-frontend' ) }
-                        className="wpuf-ai-description w-full resize-none rounded-lg border-gray-300 px-4 py-3 text-gray-500 focus-visible:border-[#059669] focus-visible:ring-[3px] focus-visible:ring-[#059669]/10"
+                        className="wpuf-ai-description w-full resize-none rounded-md border-gray-300 bg-white! px-3 py-2.5 text-sm text-gray-700 focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/10"
                     />
-                    <div className="mt-2 text-right text-sm text-gray-600">
+                    <div className="mt-1.5 text-right text-[13px] text-gray-500">
                         { description.length }/{ MAX_DESCRIPTION } { __( 'Characters', 'wp-user-frontend' ) }
                     </div>
                 </div>
 
                 { ( integrations.length > 0 || loading ) && (
                     <div className="mb-6">
-                        <label htmlFor="wpuf-ai-integration" className="mb-2 block text-[16px] font-medium text-gray-900">
+                        <label htmlFor="wpuf-ai-integration" className="mb-1.5 block text-sm font-medium text-gray-900">
                             { __( 'Form Type (Optional)', 'wp-user-frontend' ) }
                         </label>
                         <Select
@@ -137,9 +138,9 @@ export default function InputStage( { description, promptId, integration, genera
                             options={ integrationOptions }
                             disabled={ loading }
                             onChange={ ( next ) => onChange( { integration: next, promptId: '', description: '' } ) }
-                            className="h-[46px] w-full rounded-[6px] px-[14px] text-base text-gray-700"
+                            className="w-full"
                         />
-                        <p className="m-0 mt-2 text-sm text-gray-500">
+                        <p className="m-0 mt-1.5 text-[13px] text-gray-500">
                             { loading ? (
                                 <span className="inline-flex items-center gap-2">
                                     <Spinner />
@@ -151,8 +152,8 @@ export default function InputStage( { description, promptId, integration, genera
                 ) }
 
                 <div className="mb-6">
-                    <p className="m-0 mb-4 text-[16px] text-gray-900">{ __( 'Or create using our Prompts:', 'wp-user-frontend' ) }</p>
-                    <div className="flex flex-wrap gap-4">
+                    <p className="m-0 mb-3 text-sm font-medium text-gray-900">{ __( 'Or create using our Prompts:', 'wp-user-frontend' ) }</p>
+                    <div className="flex flex-wrap gap-2">
                         { templates.map( ( template ) => (
                             <button
                                 key={ template.id }
@@ -160,10 +161,10 @@ export default function InputStage( { description, promptId, integration, genera
                                 aria-pressed={ promptId === template.id }
                                 onClick={ () => pickPrompt( template ) }
                                 className={ cn(
-                                    'cursor-pointer rounded-md border px-4 py-2 text-sm font-medium transition-all',
+                                    'h-8 cursor-pointer rounded-full border border-solid px-3 text-[13px] font-medium transition-all',
                                     promptId === template.id
-                                        ? 'wpuf-prompt-btn-active border-emerald-600 bg-emerald-600 text-white hover:text-emerald-200'
-                                        : 'border-gray-200 bg-white text-gray-700 hover:border-emerald-600 hover:bg-gray-50 hover:text-emerald-700'
+                                        ? 'wpuf-prompt-btn-active border-primary bg-primary text-white'
+                                        : 'border-gray-200 bg-white text-gray-700 hover:border-primary hover:text-primary'
                                 ) }
                             >
                                 { template.label }
@@ -172,21 +173,22 @@ export default function InputStage( { description, promptId, integration, genera
                     </div>
                 </div>
 
-                <div className="flex justify-center gap-4">
+                <div className="flex justify-end gap-3 border-0 border-t border-solid border-gray-200 pt-6">
                     <Button
                         variant="secondary"
                         onClick={ () => window.history.back() }
-                        className="h-14 rounded-md px-6 py-3 text-base font-medium leading-6"
+                        size="lg"
                     >
                         { __( 'Back', 'wp-user-frontend' ) }
                     </Button>
                     <Button
                         onClick={ generate }
                         disabled={ ! description.trim() || generating }
-                        className="wpuf-ai-generate h-14 gap-2 rounded-lg px-8 py-4 text-base font-normal leading-6"
+                        size="lg"
+                        className="wpuf-ai-generate"
                     >
                         { generating ? __( 'Generating...', 'wp-user-frontend' ) : __( 'Generate Form', 'wp-user-frontend' ) }
-                        { generating ? <span className="size-5 animate-spin rounded-full border-2 border-white border-t-transparent" /> : <SparklesIcon /> }
+                        { generating ? <span className="size-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> : <SparklesIcon /> }
                     </Button>
                 </div>
             </div>

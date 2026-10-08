@@ -64,3 +64,12 @@ body.wpuf-builder-dragging * {
     cursor: grabbing !important;
     user-select: none;
 }
+
+/* Field Options column: FlyHR form rhythm (label 6px above its control, rows 16px apart). */
+.wpuf-form-builder-panel-options .panel-field-opt {
+    margin-bottom: 1rem;
+}
+
+.wpuf-form-builder-panel-options .panel-field-opt > div > label {
+    margin-bottom: 0.375rem;
+}

@@ -23,7 +23,7 @@ export default function SelectInput( { optionField, field, value, onChange } ) {
                     </label>
                 ) }
             </div>
-            <div className="option-fields-section my-4">
+            <div className="option-fields-section mt-1.5">
                 <Select
                     id={ id }
                     options={ options }

@@ -1745,7 +1745,7 @@ export const Selectors = {
 
         // Field Options Panel
         fieldOptionsPanel: {
-            panelTitle: '//h3[normalize-space()="Field Options"]',
+            panelTitle: '(//h3[normalize-space()="Field Options"] | //h2[normalize-space()="Field Options"])[1]',
             
             // Basic Options - Common to most fields
             fieldLabel: '(//*[self::label or self::div or self::span][normalize-space(text())="Field Label"]/following::*[@role="radio" or @role="checkbox" or (self::input and not(@type="radio") and not(@type="checkbox") and not(@type="hidden") and not(@aria-hidden="true"))])[1]',

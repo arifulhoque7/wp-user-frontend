@@ -1,6 +1,7 @@
 import { useState, useMemo } from '@wordpress/element';
 import { useSelect } from '@wordpress/data';
 import { __ } from '@wordpress/i18n';
+import { MousePointerClick } from 'lucide-react';
 import { STORE_NAME } from '../../store';
 import { filterFieldSettings } from '../../extensions/hooks';
 import SettingInput from './SettingInput';
@@ -15,7 +16,7 @@ function SettingSection( { title, settings, field, defaultOpen, isBasic = false 
     }
 
     return (
-        <div className={ isBasic ? 'option-fields-section mt-6' : 'option-fields-section' }>
+        <div className={ isBasic ? 'option-fields-section mt-2' : 'option-fields-section mt-2' }>
             <h3
                 className={ `flex items-center mt-0 mb-4 justify-between hover:cursor-pointer font-semibold text-sm! ${ isOpen ? 'text-primary' : 'text-gray-500' }` }
                 onClick={ () => setIsOpen( ! isOpen ) }
@@ -76,8 +77,14 @@ export default function FieldOptionsPanel() {
     if ( ! editingField ) {
         return (
             <div className="wpuf-form-builder-field-options">
-                <div className="options-fileds-section text-center">
-                    <p className="text-gray-500 text-sm font-medium">
+                <div className="options-fileds-section mt-2 flex flex-col items-center rounded-[10px] border border-dashed border-gray-300 bg-gray-50 px-6 py-10 text-center">
+                    <span className="mb-4 flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+                        <MousePointerClick className="size-6" aria-hidden="true" />
+                    </span>
+                    <p className="m-0! mb-1! text-base font-semibold text-gray-900">
+                        { __( 'No field selected', 'wp-user-frontend' ) }
+                    </p>
+                    <p className="m-0! max-w-[220px] text-sm leading-5 text-gray-500">
                         { i18n.empty_field_options_msg || __( 'Click on a field to edit its options.', 'wp-user-frontend' ) }
                     </p>
                 </div>

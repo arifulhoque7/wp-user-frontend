@@ -83,7 +83,7 @@ export default function ProcessingStage( { done, onComplete } ) {
                 <div className="mb-5 flex justify-center">
                     <img src={ `${ base }/images/ai-star.gif` } alt={ __( 'Processing', 'wp-user-frontend' ) } className="size-24" />
                 </div>
-                <h3 className="m-0 mb-6 text-center text-xl font-normal text-gray-900">{ __( 'Generating your form...', 'wp-user-frontend' ) }</h3>
+                <h3 className="m-0 mb-6 text-center text-xl font-semibold text-gray-900">{ __( 'Generating your form...', 'wp-user-frontend' ) }</h3>
                 <div className="grid grid-cols-1 justify-items-center gap-2">
                     { STEPS().map( ( text, index ) => {
                         const number = index + 1;

@@ -66,7 +66,7 @@ export default function ChatMessage( { message, statusVisible, applying, onAccep
             <div className="wpuf-message-user flex justify-end">
                 { /* Develop: the bubble wraps its text (no grow). */ }
                 <div>
-                    <div className="w-full whitespace-pre-line rounded-2xl rounded-br border border-[#34D399] bg-[#ECFDF5] px-4 py-3 text-[16px] font-normal leading-6 text-emerald-800">
+                    <div className="w-full whitespace-pre-line rounded-xl rounded-br border border-solid border-primary/30 bg-primary/5 px-3.5 py-2.5 text-sm font-normal leading-6 text-gray-800">
                         { message.content }
                     </div>
                 </div>
@@ -88,16 +88,16 @@ export default function ChatMessage( { message, statusVisible, applying, onAccep
         <div className="wpuf-message-ai flex items-start gap-3" data-error={ message.isError || undefined }>
             { /* Develop's nested flex: the bubble wraps its text up to the panel width. */ }
             <div className="flex items-start gap-3">
-            <LogoBadge className="size-9 shrink-0" />
+            <LogoBadge className="size-8 shrink-0" />
             <div className="flex-1">
-                <div className={ cn( 'wpuf-message-bubble-ai w-full rounded-2xl rounded-bl border border-[#E5E7EB] bg-white px-4 py-3 text-base text-[#4B5563]' ) }>
-                    <div className="m-0 whitespace-pre-line text-[16px] text-gray-600">{ body }</div>
+                <div className={ cn( 'wpuf-message-bubble-ai w-full rounded-xl rounded-bl border border-solid border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-700' ) }>
+                    <div className="m-0 whitespace-pre-line text-sm leading-6 text-gray-700">{ body }</div>
                     { message.showButtons && (
                         <div className="wpuf-message-actions mt-4 flex gap-3">
-                            <button type="button" onClick={ onAccept } disabled={ applying } className="wpuf-btn-accept h-[34px] cursor-pointer rounded-md border border-[#E5E7EB] bg-white px-[13px] py-1 text-sm font-medium text-[#374151] transition-all hover:bg-gray-50">
+                            <button type="button" onClick={ onAccept } disabled={ applying } className="wpuf-btn-accept h-8 cursor-pointer rounded-md border border-solid border-gray-300 bg-white px-3 text-[13px] font-medium text-[#374151] transition-all hover:bg-gray-50">
                                 { __( 'Accept', 'wp-user-frontend' ) }
                             </button>
-                            <button type="button" onClick={ onReject } disabled={ applying } className="wpuf-btn-reject h-[34px] cursor-pointer rounded-md border border-[#E5E7EB] bg-white px-[13px] py-1 text-sm font-medium text-[#374151] transition-all hover:bg-gray-50">
+                            <button type="button" onClick={ onReject } disabled={ applying } className="wpuf-btn-reject h-8 cursor-pointer rounded-md border border-solid border-gray-300 bg-white px-3 text-[13px] font-medium text-[#374151] transition-all hover:bg-gray-50">
                                 { __( 'Reject', 'wp-user-frontend' ) }
                             </button>
                         </div>
@@ -109,7 +109,7 @@ export default function ChatMessage( { message, statusVisible, applying, onAccep
                                 type="button"
                                 onClick={ onRestore }
                                 title={ __( 'Restore form to this checkpoint', 'wp-user-frontend' ) }
-                                className="wpuf-btn-restore flex cursor-pointer items-center gap-1.5 rounded border-0 bg-blue-500 px-2.5 py-1 text-xs text-white transition-all hover:bg-blue-600"
+                                className="wpuf-btn-restore inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-md border border-primary bg-white px-3 text-xs font-medium text-primary transition-all hover:bg-primary hover:text-white"
                             >
                                 <RestoreIcon />
                                 { __( 'Restore to this checkpoint', 'wp-user-frontend' ) }
@@ -118,7 +118,7 @@ export default function ChatMessage( { message, statusVisible, applying, onAccep
                     ) }
                 </div>
                 { message.status && statusVisible && (
-                    <div className="wpuf-message-status mt-2 text-right text-base font-normal italic leading-6 text-emerald-600">
+                    <div className="wpuf-message-status mt-2 text-right text-[13px] font-normal italic text-primary">
                         { message.status }
                     </div>
                 ) }

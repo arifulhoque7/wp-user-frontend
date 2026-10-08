@@ -188,7 +188,7 @@ const SubscriptionField = ( { field, fieldId, subscription, onFieldChange } ) =>
 		<div className="grid grid-cols-3 gap-6 px-6 py-3">
 			{/* Label */}
 			{ field.label && (
-				<div className="flex items-center text-sm leading-6 text-gray-600">
+				<div className="flex items-center text-sm font-medium leading-5 text-gray-700">
 					<label htmlFor={ field.name } dangerouslySetInnerHTML={ { __html: field.label } } />
 					{ field.tooltip && <span className="ml-2"><HelpTip text={ field.tooltip } /></span> }
 					{ isPro && (

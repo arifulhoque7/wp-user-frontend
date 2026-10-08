@@ -161,7 +161,7 @@ export default function IconSelectorInput( { optionField, field, value, onChange
                         e.stopPropagation();
                         setShowIconPicker( ! showIconPicker );
                     } }
-                    className="w-full mt-4 min-w-full py-2! px-3! text-gray-700 font-medium shadow-xs! border border-gray-300! rounded-md! hover:text-gray-700! flex justify-between items-center text-sm! cursor-pointer"
+                    className="w-full mt-1.5 min-w-full py-2! px-3! text-gray-700 font-medium shadow-xs! border border-gray-300! rounded-md! hover:text-gray-700! flex justify-between items-center text-sm! cursor-pointer"
                     role="button"
                     tabIndex={ 0 }
                     onKeyDown={ ( e ) => e.key === 'Enter' && setShowIconPicker( ! showIconPicker ) }

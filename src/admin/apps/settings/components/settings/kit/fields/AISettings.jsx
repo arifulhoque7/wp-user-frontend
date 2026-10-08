@@ -141,7 +141,7 @@ export default function AISettings( { fields, renderField } ) {
             { modelField && (
                 <div className="mt-6">
                     <div className="flex items-center justify-between">
-                        <label className="text-sm text-gray-700 my-1.5">{ __( 'AI Model', 'wp-user-frontend' ) }</label>
+                        <label className="text-sm font-medium leading-5 text-gray-700 my-1.5">{ __( 'AI Model', 'wp-user-frontend' ) }</label>
                         <Button variant="link" size="sm" className="text-xs font-medium" onClick={ fetchModels } disabled={ fetching }>
                             { fetching ? __( 'Fetching…', 'wp-user-frontend' ) : __( '↻ Fetch latest models', 'wp-user-frontend' ) }
                         </Button>

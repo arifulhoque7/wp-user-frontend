@@ -57,7 +57,7 @@ export default function MultiSelectInput( { optionField, field, value, onChange 
             </div>
 
             <MultiSelect
-                className="term-list-selector w-full mt-2"
+                className="term-list-selector w-full mt-1.5"
                 options={ dynamicOptions }
                 value={ Array.isArray( value ) ? value : [] }
                 onChange={ ( next ) => onChange( next ) }

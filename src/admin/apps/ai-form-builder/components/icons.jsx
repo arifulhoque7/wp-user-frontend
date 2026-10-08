@@ -97,7 +97,7 @@ export function TypingDots() {
  */
 export function CaretIcon() {
     return (
-        <svg className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <svg className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500" width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
     );

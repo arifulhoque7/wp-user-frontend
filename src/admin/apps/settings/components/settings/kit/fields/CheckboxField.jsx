@@ -22,7 +22,7 @@ export default function CheckboxField( { field, name, value, onChange } ) {
                 onChange={ ( next ) => onChange( name, next ) }
             />
             { field.label && (
-                <label htmlFor={ name } className="text-sm text-gray-700 my-1.5">
+                <label htmlFor={ name } className="text-sm font-medium leading-5 text-gray-700 my-1.5">
                     { field.label }
                 </label>
             ) }

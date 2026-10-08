@@ -10,8 +10,8 @@ import { __ } from '@wordpress/i18n';
 import { getColumnCount, getWPUFFieldType, normalizeOptions, previewKind } from '../lib/fields';
 import { CaretIcon } from './icons';
 
-const BOX = 'rounded-[10px] border border-[#E3E5E8] bg-white p-3 text-base leading-6';
-const SELECT = 'wpuf-form-select w-full cursor-pointer rounded-[10px] border border-[#E3E5E8] bg-white p-3 pr-10 text-base leading-6 text-gray-700';
+const BOX = 'rounded-md border border-[#E3E5E8] bg-white px-3 py-2 text-sm leading-5';
+const SELECT = 'wpuf-form-select w-full cursor-pointer rounded-md border border-[#E3E5E8] bg-white px-3 py-2 pr-10 text-sm leading-5 text-gray-700';
 
 const PLACEHOLDERS = {
     text_field: 'Enter text...',
@@ -117,19 +117,19 @@ function ChoiceList( { field, type, priced = false } ) {
 
     if ( ! options.length ) {
         return (
-            <div className="text-base leading-6 text-gray-400">
+            <div className="text-sm leading-5 text-gray-400">
                 { priced ? __( 'No pricing options configured', 'wp-user-frontend' ) : __( 'No options configured', 'wp-user-frontend' ) }
             </div>
         );
     }
 
     return options.map( ( option ) => (
-        <div key={ option.value } className={ priced ? 'flex items-center justify-between rounded-[10px] border border-[#E3E5E8] bg-white p-3' : 'flex items-center gap-2' }>
+        <div key={ option.value } className={ priced ? 'flex items-center justify-between rounded-md border border-[#E3E5E8] bg-white px-3 py-2' : 'flex items-center gap-2' }>
             <span className="flex items-center gap-2">
-                <input type={ type } name={ `field_${ field.id }` } value={ option.value } disabled className="text-emerald-600" />
-                <span className="text-base leading-6 text-gray-700">{ String( option.label ) }</span>
+                <input type={ type } name={ `field_${ field.id }` } value={ option.value } disabled className="text-primary" />
+                <span className="text-sm leading-5 text-gray-700">{ String( option.label ) }</span>
             </span>
-            { priced && <span className="text-base font-medium text-emerald-600">{ priceOf( field, option.value ) }</span> }
+            { priced && <span className="text-sm font-medium text-primary">{ priceOf( field, option.value ) }</span> }
         </div>
     ) );
 }
@@ -144,7 +144,7 @@ function PreviewBody( { field } ) {
     const kind = previewKind( field );
     const type = getWPUFFieldType( field );
     const options = normalizeOptions( field.options );
-    const boxed = field.required ? 'rounded-[10px] border p-3' : '';
+    const boxed = field.required ? 'rounded-md border p-3' : '';
 
     switch ( kind ) {
         case 'text':
@@ -188,7 +188,7 @@ function PreviewBody( { field } ) {
 
         case 'pricing_multiselect':
             return (
-                <select multiple disabled className="wpuf-form-multiselect min-h-[120px] w-full rounded-[10px] border border-[#E3E5E8] bg-white p-3 text-base leading-6" aria-label={ field.label }>
+                <select multiple disabled className="wpuf-form-multiselect min-h-24 w-full rounded-md border border-[#E3E5E8] bg-white px-3 py-2 text-sm leading-5" aria-label={ field.label }>
                     { options.length
                         ? options.map( ( option ) => <option key={ option.value } value={ option.value } className="px-3 py-2">{ `${ option.label } - ${ priceOf( field, option.value ) }` }</option> )
                         : <option disabled>{ __( 'No pricing options configured', 'wp-user-frontend' ) }</option> }
@@ -197,28 +197,28 @@ function PreviewBody( { field } ) {
 
         case 'cart_total':
             return (
-                <div className="rounded-[10px] border-2 border-emerald-200 bg-emerald-50 p-4">
+                <div className="rounded-md border-2 border-emerald-200 bg-emerald-50 p-4">
                     <div className="flex items-center justify-between">
-                        <span className="text-lg font-semibold text-gray-800">{ field.label || __( 'Total', 'wp-user-frontend' ) }</span>
-                        <span className="text-2xl font-bold text-emerald-600">0.00</span>
+                        <span className="text-base font-semibold text-gray-800">{ field.label || __( 'Total', 'wp-user-frontend' ) }</span>
+                        <span className="text-2xl font-bold text-primary">0.00</span>
                     </div>
                 </div>
             );
 
         case 'toc':
             return (
-                <div className="rounded-[10px] border border-[#E3E5E8] bg-white p-4">
-                    { field.toc_text && <div className="mb-3 text-base leading-6 text-gray-600">{ field.toc_text }</div> }
+                <div className="rounded-md border border-[#E3E5E8] bg-white p-4">
+                    { field.toc_text && <div className="mb-3 text-sm leading-5 text-gray-600">{ field.toc_text }</div> }
                     <div className="flex items-start gap-2">
-                        <input type="checkbox" disabled className="mt-1 text-emerald-600" />
-                        <span className="text-base font-medium leading-6 text-gray-700">{ field.description || 'I agree to the terms and conditions' }</span>
+                        <input type="checkbox" disabled className="mt-1 text-primary" />
+                        <span className="text-sm font-medium leading-5 text-gray-700">{ field.description || 'I agree to the terms and conditions' }</span>
                     </div>
                 </div>
             );
 
         case 'file':
             return (
-                <div className="flex flex-col items-center gap-2 rounded-[10px] border-2 border-dashed border-[#E3E5E8] bg-white p-5 text-center text-base leading-6 text-gray-500">
+                <div className="flex flex-col items-center gap-2 rounded-md border-2 border-dashed border-[#E3E5E8] bg-white p-5 text-center text-sm leading-5 text-gray-500">
                     <svg className="size-8 text-gray-400" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                         <path d="M12 4V16M12 4L8 8M12 4L16 8M4 17V18C4 19.1046 4.89543 20 6 20H18C19.1046 20 20 19.1046 20 18V17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
@@ -234,7 +234,7 @@ function PreviewBody( { field } ) {
 
         case 'multiselect':
             return (
-                <select multiple className="wpuf-form-multiselect min-h-[120px] w-full rounded-[10px] border border-[#E3E5E8] bg-white p-3 text-base leading-6 text-gray-700" aria-label={ field.label }>
+                <select multiple className="wpuf-form-multiselect min-h-24 w-full rounded-md border border-[#E3E5E8] bg-white px-3 py-2 text-sm leading-5 text-gray-700" aria-label={ field.label }>
                     { options.length
                         ? options.map( ( option ) => <option key={ option.value } value={ option.value } className="px-3 py-2">{ String( option.label ) }</option> )
                         : <option disabled>{ field.placeholder || fieldPlaceholder( type ) }</option> }
@@ -259,7 +259,7 @@ function PreviewBody( { field } ) {
                         : (
                             <>
                                 <span className="text-gray-400">1</span>
-                                <div className="h-2 flex-1 rounded-[10px] bg-gray-200" />
+                                <div className="h-2 flex-1 rounded-md bg-gray-200" />
                                 <span className="text-gray-400">10</span>
                             </>
                         ) }
@@ -270,7 +270,7 @@ function PreviewBody( { field } ) {
             const input = 'checkbox_grid' === field.type ? 'checkbox' : 'radio';
 
             return (
-                <div className="rounded-[10px] border border-[#E3E5E8] bg-white p-4 text-base leading-6">
+                <div className="rounded-md border border-[#E3E5E8] bg-white p-4 text-sm leading-5">
                     <div className="mb-3 flex items-center gap-4">
                         <div className="flex-1" />
                         { [ 1, 2, 3 ].map( ( column ) => (
@@ -279,7 +279,7 @@ function PreviewBody( { field } ) {
                     </div>
                     <div className="flex items-center gap-4">
                         <div className="flex-1 text-gray-600">{ __( 'Row 1', 'wp-user-frontend' ) }</div>
-                        { [ 1, 2, 3 ].map( ( column ) => <input key={ column } type={ input } disabled className="text-emerald-600" /> ) }
+                        { [ 1, 2, 3 ].map( ( column ) => <input key={ column } type={ input } disabled className="text-primary" /> ) }
                     </div>
                 </div>
             );
@@ -287,7 +287,7 @@ function PreviewBody( { field } ) {
 
         case 'special':
             return (
-                <div className="rounded-[10px] border border-[#E3E5E8] bg-white p-5 text-center">
+                <div className="rounded-md border border-[#E3E5E8] bg-white p-5 text-center">
                     <div className="mb-2 text-gray-400">
                         <svg className="mx-auto size-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             { 'google_map' === field.type && (
@@ -310,15 +310,15 @@ function PreviewBody( { field } ) {
 
         case 'captcha':
             return (
-                <div className="rounded-[10px] border border-[#E3E5E8] bg-white p-4 text-center">
-                    <div className="mb-3 rounded-[10px] border border-gray-200 bg-white p-3 font-mono text-lg">{ 'math_captcha' === field.type ? '3 + 5 = ?' : 'CAPTCHA' }</div>
-                    <input type="text" placeholder={ __( 'Enter code', 'wp-user-frontend' ) } disabled className="w-full rounded-[10px] border border-[#E3E5E8] p-2 text-center" />
+                <div className="rounded-md border border-[#E3E5E8] bg-white p-4 text-center">
+                    <div className="mb-3 rounded-md border border-gray-200 bg-white p-3 font-mono text-base">{ 'math_captcha' === field.type ? '3 + 5 = ?' : 'CAPTCHA' }</div>
+                    <input type="text" placeholder={ __( 'Enter code', 'wp-user-frontend' ) } disabled className="w-full rounded-md border border-[#E3E5E8] px-3 py-2 text-center text-sm" />
                 </div>
             );
 
         case 'taxonomy':
             return (
-                <div className={ `${ BOX } flex cursor-pointer items-center justify-between ${ field.required ? 'border-blue-300' : '' }` }>
+                <div className={ `${ BOX } flex cursor-pointer items-center justify-between ${ field.required ? 'border-primary/40' : '' }` }>
                     <span className="text-gray-400">{ field.placeholder || '- Select -' }</span>
                     <svg width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                         <path d="M13.25 0.875001L7 7.125L0.75 0.875001" stroke="#4B5563" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -328,20 +328,20 @@ function PreviewBody( { field } ) {
 
         case 'post':
             return (
-                <div className={ `rounded-[10px] border border-blue-200 bg-blue-50 p-3 ${ field.required ? 'border-blue-300' : '' }` }>
+                <div className={ `rounded-md border border-primary/20 bg-primary/5 p-3 ${ field.required ? 'border-primary/40' : '' }` }>
                     <div className="mb-2 flex items-center gap-2">
-                        <svg className="size-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <svg className="size-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
-                        <span className="font-medium text-blue-800">{ field.label }</span>
+                        <span className="font-medium text-gray-900">{ field.label }</span>
                     </div>
-                    <div className="text-base leading-6 text-blue-600">{ field.placeholder || fieldPlaceholder( field.type ) }</div>
+                    <div className="text-sm leading-5 text-primary">{ field.placeholder || fieldPlaceholder( field.type ) }</div>
                 </div>
             );
 
         case 'column':
             return (
-                <div className="rounded-[10px] border-2 border-dashed border-purple-300 bg-purple-50 p-4">
+                <div className="rounded-md border-2 border-dashed border-purple-300 bg-purple-50 p-4">
                     <div className="mb-3 text-center font-medium text-purple-600">{ field.label }</div>
                     <div className="flex gap-2">
                         { Array.from( { length: getColumnCount( field ) }, ( _, index ) => (
@@ -355,7 +355,7 @@ function PreviewBody( { field } ) {
 
         case 'layout':
             return (
-                <div className="rounded-[10px] border-2 border-dashed border-purple-300 bg-purple-50 p-4 text-center">
+                <div className="rounded-md border-2 border-dashed border-purple-300 bg-purple-50 p-4 text-center">
                     <div className="font-medium text-purple-600">{ field.label }</div>
                 </div>
             );
@@ -364,14 +364,14 @@ function PreviewBody( { field } ) {
             const isShortcode = 'shortcode' === field.type || 'shortcode' === field.template || 'shortcode' === field.input_type;
 
             return (
-                <div className="rounded-[10px] border border-yellow-300 bg-yellow-50 p-4">
+                <div className="rounded-md border border-yellow-300 bg-yellow-50 p-4">
                     <div className="mb-2 flex items-center gap-2">
                         <svg className="size-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
                         </svg>
                         <span className="font-medium text-yellow-800">{ field.label }</span>
                     </div>
-                    <div className="text-base leading-6 text-yellow-600">
+                    <div className="text-sm leading-5 text-yellow-600">
                         { isShortcode ? field.shortcode || fieldPlaceholder( field.type ) : field.placeholder || fieldPlaceholder( field.type ) }
                     </div>
                 </div>
@@ -392,14 +392,14 @@ export default function PreviewField( { field } ) {
 
     return (
         <div className="wpuf-form-field flex flex-col gap-2" data-field-template={ field.template || field.type }>
-            <span className="flex items-center gap-1 text-base font-normal leading-6 text-gray-900">
+            <span className="flex items-center gap-1 text-sm font-medium leading-5 text-gray-900">
                 { field.label }
                 { required && <span className="font-bold text-red-500" aria-hidden="true">*</span> }
             </span>
-            { field.help_text && <p className="m-0 mb-1 text-base leading-6 text-gray-500">{ field.help_text }</p> }
+            { field.help_text && <p className="m-0 mb-1 text-sm leading-5 text-gray-500">{ field.help_text }</p> }
             <PreviewBody field={ field } />
             { field.default && (
-                <div className="flex items-center gap-1 text-base leading-6 text-blue-600">
+                <div className="flex items-center gap-1 text-sm leading-5 text-primary">
                     <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
