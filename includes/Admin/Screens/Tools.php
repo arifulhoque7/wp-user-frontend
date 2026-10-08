@@ -141,13 +141,18 @@ class Tools extends Screen {
     }
 
     /**
-     * Assets of the app route.
+     * The app page: `wpuf_load_tools` fires as on the classic page (the
+     * screens' load hooks fire in the app, as Post Forms and Subscriptions
+     * do), then the route's assets.
      *
      * @since WPUF_SINCE
      *
      * @return void
      */
     public function load_in_app() {
+        /** This action is documented in includes/Admin/Screens/Tools.php */
+        do_action( 'wpuf_load_tools' );
+
         wp_enqueue_style( 'wpuf-admin-pages' );
         wp_enqueue_script( 'wpuf-tools' );
         wp_set_script_translations( 'wpuf-tools', 'wp-user-frontend', WPUF_ROOT . '/languages' );
