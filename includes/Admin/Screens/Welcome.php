@@ -150,7 +150,8 @@ class Welcome extends Screen {
                     'onboarding' => admin_url( 'index.php?page=wpuf-onboarding' ),
                     'guide'      => $doc( 'getting-started/' ),
                     'features'   => 'https://wedevs.com/wp-user-frontend-pro/features/?utm_source=wpuf-welcome&utm_medium=welcome-page',
-                    'upgrade'    => Pro_Prompt::get_upgrade_to_pro_popup_url(),
+                    // Pro_Prompt escapes this link for HTML; the app opens the plain link.
+                    'upgrade'    => html_entity_decode( Pro_Prompt::get_upgrade_to_pro_popup_url(), ENT_QUOTES, 'UTF-8' ),
                 ],
                 'sections'   => [
                     [

@@ -112,7 +112,8 @@ class RegistrationPromo extends Screen {
                 'banner'       => $image( 'form-banner.svg' ),
                 'setupUrl'     => 'https://wedevs.com/docs/wp-user-frontend-pro/registration-profile-forms/how-to-setup-registrationlogin-page/',
                 'learnUrl'     => 'https://wedevs.com/docs/wp-user-frontend-pro/registration-forms/',
-                'upgradeUrl'   => Pro_Prompt::get_upgrade_to_pro_popup_url(),
+                // Pro_Prompt escapes this link for HTML; the app opens the plain link.
+                'upgradeUrl'   => html_entity_decode( Pro_Prompt::get_upgrade_to_pro_popup_url(), ENT_QUOTES, 'UTF-8' ),
                 'features'     => [
                     [ 'icon' => $image( 'icon-doc.svg' ), 'title' => __( 'Registration form builder', 'wp-user-frontend' ) ],
                     [ 'icon' => $image( 'icon-profile.svg' ), 'title' => __( 'Profile form builder', 'wp-user-frontend' ) ],
