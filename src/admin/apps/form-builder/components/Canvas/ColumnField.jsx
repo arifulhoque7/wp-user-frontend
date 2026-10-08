@@ -27,7 +27,7 @@ function ColumnCell( { field, columnKey } ) {
         >
             <div
                 data-column={ columnKey }
-                className={ `border border-dashed border-primary/50 bg-primary/5 shadow-xs rounded-md p-1 transition-colors ${ tint }` }
+                className={ `border border-dashed border-gray-300 bg-gray-50/60 rounded-lg p-1 transition-colors ${ tint }` }
             >
                 <ul { ...dropListProps( container, colFields.length ) } className="wpuf-column-fields-sortable-list relative min-h-16 list-none m-0! p-0!">
                     { placeholder && ! colFields.length && <Indicator blocked={ placeholder.blocked } /> }

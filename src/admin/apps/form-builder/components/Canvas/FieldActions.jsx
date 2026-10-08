@@ -16,16 +16,17 @@ const ACTION_CLASSES = 'inline-flex h-7 items-center gap-1 px-2 text-xs font-med
  * hover of their own named group.
  */
 const BAR_CLASSES = {
-    column: 'wpuf-column-field-control-buttons opacity-0 group-hover/column-inner:opacity-100 rounded-b-lg bg-primary items-center transition duration-150 wpuf-ease-out flex justify-center',
-    repeat: 'wpuf-repeat-field-control-buttons opacity-0 group-hover/repeat-inner:opacity-100 rounded-b-lg bg-primary items-center transition duration-150 wpuf-ease-out flex justify-center',
+    column: 'wpuf-column-field-control-buttons absolute -top-3 right-2 z-20 flex items-center rounded-md bg-primary px-0.5 shadow-sm transition duration-150 wpuf-ease-out group-hover/column-inner:opacity-100 focus-within:opacity-100',
+    repeat: 'wpuf-repeat-field-control-buttons absolute -top-3 right-2 z-20 flex items-center rounded-md bg-primary px-0.5 shadow-sm transition duration-150 wpuf-ease-out group-hover/repeat-inner:opacity-100 focus-within:opacity-100',
 };
 const BAR_INNER_CLASSES = {
-    column: 'items-center text-white/80 flex justify-evenly p-1',
-    repeat: 'items-center text-white/80 flex justify-evenly',
+    column: 'flex items-center text-white/85',
+    repeat: 'flex items-center text-white/85',
 };
+const INNER_ACTION = 'inline-flex h-6 w-6 items-center justify-center rounded hover:bg-white/15 hover:text-white hover:cursor-pointer';
 const INNER_ACTION_CLASSES = {
-    column: 'hover:cursor-pointer hover:text-white flex mr-2',
-    repeat: 'px-2! px-3 py-2 text-sm font-medium rounded-md hover:bg-black/10 transition duration-150 wpuf-ease-out hover:transition-all',
+    column: INNER_ACTION,
+    repeat: INNER_ACTION,
 };
 
 export default function FieldActions( { field, index, container = { type: 'top' }, dragListeners, dragAttributes, showMove = true, variant = 'top' } ) {
@@ -127,7 +128,7 @@ export default function FieldActions( { field, index, container = { type: 'top' 
     return (
         <div
             className={ isInner
-                ? BAR_CLASSES[ variant ]
+                ? `${ BAR_CLASSES[ variant ] } ${ isEditing ? 'opacity-100' : 'opacity-0' }`
                 : `field-buttons absolute -top-3.5 right-4 z-20 rounded-md bg-primary! px-1 shadow-sm items-center transition duration-150 wpuf-ease-out flex group-hover:opacity-100 focus-within:opacity-100 ${ isEditing ? 'opacity-100' : 'opacity-0' }` }
         >
             <div className={ isInner ? BAR_INNER_CLASSES[ variant ] : 'flex items-center text-white/85' }>

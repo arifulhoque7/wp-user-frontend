@@ -47,7 +47,7 @@ export default function ColumnFieldPreview( { field } ) {
                 >
                     <div
                         data-column={ column }
-                        className="border border-dashed border-primary/50 bg-primary/5 shadow-xs rounded-md p-1"
+                        className="border border-dashed border-gray-300 bg-gray-50/60 rounded-lg p-1"
                     >
                         <ul className="wpuf-column-fields-sortable-list min-h-16 list-none m-0! p-0!">
                             { ( innerFields[ column ] || [] ).map( ( innerField, innerIndex ) => {
@@ -61,7 +61,7 @@ export default function ColumnFieldPreview( { field } ) {
                                         key={ innerField.id || innerIndex }
                                         className={ `m-0! p-0! rounded-t-md ${ innerField.name || '' } ${ innerField.css || '' } form-field-${ innerField.template } ${ innerField.template === 'custom_hidden_field' ? 'hidden-field' : '' }` }
                                     >
-                                        <div className="flex flex-col md:flex-row gap-2 p-4 border-transparent rounded-t-md border-t border-r border-l border-dashed border-primary/50">
+                                        <div className="flex flex-col md:flex-row gap-2 p-3 rounded-lg border border-dashed border-transparent">
                                             { ! ( innerIsFullWidth || innerIsProPreview ) && (
                                                 <div>
                                                     { ! isInvisible( innerField ) && (

@@ -96,18 +96,19 @@ export default function SortableField( { field, index, container = TOP_LEVEL, in
     const variant = 'top' === container.type ? 'top' : container.type;
 
     const classNames = ( 'column' === variant ? [
-        'relative m-0! p-0! group/column-inner hover:bg-primary/5 transition duration-150 wpuf-ease-out column-field-items wpuf-el rounded-t-md',
+        'relative m-0! p-0! group/column-inner rounded-lg transition duration-150 wpuf-ease-out column-field-items wpuf-el hover:bg-primary/5',
         field.name,
         field.css,
         'form-field-' + field.template,
         field.width ? 'field-size-' + field.width : '',
         isHidden ? 'hidden-field' : '',
-        isEditing ? 'bg-primary/5' : '',
+        isEditing ? 'bg-primary/5 ring-2 ring-primary/30' : '',
     ] : 'repeat' === variant ? [
-        'relative m-0! p-0! group/repeat-inner hover:bg-primary/5 transition duration-150 wpuf-ease-out repeat-field-items wpuf-el rounded-t-md',
+        'relative m-0! p-0! group/repeat-inner rounded-lg transition duration-150 wpuf-ease-out repeat-field-items wpuf-el hover:bg-primary/5',
         field.name,
         'form-field-' + field.template,
         field.width ? 'field-size-' + field.width : '',
+        isEditing ? 'bg-primary/5 ring-2 ring-primary/30' : '',
     ] : [
         'field-items',
         'wpuf-el',

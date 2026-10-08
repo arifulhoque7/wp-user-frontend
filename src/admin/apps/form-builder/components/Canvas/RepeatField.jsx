@@ -59,8 +59,8 @@ export default function RepeatField( { field } ) {
 
             { /* Static + and - icons, as develop (no interactivity in the builder). */ }
             <div className="wpuf-repeat-controls p-4">
-                <button type="button" className="border border-gray-100 bg-white px-[8px] py-[2px] rounded-[3px]">+</button>
-                <button type="button" className="border border-gray-100 bg-white px-[8px] py-[2px] rounded-[3px]">-</button>
+                <button type="button" className="mr-1 inline-flex size-7 items-center justify-center rounded-md border border-solid border-gray-200 bg-white text-sm text-gray-600 shadow-xs">+</button>
+                <button type="button" className="inline-flex size-7 items-center justify-center rounded-md border border-solid border-gray-200 bg-white text-sm text-gray-600 shadow-xs">-</button>
             </div>
 
             <HelpText text={ field.help } />
