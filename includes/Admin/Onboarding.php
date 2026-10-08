@@ -107,6 +107,8 @@ class Onboarding {
                 'wpuf_transaction',
                 'wpuf_subscribers',
                 'wpuf_coupon',
+                // Pro's coupons row is the post type's list.
+                'edit.php?post_type=wpuf_coupon',
             ],
         ];
 
@@ -120,6 +122,22 @@ class Onboarding {
         $menus = apply_filters( 'wpuf_onboarding_feature_menus', $menus );
 
         return ! empty( $menus ) && is_array( $menus ) ? $menus : [];
+    }
+
+    /**
+     * Tools: the admin app route when the app is on (no redirect), else the
+     * classic page.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return string
+     */
+    public function tools_url() {
+        if ( function_exists( 'wpuf_admin_app_enabled' ) && wpuf_admin_app_enabled() ) {
+            return admin_url( 'admin.php?page=wp-user-frontend#/tools' );
+        }
+
+        return admin_url( 'admin.php?page=wpuf_tools&tab=tools' );
     }
 
     /**
@@ -681,8 +699,8 @@ class Onboarding {
             ],
             'is_pro'   => wpuf_is_pro_active(),
             'urls'     => [
-                'exit'     => admin_url( 'admin.php?page=wpuf_tools&tab=tools' ),
-                'tools'    => admin_url( 'admin.php?page=wpuf_tools&tab=tools' ),
+                'exit'     => $this->tools_url(),
+                'tools'    => $this->tools_url(),
                 'settings' => admin_url( 'admin.php?page=wpuf-settings' ),
                 'payment'  => admin_url( 'admin.php?page=wpuf-settings#wpuf_payment' ),
                 'pro'      => \WeDevs\Wpuf\Free\Pro_Prompt::get_pro_url(),
@@ -1697,7 +1715,7 @@ class Onboarding {
 
             $gateways[ $id ]['is_pro_preview'] = $is_pro_preview;
             // A gateway whose module is off cannot take keys yet; its card says so.
-            $gateways[ $id ]['needs_setup']    = ! $is_pro_preview && empty( $gateway['needs_module'] ) && in_array( $id, $needs_credentials, true );
+            $gateways[ $id ]['needs_setup'] = ! $is_pro_preview && empty( $gateway['needs_module'] ) && in_array( $id, $needs_credentials, true );
 
             if ( ! empty( $gateway['needs_module'] ) ) {
                 $gateways[ $id ]['hint'] = __( 'Turn the Stripe module on in Modules, then add your keys.', 'wp-user-frontend' );
@@ -2149,7 +2167,7 @@ class Onboarding {
         $checklist[] = [
             'label' => __( 'UF pages installed', 'wp-user-frontend' ),
             'done'  => '1' === get_option( '_wpuf_page_created' ),
-            'url'   => admin_url( 'admin.php?page=wpuf_tools&tab=tools' ),
+            'url'   => $this->tools_url(),
             'link'  => __( 'Tools', 'wp-user-frontend' ),
         ];
 
