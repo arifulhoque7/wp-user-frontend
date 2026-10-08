@@ -3,6 +3,9 @@ import { faker } from '@faker-js/faker';
 import { BasicLoginPage } from '../pages/basicLogin';
 import { SettingsReactPage } from '../pages/settingsReact';
 import { aiWp, AiFormBuilderPage } from '../pages/aiFormBuilder';
+
+/** WP-CLI reachable: a local WordPress root (WPUF_E2E_WP_PATH) or a wp-env project (WPUF_E2E_WP_ENV_DIR, e.g. the QA sites). */
+const HAS_WP_CLI = !!(process.env.WPUF_E2E_WP_PATH || process.env.WPUF_E2E_WP_ENV_DIR);
 import { Users, Urls } from '../utils/testData';
 import { builderFormId } from '../utils/builderUrl';
 
@@ -34,7 +37,7 @@ const APP = `${Urls.baseUrl}/wp-admin/admin.php?page=wp-user-frontend`;
  * @Test_APP0012 : The new form route creates a form and opens its builder; registration builder (Pro) opens in the app
  * @Test_APP0013 : Add New in the app: the template picker's Blank Form and a template each create a form and open its builder in the app without a page load
  * @Test_APP0014 : AI form builder in the app: list button -> AI route -> generate -> Edit with Builder -> builder route, no page load; old AI URLs (with nonce) land on the route
- * @Test_APP0015 : List row action buttons in the app: Edit (builder route, no page load), Duplicate, Trash, Restore, Delete Permanently, bulk Move to trash; registration Edit (Pro)
+ * @Test_APP0015 : List row action buttons in the app: Edit (builder route), Duplicate (toast View form), Trash, Restore, Delete Permanently, bulk Move to trash, all without a page load, counts follow; registration Edit (Pro)
  * @Test_APP0016 : Pro without a valid license: Registration Forms stays Pro's preview page (no app route, no way round it); the free routes still run in the app
  * @Test_APP0017 : License (Pro) is the app route #/license: old URL lands there, the key is masked (never in the page), a site without an active key gets the key form
  * @Test_APP0018 : Without Pro, Registration Forms is the app route #/registration-forms on the new components (free shortcode with Copy, Pro features, modules icons) and shows admin notices
@@ -194,7 +197,7 @@ test.describe('Admin app', () => {
 
     test('APP0008 : A list row action comes back to the list in the app with its notice', { tag: ['@Lite', '@Test_APP0008'] }, async () => {
         test.skip(!(await appOn()), 'admin app is off');
-        test.skip(!process.env.WPUF_E2E_WP_PATH, 'needs WP-CLI on the site');
+        test.skip(!HAS_WP_CLI, 'needs WP-CLI on the site');
 
         const id = aiWp(['eval', "echo wpuf_create_sample_form( 'APP0008 trash me', 'wpuf_forms' );"], true).trim().split('\n').pop();
 
@@ -235,7 +238,7 @@ test.describe('Admin app', () => {
 
     test('APP0009 : Post list -> builder -> list without a page load', { tag: ['@Lite', '@Test_APP0009'] }, async () => {
         test.skip(!(await appOn()), 'admin app is off');
-        test.skip(!process.env.WPUF_E2E_WP_PATH, 'needs WP-CLI on the site');
+        test.skip(!HAS_WP_CLI, 'needs WP-CLI on the site');
 
         const id = newForm('APP0009 builder');
         const sheetOn = (sheet: string) => page.evaluate((s) => {
@@ -267,7 +270,7 @@ test.describe('Admin app', () => {
 
     test('APP0010 : One builder after another without stale data', { tag: ['@Lite', '@Test_APP0010'] }, async () => {
         test.skip(!(await appOn()), 'admin app is off');
-        test.skip(!process.env.WPUF_E2E_WP_PATH, 'needs WP-CLI on the site');
+        test.skip(!HAS_WP_CLI, 'needs WP-CLI on the site');
 
         const first = newForm('APP0010 first');
         const second = Number(aiWp(['eval', "echo wpuf_create_sample_form( 'APP0010 second', 'wpuf_forms', true );"], true).trim().split('\n').pop());
@@ -299,7 +302,7 @@ test.describe('Admin app', () => {
 
     test('APP0011 : Unsaved builder changes ask before leaving; save works in the app', { tag: ['@Lite', '@Test_APP0011'] }, async () => {
         test.skip(!(await appOn()), 'admin app is off');
-        test.skip(!process.env.WPUF_E2E_WP_PATH, 'needs WP-CLI on the site');
+        test.skip(!HAS_WP_CLI, 'needs WP-CLI on the site');
 
         const id = newForm('APP0011 guard');
 
@@ -329,7 +332,7 @@ test.describe('Admin app', () => {
 
     test('APP0012 : New form route creates a form; registration builder opens in the app', { tag: ['@Lite', '@Test_APP0012'] }, async () => {
         test.skip(!(await appOn()), 'admin app is off');
-        test.skip(!process.env.WPUF_E2E_WP_PATH, 'needs WP-CLI on the site');
+        test.skip(!HAS_WP_CLI, 'needs WP-CLI on the site');
 
         await page.goto(`${APP}#/post-forms/new`);
         await expect(page).toHaveURL(/#\/post-forms\/\d+\/edit$/, { timeout: 30000 });
@@ -393,7 +396,7 @@ test.describe('Admin app', () => {
             expect(state.id).not.toBe(blank);
             expect(state.fields, 'the template brought its fields').toBeGreaterThan(0);
 
-            if (process.env.WPUF_E2E_WP_PATH) {
+            if (HAS_WP_CLI) {
                 expect(aiWp(['post', 'get', String(state.id), '--field=post_type']).trim()).toBe(screen.postType);
                 aiWp(['post', 'delete', String(blank), String(state.id), '--force']);
             }
@@ -402,7 +405,7 @@ test.describe('Admin app', () => {
 
     test('APP0014 : AI form builder runs in the app', { tag: ['@Lite', '@Test_APP0014'] }, async () => {
         test.skip(!(await appOn()), 'admin app is off');
-        test.skip(!process.env.WPUF_E2E_WP_PATH, 'needs WP-CLI on the site (AI mock key)');
+        test.skip(!HAS_WP_CLI, 'needs WP-CLI on the site (AI mock key)');
 
         const ai = new AiFormBuilderPage(page);
         ai.configureMock();
@@ -452,12 +455,11 @@ test.describe('Admin app', () => {
 
     test('APP0015 : List row action buttons work in the app', { tag: ['@Lite', '@Test_APP0015'] }, async () => {
         test.skip(!(await appOn()), 'admin app is off');
-        test.skip(!process.env.WPUF_E2E_WP_PATH, 'needs WP-CLI on the site');
+        test.skip(!HAS_WP_CLI, 'needs WP-CLI on the site');
 
         const title = `APP0015 ${Date.now()}`;
         const id = newForm(title);
         const list = page.locator('#wpuf-post-forms-list-table-view');
-        const notices = page.locator('#wpuf-admin-app-notices');
         const rowAction = async (formTitle: string, item: string) => {
             await page.locator(`button[aria-label="Actions for ${formTitle}"]`).first().click();
             await page.getByRole('menuitem', { name: item, exact: true }).click();
@@ -475,51 +477,56 @@ test.describe('Admin app', () => {
         await expect(page.locator('#wpuf-form-builder input[name="post_title"]').first()).toHaveValue(title, { timeout: 30000 });
         expect(await page.evaluate(() => (window as unknown as { wpufNoReload?: boolean }).wpufNoReload), 'Edit without a page load').toBe(true);
 
-        // Duplicate: the server action, back to the list with its notice.
+        // Row and bulk actions run over REST in place (no page load), develop's notice texts as toasts.
+        const toast = page.locator('li[data-sonner-toast]');
         await openList();
+        await page.evaluate(() => { (window as unknown as { wpufNoReload: boolean }).wpufNoReload = true; });
+
+        // Duplicate: toast with a "View form" action to the copy's builder route.
         await rowAction(title, 'Duplicate');
-        await expect(page).toHaveURL(/page=wp-user-frontend#\/post-forms/, { timeout: 30000 });
-        await expect(notices).toContainText('Form duplicated successfully.');
-        const copy = Number(builderFormId(new URL((await notices.locator('a', { hasText: 'View form' }).first().getAttribute('href')) || '', Urls.baseUrl).toString()));
+        await expect(toast.filter({ hasText: 'Form duplicated successfully.' }).first()).toBeVisible({ timeout: 30000 });
+        const viewForm = toast.filter({ hasText: 'Form duplicated successfully.' }).first().getByRole('button', { name: 'View form' });
+        await viewForm.click();
+        await expect(page).toHaveURL(/#\/post-forms\/\d+\/edit$/);
+        const copy = Number(builderFormId(page.url()));
         expect(copy, 'the copy exists').toBeGreaterThan(id);
         const copyTitle = aiWp(['post', 'get', String(copy), '--field=post_title']).trim();
-
-        // The notice's "View form" link: the copy's builder route, no page load.
-        await page.evaluate(() => { (window as unknown as { wpufNoReload: boolean }).wpufNoReload = true; });
-        await notices.locator('a', { hasText: 'View form' }).first().click();
-        await expect(page).toHaveURL(new RegExp(`#/post-forms/${copy}/edit$`));
         await expect(page.locator('#wpuf-form-builder input[name="post_title"]').first()).toHaveValue(copyTitle, { timeout: 30000 });
-        expect(await page.evaluate(() => (window as unknown as { wpufNoReload?: boolean }).wpufNoReload), 'View form without a page load').toBe(true);
+        expect(await page.evaluate(() => (window as unknown as { wpufNoReload?: boolean }).wpufNoReload), 'Duplicate and View form without a page load').toBe(true);
 
-        // Trash the copy, restore it from the Trash tab, then delete it permanently.
+        // Trash the copy, restore it from the Trash tab, then delete it permanently: counts follow.
         await openList();
+        await page.evaluate(() => { (window as unknown as { wpufNoReload: boolean }).wpufNoReload = true; });
+        const trashTab = page.getByRole('tab', { name: /Trash/ }).first();
+        const trashCount = async () => Number(((await trashTab.innerText()).match(/\d+/) || ['0'])[0]);
+        const before = await trashCount();
         await rowAction(copyTitle, 'Trash');
-        await expect(notices).toContainText(/form(s)? moved to the trash\./, { timeout: 30000 });
-        const trashed = aiWp(['post', 'list', '--post_type=wpuf_forms', '--post_status=trash', `--title=${copyTitle}`, '--format=ids']).trim();
-        expect(trashed, 'one copy in the trash').not.toBe('');
+        await expect(toast.filter({ hasText: '1 form moved to the trash.' }).first()).toBeVisible({ timeout: 30000 });
+        await expect.poll(trashCount, { message: 'the Trash tab count follows without a reload' }).toBe(before + 1);
+        expect(aiWp(['post', 'get', String(copy), '--field=post_status']).trim()).toBe('trash');
 
-        await openList();
         await list.getByText(/^Trash/).first().click();
         await expect(page.locator(`button[aria-label="Actions for ${copyTitle}"]`).first()).toBeVisible({ timeout: 30000 });
         await rowAction(copyTitle, 'Restore');
-        await expect(notices).toContainText('1 form restored from the trash.', { timeout: 30000 });
+        await expect(toast.filter({ hasText: '1 form restored from the trash.' }).first()).toBeVisible({ timeout: 30000 });
 
-        await openList();
+        await list.getByText(/^All/).first().click();
+        await expect(page.locator(`button[aria-label="Actions for ${copyTitle}"]`).first()).toBeVisible({ timeout: 30000 });
         await rowAction(copyTitle, 'Trash');
-        await expect(notices).toContainText('1 form moved to the trash.', { timeout: 30000 });
-        await openList();
+        await expect(toast.filter({ hasText: '1 form moved to the trash.' }).last()).toBeVisible({ timeout: 30000 });
         await list.getByText(/^Trash/).first().click();
         await expect(page.locator(`button[aria-label="Actions for ${copyTitle}"]`).first()).toBeVisible({ timeout: 30000 });
         await rowAction(copyTitle, 'Delete Permanently');
         await page.getByRole('alertdialog').getByRole('button', { name: 'Delete Permanently' }).click();
-        await expect(notices).toContainText('1 form permanently deleted.', { timeout: 30000 });
+        await expect(toast.filter({ hasText: '1 form permanently deleted.' }).first()).toBeVisible({ timeout: 30000 });
 
         // Bulk: select the remaining form, Move to trash.
-        await openList();
+        await list.getByText(/^All/).first().click();
         await page.getByRole('checkbox', { name: `Select ${title}` }).first().check();
         await page.getByRole('button', { name: 'Move to trash' }).first().click();
-        await expect(notices).toContainText('1 form moved to the trash.', { timeout: 30000 });
+        await expect(toast.filter({ hasText: '1 form moved to the trash.' }).last()).toBeVisible({ timeout: 30000 });
         expect(aiWp(['post', 'get', String(id), '--field=post_status']).trim()).toBe('trash');
+        expect(await page.evaluate(() => (window as unknown as { wpufNoReload?: boolean }).wpufNoReload), 'row and bulk actions without a page load').toBe(true);
         aiWp(['post', 'delete', String(id), '--force']); // the copy was deleted permanently above
 
         // Registration list (Pro): Edit opens its builder route.
@@ -537,7 +544,7 @@ test.describe('Admin app', () => {
 
     test('APP0016 : Pro without a valid license keeps the registration preview page', { tag: ['@Pro', '@Test_APP0016'] }, async () => {
         test.skip(!(await appOn()), 'admin app is off');
-        test.skip(!process.env.WPUF_E2E_WP_PATH, 'needs WP-CLI on the site');
+        test.skip(!HAS_WP_CLI, 'needs WP-CLI on the site');
 
         const registrationRoute = () => page.evaluate(() => ((window as unknown as { wpufAdmin: { app: { routes: { id: string; mode: string }[] } } }).wpufAdmin.app.routes.find((r) => 'registration-forms' === r.id) || { mode: 'none' }).mode);
         await page.goto(`${APP}#/post-forms`);
@@ -580,7 +587,7 @@ test.describe('Admin app', () => {
 
     test('APP0017 : License page in the app (Pro)', { tag: ['@Pro', '@Test_APP0017'] }, async () => {
         test.skip(!(await appOn()), 'admin app is off');
-        test.skip(!process.env.WPUF_E2E_WP_PATH, 'needs WP-CLI on the site');
+        test.skip(!HAS_WP_CLI, 'needs WP-CLI on the site');
 
         const row = page.locator('#toplevel_page_wp-user-frontend a', { hasText: 'License' }).first();
         test.skip(!(await row.count()) || !((await row.getAttribute('href')) || '').includes('#/license'), 'license route needs Pro');

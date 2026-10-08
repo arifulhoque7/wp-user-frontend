@@ -439,6 +439,10 @@ export default function TemplatePicker( { open, onClose, data, onAI } ) {
             return undefined;
         }
 
+        // Each opening starts with an empty search, as develop's modal did (a
+        // search left from the last visit showed "No templates found").
+        setSearch( '' );
+
         returnFocus.current = document.activeElement;
         const overflow = document.body.style.overflow;
         document.body.style.overflow = 'hidden';

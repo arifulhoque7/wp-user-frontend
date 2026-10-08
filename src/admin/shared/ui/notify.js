@@ -7,14 +7,15 @@
 import { toast } from '@wedevs/plugin-ui';
 
 /**
- * @param {*}      message Message.
- * @param {string} [type]  success|error|danger|warning|info
+ * @param {*}      message   Message.
+ * @param {string} [type]    success|error|danger|warning|info
+ * @param {Object} [options] sonner options, e.g. `{ action: { label, onClick } }`.
  *
  * @return {*} Toast id.
  */
-export default function notify( message, type = 'success' ) {
+export default function notify( message, type = 'success', options = undefined ) {
     const kind = 'danger' === type ? 'error' : type;
     const show = toast[ kind ] || toast;
 
-    return show( message );
+    return options ? show( message, options ) : show( message );
 }

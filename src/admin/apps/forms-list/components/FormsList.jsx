@@ -4,7 +4,7 @@
  * @since WPUF_SINCE
  */
 import { useState, useEffect, useCallback, useMemo, useRef } from '@wordpress/element';
-import { __, sprintf } from '@wordpress/i18n';
+import { __, _n, sprintf } from '@wordpress/i18n';
 import { request, restPath } from '@wpuf/api';
 import { applyFilters } from '@wordpress/hooks';
 import { AIConfigModal, ErrorState, Pagination, Tabs, notify, useConfirm } from '@wpuf/components';
@@ -137,11 +137,15 @@ const FormsList = ( {
     // Row and bulk actions over the admin forms REST routes (same form store
     // calls as the classic list actions), then the list reloads in place: no
     // page load. A failed request shows its error and leaves the list as it is.
+    // develop's list action notices (Admin_Form_Handler), now as toasts.
     const MESSAGES = {
-        duplicate: [ __( 'Form duplicated.', 'wp-user-frontend' ), /* translators: %d: number of forms */ __( '%d forms duplicated.', 'wp-user-frontend' ) ],
-        trash: [ __( 'Form moved to the trash.', 'wp-user-frontend' ), /* translators: %d: number of forms */ __( '%d forms moved to the trash.', 'wp-user-frontend' ) ],
-        restore: [ __( 'Form restored.', 'wp-user-frontend' ), /* translators: %d: number of forms */ __( '%d forms restored.', 'wp-user-frontend' ) ],
-        delete: [ __( 'Form deleted permanently.', 'wp-user-frontend' ), /* translators: %d: number of forms */ __( '%d forms deleted permanently.', 'wp-user-frontend' ) ],
+        /* translators: %d: number of forms */
+        trash: ( n ) => sprintf( _n( '%d form moved to the trash.', '%d forms moved to the trash.', n, 'wp-user-frontend' ), n ),
+        /* translators: %d: number of forms */
+        restore: ( n ) => sprintf( _n( '%d form restored from the trash.', '%d forms restored from the trash.', n, 'wp-user-frontend' ), n ),
+        /* translators: %d: number of forms */
+        delete: ( n ) => sprintf( _n( '%d form permanently deleted.', '%d forms permanently deleted.', n, 'wp-user-frontend' ), n ),
+        duplicate: () => __( 'Form duplicated successfully.', 'wp-user-frontend' ),
     };
 
     const [ acting, setActing ] = useState( false );
@@ -153,12 +157,16 @@ const FormsList = ( {
 
         setActing( true );
 
+        let copyId = 0;
+
         try {
             for ( const id of ids ) {
-                await request(
+                const body = await request(
                     restPath( 'wpuf/v1', 'delete' === action ? `/admin/forms/${ id }` : `/admin/forms/${ id }/${ action }` ),
                     { method: 'delete' === action ? 'DELETE' : 'POST' }
                 );
+
+                copyId = ( body && body.data && body.data.id ) || copyId;
             }
         } catch ( requestError ) {
             setActing( false );
@@ -169,7 +177,17 @@ const FormsList = ( {
 
         setActing( false );
         setSelectedForms( [] );
-        notify( 1 === ids.length ? MESSAGES[ action ][ 0 ] : sprintf( MESSAGES[ action ][ 1 ], ids.length ) );
+        // A copy: develop's notice linked it ("View form."), here the toast action does.
+        notify(
+            MESSAGES[ action ]( ids.length ),
+            'success',
+            'duplicate' === action && copyId ? {
+                action: {
+                    label: __( 'View form', 'wp-user-frontend' ),
+                    onClick: () => openRoute( `${ routeBase }/${ copyId }/edit`, buildAdminUrl( copyId, 'edit' ) ),
+                },
+            } : undefined
+        );
 
         // The page may be empty now (last rows trashed or deleted): step back one.
         const page = 'duplicate' !== action && ids.length >= forms.length && pagination.current_page > 1 ? pagination.current_page - 1 : pagination.current_page;
@@ -177,7 +195,7 @@ const FormsList = ( {
         fetchForms( page, currentTab, searchTerm, perPage );
 
         return true;
-    }, [ acting, forms, pagination, currentTab, searchTerm, perPage, fetchForms ] ); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [ acting, forms, pagination, currentTab, searchTerm, perPage, fetchForms, routeBase, buildAdminUrl ] ); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Row action handler
     const handleAction = useCallback( async ( action, form ) => {
