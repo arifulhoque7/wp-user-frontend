@@ -15,6 +15,8 @@ export const exportForms = ( type, ids ) => request( path( 'export', { type, ids
 
 export const getShortcodes = () => request( path( 'shortcodes' ) );
 
+export const getOnboarding = () => request( path( 'onboarding' ) );
+
 export const importFile = ( file ) => {
     const body = new window.FormData();
 

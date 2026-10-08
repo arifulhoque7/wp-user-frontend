@@ -168,8 +168,8 @@ class Tools extends Screen {
      */
     public function app_globals() {
         $admin      = wpuf()->admin;
-        $onboarding = is_object( $admin ) && $admin->onboarding ? $admin->onboarding->get_entry_point() : null;
-        $is_block   = function_exists( 'wp_is_block_theme' ) && wp_is_block_theme();
+        $onboarding = is_object( $admin ) && $admin->onboarding ? ( new ToolsService() )->onboarding_entry() : null;
+        $is_block = function_exists( 'wp_is_block_theme' ) && wp_is_block_theme();
 
         return [
             'wpufTools' => [

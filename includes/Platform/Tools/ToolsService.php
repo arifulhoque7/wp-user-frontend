@@ -153,6 +153,24 @@ class ToolsService {
     }
 
     /**
+     * The Tools onboarding box: label, URL (decoded for navigation) and the
+     * re-run warning, as Admin\Onboarding::get_entry_point() gives them now.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return array url, label, warning
+     */
+    public function onboarding_entry() {
+        $admin  = function_exists( 'wpuf' ) ? wpuf()->admin : null;
+        $wizard = is_object( $admin ) && $admin->onboarding instanceof \WeDevs\Wpuf\Admin\Onboarding ? $admin->onboarding : new \WeDevs\Wpuf\Admin\Onboarding( false );
+        $entry  = $wizard->get_entry_point();
+
+        $entry['url'] = html_entity_decode( $entry['url'], ENT_QUOTES, 'UTF-8' );
+
+        return $entry;
+    }
+
+    /**
      * Published forms of a type, for the export picker.
      *
      * @since WPUF_SINCE

@@ -125,6 +125,7 @@ class ToolsController extends RestController {
         );
         $this->route( $base . '/import', WP_REST_Server::CREATABLE, 'import', $forms );
         $this->route( $base . '/shortcodes', WP_REST_Server::READABLE, 'get_shortcodes', $forms );
+        $this->route( $base . '/onboarding', WP_REST_Server::READABLE, 'get_onboarding', $site );
     }
 
     /**
@@ -317,6 +318,17 @@ class ToolsController extends RestController {
         }
 
         return rest_ensure_response( [ 'message' => __( 'Forms imported successfully.', 'wp-user-frontend' ) ] );
+    }
+
+    /**
+     * The onboarding box as it is now (the app's globals are from page load).
+     *
+     * @since WPUF_SINCE
+     *
+     * @return \WP_REST_Response
+     */
+    public function get_onboarding() {
+        return rest_ensure_response( $this->tools->onboarding_entry() );
     }
 
     /**

@@ -6,12 +6,12 @@
  *
  * @since WPUF_SINCE
  */
-import { useState } from '@wordpress/element';
+import { useEffect, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { Button, dialogs, notify } from '@wpuf/components';
 import { FilePlus2, Rocket, TriangleAlert } from 'lucide-react';
 
-import { runTool } from './api';
+import { getOnboarding, runTool } from './api';
 import LogoutMenuTool from './LogoutMenuTool';
 import ToolCard from './ToolCard';
 
@@ -82,7 +82,15 @@ function DangerRow( { title, text, children } ) {
  */
 export default function ToolsTab( { tools } ) {
     const [ busy, setBusy ] = useState( '' );
-    const entry = tools.onboarding;
+    // Page-load data first, then the current state: onboarding's Exit setup
+    // comes here without a reload, so the globals can be a run behind.
+    const [ entry, setEntry ] = useState( tools.onboarding );
+
+    useEffect( () => {
+        if ( tools.canManageSite ) {
+            getOnboarding().then( setEntry ).catch( () => {} );
+        }
+    }, [ tools.canManageSite ] );
 
     const run = async ( key, route, data, confirm ) => {
         if ( confirm && ! ( await dialogs.confirm( confirm ) ) ) {
