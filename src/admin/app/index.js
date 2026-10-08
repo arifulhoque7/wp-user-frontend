@@ -355,6 +355,9 @@ const render = async () => {
     }
 
     unmountCurrent();
+    // Nothing is mounted until this render finishes: a quick way back to the
+    // old route must render it again, not be taken for a query change.
+    current = null;
     queryListeners.clear();
     guards.clear();
 
@@ -486,6 +489,7 @@ function navigate( path, { replace = false, adopt = false } = {} ) {
             };
             syncChrome( found.route );
             syncPage( found.route );
+            doAction( 'wpuf.admin.routeChanged', { route: found.route, params: found.params, query: current.query } );
 
             return;
         }
@@ -526,8 +530,11 @@ function setQuery( query, { replace = true } = {} ) {
     if ( replace ) {
         window.history.replaceState( null, '', hash );
     } else {
-        skipNext = true;
-        window.location.hash = hash;
+        // No hashchange fires for the same hash: the flag would swallow the next real one.
+        if ( window.location.hash !== hash ) {
+            skipNext = true;
+            window.location.hash = hash;
+        }
     }
 }
 

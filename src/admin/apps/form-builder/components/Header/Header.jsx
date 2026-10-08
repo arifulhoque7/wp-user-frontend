@@ -39,7 +39,7 @@ export default function Header( { activeTab, onTabChange } ) {
         };
     }, [] );
 
-    const { updateField } = useDispatch( STORE_NAME );
+    const { updateField, markDirty } = useDispatch( STORE_NAME );
     const { isSaving, saveForm } = useFormSave();
     const isDirty = useSelect( ( select ) => select( STORE_NAME ).getIsDirty(), [] );
 
@@ -63,6 +63,9 @@ export default function Header( { activeTab, onTabChange } ) {
 
     const handleTitleChange = ( e ) => {
         setTitle( e.target.value );
+        // The title is saved from the form element, not the store: a rename
+        // alone must still enable Save and the leave prompt.
+        markDirty();
     };
 
     const handleTitleBlur = () => {

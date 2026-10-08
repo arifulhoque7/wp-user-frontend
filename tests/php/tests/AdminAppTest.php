@@ -114,11 +114,12 @@ class AdminAppTest extends WP_UnitTestCase {
     public function test_menu_rows_point_at_app_routes_only_when_in_app() {
         global $submenu;
 
-        $submenu['wp-user-frontend'] = [ [ 'Post Forms', 'manage_options', 'wpuf-post-forms' ], [ 'Tools', 'manage_options', 'wpuf_tools' ] ]; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+        $submenu['wp-user-frontend'] = [ [ 'Post Forms', 'manage_options', 'wpuf-post-forms' ], [ 'Modules', 'manage_options', 'wpuf-modules' ] ]; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
 
         $this->app()->point_menu_rows_at_app();
         $this->assertSame( 'admin.php?page=wp-user-frontend#/post-forms', $submenu['wp-user-frontend'][0][2] );
-        $this->assertSame( 'wpuf_tools', $submenu['wp-user-frontend'][1][2], 'rows without a route stay' );
+        // Tools is an app route since 5e; Modules (Pro) has none.
+        $this->assertSame( 'wpuf-modules', $submenu['wp-user-frontend'][1][2], 'rows without a route stay' );
 
         $submenu['wp-user-frontend'][0][2] = 'wpuf-post-forms'; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
 

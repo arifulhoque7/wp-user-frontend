@@ -359,6 +359,8 @@ class Admin_Tools {
         <?php } ?>
 
         <div class="metabox-holder">
+            <?php // The onboarding wizard is an admin app route: no box while the app is off. ?>
+            <?php if ( wpuf_admin_app_enabled() ) : ?>
             <div class="postbox">
                 <h3><?php esc_html_e( 'Onboarding', 'wp-user-frontend' ); ?></h3>
 
@@ -378,6 +380,7 @@ class Admin_Tools {
                     </a>
                 </div>
             </div>
+            <?php endif; ?>
 
             <div class="postbox">
                 <h3><?php esc_html_e( 'Page Installation', 'wp-user-frontend' ); ?></h3>

@@ -150,6 +150,34 @@ class SettingsStoreTest extends WP_UnitTestCase {
         return [ $legacy, $current, $legacy_options, $this->options(), $legacy_fired, $this->fired ];
     }
 
+    /**
+     * The legacy save response with secrets masked, as the REST save answers
+     * since the adversarial review (the read route already masked them).
+     *
+     * @param array $data Response data.
+     *
+     * @return array
+     */
+    private function masked( $data ) {
+        if ( empty( $data['data']['values'] ) || ! is_array( $data['data']['values'] ) ) {
+            return $data;
+        }
+
+        $store = Stores::settings();
+
+        foreach ( $data['data']['values'] as $section_id => $values ) {
+            $data['data']['values'][ $section_id ] = $store->mask_secrets( $values, $store->section_fields( $section_id ) );
+        }
+
+        foreach ( [ 'openai', 'anthropic', 'google' ] as $provider ) {
+            if ( isset( $data['data']['values']['wpuf_ai'][ $provider . '_api_key' ] ) ) {
+                $data['data']['values']['wpuf_ai'][ $provider . '_api_key' ] = wpuf_settings_mask_secret( $data['data']['values']['wpuf_ai'][ $provider . '_api_key' ], 4 );
+            }
+        }
+
+        return $data;
+    }
+
     public function test_store_is_shared_from_the_container() {
         $this->assertInstanceOf( SettingsStore::class, Stores::settings() );
         $this->assertSame( Stores::settings(), wpuf()->platform()->get( SettingsStore::class ) );
@@ -164,7 +192,7 @@ class SettingsStoreTest extends WP_UnitTestCase {
         $this->assertNotEmpty( array_filter( $current_options, 'is_array' ), 'options were written' );
 
         $this->assertSame( $legacy->get_status(), $current->get_status() );
-        $this->assertSame( $legacy->get_data(), $current->get_data() );
+        $this->assertSame( $this->masked( $legacy->get_data() ), $current->get_data(), 'same response, secrets masked' );
         $this->assertSame( $legacy_options, $current_options, 'every section option identical' );
         $this->assertSame( $legacy_fired, $current_fired, 'wpuf_settings_saved fired once with the same saved, incoming and extra' );
         $this->assertCount( 1, $current_fired );
@@ -274,7 +302,8 @@ class SettingsStoreTest extends WP_UnitTestCase {
 
         list( $legacy, $current, $legacy_options, $current_options ) = $this->both( $payload );
 
-        $this->assertSame( $legacy->get_data(), $current->get_data() );
+        $this->assertSame( $this->masked( $legacy->get_data() ), $current->get_data() );
+        $this->assertStringNotContainsString( 'stored-secret-value', wp_json_encode( $current->get_data() ), 'the save response never carries a stored secret' );
         $this->assertSame( $legacy_options, $current_options );
 
         list( $legacy, $current ) = $this->both( 'not an array' );

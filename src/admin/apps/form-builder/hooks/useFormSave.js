@@ -1,5 +1,5 @@
 import { useState, useCallback } from '@wordpress/element';
-import { useSelect, useDispatch } from '@wordpress/data';
+import { select as selectStore, useSelect, useDispatch } from '@wordpress/data';
 import { __ } from '@wordpress/i18n';
 import { STORE_NAME } from '../store';
 import { fireBeforeSave, fireAfterSave } from '../extensions/hooks';
@@ -185,6 +185,20 @@ export default function useFormSave() {
 
         const formId = parseInt( new FormData( formElement ).get( 'wpuf_form_id' ), 10 ) || 0;
 
+        // What this save sends: edits made while it runs (the canvas and the
+        // settings stay editable) must not be replaced by the response or
+        // marked clean.
+        const titleOf = () => ( formElement.querySelector( '[name="post_title"]' ) || {} ).value;
+        const sent = { formFields, settings, notifications, title: titleOf() };
+        const unchanged = () => {
+            const store = selectStore( STORE_NAME );
+
+            return store.getFormFields() === sent.formFields
+                && store.getSettings() === sent.settings
+                && store.getNotifications() === sent.notifications
+                && titleOf() === sent.title;
+        };
+
         request( restPath( 'wpuf/v1', `/admin/forms/${ formId }` ), {
             method: 'POST',
             data: {
@@ -199,12 +213,13 @@ export default function useFormSave() {
         } )
             .then( ( body ) => {
                 const response = body && body.data ? body.data : {};
+                const keep = unchanged();
 
-                if ( response.form_fields ) {
+                if ( keep && response.form_fields ) {
                     setFormFields( response.form_fields );
                 }
 
-                if ( response.form_settings ) {
+                if ( keep && response.form_settings ) {
                     setFormSettings( response.form_settings );
                 }
 
@@ -213,7 +228,9 @@ export default function useFormSave() {
 
                 setPendingClean( new Promise( ( resolve ) => {
                     setTimeout( () => {
-                        markClean();
+                        if ( keep && unchanged() ) {
+                            markClean();
+                        }
                         resolve();
                     }, 500 );
                 } ) );

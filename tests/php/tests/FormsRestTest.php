@@ -191,6 +191,27 @@ class FormsRestTest extends WP_UnitTestCase {
         $this->assertSame( 'above', get_post_meta( $created->get_data()['data']['id'], 'wpuf_form_settings', true )['label_position'] );
     }
 
+    public function test_save_never_updates_a_post_that_is_not_a_field_of_the_form() {
+        wp_set_current_user( self::factory()->user->create( [ 'role' => 'administrator' ] ) );
+
+        $page_id = self::factory()->post->create( [ 'post_type' => 'page', 'post_status' => 'private', 'post_title' => 'Private page', 'post_content' => 'secret' ] );
+        $form_id = $this->make_form();
+        $body    = $this->payload( $form_id );
+        $fields  = json_decode( $body['form_fields'], true );
+
+        // A field carrying another post's id (no is_new) is inserted as a new field.
+        $fields[0]['id']     = $page_id;
+        $body['form_fields'] = wp_json_encode( $fields );
+
+        $this->assertSame( 200, $this->post( $form_id, $body )->get_status() );
+
+        $page = get_post( $page_id );
+        $this->assertSame( 'page', $page->post_type );
+        $this->assertSame( 'secret', $page->post_content );
+        $this->assertSame( 0, (int) $page->post_parent );
+        $this->assertCount( 1, wpuf_get_form_fields( $form_id ) );
+    }
+
     public function test_create_from_template_matches_the_template_link() {
         wp_set_current_user( self::factory()->user->create( [ 'role' => 'administrator' ] ) );
 

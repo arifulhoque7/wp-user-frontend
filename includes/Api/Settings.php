@@ -224,6 +224,9 @@ class Settings extends RestController {
         // section options and fires wpuf_settings_saved (task 2.4c).
         $saved = Stores::settings()->save( $incoming, $request->get_param( 'extra' ) );
 
+        // Secrets go back masked, as the read route sends them.
+        $saved = $this->mask_saved_values( $saved );
+
         return new WP_REST_Response(
             [
                 'success' => true,
@@ -231,6 +234,41 @@ class Settings extends RestController {
                 'data'    => [ 'values' => $saved ],
             ]
         );
+    }
+
+    /**
+     * Mask the secrets in the saved section values (password preview fields and
+     * the AI provider keys), as `get_items()` does: the real values never leave
+     * the server.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param array $saved Saved values by section.
+     *
+     * @return array
+     */
+    private function mask_saved_values( $saved ) {
+        if ( ! is_array( $saved ) ) {
+            return $saved;
+        }
+
+        $store = Stores::settings();
+
+        foreach ( $saved as $section_id => $values ) {
+            $saved[ $section_id ] = $store->mask_secrets( $values, $store->section_fields( $section_id ) );
+        }
+
+        if ( isset( $saved['wpuf_ai'] ) && is_array( $saved['wpuf_ai'] ) && function_exists( 'wpuf_settings_mask_secret' ) ) {
+            foreach ( [ 'openai', 'anthropic', 'google' ] as $provider ) {
+                $key = $provider . '_api_key';
+
+                if ( isset( $saved['wpuf_ai'][ $key ] ) ) {
+                    $saved['wpuf_ai'][ $key ] = wpuf_settings_mask_secret( $saved['wpuf_ai'][ $key ], 4 );
+                }
+            }
+        }
+
+        return $saved;
     }
 
     /**

@@ -186,6 +186,11 @@ class Form_Template {
 
         $form_fields = $template_object->get_form_fields();
 
+        // A template without fields creates nothing (no orphan form).
+        if ( ! $form_fields ) {
+            return false;
+        }
+
         // The form store writes the post, then settings and version, then the
         // fields as the template gives them (no unslash), as before (task 2.4a).
         $form_id = Stores::forms()->create(
@@ -206,7 +211,7 @@ class Form_Template {
             return $form_id;
         }
 
-        return $form_fields ? (int) $form_id : false;
+        return (int) $form_id;
     }
 
     /**

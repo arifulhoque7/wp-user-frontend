@@ -312,7 +312,10 @@ export function updateItem() {
         try {
             const response = await updateSubscription(updatedItem);
 
-            dispatch.setIsDirty(false);
+            // The route answers 200 with success: false on a refused save: keep the edits dirty.
+            if ( ! response || false !== response.success ) {
+                dispatch.setIsDirty(false);
+            }
             doAction( 'wpuf.subscription.itemSaved', response, updatedItem );
             return response;
         } catch (error) {

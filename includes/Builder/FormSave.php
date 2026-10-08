@@ -121,19 +121,18 @@ class FormSave {
         // user status, the post expiration values the screen shows, and the
         // multi-step bar type (its select's first option).
         if ( class_exists( 'WP_User_Frontend_Pro' ) ) {
-            if ( 'wpuf_profile' === get_post_type( $form_id ) ) {
+            if ( $touched && 'wpuf_profile' === get_post_type( $form_id ) ) {
                 $settings = Normalizers::registration_user_status( $settings );
-
-                if ( $touched ) {
-                    $settings = Normalizers::registration_form_selects( $settings );
-                }
+                $settings = Normalizers::registration_form_selects( $settings );
             }
 
             if ( $touched && 'wpuf_forms' === get_post_type( $form_id ) ) {
                 $settings = Normalizers::post_expiration( $settings );
             }
 
-            $settings = Normalizers::multistep_progressbar_type( $settings );
+            if ( $touched ) {
+                $settings = Normalizers::multistep_progressbar_type( $settings );
+            }
         }
 
         // Server-side validation for fallback PPP cost

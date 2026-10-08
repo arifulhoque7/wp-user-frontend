@@ -289,7 +289,14 @@ class FormsController extends RestController {
             // The admin container only exists on wp-admin requests, not on REST ones.
             $templates = wpuf()->admin ? wpuf()->admin->form_template : null;
             $templates = $templates ? $templates : new \WeDevs\Wpuf\Admin\Forms\Post\Templates\Form_Template();
-            $form_id   = false === $templates->get_template_object( $template ) ? null : $templates->create_from_template( $template );
+            $object    = $templates->get_template_object( $template );
+
+            // A card the picker shows as not installed (its integration is off) is refused too.
+            if ( $object && method_exists( $object, 'is_enabled' ) && ! $object->is_enabled() ) {
+                return $this->error( 'invalid_template', __( 'This template is not available.', 'wp-user-frontend' ), 400 );
+            }
+
+            $form_id   = false === $object ? null : $templates->create_from_template( $template );
         }
 
         /**
@@ -311,7 +318,7 @@ class FormsController extends RestController {
             return $this->error( 'invalid_template', __( 'This template is not available.', 'wp-user-frontend' ), 400 );
         }
 
-        if ( ! $form_id ) {
+        if ( ! $form_id || get_post_type( (int) $form_id ) !== $type ) {
             return $this->error( 'not_created', __( 'The form could not be created.', 'wp-user-frontend' ), 500 );
         }
 
@@ -335,6 +342,10 @@ class FormsController extends RestController {
 
         if ( 'wpuf_profile' === $type ) {
             $settings = Normalizers::registration_form_selects( $settings );
+
+            if ( class_exists( 'WP_User_Frontend_Pro' ) ) {
+                $settings = Normalizers::registration_user_status( $settings );
+            }
         } else {
             $settings = Normalizers::post_form_selects( $settings );
 

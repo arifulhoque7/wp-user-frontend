@@ -73,5 +73,16 @@ class Admin_Welcome {
      *
      * @return void
      */
-    public function welcome_page() {}
+    public function welcome_page() {
+        // Only reached with the admin app off (it opens #/welcome otherwise):
+        // the welcome screen is an app route, so point to the forms list.
+        if ( ! wpuf_admin_app_enabled() ) {
+            printf(
+                '<div class="wrap"><h1>%1$s</h1><p><a class="button button-primary" href="%2$s">%3$s</a></p></div>',
+                esc_html__( 'Welcome to WP User Frontend', 'wp-user-frontend' ),
+                esc_url( admin_url( 'admin.php?page=wpuf-post-forms' ) ),
+                esc_html__( 'Create Your First Form', 'wp-user-frontend' )
+            );
+        }
+    }
 }

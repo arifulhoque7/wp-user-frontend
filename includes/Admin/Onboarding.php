@@ -224,6 +224,12 @@ class Onboarding {
             return;
         }
 
+        // An AJAX request (heartbeat) or a user who cannot manage the site inside
+        // the transient's window must not use up the one-time redirect.
+        if ( ! current_user_can( 'manage_options' ) || wp_doing_ajax() ) {
+            return;
+        }
+
         delete_transient( 'wpuf_onboarding_redirect' );
 
         // The legacy wizard reads its own transient later in this same request.
@@ -238,7 +244,9 @@ class Onboarding {
             return;
         }
 
-        if ( ! current_user_can( 'manage_options' ) || wp_doing_ajax() ) {
+        // The wizard is an admin app route: with the app off (WPUF_ADMIN_APP)
+        // there is nothing to open, so the activation stays on Plugins.
+        if ( ! wpuf_admin_app_enabled() ) {
             return;
         }
 
@@ -274,6 +282,12 @@ class Onboarding {
             add_action(
                 'load-' . $hook,
                 function () {
+                    // No admin app, no wizard: the classic forms list instead of a blank page.
+                    if ( ! wpuf_admin_app_enabled() ) {
+                        wp_safe_redirect( admin_url( 'admin.php?page=wpuf-post-forms' ) );
+                        exit;
+                    }
+
                     wpuf()->platform()->get( Screens\Registry::class )->load( self::PAGE_SLUG );
                 }
             );

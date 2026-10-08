@@ -108,7 +108,16 @@ class FieldStore {
                 unset( $field['is_new'], $field['id'] );
                 $field_id = $this->write( $form_id, $field, 0, $order );
             } else {
-                $field_id = $this->write( $form_id, $field, $stored_id, $order );
+                // Only a field post of this form can be updated by id: any other
+                // post id (a page, an order, another form's field) is never
+                // touched, the field is inserted as a new one instead.
+                $owned = $stored_id && 'wpuf_input' === get_post_type( $stored_id ) && (int) wp_get_post_parent_id( $stored_id ) === (int) $form_id;
+
+                if ( ! $owned ) {
+                    unset( $field['id'] );
+                }
+
+                $field_id = $this->write( $form_id, $field, $owned ? $stored_id : 0, $order );
             }
 
             $kept_ids[] = $field_id;

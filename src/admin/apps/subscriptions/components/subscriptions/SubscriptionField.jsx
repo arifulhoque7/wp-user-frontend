@@ -126,17 +126,28 @@ const SubscriptionField = ( { field, fieldId, subscription, onFieldChange } ) =>
 	const value = getFieldValue();
 
 	// Handle field value change
-	// Stepper buttons beside a number field: one `step` up or down, not below `min`.
+	// Stepper buttons beside a number field: one `step` up or down, within the
+	// field's min / max (`min` or `validation.min`). Without a declared minimum
+	// the floor is 0, or -1 for counts where -1 means unlimited (their help says
+	// so, or the value is -1 already).
 	const stepNumber = ( delta ) => {
 		const step = parseFloat( field.step ) || 1;
-		const decimals = ( String( field.step || '' ).split( '.' )[ 1 ] || '' ).length;
-		let next = ( parseFloat( value ) || 0 ) + ( delta * step );
+		const declared = ( key ) => {
+			const raw = undefined !== field[ key ] && '' !== field[ key ] ? field[ key ] : field.validation && field.validation[ key ];
 
-		if ( undefined !== field.min && '' !== field.min && next < parseFloat( field.min ) ) {
-			next = parseFloat( field.min );
-		}
+			return undefined === raw || '' === raw || isNaN( parseFloat( raw ) ) ? null : parseFloat( raw );
+		};
+		const help = `${ field.tooltip || '' } ${ field.help_text || '' } ${ field.placeholder || '' }`;
+		const current = parseFloat( value ) || 0;
+		const floor = null !== declared( 'min' ) ? declared( 'min' ) : ( /-1/.test( help ) || -1 === current ? -1 : 0 );
+		const ceiling = declared( 'max' );
+		const places = ( n ) => ( String( n ).split( '.' )[ 1 ] || '' ).length;
+		const decimals = Math.max( places( field.step || '' ), places( value || '' ) );
+		let next = current + ( delta * step );
 
-		handleChange( decimals ? next.toFixed( decimals ) : String( next ) );
+		next = Math.max( floor, null !== ceiling ? Math.min( ceiling, next ) : next );
+
+		handleChange( decimals ? next.toFixed( decimals ) : String( Math.round( next ) ) );
 	};
 
 	const handleChange = ( newValue ) => {
