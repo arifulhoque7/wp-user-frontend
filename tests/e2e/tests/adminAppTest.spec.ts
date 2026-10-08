@@ -38,6 +38,7 @@ const APP = `${Urls.baseUrl}/wp-admin/admin.php?page=wp-user-frontend`;
  * @Test_APP0016 : Pro without a valid license: Registration Forms stays Pro's preview page (no app route, no way round it); the free routes still run in the app
  * @Test_APP0017 : License (Pro) is the app route #/license: old URL lands there, the key is masked (never in the page), a site without an active key gets the key form
  * @Test_APP0018 : Without Pro, Registration Forms is the app route #/registration-forms on the new components (free shortcode with Copy, Pro features, modules icons)
+ * @Test_APP0019 : Help, Tools, Transactions and Coupons: old URLs land on their app routes with the menu row lit, and those routes show admin notices as develop's pages did
  */
 
 test.beforeAll(async () => {
@@ -619,5 +620,26 @@ test.describe('Admin app', () => {
         await expect(page.locator('#toplevel_page_wp-user-frontend li.current a')).toHaveText('Registration Forms');
         await expect(page.locator('.wpuf-registration-pro img[src*="/images/modules/"]')).toHaveCount(6);
         await expect(page.locator('.wpuf-registration-pro').getByRole('button', { name: 'Upgrade to PRO' })).toBeVisible();
+    });
+
+    test('APP0019 : Help, Tools, Transactions and Coupons old URLs land in the app with notices on', { tag: ['@Lite', '@Test_APP0019'] }, async () => {
+        test.skip(!(await appOn()), 'admin app is off');
+
+        const pages = [
+            { old: 'admin.php?page=wpuf-support', route: '/help', id: 'help', menu: 'Help' },
+            { old: 'admin.php?page=wpuf_tools&tab=export', route: '/tools?tab=export', id: 'tools', menu: 'Tools' },
+            { old: 'admin.php?page=wpuf_transaction', route: '/transactions', id: 'transactions', menu: 'Transactions' },
+            { old: 'edit.php?post_type=wpuf_coupon', route: '/coupons', id: 'coupons', menu: 'Coupons' },
+        ];
+
+        for ( const item of pages ) {
+            await page.goto(`${Urls.baseUrl}/wp-admin/${item.old}`);
+            await expect(page).toHaveURL(new RegExp('page=wp-user-frontend#' + item.route.replace(/[?]/g, '\\?') + '$'));
+            await expect(page.locator('#toplevel_page_wp-user-frontend li.current a')).toHaveText(item.menu);
+
+            // develop printed admin notices on these pages; the route keeps them.
+            const notices = await page.evaluate((id) => ((window as unknown as { wpufAdmin: { app: { routes: { id: string; notices?: boolean }[] } } }).wpufAdmin.app.routes.find((r) => id === r.id) || {}).notices, item.id);
+            expect(notices, item.id + ' shows admin notices').toBe(true);
+        }
     });
 });
