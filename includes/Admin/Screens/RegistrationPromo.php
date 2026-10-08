@@ -60,6 +60,8 @@ class RegistrationPromo extends Screen {
                 'menuLink'       => true,
                 'container'      => 'wpuf-registration-promo',
                 'containerClass' => 'px-[20px]',
+                // Develop's page showed the admin notices (as Pro's list route does).
+                'notices'        => true,
                 'page'           => 'admin.php?page=wpuf-profile-forms',
             ],
         ];
