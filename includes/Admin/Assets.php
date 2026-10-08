@@ -84,6 +84,7 @@ class Assets implements Hookable {
         $help_asset            = $this->react_asset( 'help', [ 'wp-element', 'wp-i18n', 'wpuf-admin-runtime', 'wpuf-admin-ui' ] );
         $tools_asset           = $this->react_asset( 'tools', [ 'wp-element', 'wp-i18n', 'wpuf-admin-runtime', 'wpuf-admin-ui' ] );
         $transactions_asset    = $this->react_asset( 'transactions', [ 'wp-element', 'wp-i18n', 'wpuf-admin-runtime', 'wpuf-admin-ui' ] );
+        $coupons_promo_asset   = $this->react_asset( 'coupons-promo', [ 'wp-element', 'wp-i18n', 'wpuf-admin-runtime', 'wpuf-admin-ui' ] );
         // The shared React admin layer (design.md D24): screens and Pro get
         // these as dependencies through the `@wpuf/*` / plugin-ui externals.
         $admin_runtime_asset = $this->react_asset( 'admin-runtime', [ 'wp-api-fetch', 'wp-element', 'wp-hooks', 'wp-url' ] );
@@ -174,6 +175,13 @@ class Assets implements Hookable {
                 'src'       => WPUF_ASSET_URI . '/js/react/transactions.js',
                 'deps'      => $transactions_asset['dependencies'],
                 'version'   => $transactions_asset['version'],
+                'in_footer' => true,
+            ],
+            // Coupons without Pro (Admin\Screens\CouponsPromo).
+            'coupons-promo'             => [
+                'src'       => WPUF_ASSET_URI . '/js/react/coupons-promo.js',
+                'deps'      => $coupons_promo_asset['dependencies'],
+                'version'   => $coupons_promo_asset['version'],
                 'in_footer' => true,
             ],
             // AI form builder, under the Vue app's handle (Admin\Screens\AiFormBuilder).

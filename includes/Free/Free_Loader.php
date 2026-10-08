@@ -231,8 +231,8 @@ class Free_Loader extends Pro_Prompt {
 
     public function admin_menu() {
         if ( 'on' === wpuf_get_option( 'enable_payment', 'wpuf_payment', 'on' ) ) {
-            $capability = wpuf_admin_role();
-            add_submenu_page(
+            $capability  = wpuf_admin_role();
+            $coupon_hook = add_submenu_page(
                 wpuf()->admin->menu->parent_slug,
                 __( 'Coupons', 'wp-user-frontend' ),
                 __( 'Coupons', 'wp-user-frontend' ),
@@ -241,6 +241,19 @@ class Free_Loader extends Pro_Prompt {
                 [ $this, 'admin_coupon_page' ],
                 4
             );
+
+            // Coupons without Pro: a route of the React admin app.
+            if ( wpuf()->platform()->has( \WeDevs\Wpuf\Admin\Screens\Registry::class ) ) {
+                $registry = wpuf()->platform()->get( \WeDevs\Wpuf\Admin\Screens\Registry::class );
+
+                $registry->add( new \WeDevs\Wpuf\Admin\Screens\CouponsPromo() );
+                add_action(
+                    "load-$coupon_hook",
+                    function () use ( $registry ) {
+                        $registry->load( 'wpuf_coupon' );
+                    }
+                );
+            }
         }
     }
 
