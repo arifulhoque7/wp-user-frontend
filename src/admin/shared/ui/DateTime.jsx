@@ -14,6 +14,7 @@ import { Calendar, Input, Popover, PopoverContent, PopoverTrigger, cn } from '@w
 import { useState } from '@wordpress/element';
 import { dateI18n, getSettings } from '@wordpress/date';
 import { __ } from '@wordpress/i18n';
+import { ChevronDown } from 'lucide-react';
 
 import { dateToYmd, ymdToDate } from './values';
 
@@ -46,7 +47,8 @@ export default function DateTime( { value, onChange, placeholder, disabled, cale
                 className={ cn( 'inline-flex w-full min-w-[200px] items-center justify-between h-[38px] px-3 text-sm bg-white border border-gray-300 rounded-md cursor-pointer outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-60', ymd ? 'text-gray-900' : 'text-gray-400', className ) }
             >
                 <span className="truncate">{ label }</span>
-                <span aria-hidden="true" className="ms-2 text-gray-400">▾</span>
+                { /* Same chevron as the Select trigger (plugin-ui: lucide, 16px, gray-500). */ }
+                <ChevronDown aria-hidden="true" className="ms-2 size-4 shrink-0 text-gray-500 pointer-events-none" />
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
