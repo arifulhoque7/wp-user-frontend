@@ -246,8 +246,10 @@ body.wpuf-builder-screen form#wpuf-form-builder {
 
 /* Attribute selectors: build.mjs rewrites `.pui-root` selectors (host roots excluded). */
 body.wpuf-admin-react #wpbody-content,
+body.wpuf-admin-app #wpbody-content,
 body.wpuf-admin-react [class~="pui-root"],
-body.wpuf-admin-react [class~="wpuf-onboarding"] {
+body.wpuf-admin-react [class~="wpuf-onboarding"],
+body.wpuf-admin-react #wpbody-content .wpuf-help {
     /* Literal, like FlyHR: ahead of any --font-sans printed inline. */
     font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
