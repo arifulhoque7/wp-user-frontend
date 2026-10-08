@@ -14,7 +14,7 @@ const ContentHeader = ( { currentSubscriptionStatus = 'all', allCount = {}, onAd
 	);
 
 	return (
-		<div className="flex items-center justify-between mt-6 leading-none px-[20px]">
+		<div className="flex items-center justify-between mt-6 leading-none">
 			<h3 className="text-2xl font-bold leading-8 text-gray-900 my-0">
 				{ __( 'Subscriptions', 'wp-user-frontend' ) }
 			</h3>

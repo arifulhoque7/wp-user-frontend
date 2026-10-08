@@ -240,7 +240,7 @@ const SettingsApp = () => {
             />
 
             { isLoading ? (
-                <div className="px-3 pt-8 pb-6">
+                <div className="pt-6 pb-6">
                     <div className="flex animate-pulse gap-8 rounded-lg border border-gray-200 bg-white p-8 shadow-xs">
                         {/* Left nav skeleton */}
                         <div className="w-[280px] shrink-0 [&>:not([hidden])~:not([hidden])]:mt-3 [&>:not([hidden])~:not([hidden])]:mb-0">
@@ -265,7 +265,7 @@ const SettingsApp = () => {
                     </div>
                 </div>
             ) : (
-            <div className="px-3 pt-8 pb-6">
+            <div className="pt-6 pb-6">
             { /* Settings of other plugins the React screen cannot show (D12). */ }
             { classicOnly.length > 0 && (
                 <div role="status" data-settings-notice="classic-only" className="mb-6 flex items-start gap-3 rounded-md border-l-4 border-amber-400 bg-amber-50 px-4 py-3 text-sm text-amber-800">
