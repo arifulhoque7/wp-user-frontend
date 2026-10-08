@@ -9,6 +9,7 @@
  */
 import { __, sprintf } from '@wordpress/i18n';
 import { ConfirmDialog, dialogs } from '@wpuf/components';
+import { inApp } from '../../../app/client';
 
 const builderData = () => window.wpuf_form_builder || {};
 
@@ -54,7 +55,9 @@ export function showOops( message ) {
  */
 export function openCustomFieldTooltip( fieldId ) {
     const data = builderData();
-    const settingsUrl = ( window.ajaxurl || '' ).replace( 'admin-ajax.php', '' ) + 'admin.php?page=wpuf-settings#wpuf_frontend_posting';
+    const adminUrl = ( window.ajaxurl || '' ).replace( 'admin-ajax.php', '' );
+    // In the admin app: the Settings route on the Frontend Posting section (no redirect hop).
+    const settingsUrl = adminUrl + ( inApp() ? 'admin.php?page=wp-user-frontend#/settings?tab=wpuf_frontend_posting' : 'admin.php?page=wpuf-settings#wpuf_frontend_posting' );
 
     return dialogs.open( ( { close } ) => (
         <ConfirmDialog

@@ -34,7 +34,7 @@ function Welcome() {
         <PageShell>
             <PageHeader utm="wpuf-welcome" />
             <div className="wpuf-welcome mt-6 grid gap-6 pb-10">
-                <section className="wpuf-welcome-hero relative overflow-hidden rounded-lg border border-solid border-gray-200 bg-white">
+                <section className="wpuf-welcome-hero relative overflow-hidden rounded-[10px] border border-solid border-gray-200 bg-white">
                     <span aria-hidden="true" className="wpuf-welcome-glow pointer-events-none absolute -start-24 -top-24 size-80 rounded-full bg-emerald-300/25 blur-3xl" />
                     <span aria-hidden="true" className="wpuf-welcome-glow wpuf-welcome-glow-late pointer-events-none absolute -bottom-32 -end-16 size-96 rounded-full bg-emerald-400/15 blur-3xl" />
                     <div className="relative grid items-center gap-8 p-8 lg:grid-cols-2 lg:p-10">
@@ -81,7 +81,7 @@ function Welcome() {
 
                 <div className="grid gap-6 xl:grid-cols-3">
                     { sections.map( ( section, at ) => (
-                        <Reveal key={ section.title } arrival="panel" delay={ after + 320 + at * 90 } as="section" className="wpuf-welcome-section rounded-lg border border-solid border-gray-200 bg-white">
+                        <Reveal key={ section.title } arrival="panel" delay={ after + 320 + at * 90 } as="section" className="wpuf-welcome-section rounded-[10px] border border-solid border-gray-200 bg-white">
                             <h3 className="m-0 border-0 border-b border-solid border-gray-200 px-6 py-4 text-base font-semibold text-gray-900">{ section.title }</h3>
                             <ul className="m-0 list-none p-0">
                                 { ( section.items || [] ).map( ( item ) => (
@@ -101,7 +101,7 @@ function Welcome() {
                 </div>
 
                 { ! page.isPro && ( page.proFeatures || [] ).length > 0 && (
-                    <Reveal arrival="panel" delay={ after + 620 } as="section" className="wpuf-welcome-pro overflow-hidden rounded-lg border border-solid border-gray-200 bg-white">
+                    <Reveal arrival="panel" delay={ after + 620 } as="section" className="wpuf-welcome-pro overflow-hidden rounded-[10px] border border-solid border-gray-200 bg-white">
                         <div className="grid gap-6 p-8 lg:grid-cols-[1fr_auto] lg:items-center">
                             <div>
                                 <h2 className="m-0 text-lg font-semibold text-gray-900">{ __( 'Upgrade to PRO', 'wp-user-frontend' ) }</h2>

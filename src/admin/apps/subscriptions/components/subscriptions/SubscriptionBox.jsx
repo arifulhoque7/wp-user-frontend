@@ -192,10 +192,10 @@ const SubscriptionBox = ({ subscription, onEdit, onChanged }) => {
 
 	return (
 		<>
-			<div className="text-sm justify-between bg-white border border-gray-200 rounded-lg relative">
+			<div className="text-sm justify-between bg-white border border-gray-200 rounded-[10px] shadow-sm relative">
 				<div
 					onClick={subscription.post_status !== 'trash' ? handleEdit : undefined}
-					className={`flex justify-between border-b border-gray-200 bg-white px-5 py-4 rounded-t-lg ${subscription.post_status !== 'trash' ? 'cursor-pointer' : ''}`}
+					className={`flex justify-between border-b border-gray-200 bg-white px-5 py-4 rounded-t-[10px] ${subscription.post_status !== 'trash' ? 'cursor-pointer' : ''}`}
 				>
 					<div>
 						<div className="flex items-center text-gray-900 m-0 font-semibold" title={`id: ${subscription.ID}`}>

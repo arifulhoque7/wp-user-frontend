@@ -147,7 +147,7 @@ class Welcome extends Screen {
                     'thumb' => $image( 'welcome/welcome-video.png' ),
                 ],
                 'urls'       => [
-                    'postForms'  => admin_url( 'admin.php?page=wpuf-post-forms' ),
+                    'postForms'  => wpuf_admin_app_enabled() ? wpuf_admin_app_url( '/post-forms' ) : admin_url( 'admin.php?page=wpuf-post-forms' ),
                     'onboarding' => admin_url( 'index.php?page=wpuf-onboarding' ),
                     'guide'      => $doc( 'getting-started/' ),
                     'features'   => 'https://wedevs.com/wp-user-frontend-pro/features/?utm_source=wpuf-welcome&utm_medium=welcome-page',
