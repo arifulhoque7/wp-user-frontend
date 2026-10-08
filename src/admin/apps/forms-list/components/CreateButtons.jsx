@@ -4,6 +4,7 @@
  * @since WPUF_SINCE
  */
 import { __ } from '@wordpress/i18n';
+import { Plus } from 'lucide-react';
 import { Button } from '@wpuf/components';
 
 const AiIcon = () => (
@@ -23,6 +24,7 @@ const CreateButtons = ( { onAddNew, onAIFormBuilder } ) => (
     <div className="flex gap-3 justify-center">
         { onAIFormBuilder && (
             <Button
+                size="lg"
                 onClick={ onAIFormBuilder }
                 className="gap-0 bg-gradient-to-r from-purple-600 to-blue-600 enabled:hover:from-purple-700 enabled:hover:to-blue-700"
             >
@@ -31,8 +33,8 @@ const CreateButtons = ( { onAddNew, onAIFormBuilder } ) => (
             </Button>
         ) }
         { /* `new-wpuf-form`: legacy scripts open the templates modal from it. */ }
-        <Button onClick={ onAddNew } className="new-wpuf-form gap-1">
-            <span className="dashicons dashicons-plus-alt2" aria-hidden="true"></span>
+        <Button size="lg" onClick={ onAddNew } className="new-wpuf-form">
+            <Plus size={ 16 } strokeWidth={ 2 } aria-hidden="true" />
             { __( 'Add New', 'wp-user-frontend' ) }
         </Button>
     </div>

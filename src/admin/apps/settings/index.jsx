@@ -9,6 +9,7 @@ import { createRoot } from '@wordpress/element';
 import { useSelect, useDispatch } from '@wordpress/data';
 import { useEffect, useState, useCallback, useRef, createInterpolateElement } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
+import { Save } from 'lucide-react';
 
 import { Button, PageFooter, PageHeader, PageShell, Tabs, WpufProviders } from '@wpuf/components';
 import SettingsNav from './components/settings/SettingsNav';
@@ -243,9 +244,9 @@ const SettingsApp = () => {
                     <div className="flex animate-pulse gap-8 rounded-lg border border-gray-200 bg-white p-8 shadow-xs">
                         {/* Left nav skeleton */}
                         <div className="w-[280px] shrink-0 [&>:not([hidden])~:not([hidden])]:mt-3 [&>:not([hidden])~:not([hidden])]:mb-0">
-                            <div className="h-[42px] rounded-md bg-gray-100" />
+                            <div className="h-9 rounded-md bg-gray-100" />
                             { Array.from( { length: 8 } ).map( ( _, i ) => (
-                                <div key={ i } className="h-10 rounded-md bg-gray-100" />
+                                <div key={ i } className="h-9 rounded-md bg-gray-100" />
                             ) ) }
                         </div>
                         {/* Content skeleton */}
@@ -256,7 +257,7 @@ const SettingsApp = () => {
                                 { Array.from( { length: 5 } ).map( ( _, i ) => (
                                     <div key={ i }>
                                         <div className="mb-2 h-4 w-32 rounded-sm bg-gray-100" />
-                                        <div className="h-[42px] w-full rounded-md bg-gray-100" />
+                                        <div className="h-9 w-full rounded-md bg-gray-100" />
                                     </div>
                                 ) ) }
                             </div>
@@ -308,7 +309,16 @@ const SettingsApp = () => {
                 />
             ) : null }
 
-            <div className="flex gap-8 rounded-lg border border-gray-200 bg-white p-8 shadow-xs">
+            { /* Title row over both columns (FlyHR settings). */ }
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
+                <h2 className="mt-0 mb-0 text-xl! font-semibold leading-7 text-gray-900">
+                    { searching
+                        ? __( 'Search results', 'wp-user-frontend' )
+                        : ( currentTab ? currentTab.title : '' ) }
+                </h2>
+            </div>
+
+            <div className="flex items-start gap-6">
                 <SettingsNav
                     ia={ ia }
                     activeTab={ activeTab }
@@ -317,15 +327,7 @@ const SettingsApp = () => {
                     onSearch={ setSearch }
                 />
 
-                <div className="min-w-0 flex-1 max-w-full border-l border-gray-200 pl-8">
-                    <h2 className="mt-0 mb-0 text-xl font-semibold leading-7 text-gray-900">
-                        { searching
-                            ? __( 'Search results', 'wp-user-frontend' )
-                            : ( currentTab ? currentTab.title : '' ) }
-                    </h2>
-
-                    {/* Figma: full-width divider under the tab title, 32px above + below. */}
-                    <div className="my-8 border-b border-gray-200" />
+                <div className="min-w-0 flex-1 max-w-full">
 
                     { ! searching && currentTab && currentTab.notice ? (
                         <div className="mb-8 flex items-start gap-2 rounded-md border-l-4 border-amber-400 bg-amber-50 px-4 py-3 text-sm text-amber-700">
@@ -387,17 +389,18 @@ const SettingsApp = () => {
                 ) : null }
                 <Button
                     variant="secondary"
-                    className="h-[42px] px-6 font-medium"
+                    size="lg"
                     disabled={ ! isDirty || isSaving }
                     onClick={ () => discard() }
                 >
                     { __( 'Cancel', 'wp-user-frontend' ) }
                 </Button>
                 <Button
-                    className="h-[42px] px-8 font-medium"
+                    size="lg"
                     disabled={ isSaving || ! isDirty }
                     onClick={ handleSave }
                 >
+                    <Save size={ 16 } strokeWidth={ 2 } aria-hidden="true" />
                     { isSaving ? __( 'Saving…', 'wp-user-frontend' ) : __( 'Save', 'wp-user-frontend' ) }
                 </Button>
             </div>

@@ -26,7 +26,7 @@ const AUTO_SPEED = 110;
 const AUTO_START_WAIT = 600;
 const AUTO_END_WAIT = 1400;
 
-const ACTION_CLASS = 'inline-flex h-[38px] items-center justify-center rounded-md border border-solid border-transparent bg-primary px-4 text-sm font-semibold text-white no-underline cursor-pointer hover:bg-[#10b981] hover:text-white focus:text-white focus:outline-hidden focus:shadow-none focus-visible:ring-2 focus-visible:ring-white';
+const ACTION_CLASS = 'inline-flex h-10 items-center justify-center rounded-md border border-solid border-transparent bg-primary px-5 text-sm font-medium shadow-sm text-white no-underline cursor-pointer hover:bg-[#10b981] hover:text-white focus:text-white focus:outline-hidden focus:shadow-none focus-visible:ring-2 focus-visible:ring-white';
 
 const PlusIcon = () => (
     <svg className="size-8 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" aria-hidden="true">
@@ -221,7 +221,7 @@ function TemplateCard( { item, onPreview, onKeyDown, previewed } ) {
             onBlur={ () => hasPreview && onPreview( null ) }
             onKeyDown={ hasPreview ? onKeyDown : undefined }
         >
-            <div className="relative aspect-[4/5] overflow-hidden border-0 border-b border-solid border-gray-200 bg-white">
+            <div className="relative aspect-[5/5] overflow-hidden border-0 border-b border-solid border-gray-200 bg-white">
                 { item.image && (
                     <img
                         src={ item.image }
@@ -244,19 +244,19 @@ function TemplateCard( { item, onPreview, onKeyDown, previewed } ) {
                     <span className="absolute start-2 top-2 z-20 rounded-full border border-solid border-gray-200 bg-white px-2 py-0.5 text-xs font-medium text-gray-600">{ __( 'Not installed', 'wp-user-frontend' ) }</span>
                 ) }
 
-                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-gray-900/50 p-4 text-center opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-white/80 p-4 text-center opacity-0 backdrop-blur-[1px] transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
                     { action }
                     { ! action && (
                         <>
-                            <span className="text-sm font-semibold text-white">{ __( 'This integration is not installed.', 'wp-user-frontend' ) }</span>
-                            { item.description && <span className="text-xs text-white">{ item.description }</span> }
+                            <span className="text-sm font-semibold text-gray-900">{ __( 'This integration is not installed.', 'wp-user-frontend' ) }</span>
+                            { item.description && <span className="text-xs text-gray-600">{ item.description }</span> }
                         </>
                     ) }
                 </div>
             </div>
 
-            <div className="flex min-h-[60px] items-center px-4 py-2.5">
-                <span className="text-sm font-medium leading-5 text-gray-800">{ item.title }</span>
+            <div className="flex min-h-12 items-center px-4 py-2.5">
+                <span className="text-sm font-semibold leading-5 text-gray-900">{ item.title }</span>
             </div>
 
             { hasPreview && (
@@ -435,9 +435,9 @@ export default function TemplatePicker( { open, onClose, data, onAI } ) {
             onKeyDown={ onKeyDown }
         >
             <div className="shrink-0 border-0 border-b border-solid border-gray-200 bg-white">
-                <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-6 px-8 py-5">
+                <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-6 px-8 py-4">
                     <div>
-                        <h2 id="wpuf-template-picker-title" className="m-0 p-0 text-2xl font-bold leading-8 text-gray-900">{ data.title }</h2>
+                        <h2 id="wpuf-template-picker-title" className="m-0 p-0 text-xl font-semibold leading-7 text-gray-900">{ data.title }</h2>
                         <p id="wpuf-template-picker-description" className="m-0 mt-1 p-0 text-sm text-gray-500">
                             { __( 'Select from a pre-defined template to get started quickly, or start from a blank form to build your own from scratch', 'wp-user-frontend' ) }
                         </p>
@@ -449,9 +449,9 @@ export default function TemplatePicker( { open, onClose, data, onAI } ) {
             </div>
 
             <div className="min-h-0 flex-1 overflow-y-auto" onScroll={ () => preview && setPreview( null ) }>
-                <div className="mx-auto flex max-w-[1400px] items-start gap-8 px-8 py-8">
-                    <div className="sticky top-8 w-64 shrink-0">
-                        <div className="relative mb-5">
+                <div className="mx-auto flex max-w-[1400px] items-start gap-6 px-8 py-6">
+                    <div className="sticky top-6 w-60 shrink-0 rounded-[10px] border border-solid border-gray-200 bg-white p-2 shadow-sm">
+                        <div className="relative mb-2">
                             <svg className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                 <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clipRule="evenodd" />
                             </svg>
@@ -467,7 +467,7 @@ export default function TemplatePicker( { open, onClose, data, onAI } ) {
                             />
                         </div>
 
-                        <ul className="m-0 flex list-none flex-col gap-1 p-0" aria-label={ __( 'Template categories', 'wp-user-frontend' ) }>
+                        <ul className="m-0 flex list-none flex-col gap-0.5 p-0" aria-label={ __( 'Template categories', 'wp-user-frontend' ) }>
                             { categories.map( ( item ) => {
                                 const active = ! term && category === item.slug;
 
@@ -496,7 +496,7 @@ export default function TemplatePicker( { open, onClose, data, onAI } ) {
 
                     <div className="min-w-0 flex-1">
                         { visible.length > 0 && (
-                            <div className="grid grid-cols-[repeat(auto-fill,minmax(210px,1fr))] gap-5" data-template-grid="">
+                            <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4" data-template-grid="">
                                 { visible.map( ( item ) => (
                                     <TemplateCard
                                         key={ item.key }

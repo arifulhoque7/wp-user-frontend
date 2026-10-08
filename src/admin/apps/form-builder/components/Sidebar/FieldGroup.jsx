@@ -11,7 +11,7 @@ export default function FieldGroup( { section, index, children } ) {
     return (
         <div className="panel-form-field-group mb-5">
             <h3
-                className={ `flex items-center justify-between hover:cursor-pointer text-xs! uppercase tracking-wide m-0 font-semibold! ${ section.show ? 'text-gray-700' : 'text-gray-500' }` }
+                className={ `flex items-center justify-between hover:cursor-pointer text-xs! uppercase tracking-wide m-0 font-semibold! hover:text-gray-900! ${ section.show ? 'text-gray-700' : 'text-gray-500' }` }
                 onClick={ () => togglePanelSection( index ) }
                 role="button"
                 tabIndex={ 0 }

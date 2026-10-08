@@ -24,7 +24,7 @@ export default function HelpCards( { blocks } ) {
                 const { Icon, tint } = ICONS[ index % ICONS.length ];
 
                 return (
-                    <div key={ block.url } className="flex flex-col items-center rounded-[10px] border border-solid border-gray-200 bg-white p-8 text-center shadow-sm">
+                    <div key={ block.url } className="flex flex-col items-center rounded-[10px] border border-solid border-gray-200 bg-white p-5 text-center shadow-sm">
                         <span className={ `flex size-12 items-center justify-center rounded-full ${ tint }` } aria-hidden="true">
                             <Icon className="size-6" strokeWidth={ 1.75 } />
                         </span>

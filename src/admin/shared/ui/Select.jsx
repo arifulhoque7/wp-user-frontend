@@ -39,7 +39,7 @@ export default function Select( { value, options, onChange, placeholder, disable
                 placeholder={ placeholder ?? __( '- Select -', 'wp-user-frontend' ) }
                 searchPlaceholder={ __( 'Search', 'wp-user-frontend' ) }
                 emptyMessage={ __( 'No matching options', 'wp-user-frontend' ) }
-                className={ cn( 'w-full h-[38px] ps-3 pe-3 text-sm font-normal text-gray-900 bg-white border border-gray-300 rounded-md shadow-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30', className ) }
+                className={ cn( 'w-full h-9 ps-3 pe-3 text-sm font-normal text-gray-900 bg-white border border-gray-300 rounded-md shadow-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30', className ) }
             />
         );
     }
@@ -48,7 +48,7 @@ export default function Select( { value, options, onChange, placeholder, disable
         <PuiSelect value={ shown } onValueChange={ ( next ) => onChange?.( next ) } disabled={ disabled } { ...props }>
             <SelectTrigger
                 id={ id }
-                className={ cn( 'w-full h-[38px] data-[size=default]:h-[38px] ps-3 pe-3 text-sm text-gray-900 bg-white border border-gray-300 rounded-md shadow-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 data-[placeholder]:text-gray-400', className ) }
+                className={ cn( 'w-full h-9 data-[size=default]:h-9 ps-3 pe-3 text-sm text-gray-900 bg-white border border-gray-300 rounded-md shadow-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 data-[placeholder]:text-gray-400', className ) }
             >
                 <SelectValue placeholder={ placeholder ?? __( '- Select -', 'wp-user-frontend' ) }>
                     { ( val ) => ( null === val || undefined === val ? placeholder ?? __( '- Select -', 'wp-user-frontend' ) : labelOf( val ) ) }

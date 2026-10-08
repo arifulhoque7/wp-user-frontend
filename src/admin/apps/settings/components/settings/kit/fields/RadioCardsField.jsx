@@ -77,7 +77,7 @@ export default function RadioCardsField( { field, name, value, onChange, single 
         <>
             <div className="flex items-center">
                 { field.label && (
-                    <label className="text-sm text-gray-700 my-2">{ field.label }</label>
+                    <label className="text-sm text-gray-700 my-1.5">{ field.label }</label>
                 ) }
                 { field.help_text && <HelpTextIcon text={ field.help_text } /> }
             </div>

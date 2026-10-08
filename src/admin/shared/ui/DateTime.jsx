@@ -44,7 +44,7 @@ export default function DateTime( { value, onChange, placeholder, disabled, cale
             <PopoverTrigger
                 id={ id }
                 disabled={ disabled }
-                className={ cn( 'inline-flex w-full min-w-[200px] items-center justify-between h-[38px] px-3 text-sm bg-white border border-gray-300 rounded-md cursor-pointer outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-60', ymd ? 'text-gray-900' : 'text-gray-400', className ) }
+                className={ cn( 'inline-flex w-full min-w-[200px] items-center justify-between h-9 px-3 text-sm bg-white border border-gray-300 rounded-md cursor-pointer outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-60', ymd ? 'text-gray-900' : 'text-gray-400', className ) }
             >
                 <span className="truncate">{ label }</span>
                 { /* Same chevron as the Select trigger (plugin-ui: lucide, 16px, gray-500). */ }

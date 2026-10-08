@@ -77,15 +77,16 @@ const SubscriptionDetails = ( { subscription, onFieldChange, currentTab: externa
 
 	return (
 		<>
-			{/* Tab Navigation (develop: underline tabs under the title) */}
-			<Tabs
-				variant="section"
-				className="mt-4"
-				label={ __( 'Subscription sections', 'wp-user-frontend' ) }
-				value={ currentTab }
-				onChange={ setCurrentTab }
-				tabs={ sections.map( ( section ) => ( { id: section.id, label: section.title } ) ) }
-			/>
+			{/* Tab Navigation: FlyHR toolbar tabs on a full-width line */}
+			<div className="mt-4 border-0 border-b border-solid border-gray-200 pb-2">
+				<Tabs
+					variant="toolbar"
+					label={ __( 'Subscription sections', 'wp-user-frontend' ) }
+					value={ currentTab }
+					onChange={ setCurrentTab }
+					tabs={ sections.map( ( section ) => ( { id: section.id, label: section.title } ) ) }
+				/>
+			</div>
 
 			{/* Subsections for current tab — Object.values handles PHP arrays that lost their sequential keys */}
 			{ subSections[ currentTab ] &&

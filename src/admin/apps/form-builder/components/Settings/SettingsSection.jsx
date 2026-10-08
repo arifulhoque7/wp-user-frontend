@@ -207,17 +207,9 @@ export default function SettingsSection( { sectionKey, sectionData } ) {
 
         return (
             <div className="wpuf-settings-section">
-                { sectionEntries.map( ( [ subKey, subSection ], index ) => {
-                    const isFirst = index === 0;
-                    const isLast = index === sectionEntries.length - 1 && sectionEntries.length > 1;
-
-                    let classList = 'wpuf-settings-body pb-8';
-                    if ( ! isFirst ) {
-                        classList = 'wpuf-settings-body pb-8 pt-6 border-t border-gray-200';
-                    }
-                    if ( isLast ) {
-                        classList = 'wpuf-settings-body pt-6 border-t border-gray-200';
-                    }
+                { sectionEntries.map( ( [ subKey, subSection ] ) => {
+                    // One card per sub-section: header strip + body (FlyHR settings).
+                    const classList = 'wpuf-settings-body mb-5 rounded-[10px] border border-gray-200 bg-white shadow-sm';
 
                     return (
                         <div
@@ -225,41 +217,47 @@ export default function SettingsSection( { sectionKey, sectionData } ) {
                             className={ classList }
                             data-settings-body={ sectionKey }
                         >
-                            { subSection.label && (
-                                <p className="text-lg font-medium mb-3 mt-0 leading-none">
-                                    { subSection.label }
-                                </p>
+                            { ( subSection.label || subSection.desc ) && (
+                                <div className="border-0 border-b border-solid border-gray-200 px-5 py-4">
+                                    { subSection.label && (
+                                        <p className="text-base font-semibold text-gray-900 m-0 leading-6">
+                                            { subSection.label }
+                                        </p>
+                                    ) }
+                                    { subSection.desc && (
+                                        <p className="text-gray-500 text-sm leading-5 mb-0! mt-1!">
+                                            { subSection.desc }
+                                        </p>
+                                    ) }
+                                </div>
                             ) }
-                            { subSection.desc && (
-                                <p className="text-gray-500 text-[13px] leading-5 mb-4! mt-0!">
-                                    { subSection.desc }
-                                </p>
-                            ) }
-                            { subSection.fields && Object.entries( subSection.fields ).map( ( [ fieldName, fieldDef ] ) => {
-                                const inputName = settingName( fieldName, fieldDef );
-                                const settingValue = resolveSettingValue( settings, fieldName, fieldDef );
+                            <div className="px-5 pb-5 [&>.wpuf-input-container:first-child]:mt-5">
+                                { subSection.fields && Object.entries( subSection.fields ).map( ( [ fieldName, fieldDef ] ) => {
+                                    const inputName = settingName( fieldName, fieldDef );
+                                    const settingValue = resolveSettingValue( settings, fieldName, fieldDef );
 
-                                return (
-                                    <SettingsField
-                                        key={ fieldName }
-                                        slotKey={ fieldName }
-                                        hideControl={ ! isVisible( fieldName, fieldDef ) }
-                                        field={ fieldDef }
-                                        name={ inputName }
-                                        value={ settingValue }
+                                    return (
+                                        <SettingsField
+                                            key={ fieldName }
+                                            slotKey={ fieldName }
+                                            hideControl={ ! isVisible( fieldName, fieldDef ) }
+                                            field={ fieldDef }
+                                            name={ inputName }
+                                            value={ settingValue }
+                                            onChange={ handleChange }
+                                            settings={ resolvedSettings }
+                                            resolveValue={ ( subName, subDef ) => resolveSettingValue( settings, subName, subDef ) }
+                                        />
+                                    );
+                                } ) }
+                                { subSection.pro_preview && (
+                                    <ProPreviewWrapper
+                                        proPreview={ subSection.pro_preview }
                                         onChange={ handleChange }
-                                        settings={ resolvedSettings }
-                                        resolveValue={ ( subName, subDef ) => resolveSettingValue( settings, subName, subDef ) }
+                                        settings={ settings }
                                     />
-                                );
-                            } ) }
-                            { subSection.pro_preview && (
-                                <ProPreviewWrapper
-                                    proPreview={ subSection.pro_preview }
-                                    onChange={ handleChange }
-                                    settings={ settings }
-                                />
-                            ) }
+                                ) }
+                            </div>
                         </div>
                     );
                 } ) }
@@ -271,7 +269,7 @@ export default function SettingsSection( { sectionKey, sectionData } ) {
     return (
         <div className="wpuf-settings-section">
             <div
-                className="wpuf-settings-body -mt-6"
+                className="wpuf-settings-body mb-5 rounded-[10px] border border-gray-200 bg-white px-5 pb-5 shadow-sm"
                 data-settings-body={ sectionKey }
             >
                 { Object.entries( filteredData ).map( ( [ fieldName, fieldDef ] ) => {

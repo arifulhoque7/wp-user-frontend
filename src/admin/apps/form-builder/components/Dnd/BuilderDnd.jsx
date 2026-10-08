@@ -196,7 +196,7 @@ function DragPreview( { item } ) {
     if ( 'palette' === item.kind ) {
         return (
             <div className={ `wpuf-field-button flex items-center w-[220px] rounded-lg border border-solid bg-white shadow-lg px-3 py-4 ${ tone }` }>
-                <p className="text-base font-normal text-gray-500 m-0">{ labelOf( item ) }</p>
+                <p className="text-[13px] font-normal text-gray-700 m-0">{ labelOf( item ) }</p>
             </div>
         );
     }

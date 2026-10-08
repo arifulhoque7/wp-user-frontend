@@ -27,7 +27,7 @@ export default function MultiSelectChips( { field, name, value, onChange } ) {
             <SettingLabel field={ field } />
             <div className="mt-1">
                 <MultiSelect
-                    className="w-full min-h-[42px] text-base"
+                    className="w-full min-h-9 text-sm"
                     options={ selectOptions( field.options ) }
                     value={ selected.map( String ) }
                     placeholder={ field.placeholder || __( 'Select…', 'wp-user-frontend' ) }

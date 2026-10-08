@@ -1,6 +1,7 @@
 import { useState, useCallback } from '@wordpress/element';
 import { useSelect, useDispatch } from '@wordpress/data';
 import { __ } from '@wordpress/i18n';
+import { Save } from 'lucide-react';
 import { STORE_NAME } from '../../store';
 import useFormSave from '../../hooks/useFormSave';
 import LegacySlot, { getLegacySlots } from '../../common/LegacySlot';
@@ -191,7 +192,7 @@ export default function Header( { activeTab, onTabChange } ) {
                             href={ `${ previewUrl }?wpuf_preview=1&form_id=${ post.ID }` }
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-x-2 rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 ring-1 ring-inset ring-gray-300 focus:shadow-none focus:border-none leading-none shadow-xs"
+                            className="inline-flex h-10 items-center gap-x-2 rounded-md px-5 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 ring-1 ring-inset ring-gray-300 focus:shadow-none focus:border-none leading-none shadow-xs"
                         >
                             { __( 'Preview', 'wp-user-frontend' ) }
                             <svg width="16" height="11" viewBox="0 0 20 14" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -204,12 +205,13 @@ export default function Header( { activeTab, onTabChange } ) {
                         <button
                             onClick={ saveForm }
                             type="button"
-                            className="wpuf-btn-primary leading-none cursor-pointer px-4! py-2! text-sm!"
+                            className="wpuf-btn-primary inline-flex h-10 items-center gap-2 leading-5 cursor-pointer px-5! py-0! text-sm! font-medium! shadow-sm"
                         >
+                            <Save size={ 16 } strokeWidth={ 2 } aria-hidden="true" />
                             { __( 'Save', 'wp-user-frontend' ) }
                         </button>
                     ) : (
-                        <button type="button" className="wpuf-btn-primary leading-none px-4! py-2! text-sm! opacity-75 button-ajax-working" disabled>
+                        <button type="button" className="wpuf-btn-primary inline-flex h-10 items-center gap-2 leading-5 px-5! py-0! text-sm! font-medium! shadow-sm opacity-75 button-ajax-working" disabled>
                             <span className="loader" />{ ' ' }
                             { __( 'Saving Form Data', 'wp-user-frontend' ) }
                         </button>

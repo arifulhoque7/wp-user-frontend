@@ -393,7 +393,7 @@ const FormsList = ( {
 
             { /* List card (FlyHR): toolbar with status tabs + search, selection
                  bar, table or state, footer pagination. */ }
-            <div className="mt-5 rounded-[10px] border border-solid border-gray-200 bg-white shadow-sm">
+            <div className="mt-4 rounded-[10px] border border-solid border-gray-200 bg-white shadow-sm">
                 <div className="flex flex-wrap items-center justify-between gap-3 border-0 border-b border-solid border-gray-200 px-4 pt-3 pb-2">
                     <Tabs
                         variant="toolbar"

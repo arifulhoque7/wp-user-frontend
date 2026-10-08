@@ -25,7 +25,7 @@ export default function PicRadioField( { field, name, value, onChange } ) {
         <>
             { field.label && (
                 <div className="flex items-center">
-                    <label className="text-sm text-gray-700 my-2">
+                    <label className="text-sm text-gray-700 my-1.5">
                         { field.label }
                     </label>
                 </div>

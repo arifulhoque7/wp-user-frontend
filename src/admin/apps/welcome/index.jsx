@@ -42,7 +42,7 @@ function Welcome() {
                             <Reveal arrival="panel">
                                 <img src={ page.logo } alt="" className="wpuf-float mb-6 h-9 w-auto" />
                             </Reveal>
-                            <RevealWords text={ title } className="m-0 text-3xl font-bold leading-tight tracking-tight text-gray-900" />
+                            <RevealWords text={ title } className="m-0 text-2xl font-bold leading-tight tracking-tight text-gray-900" />
                             <Reveal as="p" delay={ after } className="m-0 mt-4 max-w-xl text-base leading-7 text-gray-500">
                                 { __( 'Let people post, sign up, manage their account and pay, all from the frontend of your site. Start with a form, or let the setup wizard build the pages for you.', 'wp-user-frontend' ) }
                             </Reveal>

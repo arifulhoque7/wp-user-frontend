@@ -135,7 +135,7 @@ function SettingsFieldControl( { fieldKey, field, name, value, onChange, setting
     // inline_fields is a special container type — Vue uses mt-6 flex wpuf-input-container
     if ( field.type === 'inline_fields' || ( ! field.type && field.fields ) ) {
         return (
-            <div className="mt-6 flex wpuf-input-container">
+            <div className="mt-5 flex wpuf-input-container">
                 <InlineFieldsGroup
                     field={ field }
                     resolveValue={ resolveValue }
@@ -148,7 +148,7 @@ function SettingsFieldControl( { fieldKey, field, name, value, onChange, setting
     // submit-button-conditional-logics is a special Vue component — render React equivalent
     if ( field.type === 'submit-button-conditional-logics' ) {
         return (
-            <div className="mt-6 wpuf-input-container">
+            <div className="mt-5 wpuf-input-container">
                 <SubmitConditionalLogic label={ field.label } />
             </div>
         );
@@ -175,7 +175,7 @@ function SettingsFieldControl( { fieldKey, field, name, value, onChange, setting
     // prints `long_help` under any field. `note` and `long_help` are filtered
     // with wp_kses_post before they leave PHP.
     return (
-        <div className="mt-6 wpuf-input-container">
+        <div className="mt-5 wpuf-input-container">
             <FieldComponent
                 field={ field }
                 name={ name }

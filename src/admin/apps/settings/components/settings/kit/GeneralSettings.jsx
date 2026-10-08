@@ -26,11 +26,11 @@ const GEO = [ 'ipstack_key' ];
 const LOCATION = [ 'gmap_api_key' ];
 
 const Group = ( { title, desc, first, children } ) => (
-    <div className={ first ? '' : 'mt-8 border-t border-gray-200 pt-8' }>
-        <h4 className="mb-1 mt-0 text-base font-semibold text-gray-900">
+    <div className={ first ? '' : 'mt-6 border-t border-gray-200 pt-6' }>
+        <h4 className="mb-1 mt-0 text-sm font-semibold text-gray-900">
             { title }
         </h4>
-        { desc ? <p className="mb-4 mt-0 max-w-2xl text-sm text-gray-500">{ desc }</p> : null }
+        { desc ? <p className="mb-1 mt-0 max-w-2xl text-sm text-gray-500">{ desc }</p> : null }
         { children }
     </div>
 );

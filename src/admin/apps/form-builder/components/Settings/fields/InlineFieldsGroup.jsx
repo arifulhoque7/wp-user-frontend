@@ -29,7 +29,7 @@ export default function InlineFieldsGroup( { field, resolveValue, onChange } ) {
                 return (
                     <div key={ subKey } className={ `w-1/2${ 0 === index ? ' mr-6' : '' }` }>
                         { subField.label && (
-                            <label htmlFor={ subKey } className="text-sm text-gray-700 my-2">
+                            <label htmlFor={ subKey } className="text-sm text-gray-700 my-1.5">
                                 { subField.label }
                             </label>
                         ) }

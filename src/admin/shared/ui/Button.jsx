@@ -2,7 +2,7 @@
  * The one button of the WPUF admin screens (design-tokens.md §Buttons).
  *
  * Variants: primary, secondary, link (tertiary), destructive, icon.
- * Sizes: sm (32px, 6px 12px, 13px/500), md (38px, 8px 16px, 14px/600).
+ * Sizes: sm (32px, 6px 12px, 13px/500), md (36px, 8px 16px, 14px/500), lg (40px, 20px sides, page actions, as FlyHR).
  * No outer margin: spacing comes from the group gap or the container.
  * Disabled / busy buttons do not change on hover (develop daisyUI buttons).
  */
@@ -19,7 +19,9 @@ const VARIANTS = {
 
 const SIZES = {
     sm: 'h-8 px-3 py-1.5 text-[13px] font-medium gap-1.5 rounded-md',
-    md: 'h-9 px-3.5 py-2 text-sm font-semibold gap-2 rounded-md',
+    md: 'h-9 px-4 py-2 text-sm font-medium gap-2 rounded-md',
+    // Page-level actions (FlyHR page header buttons).
+    lg: 'h-10 px-5 py-2 text-sm font-medium leading-5 gap-2 rounded-md shadow-sm',
 };
 
 const ICON_SIZES = { sm: 'size-8 p-0 rounded-md', md: 'size-9 p-0 rounded-md' };
@@ -27,7 +29,7 @@ const ICON_SIZES = { sm: 'size-8 p-0 rounded-md', md: 'size-9 p-0 rounded-md' };
 /**
  * @param {Object}  props
  * @param {string}  [props.variant='primary'] primary|secondary|link|destructive|icon
- * @param {string}  [props.size='md']         sm|md
+ * @param {string}  [props.size='md']         sm|md|lg
  * @param {boolean} [props.busy]              Show a spinner and block clicks.
  * @param {string}  [props.className]         Extra classes (layout only).
  */

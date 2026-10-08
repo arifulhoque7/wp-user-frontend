@@ -25,7 +25,7 @@ export default function TaxonomyDefaults( { settings, onChange } ) {
         return (
             <div key={ taxonomy } className="mt-6 wpuf-input-container taxonomy-container" data-taxonomy={ taxonomy }>
                 <div className="flex items-center">
-                    <label htmlFor={ `${ key }_select` } className="text-sm text-gray-700 my-2">
+                    <label htmlFor={ `${ key }_select` } className="text-sm text-gray-700 my-1.5">
                         { /* translators: %s: taxonomy label, e.g. Categories */ }
                         { sprintf( __( 'Default %s', 'wp-user-frontend' ), tax.title ) }
                     </label>

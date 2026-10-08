@@ -22,7 +22,7 @@ export default function SettingsNav( { activeTab, onTabChange } ) {
     }, [] ); // eslint-disable-line react-hooks/exhaustive-deps
 
     return (
-        <div className="w-1/4 min-h-screen border-r p-8">
+        <div className="sticky top-10 w-60 shrink-0 rounded-[10px] border border-gray-200 bg-white p-2 shadow-sm">
             { Object.entries( settingsTitles ).map( ( [ topKey, topItem ] ) => {
                 const subItems = topItem.sub_items || {};
                 const hasSubItems = Object.keys( subItems ).length > 0;
@@ -34,15 +34,15 @@ export default function SettingsNav( { activeTab, onTabChange } ) {
                 return (
                     <div key={ topKey }>
                         { /* Top-level section header */ }
-                        <div className="mb-4 flex justify-between items-center">
+                        <div className="mb-1 flex justify-between items-center">
                             <h2
                                 id={ isClickableHeader ? `${ topKey }-menu` : undefined }
                                 onClick={ isClickableHeader ? () => onTabChange( topKey ) : undefined }
-                                className={ `group/sidebar-item text-base m-0 flex items-center w-full py-2 px-3 -ml-3 rounded-lg wpuf-transition-all duration-200 ease-in-out ${ isClickableHeader ? 'hover:bg-primary hover:cursor-pointer hover:text-white' : '' } ${ isHeaderActive ? 'bg-primary active_settings_tab text-white' : 'text-gray-600' }` }
+                                className={ `group/sidebar-item m-0 flex items-center w-full rounded-md wpuf-transition-all duration-200 ease-in-out ${ isClickableHeader ? 'py-2 px-2.5 text-sm! font-medium hover:bg-gray-100 hover:cursor-pointer' : 'px-2.5 pt-3 pb-1 text-xs! font-semibold uppercase tracking-wide' } ${ isHeaderActive ? 'bg-primary/10 active_settings_tab text-primary' : 'text-gray-500' }` }
                             >
                                 { topItem.icon && (
                                     <span
-                                        className={ `${ isHeaderActive ? '[&_.custom-stroke]:stroke-white' : '[&_.custom-stroke]:stroke-gray-500' } ${ isClickableHeader ? 'group-hover/sidebar-item:[&_.custom-stroke]:stroke-white' : '' }` }
+                                        className={ `inline-flex [&>svg]:w-4 [&>svg]:h-4 ${ isHeaderActive ? 'icon-primary' : '[&_.custom-stroke]:stroke-gray-400' }` }
                                         dangerouslySetInnerHTML={ { __html: topItem.icon } }
                                     />
                                 ) }
@@ -52,8 +52,8 @@ export default function SettingsNav( { activeTab, onTabChange } ) {
 
                         { /* Sub-items list */ }
                         { hasSubItems && (
-                            <div className="mb-4">
-                                <ul className="wpuf-sidebar-menu list-none [&>:not([hidden])~:not([hidden])]:mt-2 [&>:not([hidden])~:not([hidden])]:mb-0">
+                            <div className="mb-2">
+                                <ul className="wpuf-sidebar-menu list-none m-0 [&>:not([hidden])~:not([hidden])]:mt-0.5 [&>:not([hidden])~:not([hidden])]:mb-0">
                                     { Object.entries( subItems ).map( ( [ subKey, subItem ] ) => {
                                         const isActive = activeTab === subKey;
 
@@ -61,15 +61,15 @@ export default function SettingsNav( { activeTab, onTabChange } ) {
                                             <li
                                                 key={ subKey }
                                                 onClick={ () => onTabChange( subKey ) }
-                                                className={ `group/sidebar-item mx-2 py-2 px-3 hover:bg-primary hover:cursor-pointer rounded-lg wpuf-transition-all duration-200 ease-in-out items-center flex justify-between ${ isActive ? 'bg-primary active_settings_tab' : '' }` }
+                                                className={ `group/sidebar-item m-0 py-2 px-2.5 hover:cursor-pointer rounded-md wpuf-transition-all duration-200 ease-in-out items-center flex justify-between ${ isActive ? 'bg-primary/10 active_settings_tab' : 'hover:bg-gray-100' }` }
                                                 data-settings={ subKey }
                                             >
                                                 <a
-                                                    className={ `ml-2 text-sm group-hover/sidebar-item:text-white wpuf-transition-all duration-200 ease-in-out focus:shadow-none focus:outline-hidden flex items-center ${ isActive ? 'text-white' : 'text-gray-600' }` }
+                                                    className={ `text-sm wpuf-transition-all duration-200 ease-in-out focus:shadow-none focus:outline-hidden flex items-center ${ isActive ? 'text-primary! font-medium' : 'text-gray-600 group-hover/sidebar-item:text-gray-900' }` }
                                                 >
                                                     { subItem.icon && (
                                                         <span
-                                                            className={ `[&>svg]:w-5 [&>svg]:h-5 ${ isActive ? '[&_.custom-stroke]:stroke-white' : '[&_.custom-stroke]:stroke-gray-500 group-hover/sidebar-item:[&_.custom-stroke]:stroke-white' }` }
+                                                            className={ `inline-flex [&>svg]:w-4 [&>svg]:h-4 ${ isActive ? 'icon-primary' : '[&_.custom-stroke]:stroke-gray-400 group-hover/sidebar-item:[&_.custom-stroke]:stroke-gray-600' }` }
                                                             dangerouslySetInnerHTML={ { __html: subItem.icon } }
                                                         />
                                                     ) }

@@ -46,7 +46,7 @@ export default function EmailIcon( { title } ) {
         <img
             src={ `${ assetUrl }/images/${ pick( title ) }` }
             alt=""
-            className="h-10 w-10 shrink-0"
+            className="h-8 w-8 shrink-0"
             aria-hidden="true"
         />
     );

@@ -14,7 +14,7 @@ export default function SettingLabel( { field, htmlFor, children } ) {
     return (
         <div className="flex items-center">
             { field.label && (
-                <label htmlFor={ htmlFor } className="text-sm text-gray-700 my-2">
+                <label htmlFor={ htmlFor } className="text-sm text-gray-700 my-1.5">
                     { field.label }
                 </label>
             ) }

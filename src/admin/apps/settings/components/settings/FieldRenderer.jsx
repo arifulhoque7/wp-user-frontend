@@ -239,7 +239,7 @@ export default function FieldRenderer( { sectionId, field, value, onChange, forc
     );
 
     return (
-        <div className="mt-6 wpuf-input-container" data-setting={ field.name }>
+        <div className="mt-5 wpuf-input-container" data-setting={ field.name }>
             { isProInactive ? <ProPreviewWrapper>{ control }</ProPreviewWrapper> : control }
             { ! isProInactive && QUICK_LINKS[ field.name ] && <QuickLinks kind={ QUICK_LINKS[ field.name ] } value={ value } /> }
             { normalized.__descHtml && (

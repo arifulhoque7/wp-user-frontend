@@ -186,7 +186,7 @@ const SubscriptionForm = ( { mode = 'add-new', subscriptionId = null } ) => {
 
 	return (
 		<div className="px-12">
-			<h3 className="text-lg font-bold mb-0">
+			<h3 className="text-base font-semibold mb-0">
 				{ mode === 'edit'
 					? __( 'Edit Subscription', 'wp-user-frontend' )
 					: __( 'New Subscription', 'wp-user-frontend' ) }

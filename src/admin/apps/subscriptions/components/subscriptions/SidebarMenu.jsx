@@ -20,8 +20,8 @@ const SidebarMenu = ( {
 
 	return (
 		<div className={ isUnsavedPopupOpen ? 'blur-sm' : '' }>
-			<div className="flex flex-col pr-[48px]">
-				<ul className="[&>:not([hidden])~:not([hidden])]:mt-2 [&>:not([hidden])~:not([hidden])]:mb-0 text-lg">
+			<div className="sticky top-10 flex flex-col rounded-lg border border-gray-200 bg-white p-2">
+				<ul className="m-0 [&>:not([hidden])~:not([hidden])]:mt-0.5 [&>:not([hidden])~:not([hidden])]:mb-0">
 					{ statusItems.map( ( item ) => {
 						const count = allCount[ item.key ] || 0;
 						const isActive = currentSubscriptionStatus === item.key;
@@ -40,16 +40,16 @@ const SidebarMenu = ( {
 									}
 								} }
 								className={
-									'justify-between text-gray-700 hover:text-primary hover:bg-gray-50 group flex gap-x-3 rounded-md py-2 px-[20px] text-sm leading-6 hover:cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/30' +
-									( isActive ? ' bg-gray-50 text-primary' : '' )
+									'm-0 justify-between items-center group flex gap-x-3 rounded-md py-2 px-2.5 text-sm leading-5 hover:cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/30' +
+									( isActive ? ' bg-primary/10 text-primary font-medium' : ' text-gray-600 hover:text-gray-900 hover:bg-gray-100' )
 								}
 							>
 								{ item.label }
 								{ count > 0 && (
 									<span
 										className={
-											'text-sm w-fit px-2.5 py-1 rounded-full w-max h-max border' +
-											( isActive ? ' border-primary' : '' )
+											'text-xs leading-4 px-2 py-0.5 rounded-full w-max h-max border' +
+											( isActive ? ' border-primary/40' : ' border-gray-200' )
 										}
 									>
 										{ count }

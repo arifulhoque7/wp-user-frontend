@@ -2,6 +2,7 @@ import { useState, useMemo } from '@wordpress/element';
 import { useDispatch, useSelect } from '@wordpress/data';
 import { __ } from '@wordpress/i18n';
 import { applyFilters } from '@wordpress/hooks';
+import { Save } from 'lucide-react';
 import { STORE_NAME } from '../../store';
 import SettingsNav from './SettingsNav';
 import SettingsSection from './SettingsSection';
@@ -69,57 +70,17 @@ export default function FormSettings() {
         : ( window.wpuf_admin_url || '' ) + ( isProfileForm ? 'admin.php?page=wpuf-profile-forms' : 'admin.php?page=wpuf-post-forms' );
 
     return (
-        <div className="wpuf-settings-container bg-white border border-gray-200 rounded-lg mx-4 mt-4 flex transition-transform duration-200 ease-in-out">
-            <SettingsNav
-                activeTab={ activeTab }
-                onTabChange={ setActiveTab }
-            />
-
-            <div className="w-3/4 min-h-screen p-8">
-                { /* Active tab title */ }
-                <div className="pb-8">
-                    <h2 className="text-2xl m-0 leading-none">
-                        { activeSettingsTitle }
-                    </h2>
-                </div>
-
-                { getLegacySlots().unsupported && (
-                    <div className="mb-6 p-4 bg-yellow-50 text-sm text-yellow-800 border-l-4 border-yellow-400">
-                        { __( 'An extension added builder settings that need scripts or Vue templates. They are shown as static fields here; their interactive parts do not run.', 'wp-user-frontend' ) }
-                    </div>
-                ) }
-
-                { /* Section body */ }
-                <div className="border-y border-gray-200 py-8">
-                    <SettingsSection
-                        sectionKey={ activeTab }
-                        sectionData={ activeSectionData }
-                    />
-
-                    { /* Extensions' panel for this tab (4.4g). */ }
-                    <BuilderSlot name={ settingsSlotName( activeTab ) } fillProps={ { tab: activeTab, settings, updateSetting: updateFormSetting } } />
-
-                    { ! activeSectionData && activeTab === 'modules' && (
-                        <ModulesEmptyState isProActive={ isProActive } />
-                    ) }
-
-                    { ! activeSectionData && activeTab && activeTab !== 'modules' && (
-                        <div className="text-center py-12 text-gray-500">
-                            <p>{ __( 'No settings available for this section.', 'wp-user-frontend' ) }</p>
-                        </div>
-                    ) }
-                </div>
-
-                { /* Settings other plugins printed on the settings tab hooks
-                    (wpuf_form_builder_settings_tabs_{type}, wpuf_{post,profile}_form_tab). */ }
-                <LegacySlot id="tab-settings" html={ getLegacySlots().tabs.settings } className="mt-8" />
-                <LegacySlot id="tab-form-tab" html={ getLegacySlots().tabs.form_tab } className="mt-8" />
-
+        <div className="wpuf-settings-container mx-4 mt-3 mb-6">
+            { /* Title row over both columns, actions on the right (FlyHR settings). */ }
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
+                <h2 className="text-xl! font-semibold m-0 leading-7 text-gray-900">
+                    { activeSettingsTitle }
+                </h2>
                 { /* Cancel + Save buttons */ }
-                <div className="flex [&>:not([hidden])~:not([hidden])]:ml-4 [&>:not([hidden])~:not([hidden])]:mr-0 items-center mt-8">
+                <div className="flex items-center gap-3">
                     <a
                         href={ postFormsUrl }
-                        className="inline-flex items-center gap-x-2 rounded-md px-8 py-3 text-gray-700 hover:text-gray-700 hover:bg-gray-50 ring-1 ring-inset ring-gray-300 hover:cursor-pointer"
+                        className="inline-flex h-10 items-center gap-x-2 rounded-md bg-white px-5 text-sm font-medium leading-5 text-gray-700 no-underline shadow-sm hover:text-gray-900! hover:bg-gray-50 ring-1 ring-inset ring-gray-300 hover:cursor-pointer"
                     >
                         { __( 'Cancel', 'wp-user-frontend' ) }
                     </a>
@@ -127,13 +88,56 @@ export default function FormSettings() {
                         type="button"
                         onClick={ saveForm }
                         disabled={ isSaving }
-                        className="wpuf-btn-primary w-full"
+                        className="wpuf-btn-primary inline-flex items-center gap-2 leading-5 h-10 px-5! py-0! text-sm! font-medium! shadow-sm"
                     >
+                        <Save size={ 16 } strokeWidth={ 2 } aria-hidden="true" />
                         { isSaving
                             ? __( 'Saving…', 'wp-user-frontend' )
                             : __( 'Save Form', 'wp-user-frontend' )
                         }
                     </button>
+                </div>
+            </div>
+
+            <div className="flex items-start gap-6">
+                <SettingsNav
+                    activeTab={ activeTab }
+                    onTabChange={ setActiveTab }
+                />
+
+                <div className="min-w-0 flex-1">
+
+                    { getLegacySlots().unsupported && (
+                        <div className="mb-6 p-4 bg-yellow-50 text-sm text-yellow-800 border-l-4 border-yellow-400">
+                            { __( 'An extension added builder settings that need scripts or Vue templates. They are shown as static fields here; their interactive parts do not run.', 'wp-user-frontend' ) }
+                        </div>
+                    ) }
+
+                    { /* Section body */ }
+                    <div>
+                        <SettingsSection
+                            sectionKey={ activeTab }
+                            sectionData={ activeSectionData }
+                        />
+
+                        { /* Extensions' panel for this tab (4.4g). */ }
+                        <BuilderSlot name={ settingsSlotName( activeTab ) } fillProps={ { tab: activeTab, settings, updateSetting: updateFormSetting } } />
+
+                        { ! activeSectionData && activeTab === 'modules' && (
+                            <ModulesEmptyState isProActive={ isProActive } />
+                        ) }
+
+                        { ! activeSectionData && activeTab && activeTab !== 'modules' && (
+                            <div className="text-center py-12 text-gray-500">
+                                <p>{ __( 'No settings available for this section.', 'wp-user-frontend' ) }</p>
+                            </div>
+                        ) }
+                    </div>
+
+                    { /* Settings other plugins printed on the settings tab hooks
+                        (wpuf_form_builder_settings_tabs_{type}, wpuf_{post,profile}_form_tab). */ }
+                    <LegacySlot id="tab-settings" html={ getLegacySlots().tabs.settings } className="mt-6" />
+                    <LegacySlot id="tab-form-tab" html={ getLegacySlots().tabs.form_tab } className="mt-6" />
                 </div>
             </div>
         </div>

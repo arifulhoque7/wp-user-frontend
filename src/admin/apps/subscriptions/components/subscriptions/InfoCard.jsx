@@ -44,11 +44,11 @@ const InfoCard = ( { subscription } ) => {
 			<dl className="mx-auto grid grid-cols-4 border-b-2 border-dashed bg-white p-2 m-0">
 				<div className="flex col-span-2 flex-wrap items-baseline justify-between py-2 px-6" title={ 'id: ' + subscription.ID }>
 					<dt className="text-sm font-medium leading-6 text-gray-500">{ __( 'Plan', 'wp-user-frontend' ) }</dt>
-					<dd className="w-full flex-none text-2xl leading-10 tracking-tight text-gray-900 m-0">{ subscription.post_title }</dd>
+					<dd className="w-full flex-none text-xl leading-8 tracking-tight text-gray-900 m-0">{ subscription.post_title }</dd>
 				</div>
 				<div className="flex flex-wrap items-baseline justify-between px-4 py-2">
 					<dt className="text-sm font-medium leading-6 text-gray-500">{ __( 'Payment', 'wp-user-frontend' ) }</dt>
-					<dd className="w-full flex-none text-2xl leading-10 tracking-tight text-gray-900 m-0">{ payment }</dd>
+					<dd className="w-full flex-none text-xl leading-8 tracking-tight text-gray-900 m-0">{ payment }</dd>
 				</div>
 				{ isRecurring && (
 					<div className="flex flex-wrap items-baseline justify-between px-4 py-5">
@@ -64,7 +64,7 @@ const InfoCard = ( { subscription } ) => {
 			<dl className="mx-auto grid grid-cols-1 bg-white p-2 m-0">
 				<div className="flex flex-wrap items-baseline justify-between bg-white px-4 py-2">
 					<dt className="text-sm font-medium leading-6 text-gray-500">{ __( 'Subscribers', 'wp-user-frontend' ) }</dt>
-					<dd className="flex items-center w-full flex-none text-2xl leading-10 tracking-tight text-gray-900 m-0">
+					<dd className="flex items-center w-full flex-none text-xl leading-8 tracking-tight text-gray-900 m-0">
 						<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
 							<path d="M12 10.8C13.9882 10.8 15.6 9.18822 15.6 7.2C15.6 5.21177 13.9882 3.6 12 3.6C10.0118 3.6 8.4 5.21177 8.4 7.2C8.4 9.18822 10.0118 10.8 12 10.8Z" fill="#0F172A" />
 							<path d="M3.6 21.6C3.6 16.9608 7.36081 13.2 12 13.2C16.6392 13.2 20.4 16.9608 20.4 21.6H3.6Z" fill="#0F172A" />

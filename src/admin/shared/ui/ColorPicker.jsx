@@ -25,7 +25,7 @@ export default function ColorPicker( { value, onChange, enableAlpha = false, dis
                 id={ id }
                 disabled={ disabled }
                 aria-label={ props[ 'aria-label' ] || __( 'Choose color', 'wp-user-frontend' ) }
-                className={ cn( 'inline-flex items-center gap-2 h-[38px] px-3 text-sm text-gray-900 bg-white border border-gray-300 rounded-md cursor-pointer focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-60', className ) }
+                className={ cn( 'inline-flex items-center gap-2 h-9 px-3 text-sm text-gray-900 bg-white border border-gray-300 rounded-md cursor-pointer focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-60', className ) }
             >
                 <span className="size-5 rounded-full border border-gray-300" style={ { backgroundColor: color || 'transparent' } } />
                 <span className="font-mono text-xs text-gray-700">{ color || __( 'None', 'wp-user-frontend' ) }</span>

@@ -33,7 +33,7 @@ export default function Tabs( { tabs, value, onChange, variant = 'underline', la
                 aria-label={ label }
                 className={ cn(
                     'h-auto group-data-horizontal/tabs:h-auto justify-start',
-                    segmented && 'w-max gap-0 rounded-lg bg-gray-100 p-2',
+                    segmented && 'w-max gap-0 rounded-lg bg-gray-100 p-1',
                     section && 'w-full gap-0 p-0 rounded-none bg-transparent border-0 border-b border-solid border-gray-200 text-sm font-medium text-center text-gray-500',
                     toolbar && 'w-auto min-w-0 max-w-full gap-0 p-0 -mb-2 pb-2 rounded-none bg-transparent items-stretch overflow-x-auto',
                     ! segmented && ! section && ! toolbar && 'w-auto gap-0 p-0 rounded-none bg-transparent',
@@ -48,9 +48,9 @@ export default function Tabs( { tabs, value, onChange, variant = 'underline', la
                         className={ cn(
                             // Develop spaces tabs with a right margin on each (also the last one).
                             'flex-none h-auto gap-0 cursor-pointer shadow-none',
-                            segmented && 'mr-2 rounded-md border-0 px-4 py-2 text-base font-normal text-gray-500 data-active:bg-white data-active:text-gray-800 data-active:drop-shadow-xs enabled:hover:bg-white enabled:hover:text-gray-800',
-                            section && 'me-2 mb-[-1px] rounded-t-lg rounded-b-none border-0 border-solid p-4 text-sm font-medium text-gray-500 data-active:border-b-2 data-active:border-b-primary data-active:text-primary enabled:hover:border-b-2 enabled:hover:border-b-primary enabled:hover:text-primary',
-                            toolbar && 'relative h-10 gap-1.5 overflow-visible rounded-none border-0 bg-transparent px-4 text-sm font-medium text-gray-500 after:hidden data-active:bg-transparent data-active:text-primary enabled:hover:text-gray-900 data-active:hover:text-primary',
+                            segmented && 'mr-1 last:mr-0 rounded-md border-0 px-3 py-1.5 text-sm font-medium text-gray-500 data-active:bg-white data-active:text-gray-800 data-active:drop-shadow-xs enabled:hover:bg-white enabled:hover:text-gray-800',
+                            section && 'me-2 mb-[-1px] rounded-t-lg rounded-b-none border-0 border-solid px-3 py-2.5 text-sm font-medium text-gray-500 data-active:border-b-2 data-active:border-b-primary data-active:text-primary enabled:hover:border-b-2 enabled:hover:border-b-primary enabled:hover:text-primary',
+                            toolbar && 'relative h-10 gap-1.5 overflow-visible rounded-none border-0 bg-transparent px-4 text-sm font-medium text-gray-500 after:hidden data-active:bg-transparent data-active:text-primary enabled:hover:text-gray-900! data-active:hover:text-primary!',
                             ! segmented && ! section && ! toolbar && 'mr-8 rounded-none border-0 border-b-2 border-transparent px-1 py-4 text-sm font-medium text-gray-500 data-active:border-b-primary data-active:text-primary enabled:hover:border-b-primary enabled:hover:text-primary'
                         ) }
                     >

@@ -80,7 +80,7 @@ export default function PaymentGateways( { fields, renderField, gatewayValue, on
 
             <div className="mt-6">
                 { agField && agField.label ? (
-                    <label className="text-sm text-gray-700 my-2 block">{ agField.label }</label>
+                    <label className="text-sm text-gray-700 my-1.5 block">{ agField.label }</label>
                 ) : null }
                 <div className="mt-1 flex flex-wrap gap-3">
                     { gids.map( ( gid ) => {

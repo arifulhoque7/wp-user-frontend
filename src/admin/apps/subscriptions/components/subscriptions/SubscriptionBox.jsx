@@ -185,33 +185,33 @@ const SubscriptionBox = ({ subscription, onEdit, onChanged }) => {
 
 	return (
 		<>
-			<div className="text-base justify-between bg-white border border-gray-200 rounded-xl shadow-sm relative">
+			<div className="text-sm justify-between bg-white border border-gray-200 rounded-lg relative">
 				<div
 					onClick={subscription.post_status !== 'trash' ? handleEdit : undefined}
-					className={`flex justify-between border-b border-gray-900/5 bg-gray-50 p-6 rounded-t-xl ${subscription.post_status !== 'trash' ? 'cursor-pointer' : ''}`}
+					className={`flex justify-between border-b border-gray-200 bg-white px-5 py-4 rounded-t-lg ${subscription.post_status !== 'trash' ? 'cursor-pointer' : ''}`}
 				>
 					<div>
-						<div className="flex py-1 text-gray-900 m-0 font-medium" title={`id: ${subscription.ID}`}>
+						<div className="flex items-center text-gray-900 m-0 font-semibold" title={`id: ${subscription.ID}`}>
 							{/* develop: `{{ title }} &nbsp;` (a space and a no-break space) */}
 							{subscription.post_title}{' '}&nbsp;
 							{isPasswordProtected && (
-								<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+								<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
 									<path fillRule="evenodd" clipRule="evenodd" d="M5.99999 10.8V8.4C5.99999 5.08629 8.68628 2.4 12 2.4C15.3137 2.4 18 5.08629 18 8.4V10.8C19.3255 10.8 20.4 11.8745 20.4 13.2V19.2C20.4 20.5255 19.3255 21.6 18 21.6H5.99999C4.67451 21.6 3.59999 20.5255 3.59999 19.2V13.2C3.59999 11.8745 4.67451 10.8 5.99999 10.8ZM15.6 8.4V10.8H8.39999V8.4C8.39999 6.41178 10.0118 4.8 12 4.8C13.9882 4.8 15.6 6.41178 15.6 8.4Z" fill="#a0aec0" />
 								</svg>
 							)}
 						</div>
-						<p className="text-gray-500 text-base m-0">{billingAmount}</p>
+						<p className="text-gray-500 text-[13px] mt-1 mb-0">{billingAmount}</p>
 					</div>
 				</div>
 
 				{/* Quick menu (develop: horizontal dots, top right) */}
-				<div className="absolute top-4 right-4">
+				<div className="absolute top-3 right-3">
 					<ActionMenu items={menuItems} label={__('Actions', 'wp-user-frontend')} />
 				</div>
 
 			{/* Status Pill and Recurring Icon */}
-				<div className="flex px-6 py-6 justify-between items-center">
-					<div className={`text-sm w-fit px-2.5 py-1 shadow-xs rounded-md border ${pillColor}`}>
+				<div className="flex px-5 py-3 justify-between items-center">
+					<div className={`text-xs w-fit px-2 py-0.5 rounded-md border ${pillColor}`}>
 						{postStatus}
 					</div>
 					{isRecurringSub && (

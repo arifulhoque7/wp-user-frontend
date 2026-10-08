@@ -22,7 +22,7 @@ export default function MultiSelect( { value, options, onChange, placeholder, cl
             onValueChange={ ( next ) => onChange?.( toList( next ) ) }
             placeholder={ placeholder ?? __( '- Select -', 'wp-user-frontend' ) }
             searchPlaceholder={ __( 'Search', 'wp-user-frontend' ) }
-            className={ cn( 'min-h-[38px] text-sm bg-white border border-gray-300 rounded-md shadow-none', className ) }
+            className={ cn( 'min-h-9 text-sm bg-white border border-gray-300 rounded-md shadow-none', className ) }
             { ...props }
         />
     );

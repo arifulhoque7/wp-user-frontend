@@ -48,7 +48,7 @@ const SubscriptionSubsection = ( { subSection, fields, subscription, onFieldChan
 
 			{/* Notice (server-defined text from the subsection definition) */}
 			{ subSection.notice && (
-				<div className="rounded-b-xl bg-yellow-50 p-4">
+				<div className="rounded-b-lg bg-yellow-50 p-4">
 					<div className="flex items-center">
 						<div className="shrink-0">
 							<svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
