@@ -89,6 +89,17 @@ test.afterAll(async () => {
         // Option missing: nothing to restore.
     }
     // The seeded form and page.
+    // The form's field rows (wpuf_input children) first: `post delete` leaves them.
+    if ( formId ) {
+        try {
+            const fields = cliValue( wpCli( `post list --post_type=wpuf_input --post_parent=${ formId } --post_status=any --format=ids` ), /^[\d ]+$/ );
+            if ( fields ) {
+                wpCli( `post delete ${ fields } --force` );
+            }
+        } catch ( e ) {
+            // No fields.
+        }
+    }
     for ( const id of [ pageId, formId ? String( formId ) : '' ] ) {
         if ( id ) {
             try {
