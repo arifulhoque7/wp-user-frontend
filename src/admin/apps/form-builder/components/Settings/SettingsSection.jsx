@@ -7,6 +7,12 @@ import { orderedOptions } from './fields/settingOptions';
 import ProPreviewWrapper from './ProPreviewWrapper';
 import { useFieldVisibility, MUTUAL_EXCLUSIONS } from './useFieldDependencies';
 
+// Post expiration selects shown while nothing is stored (see resolveSettingValue).
+const EXPIRATION_SHOWN_SELECTS = {
+    expiration_time_type: 'day',
+    expired_post_status: 'draft',
+};
+
 /**
  * The input name a settings row posts (develop's views).
  *
@@ -68,6 +74,13 @@ export function resolveSettingValue( settings, fieldName, fieldDef ) {
     // 'pending') show the toggle on (develop showed it off and rewrote it).
     if ( 'user_status' === fieldName && settings && 'pending' === settings.wpuf_user_status ) {
         return 'on';
+    }
+
+    // Post expiration selects: develop's selectize showed its first option
+    // (Day(s), Draft) and the save stores those (Normalizers::post_expiration,
+    // owner decision 2026-10-08), so show them rather than "- Select -".
+    if ( 2 === path.length && 'expiration_settings' === path[ 0 ] && EXPIRATION_SHOWN_SELECTS[ key ] ) {
+        return EXPIRATION_SHOWN_SELECTS[ key ];
     }
 
     return fieldDef.value || fieldDef.default || '';

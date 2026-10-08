@@ -244,6 +244,35 @@ class FormStoreTest extends WP_UnitTestCase {
         $this->assertSame( [], Normalizers::multistep_progressbar_type( [] ) );
     }
 
+    public function test_post_expiration_stores_the_values_the_builder_shows() {
+        $shown = [
+            'enable_post_expiration'  => 'on',
+            'expiration_time_value'   => '7',
+            'expiration_time_type'    => 'day',
+            'expired_post_status'     => 'draft',
+            'post_expiration_message' => '',
+        ];
+
+        $this->assertSame( [ 'expiration_settings' => $shown ], Normalizers::post_expiration( [] ) );
+
+        // Edited and stored values stay, only missing keys are filled.
+        $result = Normalizers::post_expiration(
+            [
+                'expiration_settings' => [
+                    'enable_post_expiration'    => 'off',
+                    'expiration_time_value'     => '3',
+                    'enable_mail_after_expired' => 'on',
+                ],
+            ]
+        );
+        $this->assertSame( 'off', $result['expiration_settings']['enable_post_expiration'] );
+        $this->assertSame( '3', $result['expiration_settings']['expiration_time_value'] );
+        $this->assertSame( 'on', $result['expiration_settings']['enable_mail_after_expired'] );
+        $this->assertSame( 'day', $result['expiration_settings']['expiration_time_type'] );
+        $this->assertSame( 'draft', $result['expiration_settings']['expired_post_status'] );
+        $this->assertNull( Normalizers::post_expiration( null ) );
+    }
+
     public function test_form_post_newlines_match_a_browser_form_post() {
         $value = [
             'new_body'     => "Hi\n\nThere\r\nEnd\rX",

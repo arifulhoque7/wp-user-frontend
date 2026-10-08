@@ -136,6 +136,49 @@ class Normalizers {
     }
 
     /**
+     * Post expiration values the builder shows while nothing is stored.
+     *
+     * With no `expiration_settings` both builders show expiration on, 7, Day(s),
+     * Draft (Pro `Post_Form::form_settings_post_expiration()`: the toggle's and
+     * the number's `value`, the selects' first options). Develop's form post
+     * stored those on the first save, so posts expired as shown; the React
+     * builder writes a row only after an edit, so the switch read on while
+     * `Post_Expiration` found no `enable_post_expiration` and never expired
+     * the post. Missing keys get the shown values (owner decision 2026-10-08);
+     * stored values stay as they are.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param array $settings Form settings
+     *
+     * @return array
+     */
+    public static function post_expiration( $settings ) {
+        if ( ! is_array( $settings ) ) {
+            return $settings;
+        }
+
+        $expiration = isset( $settings['expiration_settings'] ) && is_array( $settings['expiration_settings'] ) ? $settings['expiration_settings'] : [];
+        $shown      = [
+            'enable_post_expiration'  => 'on',
+            'expiration_time_value'   => '7',
+            'expiration_time_type'    => 'day',
+            'expired_post_status'     => 'draft',
+            'post_expiration_message' => '',
+        ];
+
+        foreach ( $shown as $key => $value ) {
+            if ( ! isset( $expiration[ $key ] ) ) {
+                $expiration[ $key ] = $value;
+            }
+        }
+
+        $settings['expiration_settings'] = $expiration;
+
+        return $settings;
+    }
+
+    /**
      * Line breaks as a browser form post sends them: every line break in an
      * edited string as CRLF. Develop's builder and settings screens posted
      * their textareas as a form, so their stored text has `\r\n`; the React

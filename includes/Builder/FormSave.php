@@ -107,10 +107,15 @@ class FormSave {
         $notifications = json_decode( $notifications, true );
 
         // Values develop's form post always stored (Pro): the registration new
-        // user status, and the multi-step bar type (its select's first option).
+        // user status, the post expiration values the screen shows, and the
+        // multi-step bar type (its select's first option).
         if ( class_exists( 'WP_User_Frontend_Pro' ) ) {
             if ( 'wpuf_profile' === get_post_type( $form_id ) ) {
                 $settings = Normalizers::registration_user_status( $settings );
+            }
+
+            if ( 'wpuf_forms' === get_post_type( $form_id ) ) {
+                $settings = Normalizers::post_expiration( $settings );
             }
 
             $settings = Normalizers::multistep_progressbar_type( $settings );
