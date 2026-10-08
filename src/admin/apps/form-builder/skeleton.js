@@ -54,6 +54,35 @@ const bone = ( width, height, extra = {} ) => box( { width, height, flex: '0 0 a
 const card = ( style, children ) => box( { background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', ...style }, children );
 
 /**
+ * Fold the WordPress menu to its icon rail for the builder, marking that the
+ * builder folded it (FormBuilder unfolds it on leave only then).
+ */
+export function foldMenu() {
+    const body = document.body;
+
+    if ( body.classList.contains( 'folded' ) ) {
+        return;
+    }
+
+    body.classList.add( 'folded' );
+    body.dataset.wpufBuilderFolded = '1';
+}
+
+/**
+ * Undo foldMenu() when the builder folded the menu.
+ */
+export function unfoldMenu() {
+    const body = document.body;
+
+    if ( '1' !== body.dataset.wpufBuilderFolded ) {
+        return;
+    }
+
+    body.classList.remove( 'folded' );
+    delete body.dataset.wpufBuilderFolded;
+}
+
+/**
  * The skeleton element (its status text is for screen readers).
  *
  * @return {HTMLElement} Skeleton.
@@ -72,57 +101,71 @@ export function builderSkeleton() {
     status.textContent = __( 'Loading the form builder…', 'wp-user-frontend' );
     Object.assign( status.style, { position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap' } );
 
-    const header = card( { position: 'relative', overflow: 'hidden', padding: '24px', marginBottom: '16px' }, [
+    // The WordPress menu folds as the builder does (FormBuilder), so nothing
+    // jumps when it mounts; FormBuilder takes it over and unfolds it on leave.
+    foldMenu();
+
+    const header = card( { position: 'relative', overflow: 'hidden', padding: '10px 16px', marginBottom: '12px' }, [
         box( {}, [], 'wpuf-sk-bar' ),
-        box( { display: 'flex', alignItems: 'center', gap: '16px' }, [
-            bone( '38px', '38px', { borderRadius: '9999px' } ),
-            bone( '180px', '20px' ),
-            bone( '120px', '40px', { marginLeft: '24px' } ),
+        box( { display: 'flex', alignItems: 'center', gap: '12px' }, [
+            bone( '28px', '28px', { borderRadius: '9999px' } ),
+            bone( '130px', '16px' ),
+            bone( '64px', '28px' ),
             box( { flex: '1 1 auto' } ),
-            bone( '124px', '40px' ),
-            bone( '64px', '40px', { background: '#a7f3d0' } ),
+            box( { display: 'flex', gap: '4px', padding: '4px', background: '#f3f4f6', borderRadius: '8px' }, [
+                bone( '96px', '28px', { background: '#fff' } ),
+                bone( '72px', '28px', { background: 'transparent' } ),
+            ] ),
+            box( { flex: '1 1 auto' } ),
+            bone( '92px', '36px' ),
+            bone( '64px', '36px', { background: '#a7f3d0' } ),
         ] ),
-        box( { display: 'flex', gap: '8px', marginTop: '28px', padding: '6px', width: '240px', background: '#f3f4f6', borderRadius: '8px' }, [
-            bone( '116px', '40px', { background: '#fff' } ),
-            bone( '100px', '40px', { background: 'transparent' } ),
-        ] ),
     ] );
 
-    const row = ( height = '40px' ) => box( { display: 'flex', alignItems: 'flex-start', gap: '48px', marginBottom: '28px' }, [
-        bone( '120px', '14px', { marginTop: '12px' } ),
-        bone( '100%', height, { flex: '1 1 auto', maxWidth: '508px' } ),
+    const tiles = () => box( { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '20px' }, [
+        bone( '100%', '40px' ),
+        bone( '100%', '40px' ),
+        bone( '100%', '40px' ),
+        bone( '100%', '40px' ),
     ] );
 
-    const canvas = box( { flex: '1 1 auto', padding: '40px 48px', borderRight: '1px solid #e5e7eb', minWidth: '0' }, [
-        row(),
-        row( '220px' ),
-        row(),
-        row( '88px' ),
-    ] );
-
-    const tiles = () => box( { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '28px' }, [
-        bone( '100%', '56px' ),
-        bone( '100%', '56px' ),
-        bone( '100%', '56px' ),
-        bone( '100%', '56px' ),
-    ] );
-
-    const panel = box( { flex: '0 0 390px', padding: '24px' }, [
-        box( { display: 'flex', gap: '8px', padding: '10px', background: '#f3f4f6', borderRadius: '8px', marginBottom: '24px' }, [
-            bone( '50%', '36px', { background: '#fff' } ),
-            bone( '50%', '36px', { background: 'transparent' } ),
-        ] ),
-        bone( '100%', '40px', { marginBottom: '28px' } ),
-        bone( '96px', '16px', { marginBottom: '16px', background: '#d1fae5' } ),
+    const fields = box( { flex: '0 0 300px', padding: '16px', borderRight: '1px solid #e5e7eb', background: 'rgba( 249, 250, 251, .6 )' }, [
+        bone( '80px', '10px', { marginBottom: '16px' } ),
+        bone( '100%', '32px', { marginBottom: '20px' } ),
+        bone( '90px', '10px', { marginBottom: '12px' } ),
         tiles(),
-        bone( '110px', '16px', { marginBottom: '16px', background: '#d1fae5' } ),
+        bone( '100px', '10px', { marginBottom: '12px' } ),
         tiles(),
+    ] );
+
+    const row = ( height = '36px' ) => box( { display: 'flex', alignItems: 'flex-start', gap: '40px', padding: '16px 20px' }, [
+        bone( '110px', '14px', { marginTop: '11px' } ),
+        bone( '100%', height, { flex: '1 1 auto' } ),
+    ] );
+
+    const canvas = box( { flex: '1 1 auto', padding: '20px 24px', minWidth: '0' }, [
+        row(),
+        row( '180px' ),
+        row(),
+        row( '72px' ),
+    ] );
+
+    const option = () => box( { marginBottom: '20px' }, [
+        bone( '90px', '12px', { marginBottom: '8px' } ),
+        bone( '100%', '36px' ),
+    ] );
+
+    const options = box( { flex: '0 0 300px', padding: '16px', borderLeft: '1px solid #e5e7eb' }, [
+        bone( '90px', '10px', { marginBottom: '20px' } ),
+        option(),
+        option(),
+        option(),
     ] );
 
     const skeleton = box( { position: 'relative', marginTop: '16px', marginRight: '16px' }, [
         status,
         header,
-        card( { display: 'flex', minHeight: '640px', overflow: 'hidden' }, [ canvas, panel ] ),
+        card( { display: 'flex', height: 'calc( 100vh - 132px )', minHeight: '480px', overflow: 'hidden' }, [ fields, canvas, options ] ),
     ], 'wpuf-builder-skeleton wpuf-admin-app-loading' );
 
     skeleton.setAttribute( 'role', 'status' );
@@ -148,6 +191,8 @@ export function builderLoadError( message ) {
     const node = card( { marginTop: '16px', marginRight: '16px', padding: '16px 20px', borderColor: '#fecaca', background: '#fef2f2' }, [ text ] );
 
     node.className = 'wpuf-admin-app-loading is-error';
+
+    unfoldMenu();
     node.setAttribute( 'role', 'alert' );
 
     return node;

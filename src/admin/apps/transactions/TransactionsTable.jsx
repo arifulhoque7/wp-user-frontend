@@ -11,7 +11,7 @@ import { ArrowDown, ArrowUp, ArrowUpDown, Check, Eye, Trash2, X } from 'lucide-r
 import StatusBadge from './StatusBadge';
 
 const TH = 'px-2 font-normal';
-const TD = 'px-2 py-3 align-middle text-sm';
+const TD = 'px-2 py-2.5 align-middle text-[13px]';
 
 /**
  * A link when the URL is there, else the text.
@@ -108,7 +108,7 @@ export default function TransactionsTable( { rows, selected, onSelect, sort, onS
                 </thead>
                 <tbody>
                     { rows.map( ( row ) => (
-                        <tr key={ row.key } className="h-18 border-0 border-b border-solid border-gray-200 bg-white last:border-b-0 hover:bg-gray-50">
+                        <tr key={ row.key } className="h-14 border-0 border-b border-solid border-gray-200 bg-white last:border-b-0 hover:bg-gray-50">
                             <td className="w-10 px-4 align-middle">
                                 <Checkbox
                                     value={ selected.includes( row.key ) }

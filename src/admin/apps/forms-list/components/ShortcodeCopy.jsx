@@ -10,11 +10,11 @@ import { COPY_SVG_PATH } from '../utils/constants';
 const ShortcodeCopy = ( { shortcode, copiedKey, currentCopiedKey, onCopy, compact = false } ) => {
     const isCopied = currentCopiedKey === copiedKey;
     // Compact: the smaller code box develop used for the profile shortcode pair.
-    const spacing = compact ? 'mx-2 py-[5px] px-[10px]' : 'mr-2 py-[10px] px-[14px]';
+    const spacing = compact ? 'mx-2 py-[3px] px-2' : 'mr-2 py-1 px-2.5';
 
     return (
         <div className="flex items-center">
-            <code className={ `${ spacing } bg-gray-50 border border-gray-300 rounded-md shadow-xs` }>
+            <code className={ `${ spacing } text-xs leading-5 text-gray-700 bg-gray-50 border border-gray-200 rounded-md` }>
                 { isCopied ? __( 'Copied!', 'wp-user-frontend' ) : shortcode }
             </code>
             <button
@@ -26,8 +26,8 @@ const ShortcodeCopy = ( { shortcode, copiedKey, currentCopiedKey, onCopy, compac
             >
                 <svg
                     className="block stroke-gray-400"
-                    width="20"
-                    height="20"
+                    width="16"
+                    height="16"
                     viewBox="0 0 20 20"
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"

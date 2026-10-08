@@ -318,7 +318,7 @@ const SettingsApp = () => {
                 />
 
                 <div className="min-w-0 flex-1 max-w-full border-l border-gray-200 pl-8">
-                    <h2 className="mt-0 mb-0 text-2xl font-bold leading-7 text-gray-900">
+                    <h2 className="mt-0 mb-0 text-xl font-semibold leading-7 text-gray-900">
                         { searching
                             ? __( 'Search results', 'wp-user-frontend' )
                             : ( currentTab ? currentTab.title : '' ) }

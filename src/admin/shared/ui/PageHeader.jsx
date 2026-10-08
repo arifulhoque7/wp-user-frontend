@@ -23,7 +23,7 @@ export const IDEAS_URL = 'https://feedback.wedevs.com/b/user-frontend';
 const BADGE = 'ml-2 inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs text-green-700 ring-1 ring-inset ring-[rgba(22,163,74,0.2)]';
 const SHADOW = 'shadow-[0_1px_2px_0_rgba(0,0,0,0.05)]';
 // develop's Ideas link: WordPress body text color (#3c434a), not the link color (measured on develop, 4.1a).
-const OUTLINE = 'border border-solid border-gray-100 mr-4 text-center rounded-md px-3 py-2 text-sm font-semibold text-[#3c434a] no-underline hover:bg-slate-100 hover:text-[#3c434a] focus:bg-slate-100 focus:text-[#3c434a] focus:shadow-none';
+const OUTLINE = 'border border-solid border-gray-100 mr-3 text-center rounded-md px-3 py-1.5 text-[13px] font-semibold text-[#3c434a] no-underline hover:bg-slate-100 hover:text-[#3c434a] focus:bg-slate-100 focus:text-[#3c434a] focus:shadow-none';
 
 /**
  * "pro-business" -> "Pro Business".
@@ -61,13 +61,13 @@ export default function PageHeader( { variant = 'bleed', utm = 'wpuf-header', su
             data-wpuf-ui=""
             className={ cn(
                 'flex justify-between items-center border-0 border-b-2 border-solid border-gray-100',
-                'card' === variant ? 'bg-white p-5' : 'w-[calc(100%+40px)] -ml-5 px-5 pt-4 pb-4 bg-white',
+                'card' === variant ? 'bg-white p-4' : 'w-[calc(100%+40px)] -ml-5 px-5 py-3 bg-white',
                 className
             ) }
         >
             <div className="flex justify-start items-center">
-                { boot.assetUrl && <img src={ boot.assetUrl + '/images/wpuf-icon-circle.svg' } alt={ __( 'WPUF Icon', 'wp-user-frontend' ) } className="w-12 h-auto mr-4" /> }
-                <h2 className="m-0 text-2xl leading-7 font-bold text-[#1d2327]">{ isPro ? __( 'WP User Frontend Pro', 'wp-user-frontend' ) : __( 'WP User Frontend', 'wp-user-frontend' ) }</h2>
+                { boot.assetUrl && <img src={ boot.assetUrl + '/images/wpuf-icon-circle.svg' } alt={ __( 'WPUF Icon', 'wp-user-frontend' ) } className="w-9 h-auto mr-3" /> }
+                <h2 className="m-0 text-lg leading-6 font-semibold text-[#1d2327]">{ isPro ? __( 'WP User Frontend Pro', 'wp-user-frontend' ) : __( 'WP User Frontend', 'wp-user-frontend' ) }</h2>
                 { plan && <span className={ cn( BADGE, 'font-semibold' ) }>{ plan }</span> }
                 { version && <span className={ cn( BADGE, 'font-medium' ) }>{ 'v' + version }</span> }
                 { ! isPro && (
@@ -75,7 +75,7 @@ export default function PageHeader( { variant = 'bleed', utm = 'wpuf-header', su
                         href={ addQueryArgs( UPGRADE_URL, { utm_source: utm, utm_medium: 'wpuf-header' } ) }
                         target="_blank"
                         rel="noreferrer"
-                        className="flex ml-4 rounded-md bg-primary px-4 py-3 text-sm font-semibold text-white no-underline hover:bg-[#10b981] hover:text-white focus:text-white focus:shadow-none"
+                        className="flex ml-4 rounded-md bg-primary px-3 py-2 text-[13px] font-semibold text-white no-underline hover:bg-[#10b981] hover:text-white focus:text-white focus:shadow-none"
                     >
                         { __( 'Upgrade to PRO', 'wp-user-frontend' ) }
                     </a>
@@ -107,7 +107,7 @@ export default function PageHeader( { variant = 'bleed', utm = 'wpuf-header', su
                         href={ supportUrl }
                         target="_blank"
                         rel="noreferrer"
-                        className={ cn( 'rounded-md text-center bg-primary px-3 py-2 text-sm font-semibold text-white no-underline hover:bg-[#10b981] hover:text-white focus:bg-[#10b981] focus:text-white', SHADOW ) }
+                        className={ cn( 'rounded-md text-center bg-primary px-3 py-1.5 text-[13px] font-semibold text-white no-underline hover:bg-[#10b981] hover:text-white focus:bg-[#10b981] focus:text-white', SHADOW ) }
                     >
                         { /* develop: "Support ", two no-break spaces, then a space before the icon */ }
                         { __( 'Support', 'wp-user-frontend' ) + ' \u00a0\u00a0 ' }

@@ -462,7 +462,7 @@ export class FieldAddPage extends Base {
     //Admin checks if Created form is displayed in Post Forms - Table/List
     async validatePostFormCreated(validateNewPostName_PF: string) {
         //Return HOME
-        await this.validateAndClick(Selectors.postForms.createBlankForm_PF.clickpostFormsMenuOption);
+        await this.clickWpufSubmenu(Selectors.postForms.createBlankForm_PF.clickpostFormsMenuOption);
         // In the admin app the menu row is a route change: wait for the list before reloading it.
         await this.isVisibleSoon(Selectors.postForms.navigatePage_PF.checkAddButton_PF);
         await this.page.reload();
@@ -478,7 +478,7 @@ export class FieldAddPage extends Base {
 
     async validateProductPostFormCreated(validateNewPostName_PF: string) {
         //Return HOME
-        await this.validateAndClick(Selectors.postForms.createBlankForm_PF.clickpostFormsMenuOption);
+        await this.clickWpufSubmenu(Selectors.postForms.createBlankForm_PF.clickpostFormsMenuOption);
         // In the admin app the menu row is a route change: wait for the list before reloading it.
         await this.isVisibleSoon(Selectors.postForms.navigatePage_PF.checkAddButton_PF);
         await this.page.reload();
@@ -528,7 +528,7 @@ export class FieldAddPage extends Base {
     //Admin checks if Created form is displayed in Post Forms - Table/List
     async validateRegistrtionFormCreated(validateNewPostName_RF) {
         //Return HOME
-        await this.validateAndClick(Selectors.registrationForms.createBlankForm_RF.clickRegistrationFormMenuOption);
+        await this.clickWpufSubmenu(Selectors.registrationForms.createBlankForm_RF.clickRegistrationFormMenuOption);
          
 
         //ASSERTION > Check if-VALID

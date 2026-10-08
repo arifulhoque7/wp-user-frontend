@@ -22,7 +22,7 @@ import ShortcodeCopy from './ShortcodeCopy';
 
 // FlyHR list-table cells: header text comes from the row (uppercase 12px gray).
 const TH = 'px-2 font-normal';
-const TD = 'px-2 py-3 align-middle text-sm';
+const TD = 'px-2 py-2.5 align-middle text-[13px]';
 
 const statusLabel = ( status ) => {
     const labels = {
@@ -198,7 +198,7 @@ const FormsTable = ( {
                 </thead>
                 <tbody>
                     { forms.map( ( form ) => (
-                        <tr key={ form.ID } className="h-18 border-0 border-b border-solid border-gray-200 bg-white last:border-b-0 hover:bg-gray-50">
+                        <tr key={ form.ID } className="h-14 border-0 border-b border-solid border-gray-200 bg-white last:border-b-0 hover:bg-gray-50">
                             <td className="w-10 px-4 align-middle">
                                 <Checkbox
                                     value={ selectedForms.includes( form.ID ) }

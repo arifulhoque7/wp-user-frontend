@@ -140,6 +140,19 @@ export class Base {
     }
 
     // Validate and Click
+    /**
+     * Click a WP User Frontend submenu link of the WordPress admin menu. The form
+     * builder folds the menu to its icon rail, where submenus are hover flyouts:
+     * hover the top-level item first so the link is visible.
+     */
+    async clickWpufSubmenu(locator: string) {
+        const folded = await this.page.evaluate(() => document.body.classList.contains('folded'));
+        if (folded) {
+            await this.page.locator('#toplevel_page_wp-user-frontend').hover();
+        }
+        await this.validateAndClick(locator);
+    }
+
     async validateAndClick(locator: string) {
         try {
             await this.waitForLoading();

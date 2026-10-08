@@ -41,7 +41,7 @@ export default function BuilderCanvas() {
 
     return (
         <div id="form-preview-stage" className="h-[70vh]" { ...dropListProps( TOP, formFields.length ) }>
-            <ul data-dnd-rows="" className={ `wpuf-form sortable-list py-8 form-label-${ labelType } ${ canvasClass }` }>
+            <ul data-dnd-rows="" className={ `wpuf-form sortable-list py-4 form-label-${ labelType } ${ canvasClass }` }>
                 { formFields.map( ( field, index ) => (
                     <SortableField
                         key={ field.id }

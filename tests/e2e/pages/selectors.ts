@@ -394,7 +394,7 @@ export const Selectors = {
         /* Locators for All Fields Options + Save */
         /********************* PostFields *********************/
 
-        addPostFieldButton: '//a[normalize-space()="Add Fields"]',
+        addPostFieldButton: '(//a[normalize-space()="Add Fields"] | //h2[normalize-space()="Add Fields"])[1]',
         addPostFields_PF: {
             // Post_Fields
             postTitleBlock: '//p[normalize-space(text())="Post Title"]',
@@ -1709,10 +1709,10 @@ export const Selectors = {
 
     fieldOptionsSettings: {
         // Field Navigation and Selection
-        addFieldsButton: '//a[normalize-space()="Add Fields"]',
+        addFieldsButton: '(//a[normalize-space()="Add Fields"] | //h2[normalize-space()="Add Fields"])[1]',
         formSelector: (formName: string) => `//span[normalize-space()="${formName}"]`,
-        // React builder: the "Field Options" tab is selected once a field is opened.
-        fieldOptionHeader: '(//*[@role="tab" and normalize-space()="Field Options"] | //div[@class="option-fields-section wpuf-mt-6"]//h3)[1]',
+        // React builder: the "Field Options" column (its tab before the three-column layout).
+        fieldOptionHeader: '(//*[@role="tab" and normalize-space()="Field Options"] | //h2[normalize-space()="Field Options"] | //div[@class="option-fields-section wpuf-mt-6"]//h3)[1]',
         advancedSettings: '(//*[self::h3 or self::button][normalize-space()="Advanced Options"])[1]',
         previewButton: '//a[normalize-space()="Preview"]',
         // Field Edit Actions

@@ -384,8 +384,8 @@ const FormsList = ( {
             ) }
 
             { /* Page title and action buttons */ }
-            <div className="flex justify-between items-center mt-9">
-                <h3 className="text-2xl font-bold m-0 p-0 leading-none">
+            <div className="flex justify-between items-center mt-6">
+                <h3 className="text-xl font-semibold m-0 p-0 leading-none">
                     { filteredPageTitle }
                 </h3>
                 <CreateButtons onAddNew={ openModal } onAIFormBuilder={ aiHandler } />
@@ -393,7 +393,7 @@ const FormsList = ( {
 
             { /* List card (FlyHR): toolbar with status tabs + search, selection
                  bar, table or state, footer pagination. */ }
-            <div className="mt-9 rounded-[10px] border border-solid border-gray-200 bg-white shadow-sm">
+            <div className="mt-5 rounded-[10px] border border-solid border-gray-200 bg-white shadow-sm">
                 <div className="flex flex-wrap items-center justify-between gap-3 border-0 border-b border-solid border-gray-200 px-4 pt-3 pb-2">
                     <Tabs
                         variant="toolbar"

@@ -39,6 +39,11 @@
     --text-2xs: 13px;
 }
 
+/* Tints a gray palette icon (an <img> SVG) to --color-primary (#059669) on hover. */
+@utility icon-primary {
+    filter: brightness(0) invert(39%) sepia(74%) saturate(2338%) hue-rotate(141deg) brightness(93%) contrast(96%);
+}
+
 @utility min-w-btn-cancel {
     min-width: 101px;
 }

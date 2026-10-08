@@ -17,7 +17,7 @@ function SettingSection( { title, settings, field, defaultOpen, isBasic = false 
     return (
         <div className={ isBasic ? 'option-fields-section mt-6' : 'option-fields-section' }>
             <h3
-                className={ `flex mt-0 mb-6 justify-between hover:cursor-pointer font-medium text-lg ${ isOpen ? 'text-primary' : 'text-gray-500' }` }
+                className={ `flex items-center mt-0 mb-4 justify-between hover:cursor-pointer font-semibold text-sm! ${ isOpen ? 'text-primary' : 'text-gray-500' }` }
                 onClick={ () => setIsOpen( ! isOpen ) }
                 role="button"
                 tabIndex={ 0 }
@@ -77,7 +77,7 @@ export default function FieldOptionsPanel() {
         return (
             <div className="wpuf-form-builder-field-options">
                 <div className="options-fileds-section text-center">
-                    <p className="text-gray-500 text-lg font-medium">
+                    <p className="text-gray-500 text-sm font-medium">
                         { i18n.empty_field_options_msg || __( 'Click on a field to edit its options.', 'wp-user-frontend' ) }
                     </p>
                 </div>

@@ -19,10 +19,10 @@ const VARIANTS = {
 
 const SIZES = {
     sm: 'h-8 px-3 py-1.5 text-[13px] font-medium gap-1.5 rounded-md',
-    md: 'h-[38px] px-4 py-2 text-sm font-semibold gap-2 rounded-md',
+    md: 'h-9 px-3.5 py-2 text-sm font-semibold gap-2 rounded-md',
 };
 
-const ICON_SIZES = { sm: 'size-8 p-0 rounded-md', md: 'size-[38px] p-0 rounded-md' };
+const ICON_SIZES = { sm: 'size-8 p-0 rounded-md', md: 'size-9 p-0 rounded-md' };
 
 /**
  * @param {Object}  props

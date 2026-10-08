@@ -18,7 +18,7 @@ export default function TableSkeleton( { rows = 6 } ) {
                 <Skeleton className="h-3 w-24 bg-gray-200" />
             </div>
             { Array.from( { length: rows } ).map( ( _, index ) => (
-                <div key={ index } className={ ROW + ' h-18 last:border-b-0' }>
+                <div key={ index } className={ ROW + ' h-14 last:border-b-0' }>
                     <Skeleton className="size-4 rounded-[4px] bg-gray-200" />
                     <Skeleton className="h-3.5 w-16 bg-gray-200" />
                     <Skeleton className="h-5 w-20 rounded-full bg-gray-200" />

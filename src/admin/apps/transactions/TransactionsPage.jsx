@@ -226,7 +226,7 @@ export default function TransactionsPage( { context } ) {
             <PageHeader utm="wpuf-transactions" />
 
             <div className="wpuf-transactions mt-9 pb-10">
-                <h1 className="m-0 p-0 text-2xl font-bold leading-none text-gray-900">{ __( 'Transactions', 'wp-user-frontend' ) }</h1>
+                <h1 className="m-0 p-0 text-xl font-semibold leading-none text-gray-900">{ __( 'Transactions', 'wp-user-frontend' ) }</h1>
                 <p className="m-0 mt-2 text-sm text-gray-500">{ __( 'Payments for subscriptions and paid posts. Bank payments wait here until you accept them.', 'wp-user-frontend' ) }</p>
 
                 <SummaryCards counts={ counts } />

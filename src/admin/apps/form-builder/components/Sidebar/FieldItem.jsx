@@ -48,15 +48,15 @@ function DraggableFieldItem( { template, title, iconUrl, onAdd } ) {
                     onAdd( template );
                 }
             } }
-            className="wpuf-field-button relative flex items-center rounded-lg border border-gray-200 bg-white shadow-sm px-3 py-4 hover:cursor-pointer hover:border-primary touch-manipulation"
+            className="wpuf-field-button group/tile relative flex items-center rounded-md border border-gray-200 bg-white px-2.5 py-2 min-h-10 hover:cursor-pointer hover:border-primary hover:bg-primary/5 touch-manipulation wpuf-transition-all"
         >
             { iconUrl && (
-                <div className="shrink-0 mr-2">
-                    <img src={ iconUrl } alt="" draggable="false" />
+                <div className="shrink-0 mr-2 flex items-center">
+                    <img src={ iconUrl } alt="" draggable="false" className="size-4 group-hover/tile:icon-primary" />
                 </div>
             ) }
             <div className="min-w-0 flex-1">
-                <p className="text-base font-normal text-gray-500 m-0">
+                <p className="text-[13px] leading-tight font-normal text-gray-700 group-hover/tile:text-primary! m-0 line-clamp-2 break-words">
                     { title }
                 </p>
             </div>
@@ -90,20 +90,20 @@ export default function FieldItem( { template, onAdd, onProAlert, onValidationAl
                 tabIndex={ 0 }
                 onKeyDown={ ( e ) => e.key === 'Enter' && onProAlert( template ) }
             >
-                <div className="opacity-50 wpuf-field-button flex items-center rounded-lg border border-gray-200 bg-white shadow-xs p-4 hover:border-gray-300 hover:cursor-pointer">
+                <div className="opacity-50 wpuf-field-button flex items-center rounded-md border border-gray-200 bg-white px-2.5 py-2 min-h-10 hover:border-gray-300 hover:cursor-pointer">
                     { iconUrl && (
-                        <div className="shrink-0 mr-2 text-gray-400">
-                            <img src={ iconUrl } alt="" />
+                        <div className="shrink-0 mr-2 flex items-center text-gray-400">
+                            <img src={ iconUrl } alt="" className="size-4" />
                         </div>
                     ) }
                     <div className="min-w-0 flex-1">
-                        <p className="text-base font-normal text-gray-500 m-0">
+                        <p className="text-[13px] leading-tight font-normal text-gray-700 m-0 line-clamp-2 break-words">
                             { title }
                         </p>
                     </div>
                 </div>
-                <div className="absolute top-4 right-4 opacity-0 group-hover/pro-field:opacity-100 wpuf-transition-all">
-                    <img src={ `${ ( window.wpuf_form_builder || {} ).asset_url || '' }/images/pro-badge.svg` } alt="" />
+                <div className="absolute top-1/2 -translate-y-1/2 right-2 opacity-0 group-hover/pro-field:opacity-100 wpuf-transition-all">
+                    <img src={ `${ ( window.wpuf_form_builder || {} ).asset_url || '' }/images/pro-badge.svg` } alt="" className="h-4" />
                 </div>
             </div>
         );
@@ -115,18 +115,18 @@ export default function FieldItem( { template, onAdd, onProAlert, onValidationAl
                 data-form-field={ template }
                 data-source="panel"
                 onClick={ () => onValidationAlert( template ) }
-                className="relative flex items-center rounded-lg border border-gray-200 bg-white shadow-xs px-3 py-4 hover:border-gray-300 hover:cursor-pointer"
+                className="relative flex items-center rounded-md border border-gray-200 bg-white px-2.5 py-2 min-h-10 hover:border-gray-300 hover:cursor-pointer"
                 role="button"
                 tabIndex={ 0 }
                 onKeyDown={ ( e ) => e.key === 'Enter' && onValidationAlert( template ) }
             >
                 { iconUrl && (
-                    <div className="shrink-0 mr-2">
-                        <img src={ iconUrl } alt="" />
+                    <div className="shrink-0 mr-2 flex items-center">
+                        <img src={ iconUrl } alt="" className="size-4" />
                     </div>
                 ) }
                 <div className="min-w-0 flex-1">
-                    <p className="text-base font-normal text-gray-500 m-0">
+                    <p className="text-[13px] leading-tight font-normal text-gray-700 m-0 line-clamp-2 break-words">
                         { title }
                     </p>
                 </div>

@@ -38,7 +38,7 @@ function CouponsPromo() {
 
             <div className="wpuf-coupons-promo mt-9 pb-10">
                 <div className="flex items-center gap-3">
-                    <h1 className="m-0 p-0 text-2xl font-bold leading-none text-gray-900">{ __( 'Coupons', 'wp-user-frontend' ) }</h1>
+                    <h1 className="m-0 p-0 text-xl font-semibold leading-none text-gray-900">{ __( 'Coupons', 'wp-user-frontend' ) }</h1>
                     <ProBadge utm="wpuf-coupons" />
                 </div>
                 <p className="m-0 mt-2 text-sm text-gray-500">{ __( 'Use Coupon codes for subscription for discounts.', 'wp-user-frontend' ) }</p>

@@ -161,7 +161,7 @@ export default function IconSelectorInput( { optionField, field, value, onChange
                         e.stopPropagation();
                         setShowIconPicker( ! showIconPicker );
                     } }
-                    className="w-full mt-4 min-w-full py-2.5! px-3.5! text-gray-700 font-medium shadow-xs! border border-gray-300! rounded-md! hover:text-gray-700! flex justify-between items-center text-base! cursor-pointer"
+                    className="w-full mt-4 min-w-full py-2! px-3! text-gray-700 font-medium shadow-xs! border border-gray-300! rounded-md! hover:text-gray-700! flex justify-between items-center text-sm! cursor-pointer"
                     role="button"
                     tabIndex={ 0 }
                     onKeyDown={ ( e ) => e.key === 'Enter' && setShowIconPicker( ! showIconPicker ) }
@@ -194,7 +194,7 @@ export default function IconSelectorInput( { optionField, field, value, onChange
                     <div
                         onClick={ ( e ) => e.stopPropagation() }
                         className="absolute bg-white border border-gray-300 rounded-lg w-full z-50 mt-1 shadow-lg right-0"
-                        style={ { maxHeight: 350, minWidth: 320, maxWidth: 400 } }
+                        style={ { maxHeight: 350 } }
                     >
                         { /* Tabs */ }
                         <div className="flex border-b border-gray-200">
@@ -204,7 +204,7 @@ export default function IconSelectorInput( { optionField, field, value, onChange
                                     e.stopPropagation();
                                     setActiveTab( 'icon' );
                                 } }
-                                className={ `flex-1 py-2 px-4 text-sm font-medium border-b-2 transition-colors ${ activeTab === 'icon' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700' }` }
+                                className={ `flex-1 py-2 px-4 text-sm font-medium border-b-2 transition-colors ${ activeTab === 'icon' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700' }` }
                             >
                                 <i className="fa fa-icons mr-1" />
                                 { __( 'Icons', 'wp-user-frontend' ) }
@@ -215,7 +215,7 @@ export default function IconSelectorInput( { optionField, field, value, onChange
                                     e.stopPropagation();
                                     setActiveTab( 'image' );
                                 } }
-                                className={ `flex-1 py-2 px-4 text-sm font-medium border-b-2 transition-colors ${ activeTab === 'image' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700' }` }
+                                className={ `flex-1 py-2 px-4 text-sm font-medium border-b-2 transition-colors ${ activeTab === 'image' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700' }` }
                             >
                                 <i className="fa fa-image mr-1" />
                                 { __( 'Upload Image', 'wp-user-frontend' ) }
@@ -240,19 +240,18 @@ export default function IconSelectorInput( { optionField, field, value, onChange
 
                                 <div className="wpuf-icon-grid-container" style={ { maxHeight: 210, overflowY: 'auto', padding: 10 } }>
                                     { filteredIcons.length > 0 ? (
-                                        <div className="wpuf-icon-grid" style={ { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 } }>
+                                        <div className="wpuf-icon-grid" style={ { display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 } }>
                                             { filteredIcons.map( ( icon ) => (
                                                 <button
                                                     type="button"
                                                     key={ icon.class }
                                                     onClick={ () => selectIcon( icon.class ) }
-                                                    className={ `wpuf-icon-grid-item${ value === icon.class ? ' selected' : '' }` }
+                                                    className={ `wpuf-icon-grid-item flex min-h-14 cursor-pointer flex-col items-center justify-center gap-1 rounded-md border border-solid bg-white px-1 py-2 text-center transition-colors hover:border-primary hover:text-primary ${ value === icon.class ? 'selected border-primary bg-primary/5 text-primary' : 'border-gray-200 text-gray-600' }` }
                                                     title={ `${ icon.name } - ${ icon.keywords }` }
                                                     aria-pressed={ value === icon.class }
-                                                    style={ { padding: '10px 5px', textAlign: 'center', border: '1px solid #e0e0e0', borderRadius: 4, cursor: 'pointer', transition: 'all 0.2s', minHeight: 60, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' } }
                                                 >
-                                                    <i className={ icon.class } style={ { fontSize: 18, marginBottom: 4, color: '#555' } } />
-                                                    <div style={ { fontSize: 10, color: '#666', lineHeight: 1.2, wordBreak: 'break-word', maxWidth: '100%' } }>
+                                                    <i className={ `${ icon.class } text-base leading-none` } />
+                                                    <div className="max-w-full break-words text-[10px] leading-tight">
                                                         { icon.name }
                                                     </div>
                                                 </button>
@@ -292,7 +291,7 @@ export default function IconSelectorInput( { optionField, field, value, onChange
                                     <button
                                         type="button"
                                         onClick={ openMediaUploader }
-                                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-sm text-sm font-medium hover:bg-blue-600 transition-colors"
+                                        className="inline-flex items-center gap-2 px-3 py-2 bg-primary text-white rounded-md text-[13px] font-medium hover:bg-primaryHover transition-colors"
                                     >
                                         <i className="fa fa-upload" />
                                         { __( 'Upload an image to use as icon', 'wp-user-frontend' ) }

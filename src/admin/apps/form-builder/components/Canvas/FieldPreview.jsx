@@ -87,7 +87,7 @@ export default function FieldPreview( { field, variant = 'top' } ) {
 
     return (
         <div
-            className={ `flex justify-between p-6 rounded-t-md border-t border-r border-l border-dashed group-hover:border-primary group-hover:cursor-pointer pb-3! ${ isEditing ? 'bg-green-50 border-primary' : 'border-transparent' }` }
+            className={ `flex justify-between px-5 py-4 rounded-lg border group-hover:cursor-pointer ${ isEditing ? 'border-solid border-primary bg-primary/5 ring-2 ring-primary/20' : 'border-dashed border-transparent group-hover:border-primary/60' }` }
         >
             { ! ( isFullWidth || isProPreview ) && (
                 <div className="w-1/4 flex items-center">

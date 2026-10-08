@@ -64,7 +64,7 @@ export default function FieldPanel() {
     return (
         <div>
             <FieldSearch onSearch={ setSearchTerm } />
-            <div className="wpuf-form-builder-form-fields mt-4">
+            <div className="wpuf-form-builder-form-fields">
                 { filteredSections.map( ( section, index ) => (
                     <FieldGroup key={ section.id } section={ section } index={ index }>
                         { section.fields.map( ( template ) => (
@@ -80,15 +80,15 @@ export default function FieldPanel() {
                 ) ) }
             </div>
 
-            <div className="mt-12 p-6 rounded-lg shadow-md text-center border border-gray-50">
-                <h2 className="text-slate-600 text-xl font-bold mb-4">
+            <div className="mt-8 p-4 rounded-lg text-center border border-gray-200 bg-white">
+                <h2 className="text-gray-800 text-sm! font-semibold m-0! mb-1!">
                     { __( 'Got an idea for a new field?', 'wp-user-frontend' ) }
                 </h2>
-                <p className="text-slate-600 mb-6">
+                <p className="text-gray-500 text-[13px] mt-0! mb-3!">
                     { __( 'We\'d love to hear it!', 'wp-user-frontend' ) }
                 </p>
                 <a
-                    className="wpuf-btn-primary"
+                    className="wpuf-btn-primary px-3! py-1.5! text-[13px]!"
                     target="_blank"
                     rel="noopener noreferrer"
                     href="https://feedback.wedevs.com/b/user-frontend"

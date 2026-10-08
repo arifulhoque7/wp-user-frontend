@@ -1,4 +1,4 @@
-import { useState } from '@wordpress/element';
+import { useState, useEffect } from '@wordpress/element';
 import { useSelect } from '@wordpress/data';
 import { STORE_NAME } from '../store';
 import Header from './Header/Header';
@@ -9,6 +9,7 @@ import FormSettings from './Settings/FormSettings';
 import useDirtyState from '../hooks/useDirtyState';
 import { PageFooter, PageShell } from '@wpuf/components';
 import LegacySlot, { getLegacySlots } from '../common/LegacySlot';
+import { foldMenu, unfoldMenu } from '../skeleton';
 
 export default function FormBuilder() {
     const { formType } = useSelect( ( select ) => {
@@ -21,6 +22,15 @@ export default function FormBuilder() {
 
     useDirtyState();
 
+    // The WordPress menu folds to its icon rail while the builder is open, so the
+    // canvas gets the room (FlyForms builder layout); it opens again on leave
+    // unless the user had it folded already.
+    useEffect( () => {
+        foldMenu();
+
+        return unfoldMenu;
+    }, [] );
+
     return (
         <PageShell className={ `wpuf-form-builder wpuf-form-builder-${ formType }` }>
             <Header activeTab={ activeTab } onTabChange={ setActiveTab } />
@@ -31,12 +41,16 @@ export default function FormBuilder() {
                     { /* White card on the gray page (D26 page look, owner 2026-10-04). Same
                          width as before (mx-4 = the old mr-8) and a ring, not a border, so the
                          stage keeps develop's sizes; the inner edge borders stay as transparent. */ }
-                    <div className="flex bg-white mx-4 mt-4 rounded-lg ring-1 ring-gray-200 overflow-hidden">
-                        <div className="w-2/3 min-h-screen max-h-screen px-13 py-4 border-t border-l border-transparent overflow-auto">
+                    <div className="flex h-[calc(100vh-132px)] min-h-[480px] bg-white mx-4 mt-3 mb-4 rounded-lg ring-1 ring-gray-200 overflow-hidden">
+                        { /* Three columns (FlyForms builder): field palette, canvas, field options. */ }
+                        <div className="w-[280px] xl:w-[300px] 2xl:w-[320px] shrink-0 h-full overflow-auto border-r border-gray-200 bg-gray-50/60">
+                            <Sidebar panel="fields" />
+                        </div>
+                        <div className="min-w-0 flex-1 h-full px-6 py-5 overflow-auto">
                             <BuilderCanvas />
                         </div>
-                        <div className="w-1/3 max-h-screen overflow-auto border border-b-0 border-gray-200 border-t-transparent border-r-transparent">
-                            <Sidebar />
+                        <div className="w-[300px] 2xl:w-[360px] shrink-0 h-full overflow-auto border-l border-gray-200">
+                            <Sidebar panel="options" />
                         </div>
                     </div>
                 </BuilderDnd>
@@ -51,7 +65,8 @@ export default function FormBuilder() {
 
             { /* FlyHR logo footer, as the other shared-layer screens (D26); px-5 = the
                  20px its full-bleed band reaches out by. */ }
-            <PageFooter className="px-5" />
+            { /* The editor fills the window (FlyForms builder); the footer stays on Settings. */ }
+            { activeTab !== 'form-editor' && <PageFooter className="px-5" /> }
         </PageShell>
     );
 }
