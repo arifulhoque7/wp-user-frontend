@@ -27,10 +27,10 @@ export default function WpufProviders( { children, withToaster = true, host = fa
     return (
         <ThemeProvider pluginId={ PLUGIN_ID } tokens={ wpufTokens } darkTokens={ wpufDarkTokens } mode="light" className={ host ? 'wpuf-pui-host' : '' }>
             <ErrorBoundary>{ children }</ErrorBoundary>
-            { /* Where develop showed its toasts: 80px from the top, 32px from the right. */ }
+            { /* plugin-ui's default Toaster (bottom right) with rich colours per type (pui.css). */ }
             { withToaster && (
                 <div data-wpuf-ui="">
-                    <Toaster position="top-right" offset={ { top: 80, right: 32 } } richColors />
+                    <Toaster richColors />
                 </div>
             ) }
             { /* Dialogs opened through `dialogs` (one host per page, with the Toaster). */ }

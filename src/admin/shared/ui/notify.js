@@ -1,7 +1,7 @@
 /**
  * Toasts (replaces the builder's toastr `showToast( message, type )` and the
  * subscriptions notice store): plugin-ui's sonner, rendered by the Toaster in
- * WpufProviders (80px from the top, 32px from the right, like develop).
+ * WpufProviders with plugin-ui's defaults.
  * Types: success, error / danger, warning, info.
  */
 import { toast } from '@wedevs/plugin-ui';

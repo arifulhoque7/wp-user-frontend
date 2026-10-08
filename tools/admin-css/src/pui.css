@@ -200,3 +200,22 @@ body.wpuf-builder-screen form#wpuf-form-builder {
     background-color: rgba(0, 0, 0, 0.5) !important;
     backdrop-filter: none !important;
 }
+
+/*
+ * Toasts: plugin-ui's Toaster with sonner's rich colours, mapped to WPUF's
+ * palette (success = primary emerald). Scoped above sonner's injected rules.
+ */
+[data-wpuf-ui] [data-sonner-toaster][data-sonner-theme] {
+    --success-bg: #ecfdf5;
+    --success-border: #a7f3d0;
+    --success-text: #065f46;
+    --error-bg: #fef2f2;
+    --error-border: #fecaca;
+    --error-text: #991b1b;
+    --warning-bg: #fffbeb;
+    --warning-border: #fde68a;
+    --warning-text: #92400e;
+    --info-bg: #eff6ff;
+    --info-border: #bfdbfe;
+    --info-text: #1e40af;
+}

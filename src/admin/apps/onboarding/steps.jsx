@@ -193,7 +193,7 @@ export function RegistrationStep( { data, nav, save, busy, state } ) {
                 </Field>
 
                 { layouts.length > 0 && (
-                    <div className={ `wpuf-onboarding-layouts mb-6 rounded-lg border bg-white ${ isPro ? 'border-gray-200' : 'border-dashed border-gray-300 hover:border-primary' }` }>
+                    <div className={ `wpuf-onboarding-layouts mb-6 rounded-[10px] border bg-white shadow-sm ${ isPro ? 'border-gray-200' : 'border-dashed border-gray-300 hover:border-primary' }` }>
                         <div className="flex items-center gap-4 px-4 py-3">
                             { shown.image && <img src={ shown.image } alt="" className="h-10 w-14 rounded border border-solid border-gray-200 object-cover" /> }
                             <span className="min-w-0 flex-1">
@@ -357,7 +357,7 @@ export function CommonStep( { data, nav, save, busy, state } ) {
                                         // Cannot be switched on from here: the card says why and stays inert.
                                         if ( gateway.is_pro || gateway.needs_module ) {
                                             return (
-                                                <div key={ gateway.id } data-value={ gateway.id } className={ `wpuf-onboarding-card ${ gateway.is_pro ? 'is-pro' : 'is-unavailable' } flex flex-col items-center rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4 text-center hover:border-primary` }>
+                                                <div key={ gateway.id } data-value={ gateway.id } className={ `wpuf-onboarding-card ${ gateway.is_pro ? 'is-pro' : 'is-unavailable' } flex flex-col items-center rounded-[10px] border border-dashed border-gray-300 bg-gray-50 p-4 text-center hover:border-primary` }>
                                                     { body }
                                                 </div>
                                             );
@@ -430,7 +430,7 @@ export function PluginsStep( { data, nav, save, busy } ) {
                             { item.installed && <span className="wpuf-onboarding-badge mt-3 inline-flex rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">{ __( 'Will be activated', 'wp-user-frontend' ) }</span> }
                         </ChoiceCard>
                     ) : (
-                        <div key={ item.slug } data-value={ item.slug } className="wpuf-onboarding-card is-installed flex flex-col items-start rounded-lg border border-solid border-gray-200 bg-gray-50 p-5">
+                        <div key={ item.slug } data-value={ item.slug } className="wpuf-onboarding-card is-installed flex flex-col items-start rounded-[10px] border border-solid border-gray-200 bg-gray-50 p-5">
                             { body( item ) }
                             <span className="wpuf-onboarding-badge is-error mt-3 inline-flex rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-700">{ __( 'No permission to install', 'wp-user-frontend' ) }</span>
                         </div>
@@ -460,7 +460,7 @@ export function ReadyStep( { data, save, busy, state } ) {
     return (
         <>
             <StepShell title={ __( 'Your frontend is ready', 'wp-user-frontend' ) } subtitle={ __( 'Anything still grey is worth a look. Each row opens the screen that handles it.', 'wp-user-frontend' ) }>
-                <ul className="wpuf-onboarding-checklist m-0 mb-6 list-none overflow-hidden rounded-lg border border-solid border-gray-200 bg-white p-0">
+                <ul className="wpuf-onboarding-checklist m-0 mb-6 list-none overflow-hidden rounded-[10px] border border-solid border-gray-200 bg-white p-0 shadow-sm">
                     { ( data.checklist || [] ).map( ( item ) => (
                         <li key={ item.label } className={ `m-0 flex items-center gap-3 border-0 border-b border-solid border-gray-200 px-4 py-3 last:border-b-0 ${ item.done ? 'is-done' : '' }` }>
                             <span aria-hidden="true" className={ `inline-flex size-6 shrink-0 items-center justify-center rounded-full text-white ${ item.done ? 'bg-primary' : 'bg-gray-200' }` }>
@@ -488,7 +488,7 @@ export function ReadyStep( { data, save, busy, state } ) {
             <ActionBar
                 busy={ busy }
                 left={
-                    <Button variant="secondary" onClick={ () => finish( state.urls?.settings ) } disabled={ busy } data-action="settings">
+                    <Button variant="secondary" size="lg" onClick={ () => finish( state.urls?.settings ) } disabled={ busy } data-action="settings">
                         { __( 'Go to full settings', 'wp-user-frontend' ) }
                     </Button>
                 }

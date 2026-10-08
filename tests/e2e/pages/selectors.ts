@@ -592,7 +592,7 @@ export const Selectors = {
             // Save Form Settings
             saveFormSettings: '//button[normalize-space(text())="Save"]',
             // Validate Form Settings Saved
-            validateFormSettingsSaved: '//div[(normalize-space(text())="Saved form data" or normalize-space(text())="Form data saved.")]',
+            validateFormSettingsSaved: '//li[@data-sonner-toast]//div[@data-title][normalize-space()="Saved form data" or normalize-space()="Form data saved."]',
         },
 
         validateOthers_Common: {
@@ -1267,7 +1267,7 @@ export const Selectors = {
 
         // Validation Messages
         messages: {
-            formSaved: '(//div[(normalize-space(text())="Saved form data" or normalize-space(text())="Form data saved.")])[1]',
+            formSaved: '(//li[@data-sonner-toast]//div[@data-title][normalize-space()="Saved form data" or normalize-space()="Form data saved."])[1]',
         },
 
         // Notification Settings Section
@@ -1364,7 +1364,7 @@ export const Selectors = {
 
         clickForm: (formName: string) => `(//td//a[normalize-space()="${formName}"] | //span[normalize-space()="${formName}"])[1]`,
         saveButton: '//button[normalize-space(text())="Save"]',
-        formSaved: '//div[(normalize-space(text())="Saved form data" or normalize-space(text())="Form data saved.")]',
+        formSaved: '//li[@data-sonner-toast]//div[@data-title][normalize-space()="Saved form data" or normalize-space()="Form data saved."]',
         clickFormEditor: '//a[contains(text(),"Form Editor")]',
         clickFormEditorSettings: '(//a[contains(@class,"wpuf-nav-tab")][normalize-space()="Settings"] | (//a[contains(@class,"wpuf-nav-tab wpuf-nav-tab-active")])[2])[1]',
         inputEmail: '//input[@name="user_email"]',

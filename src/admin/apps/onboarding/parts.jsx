@@ -63,8 +63,8 @@ export function StepShell( { title, subtitle, children } ) {
 
     return (
         <div className="mx-auto w-full max-w-[720px]">
-            <RevealWords text={ title } as="h2" className="m-0 mb-3 text-center text-xl font-medium leading-7 text-gray-900" />
-            <Reveal as="p" delay={ after } className="m-0 mb-12 text-center text-sm leading-6 text-gray-500">
+            <RevealWords text={ title } as="h2" className="m-0 mb-2 text-center text-xl font-semibold leading-7 text-gray-900" />
+            <Reveal as="p" delay={ after } className="m-0 mb-10 text-center text-sm leading-6 text-gray-500">
                 { subtitle }
             </Reveal>
             <Reveal arrival="panel" delay={ after + 90 }>
@@ -120,7 +120,7 @@ export function SwitchRow( { name, checked, onChange, title, desc } ) {
     const id = `wpuf-onboarding-${ name.replace( /_/g, '-' ) }`;
 
     return (
-        <div className="wpuf-onboarding-switch mb-3 flex items-center gap-4 rounded-lg border border-gray-200 bg-white px-4 py-3" data-name={ name }>
+        <div className="wpuf-onboarding-switch mb-3 flex items-center gap-4 rounded-[10px] border border-gray-200 bg-white px-4 py-3 shadow-sm" data-name={ name }>
             <label htmlFor={ id } className="min-w-0 flex-1 cursor-pointer">
                 <span className="block text-sm font-medium text-gray-900">{ title }</span>
                 { desc && <span className="mt-0.5 block text-[13px] leading-5 text-gray-500">{ desc }</span> }
@@ -150,7 +150,7 @@ export function ChoiceCard( { checked, onChange, name, value, children, compact 
             data-name={ name }
             data-value={ value }
             onClick={ () => onChange( ! checked ) }
-            className={ `wpuf-onboarding-card relative flex w-full cursor-pointer flex-col rounded-lg border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${ compact ? 'items-center p-4 text-center' : 'items-start p-5 text-start' } ${ checked ? 'is-selected border-primary bg-emerald-50/40' : 'border-gray-200 bg-white hover:border-primary' }` }
+            className={ `wpuf-onboarding-card relative flex w-full cursor-pointer flex-col rounded-[10px] border shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${ compact ? 'items-center p-4 text-center' : 'items-start p-5 text-start' } ${ checked ? 'is-selected border-primary bg-primary/5 ring-2 ring-primary/15' : 'border-gray-200 bg-white hover:border-primary' }` }
         >
             <span className={ `absolute ${ compact ? 'end-3 top-3' : 'end-5 top-5' }` }>
                 <TickCircle on={ checked } />
@@ -178,18 +178,18 @@ export function ActionBar( { onPrevious, onSkip, onNext, nextLabel, busy = false
             <div className="mx-auto flex max-w-[848px] items-center justify-between gap-4 px-4 py-4">
                 <div>
                     { left || ( onPrevious && (
-                        <Button variant="secondary" onClick={ onPrevious } disabled={ busy } data-action="previous">
+                        <Button variant="secondary" size="lg" onClick={ onPrevious } disabled={ busy } data-action="previous">
                             { __( 'Previous', 'wp-user-frontend' ) }
                         </Button>
                     ) ) }
                 </div>
                 <div className="flex items-center gap-4">
                     { onSkip && (
-                        <button type="button" onClick={ onSkip } disabled={ busy } data-action="skip" className="cursor-pointer border-0 bg-transparent p-0 text-sm text-gray-500 hover:text-gray-700">
+                        <button type="button" onClick={ onSkip } disabled={ busy } data-action="skip" className="cursor-pointer border-0 bg-transparent p-0 text-sm font-medium text-gray-500 hover:text-primary">
                             { __( 'Skip this step', 'wp-user-frontend' ) }
                         </button>
                     ) }
-                    <Button onClick={ onNext } busy={ busy } data-action="next">
+                    <Button size="lg" onClick={ onNext } busy={ busy } data-action="next">
                         { nextLabel || __( 'Save & Continue', 'wp-user-frontend' ) }
                     </Button>
                 </div>

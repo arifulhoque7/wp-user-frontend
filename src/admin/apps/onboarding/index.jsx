@@ -70,7 +70,7 @@ function StepRail( { steps, current, completed, go } ) {
                             >
                                 <Tick />
                             </button>
-                            <span className={ `wpuf-step-label mt-3 text-center text-sm ${ active || done ? 'text-primary' : 'text-gray-600' }` }>{ step.label }</span>
+                            <span className={ `wpuf-step-label mt-3 text-center text-sm font-medium ${ active || done ? 'text-primary' : 'text-gray-600' }` }>{ step.label }</span>
                         </li>
                     );
                 } ) }
@@ -187,16 +187,16 @@ function Onboarding( { context } ) {
 
             <div className="wpuf-onboarding-head px-4 text-center">
                 { playHeading ? (
-                    <RevealWords text={ title } className="m-0 mt-2 text-[30px] font-normal leading-9 text-gray-900" />
+                    <RevealWords text={ title } className="m-0 mt-2 text-2xl font-bold leading-8 text-gray-900" />
                 ) : (
-                    <h1 className="m-0 mt-2 text-[30px] font-normal leading-9 text-gray-900">{ title }</h1>
+                    <h1 className="m-0 mt-2 text-2xl font-bold leading-8 text-gray-900">{ title }</h1>
                 ) }
                 <Reveal arrival="panel" delay={ playHeading ? afterWords( title ) : 0 }>
                     <StepRail steps={ steps } current={ step } completed={ state.progress?.completed || [] } go={ go } />
                 </Reveal>
             </div>
 
-            <div className="wpuf-onboarding-content mt-16 px-4" key={ step }>
+            <div className="wpuf-onboarding-content mt-12 px-4" key={ step }>
                 { Step ? <Step data={ state.data?.[ step ] || {} } state={ state } nav={ nav } save={ save } busy={ busy } /> : null }
             </div>
 

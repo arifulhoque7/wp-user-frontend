@@ -1,8 +1,7 @@
 /**
  * Bridge from the subscriptions notice store (quick edit, preferences) to
- * the shared toasts: each notice is shown with `notify` (WpufProviders'
- * Toaster sits where develop's Notice list was, top 80px / right 32px) and
- * then removed from the store.
+ * the shared toasts: each notice is shown with `notify` (plugin-ui's default
+ * Toaster in WpufProviders) and then removed from the store.
  */
 import { useEffect } from '@wordpress/element';
 import { useSelect, useDispatch } from '@wordpress/data';

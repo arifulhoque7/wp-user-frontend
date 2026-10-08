@@ -1,11 +1,12 @@
 /**
- * Show a toast notification using toastr (already enqueued by WP).
+ * Show a toast notification: the shared plugin-ui sonner toast (`notify`),
+ * which replaced the builder's toastr.
  *
  * @param {string} message Notification message
  * @param {string} type    'success' | 'error' | 'warning' | 'info'
  */
+import { notify } from '@wpuf/components';
+
 export function showToast( message, type = 'success' ) {
-    if ( typeof window.toastr !== 'undefined' ) {
-        window.toastr[ type ]( message );
-    }
+    return notify( message, type );
 }
