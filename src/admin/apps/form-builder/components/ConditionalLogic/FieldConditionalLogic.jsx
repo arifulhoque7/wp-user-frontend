@@ -15,7 +15,10 @@ import { RULE_OPTIONS, buildCondArrays, condRowsFromStored, condDependencies, hi
  * cond_option[], input_type[], field_type[], option_title[] }`.
  *
  * As develop:
- * - shown only when the field has `wpuf_cond.condition_status`;
+ * - a field stored without `wpuf_cond` (Custom HTML, Shortcode, Terms and
+ *   Conditions are created without one) shows develop's default: status No,
+ *   All, one blank rule row. Develop's component wrote that default when the
+ *   panel opened; here it is stored with the first change only;
  * - opening the panel writes nothing; Yes / No and All / Any change only
  *   their own key;
  * - the rule rows start from the stored rows that have a field and an
@@ -25,9 +28,9 @@ import { RULE_OPTIONS, buildCondArrays, condRowsFromStored, condDependencies, hi
  * Props: { optionField, field, value, onChange } (SettingInput).
  */
 export default function FieldConditionalLogic( props ) {
-    const { field, value } = props;
+    const { field } = props;
 
-    if ( ! field || ! value || ! value.condition_status ) {
+    if ( ! field ) {
         return null;
     }
 
@@ -35,8 +38,13 @@ export default function FieldConditionalLogic( props ) {
     return <ConditionalLogicPanel key={ field.id } { ...props } />;
 }
 
-function ConditionalLogicPanel( { optionField, field, value, onChange } ) {
+function ConditionalLogicPanel( { optionField, field, value: stored, onChange } ) {
     const formFields = useSelect( ( select ) => select( STORE_NAME ).getFormFields(), [] );
+    // Develop's default for a field without `wpuf_cond` (its watcher's first write).
+    const value = useMemo(
+        () => ( stored && stored.condition_status ? stored : buildCondArrays( undefined, condRowsFromStored( undefined ) ) ),
+        [ stored ]
+    );
     const i18n = useSelect( ( select ) => select( STORE_NAME ).getI18n?.() || {}, [] );
 
     const data = window.wpuf_form_builder || {};
