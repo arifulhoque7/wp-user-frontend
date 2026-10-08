@@ -16,8 +16,8 @@ const ACTION_CLASSES = 'inline-flex h-7 items-center gap-1 px-2 text-xs font-med
  * hover of their own named group.
  */
 const BAR_CLASSES = {
-    column: 'wpuf-column-field-control-buttons absolute -top-3 right-2 z-20 flex items-center rounded-md bg-primary px-0.5 shadow-sm transition duration-150 wpuf-ease-out group-hover/column-inner:opacity-100 focus-within:opacity-100',
-    repeat: 'wpuf-repeat-field-control-buttons absolute -top-3 right-2 z-20 flex items-center rounded-md bg-primary px-0.5 shadow-sm transition duration-150 wpuf-ease-out group-hover/repeat-inner:opacity-100 focus-within:opacity-100',
+    column: 'wpuf-column-field-control-buttons absolute top-1 right-1 z-20 flex items-center rounded-md bg-primary px-0.5 shadow-sm transition duration-150 wpuf-ease-out group-hover/column-inner:opacity-100 focus-within:opacity-100',
+    repeat: 'wpuf-repeat-field-control-buttons absolute top-1 right-1 z-20 flex items-center rounded-md bg-primary px-0.5 shadow-sm transition duration-150 wpuf-ease-out group-hover/repeat-inner:opacity-100 focus-within:opacity-100',
 };
 const BAR_INNER_CLASSES = {
     column: 'flex items-center text-white/85',
@@ -129,7 +129,7 @@ export default function FieldActions( { field, index, container = { type: 'top' 
         <div
             className={ isInner
                 ? `${ BAR_CLASSES[ variant ] } ${ isEditing ? 'opacity-100' : 'opacity-0' }`
-                : `field-buttons absolute -top-3.5 right-4 z-20 rounded-md bg-primary! px-1 shadow-sm items-center transition duration-150 wpuf-ease-out flex group-hover:opacity-100 focus-within:opacity-100 ${ isEditing ? 'opacity-100' : 'opacity-0' }` }
+                : `field-buttons absolute -top-3.5 right-4 z-20 rounded-md bg-primary! px-1 shadow-sm items-center transition duration-150 wpuf-ease-out flex group-hover:opacity-100 focus-within:opacity-100 ${ isEditing ? 'opacity-100' : 'opacity-0 group-has-[.column-field-items:hover]:opacity-0! group-has-[.repeat-field-items:hover]:opacity-0!' }` }
         >
             <div className={ isInner ? BAR_INNER_CLASSES[ variant ] : 'flex items-center text-white/85' }>
                 { ! failedValidation ? (
