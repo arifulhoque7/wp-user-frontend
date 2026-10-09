@@ -195,6 +195,22 @@ class Assets implements Hookable {
     }
 
     /**
+     * Version of a React admin sheet: its file's modification time (a sheet can
+     * be rebuilt without its script), else the plugin version.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param string $path Path under assets/.
+     *
+     * @return string
+     */
+    private function css_version( $path ) {
+        $file = WPUF_ROOT . '/assets/' . $path;
+
+        return file_exists( $file ) ? (string) filemtime( $file ) : WPUF_VERSION;
+    }
+
+    /**
      * React screen stylesheets, keyed by handle without the `wpuf-` prefix, in
      * registration order.
      *
@@ -205,33 +221,34 @@ class Assets implements Hookable {
     public function styles() {
         return [
             'settings-react'      => [
-                'src' => WPUF_ASSET_URI . '/css/settings-react.css',
+                'src'     => WPUF_ASSET_URI . '/css/settings-react.css',
+                'version' => $this->css_version( 'css/settings-react.css' ),
                 // settings-react-rtl.css (built by tools/admin-css) on RTL sites.
                 'rtl' => true,
             ],
             'subscriptions-react' => [
                 'src'     => WPUF_ASSET_URI . '/css/subscriptions.css',
-                'version' => $this->react_asset( 'subscriptions', [] )['version'],
+                // The sheets change without the scripts: version each by its own file.
+                'version' => $this->css_version( 'css/subscriptions.css' ),
                 // subscriptions-rtl.css (built by tools/admin-css) on RTL sites.
                 'rtl'     => true,
             ],
             // Setup wizard and welcome sheet (tools/admin-css).
             'onboarding-react'    => [
                 'src'     => WPUF_ASSET_URI . '/css/admin/onboarding-react.css',
-                'version' => $this->react_asset( 'onboarding', [] )['version'],
+                'version' => $this->css_version( 'css/admin/onboarding-react.css' ),
                 'rtl'     => true,
             ],
             // Help, Tools, Transactions and the Coupons screens (tools/admin-css `pages`).
             'admin-pages'         => [
                 'src'     => WPUF_ASSET_URI . '/css/admin/pages-react.css',
-                // The sheet changes without the scripts: version it by its own file.
-                'version' => file_exists( WPUF_ROOT . '/assets/css/admin/pages-react.css' ) ? (string) filemtime( WPUF_ROOT . '/assets/css/admin/pages-react.css' ) : WPUF_VERSION,
+                'version' => $this->css_version( 'css/admin/pages-react.css' ),
                 'rtl'     => true,
             ],
             // AI form builder sheet (tools/admin-css), under the Vue app's handle.
             'ai-form-builder'     => [
                 'src'     => WPUF_ASSET_URI . '/css/ai-form-builder-react.css',
-                'version' => $this->react_asset( 'ai-form-builder', [] )['version'],
+                'version' => $this->css_version( 'css/ai-form-builder-react.css' ),
                 'rtl'     => true,
             ],
         ];

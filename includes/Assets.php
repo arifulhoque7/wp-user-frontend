@@ -128,7 +128,7 @@ class Assets {
     public function register_styles( $styles ) {
         foreach ( $styles as $handle => $style ) {
             $deps    = ! empty( $style['deps'] ) ? $style['deps'] : [];
-            $version = ! empty( $style['version'] ) ? $style['version'] : WPUF_VERSION;
+            $version = ! empty( $style['version'] ) ? $style['version'] : $this->local_file_version( $style['src'] );
             $media   = ! empty( $style['media'] ) ? $style['media'] : 'all';
 
             wp_register_style( 'wpuf-' . $handle, $this->existing_src( $style['src'] ), $deps, $version, $media );
@@ -137,6 +137,29 @@ class Assets {
                 wp_style_add_data( 'wpuf-' . $handle, 'rtl', 'replace' );
             }
         }
+    }
+
+    /**
+     * Version of a plugin asset without its own: the file's modification time,
+     * so a rebuilt sheet reaches the browser without a version bump; the plugin
+     * version for anything else.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param string $src Asset URL.
+     *
+     * @return string
+     */
+    protected function local_file_version( $src ) {
+        if ( is_string( $src ) && 0 === strpos( $src, WPUF_ASSET_URI . '/' ) ) {
+            $path = WPUF_ROOT . '/assets/' . substr( $src, strlen( WPUF_ASSET_URI . '/' ) );
+
+            if ( file_exists( $path ) ) {
+                return (string) filemtime( $path );
+            }
+        }
+
+        return WPUF_VERSION;
     }
 
     /**

@@ -129,7 +129,7 @@ export default function InsertPoint( { index } ) {
             <Popover open={ open } onOpenChange={ ( next ) => { setOpen( next ); if ( ! next ) { setTerm( '' ); } } }>
                 <PopoverTrigger
                     aria-label={ __( 'Add a field here', 'wp-user-frontend' ) }
-                    className={ `absolute z-20 flex size-6 cursor-pointer items-center justify-center rounded-full border border-solid border-gray-300 bg-white p-0 text-gray-500 shadow-sm transition-opacity hover:border-primary hover:text-primary focus-visible:opacity-100 ${ open ? 'opacity-100 border-primary text-primary' : 'opacity-0 group-hover/seam:opacity-100' }` }
+                    className={ `absolute z-20 flex size-6 cursor-pointer items-center justify-center rounded-full border border-solid border-gray-300 bg-white p-0 text-gray-500 shadow-sm transition-opacity hover:border-primary hover:text-primary focus-visible:opacity-100! ${ open ? 'opacity-100! border-primary text-primary' : 'opacity-0 group-hover/seam:opacity-100!' }` }
                 >
                     <Plus size={ 14 } aria-hidden="true" />
                 </PopoverTrigger>

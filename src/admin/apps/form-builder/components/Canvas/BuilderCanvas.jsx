@@ -46,8 +46,12 @@ export default function BuilderCanvas() {
             <ul data-dnd-rows="" className={ `wpuf-form sortable-list py-4 form-label-${ labelType } ${ canvasClass }` }>
                 { formFields.map( ( field, index ) => (
                     <Fragment key={ field.id }>
-                        { /* "+" on the seam between two fields (FlyForms): add a field here. */ }
-                        { index > 0 && ! placeholder ? <InsertPoint index={ index } /> : null }
+                        { /* "+" on the seam between two shown fields (FlyForms): add a field
+                           here. Hidden fields have no stage row (Hidden Fields list), so
+                           they get no seam and the gap stays even around them. */ }
+                        { ! placeholder && 'custom_hidden_field' !== field.template && formFields.slice( 0, index ).some( ( prev ) => 'custom_hidden_field' !== prev.template )
+                            ? <InsertPoint index={ index } />
+                            : null }
                         <SortableField
                             field={ field }
                             index={ index }
