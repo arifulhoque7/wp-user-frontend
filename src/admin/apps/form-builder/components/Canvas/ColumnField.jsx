@@ -3,12 +3,15 @@ import { columnContainer } from '../../utils/dndTree';
 import { usePlaceholder } from '../Dnd/dropTarget';
 import { Indicator, dropListProps, indicatorFor } from '../Dnd/DropList';
 import SortableField from './SortableField';
+import InsertPoint from './InsertPoint';
 
 /**
  * One cell of a column field: a drop list of the builder's DndContext
  * (components/Dnd, design.md D16). Palette fields (develop's rules), fields
  * of any cell and stage fields can be dropped in; the cell lights up while
- * it is the drop target (red for a refused palette field).
+ * it is the drop target (red for a refused palette field). A "+" adds a
+ * field to the cell: centred in an empty cell, under the fields otherwise,
+ * shown while the cell is hovered.
  */
 function ColumnCell( { field, columnKey } ) {
     const container = columnContainer( field.id, columnKey );
@@ -27,7 +30,7 @@ function ColumnCell( { field, columnKey } ) {
         >
             <div
                 data-column={ columnKey }
-                className={ `border border-dashed border-gray-300 bg-gray-50/60 rounded-lg p-1 transition-colors ${ tint }` }
+                className={ `group/cell relative border border-dashed border-gray-300 bg-gray-50/60 rounded-lg p-1 transition-colors ${ tint }` }
             >
                 <ul { ...dropListProps( container, colFields.length ) } className="wpuf-column-fields-sortable-list relative min-h-16 list-none m-0! p-0!">
                     { placeholder && ! colFields.length && <Indicator blocked={ placeholder.blocked } /> }
@@ -41,6 +44,7 @@ function ColumnCell( { field, columnKey } ) {
                         />
                     ) ) }
                 </ul>
+                { placeholder ? null : <InsertPoint index={ colFields.length } container={ container } variant={ colFields.length ? 'cell' : 'empty' } /> }
             </div>
         </div>
     );
@@ -63,7 +67,7 @@ export default function ColumnField( { field } ) {
 
     return (
         <div
-            className={ `has-columns-${ numColumns } wpuf-field-columns flex md:flex-row gap-4 p-4 w-full justify-between rounded-t-md border-t! border-r! border-l! border-dashed! border-transparent! group-hover:border-primary/50! group-hover:cursor-pointer` }
+            className={ `has-columns-${ numColumns } wpuf-field-columns flex md:flex-row gap-4 p-4! w-full justify-between rounded-t-md border-t! border-r! border-l! border-dashed! border-transparent! group-hover:border-primary/50! group-hover:cursor-pointer` }
         >
             { columnKeys.map( ( columnKey ) => (
                 <ColumnCell key={ columnKey } field={ field } columnKey={ columnKey } />

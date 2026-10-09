@@ -1,14 +1,18 @@
 /**
- * Add a field *here*: a "+" on the seam between two stage fields that opens a
- * searchable list of field types anchored to that seam (FlyForms' builder
- * `InsertPoint`). Picking a type does what a palette click does (Pro preview
- * alert, validation alert, single-instance refusal and the custom field tip
- * through useAddField), at this position.
+ * Add a field *here*: a "+" that opens a searchable list of field types
+ * anchored to it (FlyForms' builder `InsertPoint`). Picking a type does what
+ * a palette click / drop does at this position: Pro preview alert, validation
+ * alert, then the stage (useAddField: single instance, custom field tip) or a
+ * column cell (usePaletteDrop: develop's column checks). In a column the list
+ * leaves out the types a column refuses.
  *
- * The seam is a 16px gap between the two fields (owner: room around the
- * "+"); the button is centred in it, invisible until the seam is hovered or
- * focused. It is not a drag row (no `data-dnd-item`), so the drop
- * indicator positions are unchanged.
+ * Variants:
+ * - `seam`: a 32px gap between two stage fields, the "+" centred in it with
+ *   room above and below (owner: no overlap with the field borders), shown on
+ *   hover / focus. Not a drag row (no `data-dnd-item`), so the drop indicator
+ *   positions are unchanged.
+ * - `cell`: a row under a column cell's fields, shown while the cell is hovered.
+ * - `empty`: centred over an empty column cell, shown while the cell is hovered.
  *
  * @since WPUF_SINCE
  */
@@ -23,6 +27,8 @@ import { getFieldValidators } from '../../extensions/registry';
 import { isFailedToValidate } from '../../utils/globalHelpers';
 import { openProFieldAlert, openValidationAlert } from '../../common/BuilderDialogs';
 import useAddField from '../../hooks/useAddField';
+import usePaletteDrop from '../Dnd/usePaletteDrop';
+import { canDrop } from '../../utils/dndTree';
 
 // Inline styles: the list renders in a body portal, outside the builder's
 // scoped utility classes.
@@ -64,11 +70,13 @@ const iconUrl = ( config, isProActive ) => {
  * @since WPUF_SINCE
  *
  * @param {Object} props
- * @param {number} props.index Stage position a picked field lands at.
+ * @param {number} props.index       Position a picked field lands at.
+ * @param {string} [props.container] Drop list id of a column cell (stage when empty).
+ * @param {string} [props.variant]   seam|cell|empty (default seam).
  *
  * @return {JSX.Element} Seam.
  */
-export default function InsertPoint( { index } ) {
+export default function InsertPoint( { index, container = '', variant = 'seam' } ) {
     const { panelSections, fieldSettings, isProActive } = useSelect( ( select ) => {
         const store = select( STORE_NAME );
 
@@ -79,6 +87,7 @@ export default function InsertPoint( { index } ) {
         };
     }, [] );
     const addField = useAddField();
+    const dropField = usePaletteDrop();
     const [ open, setOpen ] = useState( false );
     const [ term, setTerm ] = useState( '' );
     const [ hover, setHover ] = useState( '' );
@@ -92,11 +101,15 @@ export default function InsertPoint( { index } ) {
                 fields: section.fields.filter( ( template ) => {
                     const config = fieldSettings[ template ];
 
-                    return config && ( ! needle || String( config.title || template ).toLowerCase().includes( needle ) );
+                    if ( ! config || ( container && ! canDrop( { kind: 'palette', template }, container ) ) ) {
+                        return false;
+                    }
+
+                    return ! needle || String( config.title || template ).toLowerCase().includes( needle );
                 } ),
             } ) )
             .filter( ( section ) => section.fields.length );
-    }, [ panelSections, fieldSettings, term ] );
+    }, [ panelSections, fieldSettings, term, container ] );
 
     const pick = ( template ) => {
         const config = fieldSettings[ template ] || {};
@@ -117,19 +130,38 @@ export default function InsertPoint( { index } ) {
             return;
         }
 
-        addField( template, index );
+        if ( container ) {
+            dropField( template, { container, index } );
+        } else {
+            addField( template, index );
+        }
     };
 
+    const shown = open ? 'opacity-100! border-primary text-primary' : `opacity-0 ${ 'seam' === variant ? 'group-hover/seam:opacity-100!' : 'group-hover/cell:opacity-100!' }`;
+    const label = container ? __( 'Add a field to this column', 'wp-user-frontend' ) : __( 'Add a field here', 'wp-user-frontend' );
+    const wrapClass = {
+        seam: `wpuf-insert-seam group/seam relative m-0! flex h-8 list-none items-center justify-center p-0! ${ open ? 'is-open' : '' }`,
+        cell: 'wpuf-insert-cell relative flex h-8 items-center justify-center',
+        empty: 'wpuf-insert-cell pointer-events-none absolute inset-0 z-10 flex items-center justify-center',
+    }[ variant ];
+    const Wrap = 'seam' === variant ? 'li' : 'div';
+
     return (
-        <li className={ `wpuf-insert-seam group/seam relative m-0! flex h-4 list-none items-center justify-center p-0! ${ open ? 'is-open' : '' }` } data-insert-index={ index }>
-            { /* Hover target the whole way across the 16px gap and the hairline it
-               lights, so the "+" is not a 24px spot to hunt for. */ }
-            <span aria-hidden="true" className="absolute inset-0 z-10" />
-            <span aria-hidden="true" className={ `pointer-events-none absolute inset-x-0 top-1/2 z-10 h-px ${ open ? 'bg-primary/40' : 'bg-transparent group-hover/seam:bg-primary/40' }` } />
+        <Wrap className={ wrapClass } data-insert-index={ index }>
+            { 'seam' === variant ? (
+                <>
+                    { /* Hover target the whole way across the gap and the hairline it
+                       lights, so the "+" is not a 24px spot to hunt for. */ }
+                    <span aria-hidden="true" className="absolute inset-0 z-10" />
+                    <span aria-hidden="true" className={ `pointer-events-none absolute inset-x-0 top-1/2 z-10 h-px ${ open ? 'bg-primary/40' : 'bg-transparent group-hover/seam:bg-primary/40' }` } />
+                </>
+            ) : (
+                <span aria-hidden="true" className={ `pointer-events-none absolute inset-x-1 top-1/2 h-px ${ open ? 'bg-primary/40' : 'bg-transparent group-hover/cell:bg-primary/40' }` } />
+            ) }
             <Popover open={ open } onOpenChange={ ( next ) => { setOpen( next ); if ( ! next ) { setTerm( '' ); } } }>
                 <PopoverTrigger
-                    aria-label={ __( 'Add a field here', 'wp-user-frontend' ) }
-                    className={ `absolute z-20 flex size-6 cursor-pointer items-center justify-center rounded-full border border-solid border-gray-300 bg-white p-0 text-gray-500 shadow-sm transition-opacity hover:border-primary hover:text-primary focus-visible:opacity-100! ${ open ? 'opacity-100! border-primary text-primary' : 'opacity-0 group-hover/seam:opacity-100!' }` }
+                    aria-label={ label }
+                    className={ `${ 'seam' === variant ? 'absolute z-20' : 'pointer-events-auto relative' } flex size-6 cursor-pointer items-center justify-center rounded-full border border-solid border-gray-300 bg-white p-0 text-gray-500 shadow-sm transition-opacity hover:border-primary hover:text-primary focus-visible:opacity-100! ${ shown }` }
                 >
                     <Plus size={ 14 } aria-hidden="true" />
                 </PopoverTrigger>
@@ -189,6 +221,6 @@ export default function InsertPoint( { index } ) {
                     </div>
                 </PopoverContent>
             </Popover>
-        </li>
+        </Wrap>
     );
 }
