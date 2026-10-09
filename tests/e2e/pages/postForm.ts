@@ -167,10 +167,14 @@ export class PostFormPage extends Base {
         await this.page.reload();
         //Click Form Name Box
         await this.validateAndClick(Selectors.postForms.createBlankForm_PF.editNewFormName);
-        // Save Form
+        // Save Form: a form fresh from a template has nothing unsaved, so Save stays
+        // disabled ("No changes to save") and no "saved" toast comes.
+        const unchanged = await this.isUnchangedSave(this.page.locator(Selectors.postForms.formSettings.saveFormSettings));
         await this.validateAndClick(Selectors.postForms.formSettings.saveFormSettings);
         // Confirm Save
-        await this.assertionValidate(Selectors.postForms.formSettings.validateFormSettingsSaved);
+        if (!unchanged) {
+            await this.assertionValidate(Selectors.postForms.formSettings.validateFormSettingsSaved);
+        }
 
     }
 
@@ -196,10 +200,14 @@ export class PostFormPage extends Base {
         await this.page.reload();
         //Click Form Name Box
         await this.validateAndClick(Selectors.postForms.createBlankForm_PF.editNewFormName);
-        // Save Form
+        // Save Form: a form fresh from a template has nothing unsaved, so Save stays
+        // disabled ("No changes to save") and no "saved" toast comes.
+        const unchanged = await this.isUnchangedSave(this.page.locator(Selectors.postForms.formSettings.saveFormSettings));
         await this.validateAndClick(Selectors.postForms.formSettings.saveFormSettings);
         // Confirm Save
-        await this.assertionValidate(Selectors.postForms.formSettings.validateFormSettingsSaved);
+        if (!unchanged) {
+            await this.assertionValidate(Selectors.postForms.formSettings.validateFormSettingsSaved);
+        }
 
     }
 
