@@ -156,10 +156,37 @@ const syncPage = ( route ) => {
     routes.forEach( ( other ) => ( other.bodyClasses || [] ).forEach( ( name ) => body.classList.remove( name ) ) );
     ( route.bodyClasses || [] ).forEach( ( name ) => body.classList.add( name ) );
 
-    const notices = document.getElementById( 'wpuf-admin-app-notices' );
+    routeNotices = !! route.notices;
+    syncNotices();
+};
 
-    if ( notices ) {
-        notices.hidden = ! route.notices || '' === notices.innerHTML.trim();
+/**
+ * The notices area shows only while it holds a notice that takes space: a
+ * dismissed notice (WordPress removes it, other plugins hide it) must not
+ * leave the area's top margin as a gap above the header.
+ */
+let routeNotices = false;
+let noticesWatched = false;
+
+const syncNotices = () => {
+    const box = document.getElementById( 'wpuf-admin-app-notices' );
+
+    if ( ! box ) {
+        return;
+    }
+
+    let shown = false;
+
+    if ( routeNotices && '' !== box.innerHTML.trim() ) {
+        box.hidden = false;
+        shown = [ ...box.children ].some( ( child ) => child.getBoundingClientRect().height > 0 );
+    }
+
+    box.hidden = ! shown;
+
+    if ( ! noticesWatched && window.MutationObserver ) {
+        noticesWatched = true;
+        new window.MutationObserver( syncNotices ).observe( box, { childList: true, subtree: true, attributes: true, attributeFilter: [ 'style', 'class' ] } );
     }
 };
 
