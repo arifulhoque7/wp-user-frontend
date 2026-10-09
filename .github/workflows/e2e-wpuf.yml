@@ -63,6 +63,15 @@ jobs:
             files: tests/regFormTestPro.spec.ts tests/regFormSettingsTestPro.spec.ts tests/frontendLoginTest.spec.ts tests/mailpoetRegistrationTestPro.spec.ts
           - group: fields-subscription
             files: tests/fieldOptionSettingsTest.spec.ts tests/subscriptionTest.spec.ts tests/aiFormBuilderTest.spec.ts tests/releaseSmokeTest.spec.ts
+          # The React admin app screens (lists, Submissions page, builder "+",
+          # settings, welcome) and the Pro QR field: their own runner so the
+          # other groups do not get slower as the app tests grow.
+          - group: admin-app
+            files: tests/adminAppTest.spec.ts tests/settingsReactTest.spec.ts tests/welcomeTest.spec.ts tests/postFormDefaultsTest.spec.ts tests/qrCodeFieldTestPro.spec.ts
+          # Onboarding reruns the setup wizard (pages, settings): alone, so it
+          # cannot change what another group's specs expect.
+          - group: onboarding
+            files: tests/onboardingTest.spec.ts
 
     steps:
       # Setup PHP

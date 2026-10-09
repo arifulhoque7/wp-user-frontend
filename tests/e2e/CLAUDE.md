@@ -22,7 +22,7 @@ pnpm install --frozen-lockfile
 npx playwright install chromium
 
 pnpm run test:setup       # run setup suite first (alphaSetupTest)
-pnpm run test:parallel    # run the 3 native shards sequentially
+pnpm run test:parallel    # run the 4 native shards sequentially
 pnpm run test:sharded     # setup + shards in sequence
 ```
 

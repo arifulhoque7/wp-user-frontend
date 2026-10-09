@@ -42,9 +42,10 @@ const APP = `${Urls.baseUrl}/wp-admin/admin.php?page=wp-user-frontend`;
  * @Test_APP0017 : License (Pro) is the app route #/license: old URL lands there, the key is masked (never in the page), a site without an active key gets the key form
  * @Test_APP0018 : Without Pro, Registration Forms is the app route #/registration-forms on the new components (free shortcode with Copy, Pro features, modules icons) and shows admin notices
  * @Test_APP0019 : Help, Tools, Transactions and Coupons: old URLs land on their app routes with the menu row lit, and those routes show admin notices as develop's pages did
- * @Test_APP0020 : Post forms list Submissions column: total and pending counts link to the posts list filtered by the form (`wpuf_form`)
+ * @Test_APP0020 : Post forms list Submissions count opens the form's Submissions page (status tabs + counts, WP columns, search, empty state, reload, back)
  * @Test_APP0021 : Builder seam "+": between two fields and after the last one it opens the field list and adds the picked field at that position
  * @Test_APP0022 : Column cell "+": adds a field into that column; the list leaves out types a column refuses
+ * @Test_APP0024 : Post form builder Submissions tab; Settings / Form Editor tabs from the Submissions page; none on registration forms
  * @Test_APP0023 : A column stored the develop way (inner fields without ids, as after an update) opens each inner field for editing
  */
 
@@ -663,33 +664,97 @@ test.describe('Admin app', () => {
         }
     });
 
-    test('APP0020 : Post forms list Submissions column links to the filtered posts list', { tag: ['@Lite', '@Test_APP0020'] }, async () => {
+    test('APP0020 : Post forms list Submissions count opens the form\'s Submissions page', { tag: ['@Lite', '@Test_APP0020'] }, async () => {
         test.skip(!(await appOn()), 'admin app is off');
         test.skip(!HAS_WP_CLI, 'needs WP-CLI on the site');
 
         const title = 'APP0020 subs ' + faker.string.alphanumeric(6);
         const id = newForm(title);
-        const posts = ['publish', 'pending', 'pending'].map((status, i) => {
-            const pid = aiWp(['post', 'create', `--post_title=APP0020 post ${i}`, `--post_status=${status}`, '--porcelain'], true).trim().split('\n').pop() as string;
+        const posts = ['publish', 'pending', 'pending', 'draft'].map((status, i) => {
+            const pid = aiWp(['post', 'create', `--post_title=APP0020 post ${status} ${i}`, `--post_status=${status}`, '--porcelain'], true).trim().split('\n').pop() as string;
             aiWp(['post', 'meta', 'add', pid, '_wpuf_form_id', String(id)]);
             return pid;
         });
+        // A post of another form never shows.
+        const other = aiWp(['post', 'create', '--post_title=APP0020 other form', '--post_status=publish', '--porcelain'], true).trim().split('\n').pop() as string;
 
-        await page.goto(`${APP}#/post-forms`);
-        await page.locator('#wpuf-post-forms-list-table-view input[type="search"], #wpuf-post-forms-list-table-view input[placeholder="Search Forms"]').first().fill(title);
-        const row = page.locator('tr', { has: page.locator(`a[href*="wpuf_form=${id}"]`) }).first();
-        await expect(row).toBeVisible({ timeout: 30000 });
-        await expect(page.locator('thead th', { hasText: /^Submissions$/i })).toHaveCount(1);
-        await expect(row.locator(`a[href$="wpuf_form=${id}"]`)).toHaveText('3');
-        await expect(row.locator(`a[href*="wpuf_form=${id}&post_status=pending"]`)).toHaveText('2 pending');
+        try {
+            await page.goto(`${APP}#/post-forms`);
+            await page.locator('#wpuf-post-forms-list-table-view input[placeholder="Search Forms"]').first().fill(title);
+            const row = page.locator('tr', { hasText: title }).first();
+            await expect(row).toBeVisible({ timeout: 30000 });
+            await expect(page.locator('thead th', { hasText: /^Submissions$/i })).toHaveCount(1);
+            await expect(row.locator('button[title^="View posts submitted"]')).toHaveText('4');
+            await expect(row.getByRole('button', { name: '2 pending' })).toBeVisible();
 
-        await row.locator(`a[href*="wpuf_form=${id}&post_status=pending"]`).click();
-        await expect(page).toHaveURL(/edit\.php\?post_type=post&wpuf_form=\d+&post_status=pending/);
-        await expect(page.locator('#the-list .row-title')).toHaveCount(2);
-        await expect(page.locator('#the-list .row-title', { hasText: 'APP0020 post 0' })).toHaveCount(0);
+            await row.locator('button[title^="View posts submitted"]').click();
+            await expect(page).toHaveURL(new RegExp(`#/post-forms/${id}/submissions`));
+            const app = page.locator('#wpuf-admin-app');
+            await expect(app.getByRole('tab', { name: 'Submissions', selected: true })).toBeVisible({ timeout: 30000 });
+            await expect(app.locator('tbody tr')).toHaveCount(4);
+            await expect(app.locator('tbody tr', { hasText: 'APP0020 other form' })).toHaveCount(0);
+            for (const [name, count] of [['All', 4], ['Published', 1], ['Pending Review', 2], ['Draft', 1]] as const) {
+                await expect(app.getByRole('tab', { name: new RegExp(`^${name}\\s*\\(${count}\\)`) })).toBeVisible();
+            }
+            // WordPress posts list columns for posts.
+            for (const head of ['Title', 'Author', 'Categories', 'Tags', 'Status', 'Date']) {
+                await expect(app.locator('thead th', { hasText: new RegExp(`^${head}$`, 'i') })).toHaveCount(1);
+            }
 
-        posts.forEach((pid) => aiWp(['post', 'delete', pid, '--force']));
-        aiWp(['post', 'delete', String(id), '--force']);
+            await app.getByRole('tab', { name: /^Pending Review/ }).click();
+            await expect(app.locator('tbody tr')).toHaveCount(2);
+
+            await app.locator('input[placeholder="Search submissions"]').fill('no-such-submission-xyz');
+            await expect(app.getByText('No submission matches those filters')).toBeVisible();
+            await app.getByRole('button', { name: 'Clear filters' }).click();
+            await expect(app.locator('tbody tr')).toHaveCount(4);
+
+            // A reload stays on the page; Back returns to the list.
+            await page.reload();
+            await expect(app.locator('tbody tr')).toHaveCount(4, { timeout: 30000 });
+            await app.getByRole('link', { name: 'Back to forms' }).click();
+            await expect(page).toHaveURL(/#\/post-forms$/);
+        } finally {
+            [...posts, other].forEach((pid) => aiWp(['post', 'delete', pid, '--force']));
+            aiWp(['post', 'delete', String(id), '--force']);
+        }
+    });
+
+    test('APP0024 : Post form builder Submissions tab and back to Form Editor / Settings', { tag: ['@Lite', '@Test_APP0024'] }, async () => {
+        test.skip(!(await appOn()), 'admin app is off');
+        test.skip(!HAS_WP_CLI, 'needs WP-CLI on the site');
+
+        const id = newForm('APP0024 tabs ' + faker.string.alphanumeric(6));
+
+        try {
+            await page.goto(`${APP}#/post-forms/${id}/edit`);
+            await expect(page.getByRole('tab', { name: 'Form Editor' }).first()).toBeVisible({ timeout: 30000 });
+            await page.getByRole('tab', { name: 'Submissions' }).click();
+            await expect(page).toHaveURL(new RegExp(`#/post-forms/${id}/submissions`));
+            await expect(page.getByText('No submissions yet')).toBeVisible({ timeout: 30000 });
+
+            await page.getByRole('tab', { name: 'Settings' }).click();
+            await expect(page).toHaveURL(new RegExp(`#/post-forms/${id}/edit\\?tab=settings`));
+            await expect(page.getByRole('tab', { name: 'Settings', selected: true })).toBeVisible({ timeout: 30000 });
+
+            await page.getByRole('tab', { name: 'Submissions' }).click();
+            await page.getByRole('tab', { name: 'Form Editor' }).click();
+            await expect(page.getByRole('tab', { name: 'Form Editor', selected: true })).toBeVisible({ timeout: 30000 });
+        } finally {
+            aiWp(['post', 'delete', String(id), '--force']);
+        }
+
+        // Registration forms have no Submissions tab.
+        if (await proRegistrationList()) {
+            const reg = newForm('APP0024 reg ' + faker.string.alphanumeric(6), 'wpuf_profile');
+            try {
+                await page.goto(`${APP}#/registration-forms/${reg}/edit`);
+                await expect(page.getByRole('tab', { name: 'Form Editor' }).first()).toBeVisible({ timeout: 30000 });
+                await expect(page.getByRole('tab', { name: 'Submissions' })).toHaveCount(0);
+            } finally {
+                aiWp(['post', 'delete', String(reg), '--force']);
+            }
+        }
     });
 
     /** Leave the builder without saving: drop the unsaved state so the route guard does not stop the next test. */
