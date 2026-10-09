@@ -2286,9 +2286,9 @@ export const Selectors = {
         // Entry point on User Frontend > Tools
         entry: {
             // React Tools route (#/tools): the "Onboarding" tool card, its button and its warning Notice.
-            onboardingBox: '(//h3[normalize-space()="Onboarding"]/ancestor::div[.//button][1])',
-            startButton: '(//h3[normalize-space()="Onboarding"]/ancestor::div[.//button][1])//button',
-            rerunWarning: '(//h3[normalize-space()="Onboarding"]/ancestor::div[.//button][1])//*[@data-slot="alert"][@data-wpuf-tone="warning"]',
+            onboardingBox: '(//*[self::h2 or self::h3][normalize-space()="Onboarding"]/ancestor::div[.//button][1])',
+            startButton: '(//*[self::h2 or self::h3][normalize-space()="Onboarding"]/ancestor::div[.//button][1])//button',
+            rerunWarning: '(//*[self::h2 or self::h3][normalize-space()="Onboarding"]/ancestor::div[.//button][1])//*[@data-slot="alert"][@data-wpuf-tone="warning"]',
         },
 
         // Shared chrome
