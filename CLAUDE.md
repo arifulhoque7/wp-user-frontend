@@ -32,13 +32,13 @@ Per-directory `CLAUDE.md` files auto-load when Claude works in that path:
 ## Non-Negotiables
 
 - **Preserve existing behavior.** Hooks, filters, public methods, REST routes, template paths, and shortcodes are contracts — don't change signatures or drop parameters silently.
-- **Legacy code stays.** jQuery form builder, LESS, Grunt, and the `class/` directory coexist with modern Vue/Tailwind/Vite intentionally. Don't rewrite legacy code without explicit permission.
+- **Legacy code stays.** The site frontend, field types, payments, LESS and Grunt coexist with the React admin platform intentionally. Don't rewrite legacy code without explicit permission; renamed classes keep a `class_alias` stub at the old name.
 - **Free/Pro split matters.** Never assume Pro features exist. Detect with `class_exists('WP_User_Frontend_Pro')`.
 - **Scope discipline.** No drive-by refactors. Note unrelated issues separately instead of fixing them inline.
 
 ## Admin platform revamp (branch `feature/react-admin-revamp`)
 
-Builders, forms lists, subscriptions, settings and onboarding move to a FlyHR-style platform (`includes/Platform/`, `src/admin/`, `@wedevs/plugin-ui` with the old Vue look, Dokan-style hooks). Read [`docs/architecture.md`](docs/architecture.md) first. Rules: stored data frozen (untouched save changes nothing), WPUF keeps firing every hook it owns, Pro modules and User Directory are not edited, every in-scope button is the shared `Button` wrapper, pnpm on that branch, docs stay local (not committed). Plan and evidence: `openspec/changes/revamp-admin-react-flyhr/` in the dev site.
+Every admin screen runs on a FlyHR-style platform (`includes/Platform/`, `includes/Admin/Screens/`, `src/admin/`, `@wedevs/plugin-ui` with the old Vue look, Dokan-style hooks) as one React app on `admin.php?page=wp-user-frontend`; old admin URLs redirect to their route. Read [`docs/architecture.md`](docs/architecture.md) first (boot flow and the "where is X" map). Rules: stored data frozen (untouched save changes nothing), WPUF keeps firing every hook it owns, Pro modules and User Directory are not edited, every in-scope button is the shared `Button` wrapper, pnpm on that branch, tracked docs are committed with the work. Plan and evidence: `openspec/changes/revamp-admin-react-flyhr/` in the dev site.
 
 ## Quick Reference
 
@@ -63,7 +63,8 @@ wp-user-frontend/
 │   ├── Admin/              # Admin settings, menus, subscription management
 │   ├── Ajax/               # AJAX handlers (forms, uploads, addresses)
 │   ├── AI/                 # AI form builder (config, prompts, REST)
-│   ├── Api/                # REST API controllers (FormList, Subscription)
+│   ├── Api/                # Alias stubs of the old REST controller names (deprecated)
+│   ├── Builder/            # Builder boot data, save, hook bridge, retired-hook deprecations
 │   ├── Fields/             # Form field types (20+ field classes)
 │   ├── Free/               # Free version functionality & pro prompts
 │   ├── Frontend/           # Frontend forms, dashboard, registration, payments
@@ -73,10 +74,11 @@ wp-user-frontend/
 │   ├── Widgets/            # WordPress widgets
 │   ├── Data/               # Data layer classes
 │   ├── Log/                # Logging utilities
+│   ├── Platform/           # Container, providers, REST (Manager + Controllers), stores, Caps, Onboarding services
 │   ├── upgrades/           # Version migration scripts
 │   └── Abstracts/          # Abstract base classes
-├── src/                    # Vue 3 source (17 files)
-│   ├── admin/              # Admin panel components
+├── src/                    # React admin apps and the two remaining Vue apps
+│   ├── admin/              # React admin: app/ (runtime), apps/<screen>/, shared/
 │   ├── components/         # Shared Vue components
 │   ├── css/                # Component styles
 │   ├── js/                 # JavaScript modules
@@ -106,7 +108,6 @@ wp-user-frontend/
 ├── tests/
 │   └── e2e/                # Playwright E2E tests
 ├── views/                  # Legacy PHP view files
-├── class/                  # Legacy class files (subscription, render-form)
 ├── config/                 # Configuration files
 └── languages/              # Translation files
 ```
@@ -117,7 +118,7 @@ wp-user-frontend/
 - `includes/Frontend_Render_Form.php` / `includes/Render_Form.php` — Core form rendering engine
 - `includes/User_Subscription.php` — Subscription plan management
 - `includes/Installer.php` — Plugin activation, DB table creation
-- `includes/API.php` — REST API registration
+- `includes/API.php` — builds the three frozen REST controllers (`wpuf()->api`); routes are registered by `Platform\REST\Manager`
 - `includes/AI_Manager.php` — AI form builder orchestration
 
 ### Service Container
@@ -133,7 +134,7 @@ Simple array-based container with magic `__get()`. Services accessed via `wpuf()
 - **LESS** (legacy) for older stylesheets
 
 ### REST API
-2 controllers under `includes/Api/` — `FormList` and `Subscription`. AI features add an additional REST controller via `includes/AI/RestController.php`.
+Namespace `wpuf/v1`. Controllers live in `includes/Platform/REST/Controllers/` on the `Platform\REST\RestController` base: the admin routes (`FormsController`, `ToolsController`, `TransactionsController`, `OnboardingController`) and the frozen routes (`FormListController`, `SubscriptionController`, `SettingsController`). The AI form builder keeps its controller with its feature (`includes/AI/RestController.php`); Pro adds its own under `wpuf-pro/includes/Platform/<Feature>/`. `Platform\REST\Manager` registers all of them once on `rest_api_init`; permissions come from `Platform\Caps`.
 
 ### Payment System
 Payment gateways managed through `Lib/Gateway/`:

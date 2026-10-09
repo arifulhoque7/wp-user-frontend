@@ -2,6 +2,8 @@
 
 namespace WeDevs\Wpuf\Admin;
 
+use WeDevs\Wpuf\Platform\Onboarding\Pages;
+use WeDevs\Wpuf\Platform\Onboarding\Plugin_Installer;
 use WeDevs\Wpuf\Platform\Stores\Stores;
 
 /**
@@ -58,6 +60,20 @@ class Onboarding {
      * @var array
      */
     protected $input = [];
+
+    /**
+     * Page lookups (lazy: tests build the wizard without its constructor).
+     *
+     * @var Pages|null
+     */
+    protected $pages = null;
+
+    /**
+     * Plugin step service (lazy).
+     *
+     * @var Plugin_Installer|null
+     */
+    protected $plugins = null;
 
     /**
      * Boot the wizard
@@ -735,46 +751,6 @@ class Onboarding {
     }
 
     /**
-     * A page list as select options, "create" first
-     *
-     * @param string $create_label
-     * @param array  $pages        page id => label
-     *
-     * @return array[]
-     */
-    private function page_options( $create_label, $pages ) {
-        $options = [
-            [
-                'value' => 'create',
-                'label' => $create_label,
-            ],
-        ];
-
-        foreach ( $pages as $page_id => $label ) {
-            $options[] = [
-                'value' => (string) $page_id,
-                'label' => wp_strip_all_tags( $label ),
-            ];
-        }
-
-        return $options;
-    }
-
-    /**
-     * The stored page of a select, or "create" when it is not offered
-     *
-     * @param int     $page_id
-     * @param array[] $options
-     *
-     * @return string
-     */
-    private function page_choice( $page_id, $options ) {
-        $value = (string) absint( $page_id );
-
-        return in_array( $value, wp_list_pluck( $options, 'value' ), true ) ? $value : 'create';
-    }
-
-    /**
      * Step 1 data
      *
      * @return array
@@ -874,18 +850,18 @@ class Onboarding {
             ];
         }
 
-        $login = $this->page_options(
+        $login = $this->pages()->page_options(
             __( 'Create a new Login page', 'wp-user-frontend' ),
             $this->get_pages_for_shortcode( 'wpuf-login', __( 'UF Login Page', 'wp-user-frontend' ) )
         );
 
         // Free and Pro register different registration shortcodes.
-        $reg = $this->page_options(
+        $reg = $this->pages()->page_options(
             $is_pro ? __( 'Create a new Registration page and form', 'wp-user-frontend' ) : __( 'Create a new Registration page', 'wp-user-frontend' ),
             $this->get_pages_for_shortcode( $is_pro ? 'wpuf_profile' : 'wpuf-registration', __( 'UF Registration Page', 'wp-user-frontend' ) )
         );
 
-        $account = $this->page_options(
+        $account = $this->pages()->page_options(
             __( 'Create a new Account page', 'wp-user-frontend' ),
             $this->get_pages_for_shortcode( 'wpuf_account', __( 'UF Account Page', 'wp-user-frontend' ) )
         );
@@ -900,11 +876,11 @@ class Onboarding {
 
         return [
             'login_pages'   => $login,
-            'login_page'    => $this->page_choice( wpuf_get_option( 'login_page', 'wpuf_profile', 0 ), $login ),
+            'login_page'    => $this->pages()->page_choice( wpuf_get_option( 'login_page', 'wpuf_profile', 0 ), $login ),
             'reg_pages'     => $reg,
-            'reg_page'      => $this->page_choice( wpuf_get_option( 'reg_override_page', 'wpuf_profile', 0 ), $reg ),
+            'reg_page'      => $this->pages()->page_choice( wpuf_get_option( 'reg_override_page', 'wpuf_profile', 0 ), $reg ),
             'account_pages' => $account,
-            'account_page'  => $this->page_choice( $account_page, $account ),
+            'account_page'  => $this->pages()->page_choice( $account_page, $account ),
             'autologin'     => wpuf_is_checkbox_or_toggle_on( wpuf_get_option( 'autologin_after_registration', 'wpuf_profile', 'on' ) ),
             'layouts'       => $layout_options,
             'layout'        => $layout,
@@ -1201,10 +1177,10 @@ class Onboarding {
             if ( $login_page ) {
                 $profile['login_page'] = $login_page;
             }
-        } elseif ( $this->is_page( $login_choice ) ) {
+        } elseif ( $this->pages()->is_page( $login_choice ) ) {
             $profile['login_page'] = absint( $login_choice );
 
-            $this->ensure_page_shortcode( absint( $login_choice ), 'wpuf-login', '[wpuf-login]' );
+            $this->pages()->ensure_page_shortcode( absint( $login_choice ), 'wpuf-login', '[wpuf-login]' );
         }
 
         $reg_choice = $this->posted_value( 'reg_page' );
@@ -1232,21 +1208,21 @@ class Onboarding {
                     $profile['reg_override_page'] = $reg_page;
                 }
             }
-        } elseif ( $this->is_page( $reg_choice ) ) {
+        } elseif ( $this->pages()->is_page( $reg_choice ) ) {
             $profile['reg_override_page'] = absint( $reg_choice );
 
             if ( $is_pro ) {
                 $form_id = $this->get_registration_form_id();
 
                 if ( $form_id ) {
-                    $this->ensure_page_shortcode(
+                    $this->pages()->ensure_page_shortcode(
                         absint( $reg_choice ),
                         'wpuf_profile',
                         '[wpuf_profile type="registration" id="' . $form_id . '"]'
                     );
                 }
             } else {
-                $this->ensure_page_shortcode(
+                $this->pages()->ensure_page_shortcode(
                     absint( $reg_choice ),
                     'wpuf-registration',
                     '[wpuf-registration]'
@@ -1269,149 +1245,6 @@ class Onboarding {
         Stores::settings()->write_section( 'wpuf_profile', $profile );
 
         $this->save_account_page();
-    }
-
-    /**
-     * The first page already holding a shortcode
-     *
-     * Used so an unset page setting falls back to a page that exists rather
-     * than offering to create another one.
-     *
-     * @since WPUF_SINCE
-     *
-     * @param string $tag
-     *
-     * @return int page id, 0 when none holds it
-     */
-    public function find_page_with_shortcode( $tag ) {
-        $pages = get_posts(
-            [
-                'post_type'      => 'page',
-                'post_status'    => [ 'publish', 'draft', 'private' ],
-                'posts_per_page' => -1,
-                'orderby'        => 'ID',
-                'order'          => 'ASC',
-            ]
-        );
-
-        foreach ( $pages as $page ) {
-            if ( $this->content_has_shortcode( $page->post_content, $tag ) ) {
-                return $page->ID;
-            }
-        }
-
-        return 0;
-    }
-
-    /**
-     * Pages for a wizard dropdown, flagging the ones already holding a shortcode
-     *
-     * @since WPUF_SINCE
-     *
-     * @param string $tag    shortcode tag to look for
-     * @param string $marker  what to show in brackets on a page that has it
-     *
-     * @return array page id => label
-     */
-    public function get_pages_for_shortcode( $tag, $marker = '' ) {
-        $pages = get_posts(
-            [
-                'post_type'      => 'page',
-                'post_status'    => [ 'publish', 'draft', 'private' ],
-                'posts_per_page' => -1,
-                'orderby'        => 'title',
-                'order'          => 'ASC',
-            ]
-        );
-
-        $list = [];
-
-        foreach ( $pages as $page ) {
-            $label = $page->post_title ? $page->post_title : __( '(no title)', 'wp-user-frontend' );
-
-            if ( $marker && $this->content_has_shortcode( $page->post_content, $tag ) ) {
-                $label .= ' (' . $marker . ')';
-            }
-
-            $list[ $page->ID ] = $label;
-        }
-
-        return $list;
-    }
-
-    /**
-     * Whether content holds a shortcode
-     *
-     * The has_shortcode() helper only matches tags registered at the time of the
-     * call, and the WPUF shortcodes are not registered on the wizard screen, so
-     * the tag is matched directly instead.
-     *
-     * @since WPUF_SINCE
-     *
-     * @param string $content
-     * @param string $tag
-     *
-     * @return bool
-     */
-    protected function content_has_shortcode( $content, $tag ) {
-        if ( false === strpos( $content, '[' ) ) {
-            return false;
-        }
-
-        return (bool) preg_match( '/\[' . preg_quote( $tag, '/' ) . '[\s\]\/]/', $content );
-    }
-
-    /**
-     * Whether a wizard page choice is an existing page (not trashed)
-     *
-     * @since WPUF_SINCE
-     *
-     * @param int|string $page_id Posted page id.
-     *
-     * @return bool
-     */
-    protected function is_page( $page_id ) {
-        $page_id = absint( $page_id );
-
-        return $page_id && 'page' === get_post_type( $page_id ) && 'trash' !== get_post_status( $page_id );
-    }
-
-    /**
-     * Put a WPUF shortcode on a page that does not have it yet
-     *
-     * Picking an existing page from the wizard is only useful if the page
-     * actually renders the form, so the shortcode is appended when missing.
-     *
-     * @since WPUF_SINCE
-     *
-     * @param int    $page_id
-     * @param string $tag       shortcode tag to look for
-     * @param string $shortcode full shortcode to append
-     *
-     * @return bool whether the page was changed
-     */
-    protected function ensure_page_shortcode( $page_id, $tag, $shortcode ) {
-        $page = get_post( $page_id );
-
-        if ( ! $page || 'page' !== $page->post_type ) {
-            return false;
-        }
-
-        if ( $this->content_has_shortcode( $page->post_content, $tag ) ) {
-            return false;
-        }
-
-        $content = trim( $page->post_content );
-        $content = $content ? $content . "\n\n" . $shortcode : $shortcode;
-
-        wp_update_post(
-            [
-                'ID'           => $page_id,
-                'post_content' => $content,
-            ]
-        );
-
-        return true;
     }
 
     /**
@@ -1475,11 +1308,11 @@ class Onboarding {
             $page_id = absint( $choice );
 
             // Only an existing page; anything else keeps the stored account page.
-            if ( ! $this->is_page( $page_id ) ) {
+            if ( ! $this->pages()->is_page( $page_id ) ) {
                 return;
             }
 
-            $this->ensure_page_shortcode( $page_id, 'wpuf_account', '[wpuf_account]' );
+            $this->pages()->ensure_page_shortcode( $page_id, 'wpuf_account', '[wpuf_account]' );
         }
 
         $account['account_page'] = $page_id;
@@ -1501,7 +1334,7 @@ class Onboarding {
         // plan gated. Keep the free list in step either way, so a plan that
         // does not carry the Pro module still gets a working directory.
         if ( wpuf_is_pro_active() ) {
-            $this->toggle_pro_directory_module( $enabled );
+            $this->plugins()->toggle_pro_directory_module( $enabled );
         }
 
         $active = wpuf_free_get_active_modules();
@@ -1594,7 +1427,7 @@ class Onboarding {
             $directory_exists = false;
 
             foreach ( Admin_Installer::USER_DIRECTORY_MARKERS as $directory_marker ) {
-                if ( $this->page_exists( $directory_marker ) ) {
+                if ( $this->pages()->page_exists( $directory_marker ) ) {
                     $directory_exists = true;
 
                     break;
@@ -1613,303 +1446,6 @@ class Onboarding {
             $installer = new Admin_Installer();
 
             $installer->auto_add_logout_to_menu();
-        }
-    }
-
-    /**
-     * Step 6: companion plugins
-     *
-     * Plugins are installed over ajax from the step itself, so nothing is
-     * saved here beyond marking the step as visited.
-     *
-     * @since WPUF_SINCE
-     *
-     * @return void
-     */
-    public function save_plugins() {
-        $plugins = $this->get_recommended_plugins();
-        $errors  = [];
-
-        $picked = $this->posted_keys( 'plugins' );
-
-        if ( ! $picked || ! current_user_can( 'install_plugins' ) ) {
-            delete_option( self::PLUGIN_ERRORS_OPTION );
-
-            return;
-        }
-
-        // Four plugins downloaded one after another in a single request is the
-        // slowest thing the wizard does, and on a host with a short
-        // max_execution_time it is what times out. Ask for room, then keep an eye
-        // on the clock and stop cleanly rather than being killed mid-install.
-        wp_raise_memory_limit( 'admin' );
-
-        $budget = $this->get_install_time_budget();
-        $started = microtime( true );
-
-        foreach ( $picked as $slug ) {
-            if ( ! isset( $plugins[ $slug ] ) ) {
-                continue;
-            }
-
-            // Stop while there is still time to render a page. Whatever is left is
-            // reported rather than silently dropped, and the step reappears with
-            // those plugins still on it, so a second click finishes the job.
-            if ( $budget > 0 && ( microtime( true ) - $started ) > $budget ) {
-                $errors[ $plugins[ $slug ]['name'] ] = __( 'Not installed yet: the wizard ran out of time on this request. Select it again to finish.', 'wp-user-frontend' );
-
-                continue;
-            }
-
-            // Each plugin gets its own slice of the clock where the host allows it.
-            if ( function_exists( 'set_time_limit' ) ) {
-                // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- disabled on some hosts.
-                @set_time_limit( 120 );
-            }
-
-            $result = $this->install_and_activate( $slug );
-
-            if ( is_wp_error( $result ) ) {
-                $errors[ $plugins[ $slug ]['name'] ] = $result->get_error_message();
-            }
-        }
-
-        if ( $errors ) {
-            update_option( self::PLUGIN_ERRORS_OPTION, $errors );
-        } else {
-            delete_option( self::PLUGIN_ERRORS_OPTION );
-        }
-    }
-
-    /**
-     * How long this request may spend installing before it stops
-     *
-     * Leaves roughly a quarter of the host's execution time to render the next
-     * screen, so a run that cannot finish reports what is left instead of dying
-     * half way. Returns 0 when the host sets no limit, in which case there is
-     * nothing to budget against.
-     *
-     * @since WPUF_SINCE
-     *
-     * @return float seconds, 0 when the host imposes no limit
-     */
-    protected function get_install_time_budget() {
-        $limit = (int) ini_get( 'max_execution_time' );
-
-        if ( $limit <= 0 ) {
-            return 0;
-        }
-
-        return max( 5, $limit * 0.75 );
-    }
-
-    /**
-     * The gateways offered on the settings step, with what each one still needs
-     *
-     * Built from the same source the settings screen renders, then annotated so a
-     * card can say whether it is ready to take money or still wants credentials.
-     * Bank transfer is the only one that works on the spot, which is why it is the
-     * default; the rest send the admin to Settings afterwards.
-     *
-     * Stripe is added back when nothing registered it. Without this the card
-     * simply vanishes on a Pro site whose Stripe module is switched off, which
-     * reads as "we do not support Stripe" rather than "turn the module on".
-     *
-     * @since WPUF_SINCE
-     *
-     * @return array gateway id => card data
-     */
-    public function get_gateway_cards() {
-        $gateways = wpuf_get_gateways( 'gateway_selector' );
-        $gateways = is_array( $gateways ) ? $gateways : [];
-
-        if ( ! isset( $gateways['stripe'] ) ) {
-            $gateways['stripe'] = [
-                'admin_label'    => __( 'Credit Card', 'wp-user-frontend' ),
-                'icon'           => '',
-                'is_pro_preview' => ! wpuf_is_pro_active(),
-            ];
-
-            // Pro is here, so the gateway is available; its module is just off.
-            if ( wpuf_is_pro_active() ) {
-                $gateways['stripe']['needs_module'] = true;
-            }
-        }
-
-        // Anything that cannot take a payment until the admin enters credentials.
-        $needs_credentials = [ 'paypal', 'stripe' ];
-
-        foreach ( $gateways as $id => $gateway ) {
-            $is_pro_preview = ! empty( $gateway['is_pro_preview'] );
-
-            $gateways[ $id ]['is_pro_preview'] = $is_pro_preview;
-            // A gateway whose module is off cannot take keys yet; its card says so.
-            $gateways[ $id ]['needs_setup'] = ! $is_pro_preview && empty( $gateway['needs_module'] ) && in_array( $id, $needs_credentials, true );
-
-            if ( ! empty( $gateway['needs_module'] ) ) {
-                $gateways[ $id ]['hint'] = __( 'Turn the Stripe module on in Modules, then add your keys.', 'wp-user-frontend' );
-            } elseif ( $is_pro_preview ) {
-                $gateways[ $id ]['hint'] = __( 'Comes with Pro.', 'wp-user-frontend' );
-            } elseif ( $gateways[ $id ]['needs_setup'] ) {
-                $gateways[ $id ]['hint'] = __( 'Needs your API keys in Settings.', 'wp-user-frontend' );
-            } else {
-                $gateways[ $id ]['hint'] = __( 'Works right away.', 'wp-user-frontend' );
-            }
-        }
-
-        /**
-         * Filter the gateway cards shown on the onboarding settings step
-         *
-         * @since WPUF_SINCE
-         *
-         * @param array $gateways Gateway id => card data.
-         */
-        $gateways = apply_filters( 'wpuf_onboarding_gateway_cards', $gateways );
-
-        return is_array( $gateways ) ? $gateways : [];
-    }
-
-    /**
-     * The recommended plugins that are not running yet
-     *
-     * A plugin that is later deactivated or deleted comes back on the list,
-     * and with it the step.
-     *
-     * @since WPUF_SINCE
-     *
-     * @return array slug => plugin
-     */
-    public function get_pending_plugins() {
-        if ( ! function_exists( 'is_plugin_active' ) ) {
-            require_once ABSPATH . 'wp-admin/includes/plugin.php';
-        }
-
-        $pending = [];
-
-        foreach ( $this->get_recommended_plugins() as $slug => $plugin ) {
-            $file = $this->get_installed_file( $plugin['file'] );
-
-            if ( $file && is_plugin_active( $file ) ) {
-                continue;
-            }
-
-            $plugin['installed'] = (bool) $file;
-
-            $pending[ $slug ] = $plugin;
-        }
-
-        return $pending;
-    }
-
-    /**
-     * Install a recommended plugin from wordpress.org and switch it on
-     *
-     * @since WPUF_SINCE
-     *
-     * @param string $slug
-     *
-     * @return true|\WP_Error
-     */
-    public function install_and_activate( $slug ) {
-        $plugins = $this->get_recommended_plugins();
-
-        if ( ! isset( $plugins[ $slug ] ) ) {
-            return new \WP_Error( 'unknown_plugin', __( 'Unknown plugin.', 'wp-user-frontend' ) );
-        }
-
-        $basename = $plugins[ $slug ]['file'];
-
-        require_once ABSPATH . 'wp-admin/includes/file.php';
-        require_once ABSPATH . 'wp-admin/includes/plugin.php';
-        require_once ABSPATH . 'wp-admin/includes/plugin-install.php';
-        require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
-
-        if ( ! $this->is_plugin_installed( $basename ) ) {
-            $api = plugins_api(
-                'plugin_information', [
-                    'slug'   => $slug,
-                    'fields' => [ 'sections' => false ],
-                ]
-            );
-
-            if ( is_wp_error( $api ) ) {
-                return $api;
-            }
-
-            $upgrader = new \Plugin_Upgrader( new \Automatic_Upgrader_Skin() );
-            $result   = $upgrader->install( $api->download_link );
-
-            if ( is_wp_error( $result ) ) {
-                return $result;
-            }
-
-            if ( ! $result ) {
-                return new \WP_Error( 'install_failed', __( 'Could not install the plugin.', 'wp-user-frontend' ) );
-            }
-        }
-
-        $installed_file = $this->get_installed_file( $basename );
-
-        if ( ! $installed_file ) {
-            return new \WP_Error( 'not_found', __( 'The plugin was not found after installing.', 'wp-user-frontend' ) );
-        }
-
-        $activated = activate_plugin( $installed_file );
-
-        if ( is_wp_error( $activated ) ) {
-            return $activated;
-        }
-
-        $this->clear_activation_redirects();
-
-        return true;
-    }
-
-    /**
-     * Drop the "just activated" redirects the companion plugins set for themselves
-     *
-     * Activating a plugin from inside the wizard makes that plugin queue its own
-     * welcome or setup redirect, which fires on the next admin screen and throws the
-     * admin out of onboarding half way through. Clearing the flags keeps the admin
-     * in the wizard; the plugin's own setup screens stay reachable from its menu.
-     *
-     * Best effort by design. Deleting a transient that was never set is a no-op, and
-     * the list is filterable so a plugin using a key not covered here can add it
-     * rather than needing a change in this file.
-     *
-     * @since WPUF_SINCE
-     *
-     * @return void
-     */
-    protected function clear_activation_redirects() {
-        $default_transients = [
-            // WPUF's own, so finishing an install here does not bounce the admin
-            // into the legacy setup wizard.
-            'wpuf_activation_redirect',
-            'wpuf_onboarding_redirect',
-            // The companion plugins offered by this step.
-            'wemail_activation_redirect',
-            'erp_activation_redirect',
-            '_erp_setup_page_redirect',
-            'wedocs_activation_redirect',
-            'pm_activation_redirect',
-            'cpm_activation_redirect',
-        ];
-
-        /**
-         * Filter the activation redirect flags cleared after a companion plugin installs
-         *
-         * @since WPUF_SINCE
-         *
-         * @param array $transients Transient names to delete.
-         */
-        $transients = apply_filters( 'wpuf_onboarding_activation_redirects', $default_transients );
-        $transients = ! empty( $transients ) && is_array( $transients ) ? $transients : $default_transients;
-
-        foreach ( $transients as $transient ) {
-            if ( is_string( $transient ) && '' !== $transient ) {
-                delete_transient( $transient );
-            }
         }
     }
 
@@ -1937,142 +1473,6 @@ class Onboarding {
                 wpuf()->tracker->insights->optout();
             }
         }
-    }
-
-    /**
-     * The companion plugins offered in the wizard
-     *
-     * @since WPUF_SINCE
-     *
-     * @return array
-     */
-    public function get_recommended_plugins() {
-        $plugins = [
-            'wemail'              => [
-                'logo' => 'onboarding/wemail.svg',
-                'name' => __( 'weMail', 'wp-user-frontend' ),
-                'file' => 'wemail/wemail.php',
-                'desc' => __( 'Welcome mails, newsletters and campaigns to the people who sign up.', 'wp-user-frontend' ),
-            ],
-            'erp'                 => [
-                'logo' => 'onboarding/erp.svg',
-                'name' => __( 'WP ERP', 'wp-user-frontend' ),
-                'file' => 'erp/wp-erp.php',
-                'desc' => __( 'Turn your members into CRM contacts, with every interaction on one profile.', 'wp-user-frontend' ),
-            ],
-            'wedocs'              => [
-                'logo' => 'onboarding/wedocs.svg',
-                'name' => __( 'weDocs', 'wp-user-frontend' ),
-                'file' => 'wedocs/wedocs.php',
-                'desc' => __( 'A docs area members can read instead of opening a ticket.', 'wp-user-frontend' ),
-            ],
-            'wedevs-project-manager' => [
-                'logo' => 'onboarding/wedevs-project-manager.svg',
-                'name' => __( 'WP Project Manager', 'wp-user-frontend' ),
-                'file' => 'wedevs-project-manager/cpm.php',
-                'desc' => __( 'Run projects and tasks with the members who sign up.', 'wp-user-frontend' ),
-            ],
-        ];
-
-        /**
-         * Filter the plugins recommended during onboarding
-         *
-         * @since WPUF_SINCE
-         *
-         * @param array $plugins
-         */
-        return apply_filters( 'wpuf_onboarding_recommended_plugins', $plugins );
-    }
-
-    /**
-     * Whether a plugin is present on the site
-     *
-     * @since WPUF_SINCE
-     *
-     * @param string $basename
-     *
-     * @return bool
-     */
-    public function is_plugin_installed( $basename ) {
-        return (bool) $this->get_installed_file( $basename );
-    }
-
-    /**
-     * The installed plugin file for a basename
-     *
-     * Plugins are matched by their folder, so a main file we did not guess
-     * exactly still resolves to what is really on disk.
-     *
-     * @since WPUF_SINCE
-     *
-     * @param string $basename
-     *
-     * @return string empty when the plugin is not installed
-     */
-    public function get_installed_file( $basename ) {
-        if ( ! function_exists( 'get_plugins' ) ) {
-            require_once ABSPATH . 'wp-admin/includes/plugin.php';
-        }
-
-        $installed = get_plugins();
-
-        if ( array_key_exists( $basename, $installed ) ) {
-            return $basename;
-        }
-
-        $folder = dirname( $basename );
-
-        foreach ( array_keys( $installed ) as $file ) {
-            if ( dirname( $file ) === $folder ) {
-                return $file;
-            }
-        }
-
-        return '';
-    }
-
-    /**
-     * Turn the Pro user directory module on or off
-     *
-     * @since WPUF_SINCE
-     *
-     * @param bool $enable
-     *
-     * @return void
-     */
-    protected function toggle_pro_directory_module( $enable ) {
-        $module = 'user-directory/userlisting.php';
-
-        if ( ! function_exists( 'wpuf_pro_activate_module' ) ) {
-            return;
-        }
-
-        if ( ! $enable ) {
-            wpuf_pro_deactivate_module( $module );
-
-            return;
-        }
-
-        if ( function_exists( 'wpuf_pro_is_module_allowed' ) && ! wpuf_pro_is_module_allowed( $module ) ) {
-            return;
-        }
-
-        wpuf_pro_activate_module( $module );
-    }
-
-    /**
-     * Whether the user directory is available on this site
-     *
-     * @since WPUF_SINCE
-     *
-     * @return bool
-     */
-    public function is_directory_active() {
-        if ( function_exists( 'wpuf_pro_is_module_active' ) && wpuf_pro_is_module_active( 'user-directory/userlisting.php' ) ) {
-            return true;
-        }
-
-        return function_exists( 'wpuf_free_is_module_active' ) && wpuf_free_is_module_active( 'user_directory' );
     }
 
     /**
@@ -2114,29 +1514,6 @@ class Onboarding {
         }
 
         return $form_id;
-    }
-
-    /**
-     * Whether a page holding the given shortcode already exists
-     *
-     * @since WPUF_SINCE
-     *
-     * @param string $needle
-     *
-     * @return bool
-     */
-    protected function page_exists( $needle ) {
-        $pages = get_posts(
-            [
-                'post_type'      => 'page',
-                'post_status'    => [ 'publish', 'draft' ],
-                'posts_per_page' => -1,
-                'fields'         => 'ids',
-                's'              => $needle,
-            ]
-        );
-
-        return ! empty( $pages );
     }
 
     /**
@@ -2201,5 +1578,129 @@ class Onboarding {
         ];
 
         return $checklist;
+    }
+
+    /**
+     * @see \WeDevs\Wpuf\Platform\Onboarding\Pages::find_page_with_shortcode()
+     *
+     * @since WPUF_SINCE
+     */
+    public function find_page_with_shortcode( $tag ) {
+        return $this->pages()->find_page_with_shortcode( $tag );
+    }
+
+    /**
+     * @see \WeDevs\Wpuf\Platform\Onboarding\Pages::get_pages_for_shortcode()
+     *
+     * @since WPUF_SINCE
+     */
+    public function get_pages_for_shortcode( $tag, $marker = '' ) {
+        return $this->pages()->get_pages_for_shortcode( $tag, $marker );
+    }
+
+    /**
+     * @see \WeDevs\Wpuf\Platform\Onboarding\Plugin_Installer::get_gateway_cards()
+     *
+     * @since WPUF_SINCE
+     */
+    public function get_gateway_cards() {
+        return $this->plugins()->get_gateway_cards();
+    }
+
+    /**
+     * @see \WeDevs\Wpuf\Platform\Onboarding\Plugin_Installer::get_pending_plugins()
+     *
+     * @since WPUF_SINCE
+     */
+    public function get_pending_plugins() {
+        return $this->plugins()->get_pending_plugins();
+    }
+
+    /**
+     * @see \WeDevs\Wpuf\Platform\Onboarding\Plugin_Installer::install_and_activate()
+     *
+     * @since WPUF_SINCE
+     */
+    public function install_and_activate( $slug ) {
+        return $this->plugins()->install_and_activate( $slug );
+    }
+
+    /**
+     * @see \WeDevs\Wpuf\Platform\Onboarding\Plugin_Installer::get_recommended_plugins()
+     *
+     * @since WPUF_SINCE
+     */
+    public function get_recommended_plugins() {
+        return $this->plugins()->get_recommended_plugins();
+    }
+
+    /**
+     * @see \WeDevs\Wpuf\Platform\Onboarding\Plugin_Installer::is_plugin_installed()
+     *
+     * @since WPUF_SINCE
+     */
+    public function is_plugin_installed( $basename ) {
+        return $this->plugins()->is_plugin_installed( $basename );
+    }
+
+    /**
+     * @see \WeDevs\Wpuf\Platform\Onboarding\Plugin_Installer::get_installed_file()
+     *
+     * @since WPUF_SINCE
+     */
+    public function get_installed_file( $basename ) {
+        return $this->plugins()->get_installed_file( $basename );
+    }
+
+    /**
+     * @see \WeDevs\Wpuf\Platform\Onboarding\Plugin_Installer::is_directory_active()
+     *
+     * @since WPUF_SINCE
+     */
+    public function is_directory_active() {
+        return $this->plugins()->is_directory_active();
+    }
+
+    /**
+     * Plugins step: install and activate the picked plugins.
+     *
+     * @see \WeDevs\Wpuf\Platform\Onboarding\Plugin_Installer::save()
+     *
+     * @since WPUF_SINCE
+     *
+     * @return void
+     */
+    public function save_plugins() {
+        $this->plugins()->save( $this->posted_keys( 'plugins' ) );
+    }
+
+    /**
+     * Page lookups of the wizard.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return Pages
+     */
+    protected function pages() {
+        if ( ! $this->pages ) {
+            $this->pages = new Pages();
+        }
+
+        return $this->pages;
+    }
+
+    /**
+     * Plugin step service of the wizard.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return Plugin_Installer
+     */
+    protected function plugins() {
+        if ( ! $this->plugins ) {
+            $this->plugins = new Plugin_Installer();
+        }
+
+        return $this->plugins;
     }
 }
