@@ -53,7 +53,9 @@ test.beforeAll(async () => {
 
     page.on('pageerror', (error) => problems.push(`pageerror: ${error.message}`));
     page.on('console', (message) => {
-        if ('error' === message.type()) {
+        // Google rejecting the test site's placeholder Maps key (a form with a Google
+        // Map field) is the external service, not the screen.
+        if ('error' === message.type() && !message.text().includes('Google Maps JavaScript API error')) {
             problems.push(`console: ${message.text()}`);
         }
     });
