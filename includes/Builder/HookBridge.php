@@ -17,6 +17,10 @@ namespace WeDevs\Wpuf\Builder;
  * - Tabs: `wpuf-form-builder-tabs-{type}`, `wpuf_form_builder_settings_tabs_{type}`,
  *   `wpuf_{post,profile}_form_tab`, `wpuf-form-builder-tab-contents-{type}`.
  *
+ * These view hooks are retired as well: when an outside callback listens they
+ * fire through `do_action_deprecated()` (HookDeprecations::BRIDGED names the
+ * replacement) and the admin notice lists them; the output still renders.
+ *
  * The Vue-only template hooks (`wpuf_builder_field_options`,
  * `wpuf_field_option_data_actions|_after`, `..._builder_stage_submit_area|_bottom_area`)
  * are retired: HookDeprecations fires them (deprecated, output discarded) and
@@ -278,8 +282,20 @@ class HookBridge {
         $this->detach_own_listeners( $hook );
 
         ob_start();
-        // Spread, as develop's views called do_action(): `all` listeners see the same arguments.
-        do_action( $hook, ...$args );
+
+        // Only outside callbacks are left: the hook is a retired Vue builder view
+        // hook, so it fires the WordPress deprecated way (notice under WP_DEBUG,
+        // admin notice through HookDeprecations) and keeps its output.
+        $retired     = wpuf()->platform()->get( HookDeprecations::class );
+        $replacement = $retired->replacement_for( $hook );
+
+        if ( '' !== $replacement && $retired->note( $hook ) ) {
+            do_action_deprecated( $hook, $args, HookDeprecations::SINCE, $replacement ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound
+        } else {
+            // Spread, as develop's views called do_action(): `all` listeners see the same arguments.
+            do_action( $hook, ...$args ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound
+        }
+
         $raw = (string) ob_get_clean();
 
         $this->reattach_own_listeners( $hook );

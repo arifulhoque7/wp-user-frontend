@@ -62,6 +62,26 @@ class HookDeprecations {
     ];
 
     /**
+     * Vue builder view hooks that HookBridge still fires and renders (their output
+     * reaches the React builder), retired too: prefix => replacement. A name
+     * matches when it equals the prefix or starts with it (per-row / per-type
+     * names such as `wpuf_before_post_form_settings_field_{key}`).
+     *
+     * @var array
+     */
+    const BRIDGED = [
+        'wpuf_before_post_form_settings_field'         => 'slot wpuf-form-builder-settings-<tab>',
+        'wpuf_after_post_form_settings_field'          => 'slot wpuf-form-builder-settings-<tab>',
+        'wpuf_before_registration_form_settings_field' => 'slot wpuf-form-builder-settings-<tab>',
+        'wpuf_after_registration_form_settings_field'  => 'slot wpuf-form-builder-settings-<tab>',
+        'wpuf-form-builder-tabs-'                      => 'slot wpuf-form-builder-settings-<tab>',
+        'wpuf_form_builder_settings_tabs_'             => 'slot wpuf-form-builder-settings-<tab>',
+        'wpuf-form-builder-tab-contents-'              => 'slot wpuf-form-builder-settings-<tab>',
+        'wpuf_post_form_tab'                           => 'slot wpuf-form-builder-settings-<tab>',
+        'wpuf_profile_form_tab'                        => 'slot wpuf-form-builder-settings-<tab>',
+    ];
+
+    /**
      * Register the notice and its dismiss handler.
      *
      * @since WPUF_SINCE
@@ -187,6 +207,49 @@ class HookDeprecations {
     }
 
     /**
+     * What replaces a retired hook ('' when the hook is not retired).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param string $name Hook name.
+     *
+     * @return string
+     */
+    public function replacement_for( $name ) {
+        if ( isset( self::HOOKS[ $name ] ) ) {
+            return self::HOOKS[ $name ][1];
+        }
+
+        foreach ( self::BRIDGED as $prefix => $replacement ) {
+            if ( 0 === strpos( $name, $prefix ) ) {
+                return $replacement;
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * Record the outside callbacks of a retired hook for the admin notice (the
+     * bridge calls this before it fires a bridged hook as deprecated).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param string $name Hook name.
+     *
+     * @return string[] The outside callbacks found.
+     */
+    public function note( $name ) {
+        $outside = $this->outside_callbacks( $name );
+
+        if ( ! empty( $outside ) ) {
+            $this->remember( $name, $outside );
+        }
+
+        return $outside;
+    }
+
+    /**
      * Store the callbacks found for a hook (for the admin notice).
      *
      * @param string   $name    Hook name.
@@ -236,7 +299,7 @@ class HookDeprecations {
                         <?php echo esc_html( implode( ', ', (array) $callbacks ) ); ?>
                         <?php
                         /* translators: %s: replacement for the retired hook */
-                        printf( esc_html__( 'Use %s instead.', 'wp-user-frontend' ), '<code>' . esc_html( isset( self::HOOKS[ $hook ] ) ? self::HOOKS[ $hook ][1] : '' ) . '</code>' );
+                        printf( esc_html__( 'Use %s instead.', 'wp-user-frontend' ), '<code>' . esc_html( $this->replacement_for( $hook ) ) . '</code>' );
                         ?>
                     </li>
                 <?php endforeach; ?>
