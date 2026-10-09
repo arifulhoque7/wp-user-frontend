@@ -1,6 +1,6 @@
 import { useSelect, useDispatch } from '@wordpress/data';
 import { useState } from '@wordpress/element';
-import apiFetch from '@wordpress/api-fetch';
+import { request } from '@wpuf/api';
 import { __ } from '@wordpress/i18n';
 import { STORE_NAME } from '../../../../stores-react/settings/constants';
 import { stripTags } from '../../utils';
@@ -73,8 +73,7 @@ export default function AISettings( { fields, renderField } ) {
         try {
             // The endpoint returns HTTP 400 on failure, so a resolved response is
             // a success; real failures land in catch.
-            const res = await apiFetch( {
-                path: `${ AI_BASE }/test`,
+            const res = await request( `${ AI_BASE }/test`, {
                 method: 'POST',
                 data: { provider, api_key: keys[ provider ] || '', model: values.ai_model || '' },
             } );
@@ -92,13 +91,13 @@ export default function AISettings( { fields, renderField } ) {
             if ( provider === 'google' ) {
                 // Google's refresh reads the SAVED key from the DB, so a freshly
                 // typed (unsaved) key won't be used — surface that on failure.
-                const r = await apiFetch( { path: `${ AI_BASE }/refresh-google-models`, method: 'POST' } )
+                const r = await request( `${ AI_BASE }/refresh-google-models`, { method: 'POST' } )
                     .catch( ( e ) => ( { success: false, message: e && e.message } ) );
                 if ( r && r.success === false ) {
                     setFetchMsg( r.message || __( 'Save your Google API key first, then fetch the latest models.', 'wp-user-frontend' ) );
                 }
             }
-            const res = await apiFetch( { path: `${ AI_BASE }/models`, method: 'GET' } );
+            const res = await request( `${ AI_BASE }/models`, { method: 'GET' } );
             const rebuilt = {};
             Object.keys( res.models || {} ).forEach( ( id ) => {
                 const m = res.models[ id ];

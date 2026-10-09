@@ -5,6 +5,8 @@
  *
  * @since WPUF_SINCE
  */
+import { parseJsonBody } from '@wpuf/api';
+
 import { generationErrorMessage } from './lib/chat';
 
 /**
@@ -37,13 +39,23 @@ function send( url, init = {} ) {
 }
 
 /**
+ * JSON body of a response; stray output in front of it (another plugin's
+ * notice) is skipped.
+ *
+ * @param {Response} response Response.
+ *
+ * @return {Promise<Object>} Body.
+ */
+const jsonBody = async ( response ) => parseJsonBody( await response.text() );
+
+/**
  * Body of a failed response, or {}.
  *
  * @param {Response} response Response.
  *
  * @return {Promise<Object>} Body.
  */
-const errorBody = ( response ) => response.json().catch( () => ( {} ) );
+const errorBody = ( response ) => jsonBody( response ).catch( () => ( {} ) );
 
 /**
  * Integrations available for a form type ([] on failure, as develop).
@@ -65,7 +77,7 @@ export async function fetchIntegrations( formType ) {
         return [];
     }
 
-    const result = await response.json();
+    const result = await jsonBody( response );
 
     return result.success && result.integrations ? result.integrations : [];
 }
@@ -100,7 +112,7 @@ export async function generateForm( { prompt, sessionId, integration } ) {
         throw new Error( generationErrorMessage( await errorBody( response ), `HTTP ${ response.status }: ${ response.statusText }` ) );
     }
 
-    return response.json();
+    return jsonBody( response );
 }
 
 /**
@@ -140,7 +152,7 @@ export async function sendChat( { message, sessionId, conversationContext } ) {
         throw new Error( data.message || response.statusText );
     }
 
-    return response.json();
+    return jsonBody( response );
 }
 
 /**
@@ -168,7 +180,7 @@ export async function createForm( formData ) {
         throw new Error( `HTTP ${ response.status }: ${ data.message || response.statusText }` );
     }
 
-    const result = await response.json();
+    const result = await jsonBody( response );
 
     if ( ! result.success || ! result.form_id ) {
         throw new Error( result.message || 'Failed to create form' );

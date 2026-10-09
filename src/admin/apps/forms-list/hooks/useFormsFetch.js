@@ -9,55 +9,11 @@ import { request, restPath } from '@wpuf/api';
 export const PER_PAGE = 10;
 
 /**
- * Parse JSON from a response that may contain PHP notices mixed in.
- *
- * @param {string} responseText Raw response body text.
- *
- * @return {Object} Parsed JSON object.
- */
-export const parseJsonFromResponse = ( responseText ) => {
-    try {
-        return JSON.parse( responseText );
-    } catch ( initialError ) {
-        // Extract JSON from HTML response with error notices
-        const lines = responseText.split( '\n' );
-
-        // Find complete JSON line
-        for ( let i = lines.length - 1; i >= 0; i-- ) {
-            const line = lines[ i ].trim();
-            if ( line.startsWith( '{' ) && line.endsWith( '}' ) ) {
-                return JSON.parse( line );
-            }
-        }
-
-        // Fallback: extract by brace counting
-        let startIndex = -1;
-        let braceCount = 0;
-
-        for ( let i = 0; i < responseText.length; i++ ) {
-            if ( responseText[ i ] === '{' ) {
-                if ( startIndex === -1 ) {
-                    startIndex = i;
-                }
-                braceCount++;
-            } else if ( responseText[ i ] === '}' ) {
-                braceCount--;
-                if ( braceCount === 0 && startIndex !== -1 ) {
-                    return JSON.parse( responseText.substring( startIndex, i + 1 ) );
-                }
-            }
-        }
-
-        throw new Error( 'Invalid JSON response from server' );
-    }
-};
-
-/**
  * Hook to fetch and manage forms list data.
  *
  * Requests go through the shared request layer (`@wpuf/api`: WordPress REST
- * root and nonce, timeout, GET retry on a 5xx). The body is read as text so a
- * response with PHP notices in front of the JSON still loads (develop).
+ * root and nonce, timeout, GET retry on a 5xx, and a body parser that still
+ * loads when PHP notices sit in front of the JSON, as develop did).
  * Only the latest request writes the list: a slower, older answer (search
  * typing, tab switches) is dropped.
  *
@@ -98,8 +54,7 @@ const useFormsFetch = ( { postType = 'wpuf_forms' } = {} ) => {
         }
 
         try {
-            const response = await request( restPath( 'wpuf/v1', '/wpuf_form' ), { query, parse: false } );
-            const data = parseJsonFromResponse( await response.text() );
+            const data = await request( restPath( 'wpuf/v1', '/wpuf_form' ), { query } );
 
             if ( requestId !== latest.current ) {
                 return;

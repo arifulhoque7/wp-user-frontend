@@ -8,6 +8,16 @@ beforeEach( () => {
     apiFetch.mockReset();
 } );
 
+/**
+ * A fetch Response double.
+ *
+ * @param {number} status Status.
+ * @param {string} text   Body.
+ *
+ * @return {Object} Response-like.
+ */
+const response = ( status, text ) => ( { status, ok: status >= 200 && status < 300, statusText: 'Status ' + status, text: async () => text } );
+
 test( 'restPath joins namespace, route and query', () => {
     expect( restPath( 'wpuf/v1', '/forms' ) ).toBe( '/wpuf/v1/forms' );
     expect( restPath( '/wpuf/v1/', 'forms', { page: 2 } ) ).toBe( '/wpuf/v1/forms?page=2' );
@@ -24,15 +34,15 @@ test( 'normalizeError gives one shape', () => {
 test( 'GET is retried on a 5xx, then resolves', async () => {
     jest.useFakeTimers();
     apiFetch
-        .mockRejectedValueOnce( { code: 'http_500', message: 'x', data: { status: 500 } } )
-        .mockResolvedValueOnce( { ok: true } );
+        .mockRejectedValueOnce( response( 500, 'x' ) )
+        .mockResolvedValueOnce( response( 200, '{"ok":true}' ) );
 
     const done = request( '/wpuf/v1/forms', { query: { page: 1 } } );
     await jest.advanceTimersByTimeAsync( 1000 );
 
     await expect( done ).resolves.toEqual( { ok: true } );
     expect( apiFetch ).toHaveBeenCalledTimes( 2 );
-    expect( apiFetch.mock.calls[ 0 ][ 0 ] ).toMatchObject( { method: 'GET', path: '/wpuf/v1/forms?page=1' } );
+    expect( apiFetch.mock.calls[ 0 ][ 0 ] ).toMatchObject( { method: 'GET', path: '/wpuf/v1/forms?page=1', parse: false } );
     jest.useRealTimers();
 } );
 
@@ -71,4 +81,34 @@ test( 'a request that hangs is aborted after the timeout', async () => {
     await jest.advanceTimersByTimeAsync( REQUEST_TIMEOUT_MS + 1 );
     await assertion;
     jest.useRealTimers();
+} );
+
+test( 'the body is parsed even with stray output in front of the JSON', async () => {
+    apiFetch.mockResolvedValue( response( 200, '\nDeprecated: other plugin in /x.php on line 5\n{"success":true,"forms":[1]}' ) );
+
+    await expect( request( '/wpuf/v1/forms' ) ).resolves.toEqual( { success: true, forms: [ 1 ] } );
+} );
+
+test( 'a 204 or empty body resolves to null, a body without JSON rejects as invalid_json', async () => {
+    apiFetch.mockResolvedValueOnce( response( 204, '' ) );
+    await expect( request( '/wpuf/v1/forms/1', { method: 'DELETE' } ) ).resolves.toBeNull();
+
+    apiFetch.mockResolvedValueOnce( response( 200, '<html>not json</html>' ) );
+    await expect( request( '/wpuf/v1/forms' ) ).rejects.toMatchObject( { code: 'invalid_json', status: 200 } );
+} );
+
+test( 'a WP REST error body is rejected as is, other failures as http_<status>', async () => {
+    apiFetch.mockRejectedValueOnce( response( 403, 'Notice: x\n{"code":"rest_forbidden","message":"No","data":{"status":403}}' ) );
+    await expect( request( '/wpuf/v1/forms', { method: 'POST' } ) ).rejects.toEqual( { code: 'rest_forbidden', message: 'No', status: 403, data: { status: 403 } } );
+
+    apiFetch.mockRejectedValueOnce( response( 502, '<html>Bad gateway</html>' ) );
+    await expect( request( '/wpuf/v1/forms', { method: 'POST' } ) ).rejects.toMatchObject( { code: 'http_502', status: 502, message: 'Status 502' } );
+} );
+
+test( 'parse: false hands back the raw response', async () => {
+    const raw = response( 200, '{"a":1}' );
+    apiFetch.mockResolvedValue( raw );
+
+    await expect( request( '/wpuf/v1/forms', { parse: false } ) ).resolves.toBe( raw );
+    expect( apiFetch.mock.calls[ 0 ][ 0 ] ).toMatchObject( { parse: false } );
 } );

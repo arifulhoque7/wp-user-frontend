@@ -1,8 +1,10 @@
 /**
  * Subscriptions API
- * Centralizes all apiFetch calls for the subscriptions module
+ * Centralizes the REST calls of the subscriptions module; they go through
+ * the shared request layer (`@wpuf/api`: nonce and REST root from core,
+ * timeout, GET retry on a 5xx, JSON parsing that skips stray PHP output).
  */
-import apiFetch from '@wordpress/api-fetch';
+import { request } from '@wpuf/api';
 import { addQueryArgs } from '@wordpress/url';
 
 const NAMESPACE = '/wpuf/v1';
@@ -15,8 +17,7 @@ const ENDPOINT = `${NAMESPACE}/wpuf_subscription`;
  * @return {Promise<Object>} API response
  */
 export const fetchSubscriptions = async (params = {}) => {
-    return apiFetch({
-        path: addQueryArgs(ENDPOINT, params),
+    return request(addQueryArgs(ENDPOINT, params), {
         method: 'GET',
     });
 };
@@ -28,8 +29,7 @@ export const fetchSubscriptions = async (params = {}) => {
  * @return {Promise<Object>} API response
  */
 export const fetchSubscription = async (id) => {
-    return apiFetch({
-        path: `${ENDPOINT}/${id}`,
+    return request(`${ENDPOINT}/${id}`, {
         method: 'GET',
     });
 };
@@ -45,8 +45,7 @@ export const fetchSubscriptionCounts = async (status = 'all') => {
     if (status && status !== 'all') {
         path += `/${status}`;
     }
-    return apiFetch({
-        path,
+    return request(path, {
         method: 'GET',
     });
 };
@@ -62,8 +61,7 @@ export const updateSubscription = async (data) => {
     if (data.ID) {
         path += `/${data.ID}`;
     }
-    return apiFetch({
-        path,
+    return request(path, {
         method: 'POST',
         data: { subscription: data },
     });
@@ -76,8 +74,7 @@ export const updateSubscription = async (data) => {
  * @return {Promise<Object>} API response
  */
 export const deleteSubscription = async (id) => {
-    return apiFetch({
-        path: `${ENDPOINT}/${id}`,
+    return request(`${ENDPOINT}/${id}`, {
         method: 'DELETE',
     });
 };
@@ -89,8 +86,7 @@ export const deleteSubscription = async (id) => {
  * @return {Promise<Object>} API response
  */
 export const fetchSubscribers = async (subscriptionId) => {
-    return apiFetch({
-        path: addQueryArgs(`${ENDPOINT}/subscribers`, { subscription_id: subscriptionId }),
+    return request(addQueryArgs(`${ENDPOINT}/subscribers`, { subscription_id: subscriptionId }), {
         method: 'GET',
     });
 };
@@ -101,8 +97,7 @@ export const fetchSubscribers = async (subscriptionId) => {
  * @return {Promise<Object>} API response
  */
 export const fetchSubscriptionSettings = async () => {
-    return apiFetch({
-        path: `${NAMESPACE}/subscription-settings`,
+    return request(`${NAMESPACE}/subscription-settings`, {
         method: 'GET',
     });
 };
@@ -114,8 +109,7 @@ export const fetchSubscriptionSettings = async () => {
  * @return {Promise<Object>} API response
  */
 export const saveSubscriptionSettings = async (settings) => {
-    return apiFetch({
-        path: `${NAMESPACE}/subscription-settings`,
+    return request(`${NAMESPACE}/subscription-settings`, {
         method: 'POST',
         data: settings,
     });

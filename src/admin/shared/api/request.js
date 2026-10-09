@@ -8,10 +8,14 @@
  *
  * - 30 s timeout per attempt (chained to the caller's signal);
  * - GET/HEAD retried on a 5xx (twice, short back-off), never a mutation;
+ * - the body is read as text and parsed with `parseJsonBody()`, so stray
+ *   output in front of the JSON (another plugin's notice) does not break it;
  * - every failure rejects with `{ code, message, status, data }`.
  */
 import apiFetch from '@wordpress/api-fetch';
 import { addQueryArgs } from '@wordpress/url';
+
+import { isResponseLike, readJsonResponse } from './parse';
 
 export const REQUEST_TIMEOUT_MS = 30000;
 export const MAX_RETRIES = 2;
@@ -68,16 +72,58 @@ export function restPath( namespace, path, query ) {
 const wait = ( ms ) => new Promise( ( resolve ) => setTimeout( resolve, ms ) );
 
 /**
+ * Read a response the way apiFetch would, but through the tolerant parser.
+ *
+ * apiFetch is called with `parse: false`, so it hands back the Response and
+ * throws it on a non-2xx status. A WP REST error body (`{ code, message,
+ * data: { status } }`) is thrown as is; any other failed body becomes
+ * `{ code: 'http_<status>', message, data: { status } }`.
+ *
+ * @param {Response} response  Response.
+ * @param {boolean}  [failed]  Whether apiFetch threw it (non-2xx).
+ *
+ * @return {Promise<*>} Parsed body.
+ */
+async function readResponse( response, failed = false ) {
+    let body;
+
+    try {
+        body = await readJsonResponse( response );
+    } catch ( error ) {
+        if ( ! failed ) {
+            throw error;
+        }
+
+        body = null;
+    }
+
+    if ( ! failed ) {
+        return body;
+    }
+
+    if ( body && 'object' === typeof body && 'code' in body ) {
+        throw body;
+    }
+
+    throw {
+        code: 'http_' + response.status,
+        message: ( body && body.message ) || response.statusText || 'The request failed.',
+        data: { status: response.status },
+    };
+}
+
+/**
  * Call a REST route.
  *
  * @param {string} path              Route (see restPath()).
  * @param {Object} [options]         apiFetch options (method, data, body, headers, signal, parse).
  * @param {Object} [options.query]   Query args added to the path.
+ * @param {boolean} [options.parse]  false hands back the raw Response (apiFetch's contract).
  *
  * @return {Promise<*>} Response body.
  */
 export async function request( path, options = {} ) {
-    const { query, signal: callerSignal, ...rest } = options;
+    const { query, signal: callerSignal, parse = true, ...rest } = options;
     const method = String( rest.method || 'GET' ).toUpperCase();
     const idempotent = 'GET' === method || 'HEAD' === method;
     const url = query ? addQueryArgs( path, query ) : path;
@@ -94,7 +140,17 @@ export async function request( path, options = {} ) {
             }
         }
 
-        return Promise.resolve( apiFetch( { ...rest, method, path: url, signal: controller.signal } ) ).finally( () => clearTimeout( timer ) );
+        const call = Promise.resolve( apiFetch( { ...rest, method, path: url, signal: controller.signal, parse: false } ) )
+            .then( ( response ) => ( parse && isResponseLike( response ) ? readResponse( response ) : response ) )
+            .catch( ( raw ) => {
+                if ( parse && isResponseLike( raw ) ) {
+                    return readResponse( raw, true );
+                }
+
+                throw raw;
+            } );
+
+        return call.finally( () => clearTimeout( timer ) );
     };
 
     for ( let attempt = 0; ; attempt++ ) {

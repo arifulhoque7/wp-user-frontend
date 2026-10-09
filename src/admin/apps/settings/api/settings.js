@@ -1,8 +1,10 @@
 /**
  * Settings API
- * Centralizes apiFetch calls for the React settings screen.
+ * Centralizes the REST calls of the React settings screen; they go through
+ * the shared request layer (`@wpuf/api`: nonce and REST root from core,
+ * timeout, GET retry on a 5xx, JSON parsing that skips stray PHP output).
  */
-import apiFetch from '@wordpress/api-fetch';
+import { request } from '@wpuf/api';
 
 const NAMESPACE = '/wpuf/v1';
 const ENDPOINT = `${ NAMESPACE }/settings`;
@@ -13,8 +15,7 @@ const ENDPOINT = `${ NAMESPACE }/settings`;
  * @return {Promise<Object>} API response.
  */
 export const fetchSettings = async () => {
-    return apiFetch( {
-        path: ENDPOINT,
+    return request( ENDPOINT, {
         method: 'GET',
     } );
 };
@@ -29,8 +30,7 @@ export const fetchSettings = async () => {
  * @return {Promise<Object>} API response.
  */
 export const saveSettings = async ( values, extra = {} ) => {
-    return apiFetch( {
-        path: ENDPOINT,
+    return request( ENDPOINT, {
         method: 'POST',
         data: { settings: values, extra },
     } );

@@ -5,6 +5,7 @@
  * renaming or removing breaks add-ons.
  */
 import { HOOKS, SLOTS, applyWpufFilters, doWpufAction } from '../filters';
+import { parseJsonBody } from '../api/parse';
 import { normalizeError, request, restPath } from '../api/request';
 import { useBoot, useCan, useUnsavedGuard } from '../hooks';
 import { wpufExtraTokens, wpufTokens } from '../theme';
@@ -13,7 +14,7 @@ import publish from './publish';
 publish( {
     runtimeVersion: '1.0',
     filters: { HOOKS, SLOTS, applyWpufFilters, doWpufAction },
-    api: { request, restPath, normalizeError },
+    api: { request, restPath, normalizeError, parseJsonBody },
     reactHooks: { useBoot, useCan, useUnsavedGuard },
     utilities: { tokens: wpufTokens, extraTokens: wpufExtraTokens },
 } );

@@ -73,8 +73,8 @@ class React_Assets implements Hookable {
 			'dependencies' => [],
 			'version' => WPUF_VERSION,
 		];
-        $settings_asset        = $this->react_asset( 'settings-react', [ 'wp-element', 'wp-data', 'wp-api-fetch', 'wp-i18n', 'wp-hooks', 'wp-components' ] );
-        $subscriptions_asset   = $this->react_asset( 'subscriptions', [ 'wp-element', 'wp-data', 'wp-api-fetch', 'wp-i18n', 'wp-hooks', 'wp-components', 'wp-primitives' ] );
+        $settings_asset        = $this->react_asset( 'settings-react', [ 'wp-element', 'wp-data', 'wp-api-fetch', 'wp-i18n', 'wp-hooks', 'wp-components', 'wpuf-admin-runtime' ] );
+        $subscriptions_asset   = $this->react_asset( 'subscriptions', [ 'wp-element', 'wp-data', 'wp-api-fetch', 'wp-i18n', 'wp-hooks', 'wp-components', 'wp-primitives', 'wpuf-admin-runtime' ] );
         $form_builder_asset    = $this->react_asset( 'form-builder', [] );
         $ai_form_builder_asset = $this->react_asset( 'ai-form-builder', [ 'wp-element', 'wp-i18n', 'wp-hooks', 'wpuf-admin-runtime', 'wpuf-admin-ui' ] );
         $admin_app_asset       = $this->react_asset( 'admin-app', [ 'wp-element', 'wp-hooks', 'wp-i18n', 'wpuf-admin-runtime' ] );

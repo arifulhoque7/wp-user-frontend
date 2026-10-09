@@ -24,10 +24,8 @@ import './stores-react/settings';
 import { STORE_NAME } from './stores-react/settings/constants';
 import { addRouteGuard, getRouteQuery, inApp, registerScreen, setRouteQuery } from '../../app/client';
 
-// apiFetch is externalized to WordPress core's window.wp.apiFetch, which already
-// has the REST root URL + nonce middleware configured (via the wp-api-fetch
-// dependency). No extra middleware needed — adding our own root middleware would
-// double-prefix the path and break requests.
+// REST calls go through `@wpuf/api` (api/settings.js), which wraps core's
+// window.wp.apiFetch: REST root and nonce come from core, no extra middleware.
 
 const SettingsApp = () => {
     const { ia, sections, fields, activeTab, isLoading, isSaving, isDirty, error, search } = useSelect( ( select ) => {

@@ -14,6 +14,7 @@ use WeDevs\Wpuf\Admin\BootPayload;
 use WeDevs\Wpuf\Admin\Screens\Registry;
 use WeDevs\Wpuf\Builder\HookBridge;
 use WeDevs\Wpuf\Builder\HookDeprecations;
+use WeDevs\Wpuf\Platform\Http\JsonOutputGuard;
 use WeDevs\Wpuf\Platform\ServiceProvider;
 use WeDevs\Wpuf\Platform\VersionGuard;
 
@@ -37,6 +38,14 @@ class CoreServiceProvider extends ServiceProvider {
             VersionGuard::class,
             function () {
                 return new VersionGuard();
+            }
+        );
+
+        // Keeps wpuf/v1 REST and wpuf_* AJAX answers valid JSON when other code prints first.
+        $this->share_tagged(
+            JsonOutputGuard::class,
+            function () {
+                return new JsonOutputGuard();
             }
         );
 
