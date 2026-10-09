@@ -7,6 +7,7 @@ import { configureSpecFailFast } from '../utils/specFailFast';
 import { subscribe } from "diagnostics_channel";
 import { PostFormSettingsPage } from "../pages/postFormSettings";
 import { SettingsSetupPage } from "../pages/settingsSetup";
+import { aiWp } from "../pages/aiFormBuilder";
 
 let browser: Browser;
 let context: BrowserContext;
@@ -585,6 +586,9 @@ test.describe('Subscription-Module', () => {
     test('SB0037 : Admin setup post type to page & mandatory subscription', { tag: ['@Pro', '@Subscription'] }, async () => {
         const SubscriptionPg = new SubscriptionPage(page);
         const PostFormSettingsPg = new PostFormSettingsPage(page);
+        // Opening a new form creates an empty "Sample Form"; other specs may leave one. The form list
+        // is newest first, so drop the empty ones and keep the setup's Sample Form (it has fields).
+        aiWp(['eval', "foreach ( get_posts( [ 'post_type' => 'wpuf_forms', 'title' => 'Sample Form', 'post_status' => 'any', 'numberposts' => -1 ] ) as $f ) { if ( ! get_children( [ 'post_parent' => $f->ID, 'post_type' => 'wpuf_input' ] ) ) { wp_delete_post( $f->ID, true ); } }"], true);
         // Change post type to 'page'
         await test.step("Setup post type to page", async () => {
             await PostFormSettingsPg.changePostType('page', 'Sample Form');

@@ -1,8 +1,8 @@
 import { Browser, BrowserContext, Page, test, expect, chromium } from '@playwright/test';
 import { BasicLoginPage } from '../pages/basicLogin';
-import { AiFormBuilderPage } from '../pages/aiFormBuilder';
+import { aiWp, AiFormBuilderPage } from '../pages/aiFormBuilder';
 import { Users, Urls } from '../utils/testData';
-import { BUILDER_URL } from '../utils/builderUrl';
+import { BUILDER_URL, builderFormId } from '../utils/builderUrl';
 
 let browser: Browser;
 let context: BrowserContext;
@@ -113,6 +113,10 @@ test.describe('Release smoke: React admin screens', () => {
         await expect(page.locator('body.wpuf-admin-react')).toHaveCount(1);
         await expect(page.getByRole('tab', { name: 'Form Editor' }).first()).toBeVisible({ timeout: 30000 });
         await expectClean('post form builder');
+        // The new form route creates an empty "Sample Form" (develop's add-new did too): delete it, or
+        // later specs that open "Sample Form" by name (SB0037) find this empty one first.
+        const created = builderFormId(page.url());
+        if (created) aiWp(['post', 'delete', created, '--force']);
     });
 
     test('RS0003 : Subscriptions screen mounts', { tag: ['@Lite', '@Test_RS0003'] }, async () => {
@@ -138,6 +142,8 @@ test.describe('Release smoke: React admin screens', () => {
         await expect(page).toHaveURL(BUILDER_URL);
         await expect(page.getByRole('tab', { name: 'Form Editor' }).first()).toBeVisible({ timeout: 30000 });
         await expectClean('registration form builder');
+        const created = builderFormId(page.url());
+        if (created) aiWp(['post', 'delete', created, '--force']);
     });
 
     test('RS0006 : AI form builder page mounts', { tag: ['@Lite', '@Test_RS0006'] }, async () => {
