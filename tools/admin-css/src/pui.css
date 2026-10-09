@@ -287,20 +287,20 @@ body.wpuf-admin-react #wpbody-content .wpuf-help {
     color: var(--wpuf-notice-icon) !important;
 }
 
-/* WordPress admin notices on the app screens (#wpuf-admin-app-notices, other
-   plugins' markup kept): framed like the shared Notice (10px radius, 1px light
-   border, tinted background by type, 14px text, no left bar), centred at the
-   content width like the screens. */
+/* WPUF's own admin notices on the app screens (AppPage wraps them in
+   .wpuf-own-notice; other plugins' notices keep WordPress's look): framed like
+   the shared Notice (10px radius, 1px light border, tinted background by type,
+   14px text, no left bar). The notices area is centred at the content width. */
 .wpuf-admin-notices {
     box-sizing: border-box;
     max-width: 1400px;
     margin: 16px auto 0;
     padding: 0 20px;
 }
-.wpuf-admin-notices .notice,
-.wpuf-admin-notices div.updated,
-.wpuf-admin-notices div.error,
-.wpuf-admin-notices .update-nag {
+.wpuf-admin-notices .wpuf-own-notice .notice,
+.wpuf-admin-notices .wpuf-own-notice div.updated,
+.wpuf-admin-notices .wpuf-own-notice div.error,
+.wpuf-admin-notices .wpuf-own-notice .update-nag {
     box-sizing: border-box;
     margin: 0 0 12px !important;
     padding: 12px 40px 12px 16px !important;
@@ -312,47 +312,50 @@ body.wpuf-admin-react #wpbody-content .wpuf-help {
     font-size: 14px;
     line-height: 20px;
 }
-.wpuf-admin-notices .notice:not(.is-dismissible),
-.wpuf-admin-notices .update-nag {
+.wpuf-admin-notices .wpuf-own-notice .notice:not(.is-dismissible),
+.wpuf-admin-notices .wpuf-own-notice .update-nag {
     padding-right: 16px !important;
 }
-.wpuf-admin-notices .notice-success,
-.wpuf-admin-notices div.updated {
+.wpuf-admin-notices .wpuf-own-notice .notice-success,
+.wpuf-admin-notices .wpuf-own-notice div.updated {
     border-color: #a7f3d0 !important;
     background: #ecfdf5 !important;
     color: #374151;
 }
-.wpuf-admin-notices .notice-warning,
-.wpuf-admin-notices .update-nag {
+.wpuf-admin-notices .wpuf-own-notice .notice-warning,
+.wpuf-admin-notices .wpuf-own-notice .update-nag {
     border-color: #fde68a !important;
     background: #fffbeb !important;
     color: #92400e;
 }
-.wpuf-admin-notices .notice-error,
-.wpuf-admin-notices div.error {
+.wpuf-admin-notices .wpuf-own-notice .notice-error,
+.wpuf-admin-notices .wpuf-own-notice div.error {
     border-color: #fecaca !important;
     background: #fef2f2 !important;
     color: #991b1b;
 }
-.wpuf-admin-notices .notice p {
+.wpuf-admin-notices .wpuf-own-notice .notice p {
     margin: 4px 0 !important;
     padding: 0 !important;
     font-size: 14px;
     line-height: 20px;
 }
-.wpuf-admin-notices .notice h2,
-.wpuf-admin-notices .notice h3,
-.wpuf-admin-notices .notice strong:first-child {
+.wpuf-admin-notices .wpuf-own-notice .notice h2,
+.wpuf-admin-notices .wpuf-own-notice .notice h3,
+.wpuf-admin-notices .wpuf-own-notice .notice strong:first-child {
     color: #111827;
     font-weight: 600;
 }
-.wpuf-admin-notices .notice h2,
-.wpuf-admin-notices .notice h3 {
+.wpuf-admin-notices .wpuf-own-notice .notice h2,
+.wpuf-admin-notices .wpuf-own-notice .notice h3 {
     margin: 0 0 4px !important;
     font-size: 14px !important;
     line-height: 20px;
 }
-.wpuf-admin-notices .notice-dismiss {
+.wpuf-admin-notices .wpuf-own-notice .notice-dismiss {
     top: 8px;
     right: 8px;
+}
+.wpuf-admin-notices .wpuf-own-notice:empty {
+    display: none;
 }

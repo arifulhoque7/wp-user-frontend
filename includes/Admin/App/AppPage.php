@@ -192,6 +192,7 @@ class AppPage {
         add_filter( 'update_footer', '__return_empty_string', 99 );
         add_action( 'admin_notices', [ $this, 'start_notices' ], PHP_INT_MIN );
         add_action( 'all_admin_notices', [ $this, 'end_notices' ], PHP_INT_MAX );
+        add_action( 'in_admin_header', [ $this, 'mark_own_notices' ], PHP_INT_MAX );
     }
 
     /**
@@ -415,6 +416,93 @@ class AppPage {
      */
     public function end_notices() {
         $this->notices = (string) ob_get_clean();
+    }
+
+    /**
+     * Wrap the notices WPUF (free or Pro) prints in `<div class="wpuf-own-notice">`,
+     * so the app's notice style applies to them only; other plugins' notices
+     * keep WordPress's look. Runs on the app page only, right before
+     * `admin_notices`.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return void
+     */
+    public function mark_own_notices() {
+        global $wp_filter;
+
+        foreach ( [ 'admin_notices', 'all_admin_notices' ] as $hook ) {
+            if ( empty( $wp_filter[ $hook ] ) || ! is_object( $wp_filter[ $hook ] ) ) {
+                continue;
+            }
+
+            foreach ( $wp_filter[ $hook ]->callbacks as $priority => $callbacks ) {
+                foreach ( $callbacks as $key => $callback ) {
+                    $function = $callback['function'];
+
+                    // The capture callbacks of this page are not notices.
+                    if ( is_array( $function ) && isset( $function[0] ) && $this === $function[0] ) {
+                        continue;
+                    }
+
+                    if ( ! $this->is_own_callback( $function ) ) {
+                        continue;
+                    }
+
+                    $wp_filter[ $hook ]->callbacks[ $priority ][ $key ]['function'] = static function () use ( $function ) {
+                        echo '<div class="wpuf-own-notice">';
+                        call_user_func_array( $function, func_get_args() );
+                        echo '</div>';
+                    };
+                }
+            }
+        }
+    }
+
+    /**
+     * Whether a hook callback is defined in the free or the Pro plugin.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param mixed $callback Hook callback.
+     *
+     * @return bool
+     */
+    private function is_own_callback( $callback ) {
+        try {
+            if ( is_array( $callback ) && 2 === count( $callback ) ) {
+                $reflection = new \ReflectionMethod( $callback[0], $callback[1] );
+            } elseif ( is_string( $callback ) && false !== strpos( $callback, '::' ) ) {
+                $reflection = new \ReflectionMethod( $callback );
+            } elseif ( $callback instanceof \Closure || ( is_string( $callback ) && function_exists( $callback ) ) ) {
+                $reflection = new \ReflectionFunction( $callback );
+            } else {
+                return false;
+            }
+        } catch ( \ReflectionException $e ) {
+            return false;
+        }
+
+        $file = $reflection->getFileName();
+
+        if ( ! $file ) {
+            return false;
+        }
+
+        $file  = wp_normalize_path( $file );
+        $roots = [ wp_normalize_path( WPUF_ROOT ) ];
+
+        if ( defined( 'WPUF_PRO_ROOT' ) ) {
+            $roots[] = wp_normalize_path( WPUF_PRO_ROOT );
+        }
+
+        foreach ( $roots as $root ) {
+            if ( 0 === strpos( $file, trailingslashit( $root ) ) ) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
