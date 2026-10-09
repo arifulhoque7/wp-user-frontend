@@ -18,7 +18,7 @@ options and keys**, so they stay in sync.
    `includes/functions/settings-options.php`, extended by Pro/modules through the
    `wpuf_settings_sections` / `wpuf_settings_fields` filters. This is the single
    source of truth for what settings exist.
-2. **REST**: `includes/Api/Settings.php` (`wpuf/v1/settings`): `GET` returns the
+2. **REST**: `includes/Platform/REST/Controllers/SettingsController.php` (`wpuf/v1/settings`): `GET` returns the
    filtered schema + values; `POST` saves each section back to its option with
    the field's sanitize. Gated by `current_user_can( wpuf_admin_role() )`.
 3. **React**: `src/admin/apps/settings/index.jsx` + `src/admin/apps/settings/components/settings/*` render

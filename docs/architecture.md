@@ -56,7 +56,6 @@ includes/Admin/App/           AppPage (the one admin page)
 includes/Builder/             BuilderBoot, FormSave, HookBridge, HookDeprecations
 includes/Admin/               legacy admin services still in use (Menu, Admin_Tools, Admin_Subscription, Onboarding facade,
                               Posting, Help_Content, views/ for Subscribers / Premium / shortcode builder / help content)
-includes/Api/                 alias stubs of the old controller names (deprecated)
 includes/AI/                  AI form builder (Config, FormGenerator, prompts, its RestController, Services/)
 includes/Frontend/, Fields/, Integrations/   the site frontend, field types, third-party integrations
 includes/Free/                free plugin only: Free_Loader (hooks, delegating facade) + Settings_Preview, Modules_Preview,
@@ -75,7 +74,7 @@ Pro mirrors this under `wpuf-pro/includes/Platform/<Feature>/` (Coupons, License
 3. **Modules are not edited.** Pro modules and User Directory keep their code.
 4. **Retired hooks are deprecated, never deleted silently.**
 5. **Old URLs keep working**: every old admin URL redirects to its app route after its load step ran.
-6. **Old class names keep working**: renamed classes leave a `class_alias` stub at the old path (see `includes/Api/`, `includes/Admin/Assets.php`, `includes/Admin/Forms/Post/Templates/Form_Template.php`).
+6. **Old names stay only while something can use them**: a renamed class or an unused function that Pro (current or released) or outside code can name keeps a deprecated stub (`class_alias`, `_deprecated_function()`); one nothing can reach is deleted outright (owner rule, 2026-10-09: the `includes/Api/` stubs, `Admin\Assets`, the `Post\Templates\Form_Template` handler stub and five admin-only helpers went that way).
 7. **Frontend output is identical** to develop.
 
 ## Verification

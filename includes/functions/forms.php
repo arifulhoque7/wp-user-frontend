@@ -204,6 +204,8 @@ function wpuf_get_form_integrations( $form_id ) {
  * @deprecated WPUF_SINCE Not used by WP User Frontend any more; kept as public API.
  */
 function wpuf_is_integration_active( $form_id, $integration_id ) {
+    _deprecated_function( __FUNCTION__, 'WPUF_SINCE' );
+
     $integrations = wpuf_get_form_integrations( $form_id );
 
     if ( ! $integrations ) {

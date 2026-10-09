@@ -12,42 +12,6 @@
 use WeDevs\Wpuf\Free\Pro_Prompt;
 
 /**
- * Check if the license has been expired
- *
- * @since 2.3.13
- *
- * @return bool
- *
- * @deprecated WPUF_SINCE Not used by WP User Frontend any more; kept as public API.
- */
-function wpuf_is_license_expired() {
-    $remote_addr = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
-
-    if ( in_array( $remote_addr, [ '127.0.0.1', '::1' ], true ) ) {
-        return false;
-    }
-
-    $license_status = get_option( 'wpuf_license_status' );
-
-    // seems like this wasn't activated at all
-    if ( ! isset( $license_status->update ) ) {
-        return false;
-    }
-
-    // if license has expired more than 15 days ago
-    $update    = strtotime( $license_status->update );
-    $threshold = strtotime( '+15 days', $update );
-
-    // printf( 'Validity: %s, Threshold: %s', date( 'd-m-Y', $update), date( 'd-m-Y', $threshold ) );
-
-    if ( time() >= $threshold ) {
-        return true;
-    }
-
-    return false;
-}
-
-/**
  * Show helper texts to understand the type of page in admin page listing
  *
  * @since 2.6.0
@@ -212,19 +176,6 @@ function wpuf_load_headway_badge( $selector = '#wpuf-headway-icon' ) {
     </script>
 
     <?php
-}
-
-/**
- * Get the pro icon link
- *
- * @since 4.1.0
- *
- * @return string
- *
- * @deprecated WPUF_SINCE Not used by WP User Frontend any more; kept as public API.
- */
-function wpuf_get_pro_icon() {
-    return WPUF_ASSET_URI . '/images/pro-badge.svg';
 }
 
 /**

@@ -23,17 +23,6 @@ function wpuf_buffer_start() {
 }
 
 /**
- * Unused helper.
- *
- * @deprecated WPUF_SINCE Not used by WP User Frontend any more; kept as public API.
- */
-function wpuf_pre( $data ) {
-    echo wp_kses_post( '<pre>' );
-    print_r( $data );
-    echo wp_kses_post( '</pre>' );
-}
-
-/**
  * Unserialize a value without ever instantiating PHP objects.
  *
  * Stored post meta may hold a serialized object payload (e.g. submitted through a
@@ -75,6 +64,8 @@ function wpuf_safe_unserialize( $value ) {
  * @deprecated WPUF_SINCE Not used by WP User Frontend any more; kept as public API.
  */
 function wpuf_dropdown_helper( $options, $selected = '' ) {
+    _deprecated_function( __FUNCTION__, 'WPUF_SINCE' );
+
     $string = '';
 
     foreach ( $options as $key => $label ) {
@@ -353,6 +344,8 @@ function wpuf_ini_get_byte( $val ) {
  * @deprecated WPUF_SINCE Not used by WP User Frontend any more; kept as public API.
  */
 function wpuf_max_upload_size() {
+    _deprecated_function( __FUNCTION__, 'WPUF_SINCE' );
+
     $post_max_size       = ini_get( 'post_max_size' );
     $upload_max_filesize = ini_get( 'upload_max_filesize' );
 
@@ -435,6 +428,8 @@ function wpuf_wp_timezone() {
  * @deprecated WPUF_SINCE Not used by WP User Frontend any more; kept as public API.
  */
 function wpuf_timezone_string() {
+    _deprecated_function( __FUNCTION__, 'WPUF_SINCE' );
+
     if ( function_exists( 'wp_timezone_string' ) ) {
         return wp_timezone_string();
     }
@@ -472,6 +467,8 @@ function wpuf_timezone_string() {
  * @deprecated WPUF_SINCE Not used by WP User Frontend any more; kept as public API.
  */
 function wpuf_pagination( $total_items, $per_page, $pagination_args = [] ) {
+    _deprecated_function( __FUNCTION__, 'WPUF_SINCE' );
+
     $pagenum = isset( $_GET['pagenum'] ) ? absint( $_GET['pagenum'] ) : 1;
     $num_of_pages = ceil( $total_items / $per_page );
 

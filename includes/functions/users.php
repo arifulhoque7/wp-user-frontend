@@ -271,6 +271,8 @@ function wpuf_get_user_avatar_data( $user, $size = 96 ) {
  * @deprecated WPUF_SINCE Not used by WP User Frontend any more; kept as public API.
  */
 function wpuf_update_avatar( $user_id, $attachment_id ) {
+    _deprecated_function( __FUNCTION__, 'WPUF_SINCE' );
+
     $upload_dir   = wp_upload_dir();
     $relative_url = wp_get_attachment_url( $attachment_id );
 

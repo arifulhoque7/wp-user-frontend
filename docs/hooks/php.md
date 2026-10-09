@@ -46,7 +46,7 @@ Bridge rules: output of third-party listeners is captured and shown inside the m
 ## Hooks and handles added or changed on the branch
 | Hook / handle | Kind | Where | Note |
 |---|---|---|---|
-| `wpuf_forms_list_post_types` | filter | `Api/FormList::get_items` | post types the forms list REST lists (default `wpuf_forms`, `wpuf_profile`; others get 400) |
+| `wpuf_forms_list_post_types` | filter | `Platform/REST/Controllers/FormListController::get_items` | post types the forms list REST lists (default `wpuf_forms`, `wpuf_profile`; others get 400) |
 | `wpuf_form_builder_save_post_types`, `wpuf_form_builder_settings_meta_keys` | filter | `Ajax/Admin_Form_Builder_Ajax` | builder save allowlists (security, task 1.19) |
 | `wpuf_subscription_single_row_fields` | filter | `Api/Subscription` | fields a single-row edit may change |
 | `wpuf_before_update_subscription_pack` | action | `Api/Subscription` | now fires **once**, after a successful insert, with the saved pack id (was twice: old id, new id) |

@@ -63,7 +63,6 @@ wp-user-frontend/
 │   ├── Admin/              # Admin settings, menus, subscription management
 │   ├── Ajax/               # AJAX handlers (forms, uploads, addresses)
 │   ├── AI/                 # AI form builder (config, prompts, REST)
-│   ├── Api/                # Alias stubs of the old REST controller names (deprecated)
 │   ├── Builder/            # Builder boot data, save, hook bridge, retired-hook deprecations
 │   ├── Fields/             # Form field types (20+ field classes)
 │   ├── Free/               # Free version functionality & pro prompts

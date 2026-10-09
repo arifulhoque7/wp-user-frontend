@@ -41,74 +41,6 @@ function wpuf_show_post_status( $status ) {
 }
 
 /**
- * Format the post status for user dashboard
- *
- * @param string $status
- *
- * @since version 0.1
- *
- * @author Tareq Hasan
- *
- * @deprecated WPUF_SINCE Not used by WP User Frontend any more; kept as public API.
- */
-function wpuf_admin_post_status( $status ) {
-    $fontcolor = '#000';
-    $title = '';
-    if ( 'publish' === $status ) {
-        $title     = __( 'Published', 'wp-user-frontend' );
-        $fontcolor = '#009200';
-    } elseif ( 'draft' === $status || 'private' === $status ) {
-        $title     = __( 'Draft', 'wp-user-frontend' );
-        $fontcolor = '#bbbbbb';
-    } elseif ( 'pending' === $status ) {
-        $title     = __( 'Pending', 'wp-user-frontend' );
-        $fontcolor = '#C00202';
-    } elseif ( 'future' === $status ) {
-        $title     = __( 'Scheduled', 'wp-user-frontend' );
-        $fontcolor = '#bbbbbb';
-    }
-
-    echo wp_kses_post( '<span style="color:' . $fontcolor . ';">' . $title . '</span>' );
-}
-
-/**
- * Upload the files to the post as attachemnt
- *
- * @param <type> $post_id
- *
- * @deprecated WPUF_SINCE Not used by WP User Frontend any more; kept as public API.
- */
-function wpuf_upload_attachment( $post_id ) {
-    // phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce is verified by the submit/draft handler that calls this.
-    if ( ! isset( $_FILES['wpuf_post_attachments'] ) ) {
-        return false;
-    }
-
-    $fields = (int) wpuf_get_option( 'attachment_num' );
-
-    // phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce is verified by the submit/draft handler that calls this.
-    $wpuf_post_attachments = isset( $_FILES['wpuf_post_attachments'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_FILES['wpuf_post_attachments'] ) ) : [];
-
-    for ( $i = 0; $i < $fields; $i++ ) {
-        $file_name = basename( $wpuf_post_attachments['name'][ $i ] );
-
-        if ( $file_name ) {
-            if ( $file_name ) {
-                $upload = [
-                    'name'     => $wpuf_post_attachments['name'][ $i ],
-                    'type'     => $wpuf_post_attachments['type'][ $i ],
-                    'tmp_name' => $wpuf_post_attachments['tmp_name'][ $i ],
-                    'error'    => $wpuf_post_attachments['error'][ $i ],
-                    'size'     => $wpuf_post_attachments['size'][ $i ],
-                ];
-
-                wp_handle_upload( $upload );
-            }//file exists
-        }// end for
-    }
-}
-
-/**
  * Get the attachments of a post
  *
  * @param int $post_id
@@ -118,6 +50,8 @@ function wpuf_upload_attachment( $post_id ) {
  * @deprecated WPUF_SINCE Not used by WP User Frontend any more; kept as public API.
  */
 function wpfu_get_attachments( $post_id ) {
+    _deprecated_function( __FUNCTION__, 'WPUF_SINCE' );
+
     $att_list = [];
 
     $args = [
@@ -1321,6 +1255,8 @@ function wpuf_is_post_editable( $post ) {
  * @deprecated WPUF_SINCE Not used by WP User Frontend any more; kept as public API.
  */
 function wpuf_get_image_sizes_array( $size = '' ) {
+    _deprecated_function( __FUNCTION__, 'WPUF_SINCE' );
+
     $additional_image_sizes   = wp_get_additional_image_sizes();
     $intermediate_image_sizes = get_intermediate_image_sizes();
     $sizes = [];

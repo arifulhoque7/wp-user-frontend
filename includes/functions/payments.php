@@ -86,6 +86,8 @@ function wpuf_get_payment_type_label( $payment_method ) {
  * @deprecated WPUF_SINCE Not used by WP User Frontend any more; kept as public API.
  */
 function wpuf_get_subscription_page_url() {
+    _deprecated_function( __FUNCTION__, 'WPUF_SINCE' );
+
     $page_id = wpuf_get_option( 'subscription_page', 'wpuf_payment' );
 
     return get_permalink( $page_id );

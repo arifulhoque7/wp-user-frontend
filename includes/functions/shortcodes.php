@@ -87,6 +87,8 @@ function wpuf_shortcode_map( $location, $post_id = null, $args = [], $meta_key =
  * @deprecated WPUF_SINCE Not used by WP User Frontend any more; kept as public API.
  */
 function wpuf_shortcode_map_user( $meta_key, $user_id = null, $args = [] ) {
+    _deprecated_function( __FUNCTION__, 'WPUF_SINCE' );
+
     $location = get_user_meta( $user_id, $meta_key, true );
     wpuf_shortcode_map( $location, null, $args, $meta_key );
 }
