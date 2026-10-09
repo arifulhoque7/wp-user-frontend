@@ -14,6 +14,15 @@ const STATUS = {
 	publish: { label: __( 'Published', 'wp-user-frontend' ), className: 'bg-primary/10 text-primary' },
 	draft: { label: __( 'Draft', 'wp-user-frontend' ), className: 'bg-gray-100 text-gray-600' },
 	pending: { label: __( 'Pending', 'wp-user-frontend' ), className: 'bg-amber-50 text-amber-700' },
+	future: { label: __( 'Future', 'wp-user-frontend' ), className: 'bg-sky-50 text-sky-700' },
+	private: { label: __( 'Private', 'wp-user-frontend' ), className: 'bg-orange-50 text-orange-700' },
+	trash: { label: __( 'Trash', 'wp-user-frontend' ), className: 'bg-red-50 text-red-700' },
+};
+
+// Any other status reads as its own word (capitalised, as the list's pill), never "Draft".
+const statusOf = ( postStatus ) => STATUS[ postStatus ] || {
+	label: postStatus ? postStatus.charAt( 0 ).toUpperCase() + postStatus.slice( 1 ) : __( 'Draft', 'wp-user-frontend' ),
+	className: 'bg-gray-100 text-gray-600',
 };
 
 /**
@@ -52,7 +61,7 @@ const InfoCard = ( { subscription, mode = 'edit' } ) => {
 	const period = ! pick( 'cycle_period' ) ? __( 'day', 'wp-user-frontend' ) : pick( 'cycle_period' );
 	/* translators: 1: number of periods, 2: period (day, week, month, year) */
 	const every = 0 === cycle || 1 === cycle || isNaN( cycle ) ? '/' + period : sprintf( __( '/ %1$s %2$ss', 'wp-user-frontend' ), cycle, period );
-	const status = isEdit ? ( STATUS[ live.post_status ] || STATUS.draft ) : { label: __( 'New', 'wp-user-frontend' ), className: 'bg-gray-100 text-gray-600' };
+	const status = isEdit ? statusOf( live.post_status ) : { label: __( 'New', 'wp-user-frontend' ), className: 'bg-gray-100 text-gray-600' };
 	const title = live.post_title || __( 'Untitled plan', 'wp-user-frontend' );
 
 	return (
