@@ -270,6 +270,8 @@ test.describe('Admin app', () => {
         await expect(page.locator('input[name="wpuf_form_id"]')).toHaveValue(String(id));
         await expect(page.locator('input[name="wpuf_form_builder_nonce"]')).toHaveCount(1);
 
+        // The builder folds the WordPress menu: its rows show in a flyout on hover.
+        await page.locator('#toplevel_page_wp-user-frontend').hover();
         await page.locator('#toplevel_page_wp-user-frontend a', { hasText: 'Post Forms' }).first().click();
         await expect(page.locator('#wpuf-post-forms-list-table-view').first()).toBeVisible({ timeout: 30000 });
         expect(await page.evaluate(() => document.body.classList.contains('wpuf-builder-screen'))).toBe(false);
@@ -425,6 +427,8 @@ test.describe('Admin app', () => {
             for (const list of ['post', 'profile'] as const) {
                 const route = 'profile' === list ? 'registration-forms' : 'post-forms';
 
+                // A fresh load: a hash-only goto keeps the boot data read before the mock key was set.
+                await page.goto('about:blank');
                 await page.goto(`${APP}#/${route}`);
                 const button = page.locator(ai.S.listButton).first();
 
