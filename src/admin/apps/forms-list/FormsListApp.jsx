@@ -6,8 +6,13 @@
 import { __ } from '@wordpress/i18n';
 import { WpufProviders, PageFooter, PageHeader, PageShell } from '@wpuf/components';
 import FormsList from './components/FormsList';
+import SubmissionsPage from './components/SubmissionsPage';
 
-const FormsListApp = () => {
+/**
+ * @param {Object} props
+ * @param {number} [props.submissionsOf] Form ID: show that post form's Submissions page.
+ */
+const FormsListApp = ( { submissionsOf = 0 } ) => {
     const postType = window.wpuf_forms_list.post_type
         ? window.wpuf_forms_list.post_type
         : 'wpuf_forms';
@@ -33,14 +38,19 @@ const FormsListApp = () => {
     return (
         <WpufProviders host>
             <PageShell>
-                <PageHeader utm="wpuf-form-builder" helpUrl={ help.url } helpLabel={ help.label } />
-                <FormsList
-                    postType={ postType }
-                    formType={ formType }
-                    pageSlug={ pageSlug }
-                    pageTitle={ pageTitle }
-                />
-                <PageFooter />
+                { /* The Submissions page has the builder's header card instead. */ }
+                { submissionsOf ? null : <PageHeader utm="wpuf-form-builder" helpUrl={ help.url } helpLabel={ help.label } /> }
+                { submissionsOf ? (
+                    <SubmissionsPage formId={ submissionsOf } />
+                ) : (
+                    <FormsList
+                        postType={ postType }
+                        formType={ formType }
+                        pageSlug={ pageSlug }
+                        pageTitle={ pageTitle }
+                    />
+                ) }
+                { submissionsOf ? null : <PageFooter /> }
             </PageShell>
         </WpufProviders>
     );

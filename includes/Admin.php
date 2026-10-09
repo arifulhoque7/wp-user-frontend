@@ -31,7 +31,6 @@ class Admin {
         $this->container['gutenberg_block']       = new Frontend\Form_Gutenberg_Block();
         $this->container['plugin_upgrade_notice'] = new Admin\Plugin_Upgrade_Notice();
         $this->container['posting']               = new Admin\Posting();
-        $this->container['form_posts_filter']     = new Admin\Form_Posts_Filter();
         $this->container['shortcodes_button']     = new Admin\Shortcodes_Button();
         $this->container['tools']                 = new Admin\Admin_Tools();
         $this->container['onboarding']            = new Admin\Onboarding();

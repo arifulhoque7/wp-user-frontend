@@ -42,6 +42,195 @@ class FormList extends RestController {
                 ],
             ]
         );
+
+        register_rest_route(
+            $this->namespace, '/' . $this->base . '/(?P<id>[\d]+)/submissions', [
+                [
+                    'methods'             => WP_REST_Server::READABLE,
+                    'callback'            => [ $this, 'get_submissions' ],
+                    'permission_callback' => [ $this, 'permission_check' ],
+                    'args'                => [
+                        'id'   => [
+                            'type'              => 'integer',
+                            'sanitize_callback' => 'absint',
+                        ],
+                        'page'     => [
+                            'type'              => 'integer',
+                            'default'           => 1,
+                            'sanitize_callback' => 'absint',
+                        ],
+                        'per_page' => [
+                            'type'              => 'integer',
+                            'default'           => 10,
+                            'sanitize_callback' => 'absint',
+                        ],
+                        'status'   => [
+                            'type'              => 'string',
+                            'default'           => 'any',
+                            'sanitize_callback' => 'sanitize_key',
+                        ],
+                        's'        => [
+                            'type'              => 'string',
+                            'default'           => '',
+                            'sanitize_callback' => 'sanitize_text_field',
+                        ],
+                    ],
+                ],
+            ]
+        );
+    }
+
+    /**
+     * The posts submitted through one post form (the `_wpuf_form_id` meta),
+     * newest first, for the forms list's Submissions table.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param WP_REST_Request $request Request.
+     *
+     * @return WP_REST_Response|WP_Error
+     */
+    public function get_submissions( $request ) {
+        $form_id = absint( $request['id'] );
+
+        if ( ! $form_id || 'wpuf_forms' !== get_post_type( $form_id ) ) {
+            return new WP_Error( 'wpuf_invalid_form', __( 'Form not found.', 'wp-user-frontend' ), [ 'status' => 404 ] );
+        }
+
+        $settings  = wpuf_get_form_settings( $form_id );
+        $post_type = ! empty( $settings['post_type'] ) ? sanitize_key( $settings['post_type'] ) : 'post';
+        $per_page  = min( 100, max( 1, absint( $request['per_page'] ) ) );
+        $page      = max( 1, absint( $request['page'] ) );
+        $status    = sanitize_key( $request['status'] );
+        $search    = sanitize_text_field( $request['s'] );
+        $tabs      = [ 'publish', 'pending', 'draft', 'future', 'private' ];
+
+        if ( ! in_array( $status, $tabs, true ) ) {
+            $status = 'any';
+        }
+
+        $by_form = [
+            [
+                'key'   => '_wpuf_form_id',
+                'value' => $form_id,
+            ],
+        ];
+
+        $args = [
+            'post_type'      => $post_type,
+            'post_status'    => $status,
+            'posts_per_page' => $per_page,
+            'paged'          => $page,
+            'orderby'        => 'date',
+            'order'          => 'DESC',
+            'meta_query'     => $by_form,
+        ];
+
+        if ( '' !== $search ) {
+            $args['s'] = $search;
+        }
+
+        $query = new \WP_Query( $args );
+
+        // Count per status tab (search applied, like the list's tabs).
+        $counts = [ 'any' => 0 ];
+
+        foreach ( $tabs as $tab ) {
+            $count_args = [
+                'post_type'      => $post_type,
+                'post_status'    => $tab,
+                'posts_per_page' => 1,
+                'fields'         => 'ids',
+                'meta_query'     => $by_form,
+            ];
+
+            if ( '' !== $search ) {
+                $count_args['s'] = $search;
+            }
+
+            $count_query    = new \WP_Query( $count_args );
+            $counts[ $tab ] = (int) $count_query->found_posts;
+            $counts['any'] += $counts[ $tab ];
+        }
+
+        $statuses = get_post_statuses();
+        $items    = [];
+
+        // The columns WordPress's own posts list shows for the post type: the
+        // taxonomies with an admin column, and Comments when it has comments.
+        $taxonomies = array_filter(
+            get_object_taxonomies( $post_type, 'objects' ),
+            function ( $taxonomy ) {
+                return ! empty( $taxonomy->show_admin_column );
+            }
+        );
+        $columns    = [];
+
+        foreach ( $taxonomies as $taxonomy ) {
+            $columns[] = [
+                'key'   => $taxonomy->name,
+                'label' => $taxonomy->labels->name,
+            ];
+        }
+
+        $comments = post_type_supports( $post_type, 'comments' );
+
+        foreach ( $query->posts as $post ) {
+            $author = get_userdata( $post->post_author );
+            $terms  = [];
+
+            foreach ( $taxonomies as $taxonomy ) {
+                $names                    = wp_get_post_terms( $post->ID, $taxonomy->name, [ 'fields' => 'names' ] );
+                $terms[ $taxonomy->name ] = is_wp_error( $names ) ? [] : array_map( 'wp_strip_all_tags', $names );
+            }
+
+            if ( 'publish' === $post->post_status ) {
+                $date_label = __( 'Published', 'wp-user-frontend' );
+            } elseif ( 'future' === $post->post_status ) {
+                $date_label = __( 'Scheduled', 'wp-user-frontend' );
+            } else {
+                $date_label = __( 'Last Modified', 'wp-user-frontend' );
+            }
+
+            $items[] = [
+                'id'           => $post->ID,
+                'title'        => wp_strip_all_tags( $post->post_title ),
+                'status'       => $post->post_status,
+                'status_label' => isset( $statuses[ $post->post_status ] ) ? $statuses[ $post->post_status ] : ucfirst( $post->post_status ),
+                'author'       => $author ? $author->display_name : __( 'Guest', 'wp-user-frontend' ),
+                'terms'        => $terms,
+                'comments'     => $comments ? (int) $post->comment_count : null,
+                'date_label'   => $date_label,
+                'date'         => in_array( $post->post_status, [ 'publish', 'future' ], true )
+                    ? get_the_date( '', $post )
+                    : get_the_modified_date( '', $post ),
+                'time'         => in_array( $post->post_status, [ 'publish', 'future' ], true )
+                    ? get_the_time( '', $post )
+                    : get_the_modified_time( '', $post ),
+                'edit_url'     => current_user_can( 'edit_post', $post->ID ) ? get_edit_post_link( $post->ID, 'raw' ) : '',
+                'view_url'     => 'publish' === $post->post_status ? get_permalink( $post ) : '',
+            ];
+        }
+
+        return rest_ensure_response(
+            [
+                'success'    => true,
+                'items'      => $items,
+                'total'      => (int) $query->found_posts,
+                'pages'      => (int) $query->max_num_pages,
+                'page'       => $page,
+                'per_page'   => $per_page,
+                'counts'     => $counts,
+                'columns'    => $columns,
+                'comments'   => $comments,
+                'post_type'  => $post_type,
+                'form'       => [
+                    'id'       => $form_id,
+                    'title'    => wp_strip_all_tags( get_the_title( $form_id ) ),
+                    'edit_url' => admin_url( 'admin.php?page=wpuf-post-forms&action=edit&id=' . $form_id ),
+                ],
+            ]
+        );
     }
 
     /**

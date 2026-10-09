@@ -19,6 +19,12 @@ import { ActionMenu, Checkbox } from '@wpuf/components';
 
 import { STATUS_BADGE_CLASSES } from '../utils/constants';
 import ShortcodeCopy from './ShortcodeCopy';
+import { openRoute } from '../../../app/client';
+
+const openSubmissions = ( form ) => openRoute(
+    `/post-forms/${ form.ID }/submissions`,
+    `${ window.wpuf_admin_script.admin_url }admin.php?page=wp-user-frontend#/post-forms/${ form.ID }/submissions`
+);
 
 // FlyHR list-table cells: header text comes from the row (uppercase 12px gray).
 const TH = 'px-2 font-normal';
@@ -107,28 +113,29 @@ const FormsTable = ( {
             render: ( form ) => {
                 const total = Number( form.post_count ) || 0;
                 const pending = Number( form.pending_count ) || 0;
-                const listUrl = `${ window.wpuf_admin_script.admin_url }edit.php?post_type=${ encodeURIComponent( form.settings_post_type || 'post' ) }&wpuf_form=${ form.ID }`;
 
                 return (
                     <td key="submissions" className={ TD + ' whitespace-nowrap text-gray-500' }>
                         { total ? (
                             <span className="inline-flex items-center gap-2">
-                                <a
-                                    href={ listUrl }
-                                    className="font-medium text-gray-900 no-underline hover:text-primary hover:underline focus:text-primary"
+                                <button
+                                    type="button"
+                                    onClick={ () => openSubmissions( form ) }
+                                    className="cursor-pointer border-0 bg-transparent p-0 text-[13px] font-medium text-gray-900 hover:text-primary hover:underline focus-visible:text-primary"
                                     /* translators: %s: form name */
                                     title={ sprintf( __( 'View posts submitted through %s', 'wp-user-frontend' ), form.post_title ) }
                                 >
                                     { total }
-                                </a>
+                                </button>
                                 { pending ? (
-                                    <a
-                                        href={ `${ listUrl }&post_status=pending` }
-                                        className={ 'inline-flex items-center py-[2px] px-2 rounded-[5px] text-xs font-medium no-underline border ' + STATUS_BADGE_CLASSES.pending }
+                                    <button
+                                        type="button"
+                                        onClick={ () => openSubmissions( form ) }
+                                        className={ 'inline-flex cursor-pointer items-center py-[2px] px-2 rounded-[5px] text-xs font-medium border ' + STATUS_BADGE_CLASSES.pending }
                                     >
                                         { /* translators: %d: number of posts waiting for review */ }
                                         { sprintf( __( '%d pending', 'wp-user-frontend' ), pending ) }
-                                    </a>
+                                    </button>
                                 ) : null }
                             </span>
                         ) : (

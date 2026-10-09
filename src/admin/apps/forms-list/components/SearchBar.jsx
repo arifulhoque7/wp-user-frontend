@@ -6,7 +6,9 @@
 import { __ } from '@wordpress/i18n';
 import { TextInput } from '@wpuf/components';
 
-const SearchBar = ( { value, onChange } ) => {
+const SearchBar = ( { value, onChange, placeholder } ) => {
+    const text = placeholder || __( 'Search Forms', 'wp-user-frontend' );
+
     return (
         <div className="wpuf-form-search-box relative">
             <svg className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -15,8 +17,8 @@ const SearchBar = ( { value, onChange } ) => {
             <TextInput
                 value={ value }
                 onChange={ onChange }
-                placeholder={ __( 'Search Forms', 'wp-user-frontend' ) }
-                aria-label={ __( 'Search Forms', 'wp-user-frontend' ) }
+                placeholder={ text }
+                aria-label={ text }
                 className="h-9 w-60 ps-9"
             />
         </div>

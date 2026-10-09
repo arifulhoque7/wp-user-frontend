@@ -5,7 +5,7 @@ import { Save } from 'lucide-react';
 import { STORE_NAME } from '../../store';
 import useFormSave from '../../hooks/useFormSave';
 import LegacySlot, { getLegacySlots } from '../../common/LegacySlot';
-import { getRouteQuery, inApp } from '../../../../app/client';
+import { getRouteQuery, inApp, openRoute } from '../../../../app/client';
 
 /**
  * Builder URL of another form of the same type: its app route in the admin
@@ -75,6 +75,10 @@ export default function Header( { activeTab, onTabChange } ) {
     const handleTitleConfirm = () => {
         setIsTitleEditing( false );
     };
+
+    const isPostForm = 'wpuf_forms' === formType || 'post' === formType;
+    const submissionsPath = `/post-forms/${ post.ID }/submissions`;
+    const submissionsUrl = `admin.php?page=wp-user-frontend#${ submissionsPath }`;
 
     const tabs = [
         { id: 'form-editor', label: __( 'Form Editor', 'wp-user-frontend' ) },
@@ -189,6 +193,21 @@ export default function Header( { activeTab, onTabChange } ) {
                                 { tab.label }
                             </a>
                         ) ) }
+                        { /* Post forms: the posts the form created, on the list's Submissions page. */ }
+                        { isPostForm && post.ID ? (
+                            <a
+                                onClick={ ( e ) => {
+                                    e.preventDefault();
+                                    openRoute( submissionsPath, submissionsUrl );
+                                } }
+                                className="wpuf-nav-tab px-3 py-1.5 text-sm font-medium leading-5 rounded-md text-gray-500 hover:text-gray-900 focus:shadow-none hover:cursor-pointer wpuf-transition-all"
+                                href={ submissionsUrl }
+                                role="tab"
+                                aria-selected={ false }
+                            >
+                                { __( 'Submissions', 'wp-user-frontend' ) }
+                            </a>
+                        ) : null }
                         <div id="wpuf-pro-tab-slot" />
                         { /* Tabs other plugins printed on wpuf-form-builder-tabs-{type}. */ }
                         <LegacySlot id="tab-nav" html={ getLegacySlots().tabs.nav } className="flex items-center" />
