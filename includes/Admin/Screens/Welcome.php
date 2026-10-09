@@ -9,6 +9,7 @@
 namespace WeDevs\Wpuf\Admin\Screens;
 
 use WeDevs\Wpuf\Free\Pro_Prompt;
+use WeDevs\Wpuf\Platform\Caps;
 
 /**
  * Welcome to WP User Frontend (`index.php?page=wpuf-welcome`, Admin_Welcome)
@@ -49,7 +50,7 @@ class Welcome extends Screen {
      * @return string
      */
     public function capability() {
-        return 'manage_options';
+        return Caps::capability( Caps::MANAGE_SITE );
     }
 
     /**

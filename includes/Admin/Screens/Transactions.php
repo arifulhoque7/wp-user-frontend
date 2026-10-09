@@ -9,6 +9,7 @@
 namespace WeDevs\Wpuf\Admin\Screens;
 
 use WeDevs\Wpuf\Admin\List_Table_Transactions;
+use WeDevs\Wpuf\Platform\Caps;
 use WeDevs\Wpuf\Platform\Transactions\TransactionService;
 
 /**
@@ -142,11 +143,11 @@ class Transactions extends Screen {
      * @return array
      */
     public function app_globals() {
-        $service = new TransactionService();
+        $service = wpuf()->platform()->get( TransactionService::class );
 
         return [
             'wpufTransactions' => [
-                'canManage' => current_user_can( 'manage_options' ),
+                'canManage' => Caps::can( Caps::MANAGE_SITE ),
                 'gateways'  => $service->gateways(),
                 'perPage'   => $service->per_page(),
             ],

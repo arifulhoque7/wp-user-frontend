@@ -9,6 +9,7 @@
 namespace WeDevs\Wpuf\Platform\REST\Controllers;
 
 use WeDevs\Wpuf\Admin\Onboarding;
+use WeDevs\Wpuf\Platform\Caps;
 use WeDevs\Wpuf\Platform\REST\RestController;
 use WP_Error;
 use WP_REST_Request;
@@ -117,7 +118,7 @@ class OnboardingController extends RestController {
             return new WP_Error( 'wpuf_rest_unauthorized', __( 'You must be logged in.', 'wp-user-frontend' ), [ 'status' => 401 ] );
         }
 
-        if ( ! current_user_can( 'manage_options' ) ) {
+        if ( ! Caps::can( Caps::MANAGE_SITE ) ) {
             return new WP_Error( 'wpuf_rest_forbidden', __( 'You do not have permission to run the setup.', 'wp-user-frontend' ), [ 'status' => 403 ] );
         }
 

@@ -13,6 +13,8 @@ use WeDevs\Wpuf\Platform\Stores\FieldStore;
 use WeDevs\Wpuf\Platform\Stores\FormStore;
 use WeDevs\Wpuf\Platform\Stores\SettingsStore;
 use WeDevs\Wpuf\Platform\Stores\SubscriptionStore;
+use WeDevs\Wpuf\Platform\Tools\ToolsService;
+use WeDevs\Wpuf\Platform\Transactions\TransactionService;
 
 /**
  * Registers the stores every form, subscription and settings writer goes through.
@@ -58,6 +60,21 @@ class StoreServiceProvider extends ServiceProvider {
             SettingsStore::class,
             function () {
                 return new SettingsStore();
+            }
+        );
+
+        // Domain services over the stores and develop's tables (Tools, Transactions).
+        $this->share_tagged(
+            ToolsService::class,
+            function () {
+                return new ToolsService();
+            }
+        );
+
+        $this->share_tagged(
+            TransactionService::class,
+            function () {
+                return new TransactionService();
             }
         );
     }

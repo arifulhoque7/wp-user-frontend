@@ -8,6 +8,8 @@ use WeDevs\Wpuf\Admin\Forms\Admin_Form_Builder_Free;
  * Free features for wpuf_forms builder
  *
  * @since 2.5
+ * @deprecated WPUF_SINCE Does nothing since the React builder; still created through the
+ *             `wpuf_free_loader` list so that filter keeps its keys.
  */
 class WPUF_Admin_Form_Free {
 

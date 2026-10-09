@@ -120,6 +120,30 @@ class PlatformRestTest extends WP_UnitTestCase {
         remove_filter( 'wpuf_admin_role', $role );
     }
 
+    public function test_site_capability_stays_manage_options_and_is_filterable() {
+        $this->assertSame( 'manage_options', Caps::capability( Caps::MANAGE_SITE ) );
+
+        // The WPUF admin role filter does not lower the site-wide actions.
+        $role = function () {
+            return 'edit_posts';
+        };
+        add_filter( 'wpuf_admin_role', $role );
+        wp_set_current_user( self::factory()->user->create( [ 'role' => 'editor' ] ) );
+        $this->assertTrue( Caps::can( Caps::MANAGE_FORMS ) );
+        $this->assertFalse( Caps::can( Caps::MANAGE_SITE ) );
+        $request = new WP_REST_Request( 'POST', '/wpuf/v1/admin/transactions/delete' );
+        $request->set_param( 'items', [ [ 'kind' => 'transaction', 'id' => 1 ] ] );
+        $this->assertSame( 403, rest_do_request( $request )->get_status() );
+        remove_filter( 'wpuf_admin_role', $role );
+
+        $split = function ( $capability, $cap ) {
+            return Caps::MANAGE_SITE === $cap ? 'edit_posts' : $capability;
+        };
+        add_filter( 'wpuf_capability', $split, 10, 2 );
+        $this->assertTrue( Caps::can( Caps::MANAGE_SITE ), 'wpuf_capability can change it' );
+        remove_filter( 'wpuf_capability', $split, 10 );
+    }
+
     public function test_casts_and_error_codes() {
         $controller = new WPUF_Test_Rest_Controller();
 

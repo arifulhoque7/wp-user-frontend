@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * Legacy global form renderer, kept for outside code that uses the class name.
+ *
+ * WPUF itself renders through WeDevs\Wpuf\Frontend_Render_Form.
+ *
+ * @deprecated WPUF_SINCE Use WeDevs\Wpuf\Frontend_Render_Form.
+ */
 class WPUF_Frontend_Render_Form {
     private static $_instance;
 
@@ -347,7 +354,7 @@ class WPUF_Frontend_Render_Form {
                     }
                     ?>
 
-                   <script type="text/javascript">
+                    <script type="text/javascript">
                         if ( typeof wpuf_conditional_items === 'undefined' ) {
                             wpuf_conditional_items = [];
                         }
@@ -611,7 +618,7 @@ class WPUF_Frontend_Render_Form {
                             $term = get_term_by( 'name', $term_name, $taxonomy['name'] );
 
                             if ( empty( $term_name ) ) {
-                                  return null;
+                                    return null;
                             }
 
                             if ( $term instanceof WP_Term ) {
@@ -945,16 +952,16 @@ class WPUF_Frontend_Render_Form {
                 </div>
                 <div >
                     <label >
-                         <input type="checkbox" class="wpuf_is_featured" name="is_featured_item" value="1" <?php echo $is_featured ? 'checked' : ''; ?> >
-                         <span class="wpuf-message-box" id="remaining-feature-item"> 
-                         <?php
+                        <input type="checkbox" class="wpuf_is_featured" name="is_featured_item" value="1" <?php echo $is_featured ? 'checked' : ''; ?> >
+                        <span class="wpuf-message-box" id="remaining-feature-item"> 
+                        <?php
                             printf(
                                 /* translators: %1$s: post type name, %2$d: number of featured items remaining */
                                 wp_kses_post( __( 'Mark the %1$s as featured (remaining %2$d)', 'wp-user-frontend' ) ),
                                 esc_html( $this->form_settings['post_type'] ),
                                 esc_html( isset( $user_sub['total_feature_item'] ) ? $user_sub['total_feature_item'] : 0 )
                             );
-                            ?>
+						?>
                             </span>
                     </label>
                 </div>

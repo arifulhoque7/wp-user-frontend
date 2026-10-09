@@ -9,6 +9,7 @@
 namespace WeDevs\Wpuf\Admin\Screens;
 
 use WeDevs\Wpuf\Admin\Admin_Tools;
+use WeDevs\Wpuf\Platform\Caps;
 use WeDevs\Wpuf\Platform\Tools\ToolsService;
 
 /**
@@ -169,16 +170,17 @@ class Tools extends Screen {
      */
     public function app_globals() {
         $admin      = wpuf()->admin;
-        $onboarding = is_object( $admin ) && $admin->onboarding ? ( new ToolsService() )->onboarding_entry() : null;
+        $tools      = wpuf()->platform()->get( ToolsService::class );
+        $onboarding = is_object( $admin ) && $admin->onboarding ? $tools->onboarding_entry() : null;
         $is_block = function_exists( 'wp_is_block_theme' ) && wp_is_block_theme();
 
         return [
             'wpufTools' => [
-                'canManageSite' => current_user_can( 'manage_options' ),
+                'canManageSite' => Caps::can( Caps::MANAGE_SITE ),
                 'isPro'         => class_exists( 'WP_User_Frontend_Pro' ),
                 'onboarding'    => $onboarding,
                 'deletable'     => ToolsService::DELETABLE,
-                'menus'         => ( new ToolsService() )->menus(),
+                'menus'         => $tools->menus(),
                 'isBlockTheme'  => $is_block,
                 'logoutUrl'     => html_entity_decode( wpuf_get_logout_url(), ENT_QUOTES, 'UTF-8' ),
                 'menusUrl'      => admin_url( 'nav-menus.php' ),

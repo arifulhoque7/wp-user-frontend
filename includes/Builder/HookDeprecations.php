@@ -22,11 +22,16 @@ namespace WeDevs\Wpuf\Builder;
  * - output of the template actions was Vue markup the React builder cannot run,
  *   so it is discarded.
  *
- * Migration guide: docs/hooks/migration-vue-to-react.md.
+ * Migration guide: docs/hooks/migration-vue-to-react.md (GUIDE_URL; `docs/` is not in the release zip).
  *
  * @since WPUF_SINCE
  */
 class HookDeprecations {
+
+    /**
+     * Public copy of docs/hooks/migration-vue-to-react.md (the docs folder is not shipped).
+     */
+    const GUIDE_URL = 'https://github.com/weDevsOfficial/wp-user-frontend/blob/develop/docs/hooks/migration-vue-to-react.md';
 
     /**
      * Version the hooks were retired in (stamped at release).
@@ -305,7 +310,8 @@ class HookDeprecations {
                 <?php endforeach; ?>
             </ul>
             <p>
-                <?php esc_html_e( 'The hooks still run for now but will be removed in a future major release. See docs/hooks/migration-vue-to-react.md in the plugin.', 'wp-user-frontend' ); ?>
+                <?php esc_html_e( 'The hooks still run for now but will be removed in a future major release.', 'wp-user-frontend' ); ?>
+                <a href="<?php echo esc_url( self::GUIDE_URL ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Migration guide', 'wp-user-frontend' ); ?></a>
                 <a href="<?php echo esc_url( $dismiss ); ?>"><?php esc_html_e( 'Dismiss', 'wp-user-frontend' ); ?></a>
             </p>
         </div>

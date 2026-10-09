@@ -9,6 +9,7 @@
 namespace WeDevs\Wpuf\Admin\Screens;
 
 use WeDevs\Wpuf\Admin\Onboarding as Wizard;
+use WeDevs\Wpuf\Platform\Caps;
 
 /**
  * The setup wizard (`index.php?page=wpuf-onboarding`, Admin\Onboarding) as the
@@ -39,7 +40,7 @@ class Onboarding extends Screen {
      * @return string
      */
     public function capability() {
-        return 'manage_options';
+        return Caps::capability( Caps::MANAGE_SITE );
     }
 
     /**

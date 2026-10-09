@@ -4,6 +4,9 @@ namespace WeDevs\Wpuf\Admin\Forms;
 
 /**
  * Post related form templates
+ *
+ * @deprecated WPUF_SINCE Nothing in WPUF uses it any more (post form templates live in
+ *             Admin\Forms\Post\Templates). Kept so outside code naming the class keeps working.
  */
 class Template_Post extends Admin_Template {
 

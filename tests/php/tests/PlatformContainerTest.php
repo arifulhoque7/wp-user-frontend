@@ -142,6 +142,14 @@ class PlatformContainerTest extends WP_UnitTestCase {
         $this->assertInstanceOf( HookBridge::class, wpuf()->platform()->get( HookBridge::class, 'post', [] ) );
     }
 
+    public function test_tools_and_transactions_services_come_from_the_container() {
+        $tools = wpuf()->platform()->get( \WeDevs\Wpuf\Platform\Tools\ToolsService::class );
+        $pay   = wpuf()->platform()->get( \WeDevs\Wpuf\Platform\Transactions\TransactionService::class );
+
+        $this->assertSame( $tools, wpuf()->platform()->get( \WeDevs\Wpuf\Platform\Tools\ToolsService::class ), 'shared' );
+        $this->assertSame( $pay, wpuf()->platform()->get( \WeDevs\Wpuf\Platform\Transactions\TransactionService::class ), 'shared' );
+    }
+
     public function test_legacy_accessor_keeps_its_keys_and_returns_null_for_unknown() {
         $this->assertInstanceOf( \WeDevs\Wpuf\Admin\Forms\Field_Manager::class, wpuf()->fields );
         $this->assertInstanceOf( \WeDevs\Wpuf\Admin\Subscription::class, wpuf()->subscription );

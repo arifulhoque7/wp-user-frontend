@@ -19,6 +19,8 @@ use WeDevs\Wpuf\Platform\REST\Controllers\TransactionsController;
 use WeDevs\Wpuf\Platform\REST\Manager;
 use WeDevs\Wpuf\Platform\ServiceProvider;
 use WeDevs\Wpuf\Platform\Stores\FormStore;
+use WeDevs\Wpuf\Platform\Tools\ToolsService;
+use WeDevs\Wpuf\Platform\Transactions\TransactionService;
 
 /**
  * Registers the REST manager and every REST controller the free plugin owns.
@@ -74,16 +76,16 @@ class RestServiceProvider extends ServiceProvider {
         // wpuf/v1/admin/tools/* (User Frontend > Tools).
         $this->share_tagged(
             ToolsController::class,
-            function () {
-                return new ToolsController();
+            function ( $container ) {
+                return new ToolsController( $container->get( ToolsService::class ) );
             }
         );
 
         // wpuf/v1/admin/transactions (User Frontend > Transactions).
         $this->share_tagged(
             TransactionsController::class,
-            function () {
-                return new TransactionsController();
+            function ( $container ) {
+                return new TransactionsController( $container->get( TransactionService::class ) );
             }
         );
 

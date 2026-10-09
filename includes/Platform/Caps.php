@@ -34,6 +34,13 @@ class Caps {
     const MANAGE_SETTINGS = 'manage_settings';
 
     /**
+     * Site-wide actions develop kept for administrators: accept / reject / delete
+     * payments, Tools danger zone, onboarding. Defaults to `manage_options`, not
+     * `wpuf_admin_role()`.
+     */
+    const MANAGE_SITE = 'manage_site';
+
+    /**
      * The WordPress capability behind a WPUF capability.
      *
      * @since WPUF_SINCE
@@ -48,10 +55,12 @@ class Caps {
          *
          * @since WPUF_SINCE
          *
-         * @param string $capability WordPress capability (default: wpuf_admin_role())
+         * @param string $capability WordPress capability (default: wpuf_admin_role(), `manage_options` for MANAGE_SITE)
          * @param string $cap        WPUF capability (Caps constant)
          */
-        return (string) apply_filters( 'wpuf_capability', wpuf_admin_role(), $cap );
+        $default = self::MANAGE_SITE === $cap ? 'manage_options' : wpuf_admin_role();
+
+        return (string) apply_filters( 'wpuf_capability', $default, $cap );
     }
 
     /**

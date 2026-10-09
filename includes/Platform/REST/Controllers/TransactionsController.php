@@ -171,7 +171,7 @@ class TransactionsController extends RestController {
             return new WP_Error( 'wpuf_rest_unauthorized', __( 'You must be logged in.', 'wp-user-frontend' ), [ 'status' => 401 ] );
         }
 
-        if ( ! current_user_can( 'manage_options' ) ) {
+        if ( ! Caps::can( Caps::MANAGE_SITE ) ) {
             return new WP_Error( 'wpuf_rest_forbidden', __( 'Sorry, you are not allowed to do that.', 'wp-user-frontend' ), [ 'status' => 403 ] );
         }
 
