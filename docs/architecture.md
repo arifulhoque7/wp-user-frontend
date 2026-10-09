@@ -54,8 +54,12 @@ includes/Platform/            the platform: Container, ServiceProvider, Bootstra
 includes/Admin/Screens/       one class per admin screen + Registry, Screen (base), PrintsNotices
 includes/Admin/App/           AppPage (the one admin page)
 includes/Builder/             BuilderBoot, FormSave, HookBridge, HookDeprecations
-includes/Admin/               legacy admin services still in use (Menu, Admin_Tools, Admin_Subscription, Onboarding facade,
-                              Posting, Help_Content, views/ for Subscribers / Premium / shortcode builder / help content)
+includes/Admin/               legacy admin services still in use (Menu, Admin_Tools, Onboarding facade, Posting, Help_Content,
+                              views/ for Subscribers / Premium / shortcode builder / help content)
+includes/Admin/Subscriptions/ the subscription packs admin behind the Admin_Subscription facade (hooks + delegators):
+                              Pack_Fields (pack editor schema), Pack_Screen (CPT columns, classic metaboxes, React
+                              screen boot, sort order migration through SubscriptionStore), User_Profile (a user's pack
+                              on the profile screen)
 includes/AI/                  AI form builder (Config, FormGenerator, prompts, its RestController, Services/)
 includes/Frontend/, Fields/, Integrations/   the site frontend, field types, third-party integrations
 includes/Free/                free plugin only: Free_Loader (hooks, delegating facade) + Settings_Preview, Modules_Preview,

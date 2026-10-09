@@ -337,6 +337,48 @@ class SubscriptionStore implements DataStore {
     }
 
     /**
+     * Give every pack without a usable `_sort_order` (missing, empty or <= 0)
+     * the default order 1 (the one-off migration Admin_Subscription runs).
+     *
+     * @since WPUF_SINCE
+     *
+     * @return int Packs updated
+     */
+    public function set_default_sort_order() {
+        $ids = get_posts(
+            [
+                'post_type'      => 'wpuf_subscription',
+                'posts_per_page' => -1,
+                'post_status'    => [ 'publish', 'draft', 'private' ],
+                'fields'         => 'ids',
+                'meta_query'     => [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- one-off migration.
+                    'relation' => 'OR',
+                    [
+                        'key'     => '_sort_order',
+                        'compare' => 'NOT EXISTS',
+                    ],
+                    [
+                        'key'     => '_sort_order',
+                        'value'   => '',
+                        'compare' => '=',
+                    ],
+                    [
+                        'key'     => '_sort_order',
+                        'value'   => 0,
+                        'compare' => '<=',
+                    ],
+                ],
+            ]
+        );
+
+        foreach ( $ids as $id ) {
+            update_post_meta( $id, '_sort_order', 1 );
+        }
+
+        return count( $ids );
+    }
+
+    /**
      * Save the classic pack editor's fields (already unslashed `$_POST`). The
      * caller has checked the nonce and the capability.
      *
