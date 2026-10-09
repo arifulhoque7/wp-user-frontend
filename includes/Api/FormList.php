@@ -126,7 +126,8 @@ class FormList extends RestController {
                 $settings = get_post_meta( $post_id, 'wpuf_form_settings', true );
 
                 // Get post count for this form
-                $post_count = $this->get_form_post_count( $post_id, $settings );
+                $post_count    = $this->get_form_post_count( $post_id, $settings );
+                $pending_count = $post_count ? $this->get_form_post_count( $post_id, $settings, 'pending' ) : 0;
 
                 $forms[] = [
                     'ID'                  => $post_id,
@@ -137,6 +138,7 @@ class FormList extends RestController {
                     'settings_guest_post' => ! empty( $settings['post_permission'] ) && 'guest_post' === $settings['post_permission'],
                     'settings_user_role'  => ! empty( $settings['role'] ) ? $settings['role'] : '',
                     'post_count'          => $post_count,
+                    'pending_count'       => $pending_count,
                 ];
             }
         }
@@ -164,18 +166,22 @@ class FormList extends RestController {
      *
      * @since 4.1.4
      *
-     * @param int   $form_id  Form ID
-     * @param array $settings Form settings
+     * @since WPUF_SINCE Added the `$status` parameter.
+     *
+     * @param int    $form_id  Form ID
+     * @param array  $settings Form settings
+     * @param string $status   Post status to count (default any).
      *
      * @return int
      */
-    private function get_form_post_count( $form_id, $settings ) {
+    private function get_form_post_count( $form_id, $settings, $status = 'any' ) {
         $post_type = ! empty( $settings['post_type'] ) ? $settings['post_type'] : 'post';
 
         $args = [
             'post_type'      => $post_type,
-            'post_status'    => 'any',
-            'posts_per_page' => -1,
+            'post_status'    => $status,
+            // Only found_posts is read: fetch one id, not every post.
+            'posts_per_page' => 1,
             'fields'         => 'ids',
             'meta_query'     => [
                 [

@@ -101,6 +101,44 @@ const FormsTable = ( {
             ),
         },
         {
+            key: 'submissions',
+            label: __( 'Submissions', 'wp-user-frontend' ),
+            thClassName: TH,
+            render: ( form ) => {
+                const total = Number( form.post_count ) || 0;
+                const pending = Number( form.pending_count ) || 0;
+                const listUrl = `${ window.wpuf_admin_script.admin_url }edit.php?post_type=${ encodeURIComponent( form.settings_post_type || 'post' ) }&wpuf_form=${ form.ID }`;
+
+                return (
+                    <td key="submissions" className={ TD + ' whitespace-nowrap text-gray-500' }>
+                        { total ? (
+                            <span className="inline-flex items-center gap-2">
+                                <a
+                                    href={ listUrl }
+                                    className="font-medium text-gray-900 no-underline hover:text-primary hover:underline focus:text-primary"
+                                    /* translators: %s: form name */
+                                    title={ sprintf( __( 'View posts submitted through %s', 'wp-user-frontend' ), form.post_title ) }
+                                >
+                                    { total }
+                                </a>
+                                { pending ? (
+                                    <a
+                                        href={ `${ listUrl }&post_status=pending` }
+                                        className={ 'inline-flex items-center py-[2px] px-2 rounded-[5px] text-xs font-medium no-underline border ' + STATUS_BADGE_CLASSES.pending }
+                                    >
+                                        { /* translators: %d: number of posts waiting for review */ }
+                                        { sprintf( __( '%d pending', 'wp-user-frontend' ), pending ) }
+                                    </a>
+                                ) : null }
+                            </span>
+                        ) : (
+                            <span>0</span>
+                        ) }
+                    </td>
+                );
+            },
+        },
+        {
             key: 'shortcode',
             label: __( 'Shortcode', 'wp-user-frontend' ),
             thClassName: TH,
@@ -169,7 +207,9 @@ const FormsTable = ( {
         },
     ], [ onAction, editUrl, formType, getShortcode, copiedKey, onCopyShortcode, menuItems ] );
 
-    const columns = applyFilters( 'wpuf.formsList.tableColumns', defaultColumns, postType );
+    // Submissions count posts made with a post form; registration forms make users.
+    const baseColumns = 'wpuf_profile' === postType ? defaultColumns.filter( ( col ) => 'submissions' !== col.key ) : defaultColumns;
+    const columns = applyFilters( 'wpuf.formsList.tableColumns', baseColumns, postType );
 
     return (
         <div className="overflow-x-auto">
