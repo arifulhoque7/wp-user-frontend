@@ -26,6 +26,7 @@ Rules of the container: services are built only in providers (`share_tagged`), d
 | The admin page and its hash routes | `Admin\App\AppPage` (one page `admin.php?page=wp-user-frontend`, routes from every screen's `app_routes()`, `wpuf_admin_app_routes` filter); helpers in `includes/functions/admin-app.php` |
 | A screen (menu slug, load hook, route, boot data) | `includes/Admin/Screens/<Screen>.php`, registered in `Screens\Registry`; Pro screens in `wpuf-pro/includes/Platform/Screens/` |
 | A REST route under `wpuf/v1` | `includes/Platform/REST/Controllers/*Controller.php` (admin routes `admin/*`, frozen routes `wpuf_form`, `wpuf_subscription*`, `settings`); the AI form builder's routes in `includes/AI/RestController.php` (feature-local); Pro routes in `wpuf-pro/includes/Platform/<Feature>/*Controller.php`. All go through `Platform\REST\Manager`; base class `Platform\REST\RestController` |
+| Is AI configured, which key | `AI\Services\Provider_Settings::status()` and `::api_key_for()` (the settings screen stores `{provider}_api_key`; the older generic `ai_api_key` is read as a fallback) |
 | Who may do what | `Platform\Caps` (`MANAGE_FORMS`, `MANAGE_SUBSCRIPTIONS`, `MANAGE_SETTINGS` map to `wpuf_admin_role()`; `MANAGE_SITE` to `manage_options`; `wpuf_capability` filter) |
 | Reading or writing forms, fields, packs, settings, subscribers, a user's pack, a submission's form / payment / lock meta | `Platform\Stores\*Store` (through `Stores::forms()`, `::fields()`, `::subscriptions()`, `::settings()`, `::transactions()`, `::subscribers()`, `::user_packs()`, `::submissions()`); models in `Platform\Models` |
 | The builder save | AJAX `wpuf_form_builder_save_form` and REST `admin/forms/{id}` both call `Builder\FormSave` → `Admin\Forms\Admin_Form_Builder::save_form()` → the stores. Builder boot data: `Builder\BuilderBoot` |
@@ -46,12 +47,12 @@ Rules of the container: services are built only in providers (`share_tagged`), d
 includes/Platform/            the platform: Container, ServiceProvider, Bootstrap, Caps, VersionGuard, Http/JsonOutputGuard,
                               Providers/ (Legacy, Core, Store, Rest, Ai)
   Contracts/                  Hookable, RestRoute, DataStore
-  Providers/                  Core, Store, Rest, Ai service providers
+  Providers/                  Legacy, Core, Admin, Store, Rest, Ai service providers (Admin shares the admin layer's 16 services)
   REST/                       Manager, RestController (base), Controllers/*
   Stores/                     FormStore, FieldStore, SubscriptionStore, SettingsStore, TransactionStore, SubscriberStore,
                               UserPackStore, SubmissionStore, Normalizers, Stores
   Models/                     Form, SubscriptionPack
-  Onboarding/                 Pages, Plugin_Installer
+  Onboarding/                 Pages, Plugin_Installer, State (the wizard's own options and the activation redirect)
   Tools/, Transactions/       ToolsService, TransactionService
 includes/Admin/Screens/       one class per admin screen + Registry, Screen (base), PrintsNotices
 includes/Admin/App/           AppPage (the one admin page)
@@ -78,7 +79,7 @@ wpuf-functions.php            loader of the global functions (public API): inclu
                               and the two Walker classes stay in the loader
 ```
 
-Pro mirrors this under `wpuf-pro/includes/Platform/<Feature>/` (Coupons, License, Modules, Settings, Subscriptions, Builder, Screens), each with its provider.
+Pro mirrors this under `wpuf-pro/includes/Platform/<Feature>/` (Coupons, License, Modules, Settings, Subscriptions, Builder, Screens), each with its provider; `Platform/LegacyServiceProvider` shares every Pro service the bootstraps used to build with `new` (reached through `Platform_Guard::make()`, which falls back to `new` with an older free plugin), `Platform/Free_Data` is Pro's one door to the free stores (raw reads kept for an older free), `Platform/Content/RestrictionStore` holds the content restriction meta.
 
 ## Non-negotiables
 
