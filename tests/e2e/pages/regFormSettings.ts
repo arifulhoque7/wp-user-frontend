@@ -814,7 +814,12 @@ export class RegFormSettingsPage extends Base {
                 }
             }
 
-            // Save settings
+            // Copying a tag changes nothing, so Save stays disabled (the builder saves only
+            // with changes, owner decision): nothing to save then.
+            if (await this.page.locator(Selectors.regFormSettings.saveButton).first().isDisabled().catch(() => false)) {
+                flag = false;
+                break;
+            }
             await this.validateAndClick(Selectors.regFormSettings.saveButton);
             flag = await this.waitForFormSaved(Selectors.regFormSettings.formSaved, Selectors.regFormSettings.saveButton);
         }
@@ -936,6 +941,12 @@ export class RegFormSettingsPage extends Base {
                 }
             }
 
+            // Copying a tag changes nothing, so Save stays disabled (the builder saves only
+            // with changes, owner decision): nothing to save then.
+            if (await this.page.locator(Selectors.regFormSettings.saveButton).first().isDisabled().catch(() => false)) {
+                flag = false;
+                break;
+            }
             await this.validateAndClick(Selectors.regFormSettings.saveButton);
             flag = await this.waitForFormSaved(Selectors.regFormSettings.formSaved, Selectors.regFormSettings.saveButton);
         }

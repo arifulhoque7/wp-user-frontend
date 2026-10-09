@@ -1678,6 +1678,12 @@ export class PostFormSettingsPage extends Base {
             }
 
             // Save settings
+            // Copying a tag changes nothing, so Save stays disabled (the builder saves only
+            // with changes, owner decision): nothing to save then.
+            if (await this.page.locator(Selectors.postFormSettings.saveButton).first().isDisabled().catch(() => false)) {
+                flag = false;
+                break;
+            }
             await this.validateAndClick(Selectors.postFormSettings.saveButton);
 
             // Wait for save message
@@ -2033,6 +2039,12 @@ export class PostFormSettingsPage extends Base {
             }
 
             // Save settings
+            // Copying a tag changes nothing, so Save stays disabled (the builder saves only
+            // with changes, owner decision): nothing to save then.
+            if (await this.page.locator(Selectors.postFormSettings.saveButton).first().isDisabled().catch(() => false)) {
+                flag = false;
+                break;
+            }
             await this.validateAndClick(Selectors.postFormSettings.saveButton);
 
             // Wait for save message
