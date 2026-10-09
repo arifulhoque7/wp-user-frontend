@@ -253,3 +253,26 @@ body.wpuf-admin-react #wpbody-content .wpuf-help {
     /* Literal, like FlyHR: ahead of any --font-sans printed inline. */
     font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
+
+/* Content width like FlyHR's app shell (`mx-auto w-full max-w-[1400px]`): every
+   screen of the admin app is centred at 1400px at most, except the builders
+   (post / registration form builder and the AI form builder), which keep the
+   full width for their canvas. */
+#wpuf-admin-app:not([data-wpuf-app="form-builder"]):not([data-wpuf-app="ai-form-builder"]) > * {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* The page header and footer stay as wide as the app (FlyHR's TopBar and
+   AppFooter sit outside the capped content): centred under the capped content,
+   `--wpuf-app-w` is the app width (src/admin/app/index.js). Without it they keep
+   their 20px bleed. */
+#wpuf-admin-app:not([data-wpuf-app="form-builder"]):not([data-wpuf-app="ai-form-builder"]) [data-wpuf-bleed] {
+    box-sizing: border-box !important;
+    width: var(--wpuf-app-w, calc(100% + 40px)) !important;
+    max-width: none !important;
+    margin-left: calc((100% - var(--wpuf-app-w, calc(100% + 40px))) / 2) !important;
+}

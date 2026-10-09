@@ -25,6 +25,7 @@ export default function PageFooter( { children, className } ) {
         <div className={ cn( 'pt-6', className ) } style={ { marginTop: 'auto', paddingTop: '24px' } }>
             <footer
                 data-wpuf-ui=""
+                data-wpuf-bleed=""
                 className="-ml-5 w-[calc(100%+40px)] flex flex-col flex-wrap items-center justify-center gap-2 bg-white px-5 py-6"
             >
                 { boot.assetUrl && (

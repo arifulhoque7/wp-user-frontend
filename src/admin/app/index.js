@@ -273,6 +273,24 @@ const sortGroupStyles = ( group ) => {
 
 const container = () => document.getElementById( 'wpuf-admin-app' );
 
+/**
+ * Keep the app's width in `--wpuf-app-w`: on the screens capped at FlyHR's
+ * content width (pui.css) the page header and footer (`data-wpuf-bleed`) still
+ * span the whole app.
+ */
+const trackAppWidth = () => {
+    const element = container();
+
+    if ( ! element || ! window.ResizeObserver || element.dataset.wpufWidthTracked ) {
+        return;
+    }
+
+    element.dataset.wpufWidthTracked = '1';
+    new window.ResizeObserver( ( [ entry ] ) => {
+        element.style.setProperty( '--wpuf-app-w', `${ Math.round( entry.contentRect.width ) }px` );
+    } ).observe( element );
+};
+
 const unmountCurrent = () => {
     if ( current && current.cleanup ) {
         try {
@@ -382,6 +400,10 @@ const render = async () => {
 
     element.id = route.container || `wpuf-route-${ route.id }`;
     element.className = route.containerClass || '';
+    // Screen of the mounted route: pui.css caps every screen but the builders
+    // at FlyHR's content width.
+    container().dataset.wpufApp = route.app;
+    trackAppWidth();
     container().append( element );
 
     current = { route, params, query, key, cleanup: null };

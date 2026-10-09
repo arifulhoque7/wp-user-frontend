@@ -59,6 +59,7 @@ export default function PageHeader( { variant = 'bleed', utm = 'wpuf-header', su
     return (
         <div
             data-wpuf-ui=""
+            data-wpuf-bleed={ 'card' === variant ? undefined : '' }
             className={ cn(
                 'flex justify-between items-center border-0 border-b-2 border-solid border-gray-100',
                 'card' === variant ? 'bg-white p-4' : 'w-[calc(100%+40px)] -ml-5 px-5 py-3 bg-white',
