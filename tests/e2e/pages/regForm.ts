@@ -815,8 +815,10 @@ export class RegFormPage extends Base {
         const emailTo = await this.page.innerText(Selectors.regFormSettings.wpMailLogValidation.sentEmailAddress(VendorRegistrationForm.wcfmMemberEmail));
         expect(emailTo).toContain(VendorRegistrationForm.wcfmMemberEmail);
 
-        // View email content to validate body
-        await this.validateAndClick(Selectors.regFormSettings.wpMailLogValidation.viewEmailContent(VendorRegistrationForm.wcfmMemberEmail));
+        // View email content to validate body: the activation mail is the second row for this
+        // address (the "Status has been changed to pending" mail comes right after it), as in
+        // the WC Vendors check.
+        await this.validateAndClick(Selectors.vendorRegistrationForms.wpMailLogValidation.viewEmailContent(VendorRegistrationForm.wcfmMemberEmail));
 
         const activationLink = await this.page.locator(Selectors.regFormSettings.wpMailLogValidation.grabActivationLink).getAttribute('href');
         //expect(emailBody).toContain(expectedBodyContent);
