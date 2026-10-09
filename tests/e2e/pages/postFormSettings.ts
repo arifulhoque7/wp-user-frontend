@@ -1424,14 +1424,18 @@ export class PostFormSettingsPage extends Base {
     }
 
     async acceptPayment() {
-        // Go to form edit page
+        // React Transactions route (#/transactions): Pending tab, the newest row's Actions
+        // menu, Accept, then the confirm dialog.
         await this.navigateToURL(this.wpufTransactionPage);
-
-        await this.page.hover(Selectors.postFormSettings.transactionTableRow);
-
+        await this.validateAndClick(Selectors.postFormSettings.transactionsPendingTab);
+        await this.validateAndClick(Selectors.postFormSettings.transactionRowActions);
         await this.validateAndClick(Selectors.postFormSettings.acceptPayment);
-
-
+        const confirm = this.page.locator(Selectors.postFormSettings.acceptPaymentConfirm);
+        if (await confirm.waitFor({ state: 'visible', timeout: 3000 }).then(() => true).catch(() => false)) {
+            await confirm.click();
+        }
+        await this.page.waitForResponse((r) => /wpuf\/v1\/admin\/transactions/.test(r.url()) && 'GET' !== r.request().method(), { timeout: 15000 }).catch(() => null);
+        await this.waitForLoading();
     }
 
     async validatePayPerPost(postTitle: string) {

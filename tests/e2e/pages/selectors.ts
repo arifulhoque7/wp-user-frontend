@@ -1164,7 +1164,11 @@ export const Selectors = {
         proceedPaymentButton: '//button[@name="wpuf_payment_submit"]',
         afterPaymentPageTitle: (successPage: string) => `//h1[normalize-space(text())="${successPage}"]`,
         transactionTableRow: '//tbody//tr[1]',
-        acceptPayment: '//a[normalize-space()="Accept"]',
+        // React Transactions route: Pending tab, first row's Actions menu, Accept item, confirm.
+        transactionsPendingTab: '(//*[@role="tab" or self::button or self::a][starts-with(normalize-space(),"Pending")])[1]',
+        transactionRowActions: '(//button[starts-with(@aria-label,"Actions for payment")])[1]',
+        acceptPayment: '//*[@role="menuitem"][normalize-space()="Accept"]',
+        acceptPaymentConfirm: '//*[@role="alertdialog"]//button[normalize-space()="Accept"]',
         successMessage: '//div[@class="wpuf-success"]',
         wpufMessage: '//div[@class="wpuf-message"]',
         clickPost: (postTitle: string) => `//a[normalize-space(text())="${postTitle}"]`,
