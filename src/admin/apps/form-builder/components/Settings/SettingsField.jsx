@@ -20,6 +20,8 @@ import SubmitConditionalLogic from '../ConditionalLogic/SubmitConditionalLogic';
 import IntegrationConditionalLogic from '../ConditionalLogic/IntegrationConditionalLogic';
 import copyMailTag from '../../utils/copyMailTag';
 import TaxonomyDefaults from './fields/TaxonomyDefaults';
+import SettingInfo from './fields/SettingInfo';
+import { Notice } from '@wpuf/components';
 
 const FIELD_MAP = {
     toggle: ToggleField,
@@ -154,13 +156,14 @@ function SettingsFieldControl( { fieldKey, field, name, value, onChange, setting
         );
     }
 
-    // `note`: develop's yellow notice box (e.g. a newsletter module with no API key).
+    // `note`: a warning notice (e.g. a newsletter module with no API key). The
+    // text is wp_kses_post-filtered HTML (it may carry a link).
     if ( field.type === 'note' ) {
         return (
             <div className="my-4 wpuf-input-container">
-                <RawHTML className="p-4 bg-yellow-50 text-sm text-yellow-800 border-l-4 border-yellow-400 w-full">
-                    { field.note || '' }
-                </RawHTML>
+                <Notice tone="warning">
+                    <RawHTML>{ field.note || '' }</RawHTML>
+                </Notice>
             </div>
         );
     }
@@ -182,7 +185,8 @@ function SettingsFieldControl( { fieldKey, field, name, value, onChange, setting
                 value={ value }
                 onChange={ onChange }
             />
-            { field.long_help && (
+            { /* `info` (structured help) wins over the classic builder's `long_help` HTML. */ }
+            { field.info ? <SettingInfo info={ field.info } /> : field.long_help && (
                 <RawHTML className="text-sm mt-4 wpuf-long-help" onClick={ copyMailTag }>{ field.long_help }</RawHTML>
             ) }
         </div>

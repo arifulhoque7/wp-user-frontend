@@ -1,6 +1,7 @@
 import { TextInput } from '@wpuf/components';
 import { CONTROL_SIZE } from '../controlSize';
 import SettingLabel, { LongHelp } from './SettingLabel';
+import { Notice } from '@wpuf/components';
 
 /**
  * Text setting (legacy text / email / url / password and text-like callbacks)
@@ -19,9 +20,7 @@ export default function TextField( { field, name, value, onChange } ) {
                 placeholder={ field.placeholder || '' }
             />
             { field.notice && (
-                <div className="bg-yellow-50 border-l-4 border-yellow-500 text-yellow-700 p-4">
-                    <p className="m-0">{ field.notice.text }</p>
-                </div>
+                <Notice tone="warning" className="mt-3">{ field.notice.text }</Notice>
             ) }
             <LongHelp html={ field.long_help } />
         </>

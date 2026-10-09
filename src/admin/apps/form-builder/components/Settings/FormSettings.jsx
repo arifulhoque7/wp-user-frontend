@@ -11,6 +11,7 @@ import ModulesEmptyState from './ModulesEmptyState';
 import useFormSave from '../../hooks/useFormSave';
 import { BuilderSlot, settingsSlotName } from '../../slots';
 import { getRouteQuery, inApp, setRouteQuery } from '../../../../app/client';
+import { Notice } from '@wpuf/components';
 
 /**
  * Main form settings component — mirrors post-form-settings.php Vue template.
@@ -111,9 +112,9 @@ export default function FormSettings() {
                 <div className="min-w-0 flex-1">
 
                     { getLegacySlots().unsupported && (
-                        <div className="mb-6 p-4 bg-yellow-50 text-sm text-yellow-800 border-l-4 border-yellow-400">
+                        <Notice tone="warning" className="mb-6">
                             { __( 'An extension added builder settings that need scripts or Vue templates. They are shown as static fields here; their interactive parts do not run.', 'wp-user-frontend' ) }
-                        </div>
+                        </Notice>
                     ) }
 
                     { /* Section body */ }

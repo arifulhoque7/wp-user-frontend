@@ -8,8 +8,8 @@
  */
 import { useEffect, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
-import { Button, dialogs, notify } from '@wpuf/components';
-import { FilePlus2, Rocket, TriangleAlert } from 'lucide-react';
+import { Button, Notice, dialogs, notify } from '@wpuf/components';
+import { FilePlus2, Rocket } from 'lucide-react';
 
 import { getOnboarding, runTool } from './api';
 import LogoutMenuTool from './LogoutMenuTool';
@@ -123,10 +123,9 @@ export default function ToolsTab( { tools } ) {
                     { entry && (
                         <ToolCard icon={ Rocket } title={ __( 'Onboarding', 'wp-user-frontend' ) } description={ __( 'Walk through post forms, registration, the user directory, payments and the settings a frontend site needs. Nothing is changed until you save a step.', 'wp-user-frontend' ) }>
                             { entry.warning && (
-                                <p className="m-0 mb-4 flex gap-2 rounded-lg border border-solid border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-                                    <TriangleAlert size={ 16 } className="mt-0.5 shrink-0" aria-hidden="true" />
-                                    <span><strong>{ __( 'Heads up:', 'wp-user-frontend' ) }</strong> { entry.warning }</span>
-                                </p>
+                                <Notice tone="warning" className="mb-4" title={ __( 'Heads up:', 'wp-user-frontend' ) }>
+                                    { entry.warning }
+                                </Notice>
                             ) }
                             <Button onClick={ () => window.location.assign( entry.url ) }>{ entry.label }</Button>
                         </ToolCard>

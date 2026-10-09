@@ -29,5 +29,6 @@ export { default as PageHeader } from './PageHeader';
 export { default as PageFooter, PageShell, usePageFillHeight } from './PageFooter';
 export { default as WpEditor } from './WpEditor';
 export { default as Modal } from './Modal';
+export { default as Notice } from './Notice';
 export { default as dialogs, DialogHost } from './dialogs';
 export { default as AIConfigModal } from './AIConfigModal';

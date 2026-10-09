@@ -1,5 +1,6 @@
 import { Component } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
+import { Notice } from '@wpuf/components';
 
 /**
  * Catches render errors in a settings section so one bad field cannot blank the
@@ -23,10 +24,9 @@ export default class ErrorBoundary extends Component {
     render() {
         if ( this.state.error ) {
             return (
-                <div className="mb-6 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
-                    { __( 'A field failed to render:', 'wp-user-frontend' ) }{ ' ' }
+                <Notice tone="error" className="mb-6" title={ __( 'A field failed to render:', 'wp-user-frontend' ) }>
                     { String( this.state.error && this.state.error.message ) }
-                </div>
+                </Notice>
             );
         }
         return this.props.children;

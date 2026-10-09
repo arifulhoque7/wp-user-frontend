@@ -276,3 +276,13 @@ body.wpuf-admin-react #wpbody-content .wpuf-help {
     max-width: none !important;
     margin-left: calc((100% - var(--wpuf-app-w, calc(100% + 40px))) / 2) !important;
 }
+
+/* Shared Notice (src/admin/shared/ui/Notice.jsx): its tone colours over
+   plugin-ui Alert's !important `[&]:bg-muted` / `[&]:border-border`. */
+[data-slot="alert"][data-wpuf-tone] {
+    background-color: var(--wpuf-notice-bg) !important;
+    border-color: var(--wpuf-notice-border) !important;
+}
+[data-slot="alert"][data-wpuf-tone] > svg {
+    color: var(--wpuf-notice-icon) !important;
+}

@@ -11,7 +11,7 @@ import { useEffect, useState, useCallback, useRef, createInterpolateElement } fr
 import { __ } from '@wordpress/i18n';
 import { Save } from 'lucide-react';
 
-import { Button, PageFooter, PageHeader, PageShell, Tabs, WpufProviders } from '@wpuf/components';
+import { Button, Notice, PageFooter, PageHeader, PageShell, Tabs, WpufProviders } from '@wpuf/components';
 import SettingsNav from './components/settings/SettingsNav';
 import SettingsSection, { PROVIDER_SECTIONS } from './components/settings/SettingsSection';
 import { stripTags } from './components/settings/utils';
@@ -268,25 +268,36 @@ const SettingsApp = () => {
             <div className="pt-6 pb-6">
             { /* Settings of other plugins the React screen cannot show (D12). */ }
             { classicOnly.length > 0 && (
-                <div role="status" data-settings-notice="classic-only" className="mb-6 flex items-start gap-3 rounded-md border-l-4 border-amber-400 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                    <div className="min-w-0 flex-1">
-                        <p className="m-0 font-medium">
-                            { __( 'Some settings added by other plugins are only available in Classic view:', 'wp-user-frontend' ) }
-                        </p>
-                        <p className="m-0 mt-1">{ classicOnly.join( ', ' ) }</p>
-                    </div>
-                    { boot.classic_url && (
-                        <a href={ boot.classic_url } className="shrink-0 font-medium text-amber-900 underline hover:text-amber-900">
+                <Notice
+                    role="status"
+                    data-settings-notice="classic-only"
+                    tone="warning"
+                    className="mb-6"
+                    title={ __( 'Some settings added by other plugins are only available in Classic view:', 'wp-user-frontend' ) }
+                    action={ boot.classic_url ? (
+                        <a href={ boot.classic_url } className="font-medium text-amber-900 underline hover:text-amber-900">
                             { __( 'Open Classic view', 'wp-user-frontend' ) }
                         </a>
-                    ) }
-                </div>
+                    ) : null }
+                >
+                    { classicOnly.join( ', ' ) }
+                </Notice>
             ) }
 
             { /* Shown once to each admin of a site that had the classic screen (D12). */ }
             { showNewUi && (
-                <div role="status" data-settings-notice="new-ui" className="mb-6 flex items-start gap-3 rounded-md border-l-4 border-primary bg-emerald-50 px-4 py-3 text-sm text-gray-700">
-                    <p className="m-0 min-w-0 flex-1">
+                <Notice
+                    role="status"
+                    data-settings-notice="new-ui"
+                    tone="success"
+                    className="mb-6"
+                    action={
+                        <Button variant="link" size="sm" className="text-gray-600" onClick={ () => setShowNewUi( false ) }>
+                            { __( 'Dismiss', 'wp-user-frontend' ) }
+                        </Button>
+                    }
+                >
+                    <p className="m-0">
                         { boot.switch_ui_url
                             ? createInterpolateElement(
                                 __( 'This is the new settings screen. Every setting is where it was stored before; you can go back to the <a>Classic view</a> at any time.', 'wp-user-frontend' ),
@@ -294,10 +305,7 @@ const SettingsApp = () => {
                             )
                             : __( 'This is the new settings screen. Every setting is where it was stored before.', 'wp-user-frontend' ) }
                     </p>
-                    <Button variant="link" size="sm" className="shrink-0 text-gray-600" onClick={ () => setShowNewUi( false ) }>
-                        { __( 'Dismiss', 'wp-user-frontend' ) }
-                    </Button>
-                </div>
+                </Notice>
             ) }
 
             { error ? (
@@ -331,10 +339,9 @@ const SettingsApp = () => {
                 <div className="min-w-0 flex-1 max-w-full">
 
                     { ! searching && currentTab && currentTab.notice ? (
-                        <div className="mb-8 flex items-start gap-2 rounded-md border-l-4 border-amber-400 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                            <svg className="mt-0.5 h-4 w-4 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M8.257 3.1c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
+                        <Notice tone="warning" className="mb-8">
                             { currentTab.notice }
-                        </div>
+                        </Notice>
                     ) : null }
 
                     { ! searching && currentTab && currentTab.subtabs && currentTab.sections.length > 1 ? (

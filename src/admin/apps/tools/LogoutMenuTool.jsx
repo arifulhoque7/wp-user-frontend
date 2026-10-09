@@ -7,7 +7,7 @@
  */
 import { useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
-import { Button, Select, TextInput, notify } from '@wpuf/components';
+import { Button, Notice, Select, TextInput, notify } from '@wpuf/components';
 import { Check, Copy, LogOut } from 'lucide-react';
 
 import { copyText, runTool } from './api';
@@ -72,16 +72,15 @@ export default function LogoutMenuTool( { tools } ) {
 
                 <div>
                     { tools.isBlockTheme && (
-                        <div className="rounded-lg border border-solid border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-                            <strong>{ __( 'Block Theme Detected (FSE)', 'wp-user-frontend' ) }</strong>
-                            <p className="m-0 mt-1">{ __( 'Your theme uses the Full Site Editor. To add a logout link to your navigation:', 'wp-user-frontend' ) }</p>
-                            <ol className="m-0 mt-2 list-decimal ps-5">
+                        <Notice tone="warning" title={ __( 'Block Theme Detected (FSE)', 'wp-user-frontend' ) }>
+                            <p className="m-0">{ __( 'Your theme uses the Full Site Editor. To add a logout link to your navigation:', 'wp-user-frontend' ) }</p>
+                            <ol className="m-0 mt-2 ps-5" style={ { listStyleType: 'decimal' } }>
                                 <li>{ __( 'Go to Appearance > Editor > Navigation', 'wp-user-frontend' ) }</li>
                                 <li>{ __( 'Click the + button to add a new item', 'wp-user-frontend' ) }</li>
                                 <li>{ __( 'Select "Custom Link"', 'wp-user-frontend' ) }</li>
                                 <li>{ __( 'Use the URL and label below', 'wp-user-frontend' ) }</li>
                             </ol>
-                        </div>
+                        </Notice>
                     ) }
 
                     { ! tools.isBlockTheme && menus.length > 0 && (
