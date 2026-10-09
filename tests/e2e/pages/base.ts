@@ -159,6 +159,12 @@ export class Base {
             const element = this.page.locator(locator);
             await element.waitFor();
             expect(element.isVisible).toBeTruthy();
+            // The builder keeps Save disabled while nothing changed (title "No changes to
+            // save", owner decision): a step that changed nothing has nothing to save.
+            if (await this.isUnchangedSave(element)) {
+                console.log('\x1b[33m%s\x1b[0m', `⏭️ Save not clicked (no changes) ${locator}`);
+                return;
+            }
             await element.click();
             await this.waitForLoading();
             console.log('\x1b[35m%s\x1b[0m', `✅ Clicked on ${locator}`);
@@ -398,6 +404,12 @@ export class Base {
         await this.page.waitForLoadState('domcontentloaded');
     }
 
+    /** A builder Save button that is disabled because nothing changed. */
+    async isUnchangedSave(element: import('@playwright/test').Locator): Promise<boolean> {
+        const first = element.first();
+        return 'No changes to save' === (await first.getAttribute('title').catch(() => null)) && (await first.isDisabled().catch(() => false));
+    }
+
     async waitForFormSaved(formSavedLocator: string, saveButtonLocator: string) {
         // Detect the transient "Saved form data" toast with a generous timeout.
         // IMPORTANT: always return false ("saved – stop") so callers that loop
@@ -405,6 +417,11 @@ export class Base {
         // exactly once. Returning true on a flaky false-negative made those loops
         // re-enter and create DUPLICATE forms, which then broke unscoped
         // form-name selectors with Playwright strict-mode violations.
+        // Nothing changed: Save stayed disabled and no request was sent (see validateAndClick).
+        if (await this.isUnchangedSave(this.page.locator(saveButtonLocator))) {
+            console.log('\x1b[32m%s\x1b[0m', `✅ Nothing to save`);
+            return false;
+        }
         try {
             await this.waitForLoading();
             await this.page.locator(formSavedLocator).first().waitFor({ timeout: 15000 });
