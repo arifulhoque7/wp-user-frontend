@@ -152,6 +152,7 @@ test.describe('Onboarding Wizard Tests', () => {
      * @Test_ONB0033 : Admin is validating a card is always offered for every gateway
      * @Test_ONB0034 : Admin is validating each gateway says whether it is ready to use
      * @Test_ONB0035 : Admin is validating an unavailable gateway is inert, not a link
+     * @Test_ONB0036 : Admin is validating switched-off features hide their menus and come back when picked
      *
      ***-----------------------------------------------------------------------------------**/
 
@@ -611,5 +612,25 @@ test.describe('Onboarding Wizard Tests', () => {
         await card.click({ force: true });
         await page.waitForTimeout(400);
         expect(page.url(), 'clicking the card should not navigate away').toBe(before);
+    });
+
+    test('ONB0036 : Admin is validating switched-off features hide their menus and come back when picked', { tag: ['@Basic'] }, async () => {
+        // Registration and the directory off: their menus go (owner: menus hide, settings stay).
+        await onboarding.gotoWizard('features');
+        await onboarding.setFeatures(['post_form', 'payments']);
+        await onboarding.continueStep();
+
+        let labels = await onboarding.getWpufSubmenuLabels();
+        expect(labels).not.toContain('Registration Forms');
+        expect(labels).not.toContain('User Directories');
+        expect(labels).toEqual(expect.arrayContaining(['Post Forms', 'Subscriptions', 'Transactions', 'Tools', 'Settings']));
+
+        // Everything picked again: every menu is back.
+        await onboarding.gotoWizard('features');
+        await onboarding.setFeatures(['post_form', 'registration', 'user_directory', 'payments']);
+        await onboarding.continueStep();
+
+        labels = await onboarding.getWpufSubmenuLabels();
+        expect(labels).toEqual(expect.arrayContaining(['Post Forms', 'Registration Forms', 'Subscriptions', 'Transactions', 'Tools', 'Settings']));
     });
 });

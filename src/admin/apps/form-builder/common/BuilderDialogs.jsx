@@ -10,6 +10,7 @@
 import { __, sprintf } from '@wordpress/i18n';
 import { ConfirmDialog, dialogs } from '@wpuf/components';
 import { inApp } from '../../../app/client';
+import { proMessageText } from '../utils/proMessage';
 
 const builderData = () => window.wpuf_form_builder || {};
 
@@ -22,9 +23,7 @@ const BODY = { margin: '8px 0 0', display: 'flex', flexDirection: 'column', gap:
 const LINK = { border: 0, background: 'none', padding: 0, font: 'inherit', fontWeight: 700, color: PRIMARY, cursor: 'pointer' };
 const IMAGE = { display: 'block', width: '100%', borderRadius: 8, border: '1px solid #e5e7eb', boxSizing: 'border-box' };
 
-// The config's Pro message comes wrapped in develop's `<p class="wpuf-...">`;
-// the dialog shows its text.
-const proMessage = () => ( ( builderData().i18n || {} ).pro_feature_msg || '' ).replace( /<[^>]*>/g, '' ).trim();
+const proMessage = () => proMessageText( ( builderData().i18n || {} ).pro_feature_msg );
 
 const assetUrl = () => ( window.wpuf_admin_script || {} ).asset_url || builderData().asset_url || '';
 

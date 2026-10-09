@@ -1707,6 +1707,8 @@ export const Selectors = {
             viewEmailContent: (emails: string) => `(//div[normalize-space()='${emails}'])[2]`,
             // The activation mail of that address, by subject (not by row position: other
             // mails to the same address may come before or after it).
+            // Pro's "pending by an administrator" mail, which a sign-up that needs no approval must not get.
+            pendingStatusEmail: (email: string) => `//tr[.//div[normalize-space()='${email}']][contains(normalize-space(.),'Status has been changed to pending')]`,
             viewActivationEmail: (email: string) => `(//tr[.//div[normalize-space()='${email}']][contains(normalize-space(.),'Account Activation')]//div[normalize-space()='${email}'])[1]`,
             previewEmailContentBody: '(//div[@class="wml-body-wrapper"])[1]',
             grabActivationLink: '//a[normalize-space()="Activation Link"]',

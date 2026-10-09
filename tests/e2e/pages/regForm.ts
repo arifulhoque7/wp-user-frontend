@@ -608,6 +608,8 @@ export class RegFormPage extends Base {
         expect(emailTo).toContain(VendorRegistrationForm.wcVendorEmail);
 
         // View email content to validate body
+        // No "pending by an administrator" mail: the form needs no admin approval (Pro 2d4dde9b).
+        await expect(this.page.locator(Selectors.vendorRegistrationForms.wpMailLogValidation.pendingStatusEmail(VendorRegistrationForm.wcVendorEmail))).toHaveCount(0);
         await this.validateAndClick(Selectors.vendorRegistrationForms.wpMailLogValidation.viewActivationEmail(VendorRegistrationForm.wcVendorEmail));
 
         const activationLink = await this.page.locator(Selectors.vendorRegistrationForms.wpMailLogValidation.grabActivationLink).getAttribute('href');
@@ -816,6 +818,8 @@ export class RegFormPage extends Base {
         expect(emailTo).toContain(VendorRegistrationForm.wcfmMemberEmail);
 
         // View the activation mail (by subject) to grab the link.
+        // No "pending by an administrator" mail: the form needs no admin approval (Pro 2d4dde9b).
+        await expect(this.page.locator(Selectors.vendorRegistrationForms.wpMailLogValidation.pendingStatusEmail(VendorRegistrationForm.wcfmMemberEmail))).toHaveCount(0);
         await this.validateAndClick(Selectors.vendorRegistrationForms.wpMailLogValidation.viewActivationEmail(VendorRegistrationForm.wcfmMemberEmail));
 
         const activationLink = await this.page.locator(Selectors.regFormSettings.wpMailLogValidation.grabActivationLink).getAttribute('href');

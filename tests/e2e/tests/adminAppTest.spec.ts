@@ -51,6 +51,7 @@ const APP = `${Urls.baseUrl}/wp-admin/admin.php?page=wp-user-frontend`;
  * @Test_APP0021 : Builder seam "+": between two fields and after the last one it opens the field list and adds the picked field at that position
  * @Test_APP0022 : Column cell "+": adds a field into that column; the list leaves out types a column refuses
  * @Test_APP0024 : Post form builder Submissions tab; Settings / Form Editor tabs from the Submissions page; none on registration forms
+ * @Test_APP0025 : Pro modules switch on / off through the React page; without a valid license all are locked and REST refuses switch-on
  * @Test_APP0023 : A column stored the develop way (inner fields without ids, as after an update) opens each inner field for editing
  */
 
@@ -876,5 +877,47 @@ test.describe('Admin app', () => {
 
         await discardBuilder();
         aiWp(['post', 'delete', String(id), '--force']);
+    });
+
+    test('APP0025 : Pro modules switch on and off; without a valid license every module is locked', { tag: ['@Pro', '@Test_APP0025'] }, async () => {
+        test.skip(!(await appOn()), 'admin app is off');
+        test.skip(!HAS_WP_CLI, 'needs WP-CLI on the site');
+        test.skip(!new AiFormBuilderPage(page).proActive(), 'modules need Pro');
+
+        const MODULE = 'seo/wpuf-seo.php';
+        const active = () => aiWp(['option', 'get', 'wpuf_pro_active_modules', '--format=json']);
+        const wasOn = active().includes('seo/');
+        const license = aiWp(['option', 'get', 'wpuf_license', '--format=json']).trim();
+
+        try {
+            await page.goto('about:blank');
+            await page.goto(`${APP}#/modules`);
+            const sw = page.locator(`li[data-module="${MODULE}"] [role="switch"]`);
+            await expect(sw).toBeVisible({ timeout: 30000 });
+
+            for (const want of [!wasOn, wasOn]) {
+                const saved = page.waitForResponse((r) => r.url().includes('admin/modules') && 'POST' === r.request().method());
+                await sw.click();
+                expect((await saved).status()).toBe(200);
+                await expect(sw).toHaveAttribute('aria-checked', String(want));
+                expect(active().includes('seo/'), `stored after switching ${want ? 'on' : 'off'}`).toBe(want);
+            }
+
+            // No valid license: locked, no switches, and the REST route refuses to switch one on.
+            aiWp(['eval', '$l = get_option( "wpuf_license" ); $l["status"] = "deactivate"; update_option( "wpuf_license", $l );'], true);
+            await page.goto('about:blank');
+            await page.goto(`${APP}#/modules`);
+            await expect(page.getByText('No active license')).toBeVisible({ timeout: 30000 });
+            await expect(page.getByRole('tab', { name: /^Locked/ })).toHaveAttribute('aria-selected', 'true');
+            await expect(page.locator('li[data-module] [role="switch"]')).toHaveCount(0);
+            const status = await page.evaluate(async (module) => {
+                const nonce = (window as unknown as { wpApiSettings?: { nonce: string } }).wpApiSettings?.nonce || '';
+                const res = await fetch('/wp-json/wpuf/v1/admin/modules', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': nonce }, body: JSON.stringify({ module, active: true }) });
+                return res.status;
+            }, MODULE);
+            expect(status).toBe(403);
+        } finally {
+            aiWp(['option', 'update', 'wpuf_license', license, '--format=json']);
+        }
     });
 });

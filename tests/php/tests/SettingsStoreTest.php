@@ -254,6 +254,22 @@ class SettingsStoreTest extends WP_UnitTestCase {
     }
 
     /**
+     * Rich text from the email body editors (bold, list, link with &amp;, a
+     * {tag}) is stored byte for byte as the legacy screen stored it (QA
+     * 2026-10-09: same md5 on develop and the branch for all 10 editors).
+     */
+    public function test_wysiwyg_html_is_stored_like_the_legacy_screen() {
+        $html    = "<p>Hi <strong>{username}</strong>, see <em>this</em>:</p>\r\n<ul>\r\n \t<li>One</li>\r\n \t<li>Two &amp; more</li>\r\n</ul>\r\n<a href=\"https://example.com/x?a=1&amp;b=2\">Link</a>";
+        $payload = [ 'wpuf_mails' => [ 'guest_email_body' => $html ] ];
+
+        list( , , $legacy_options, $current_options ) = $this->both( $payload );
+
+        $this->assertSame( $legacy_options['wpuf_mails']['guest_email_body'], $current_options['wpuf_mails']['guest_email_body'] );
+        $this->assertStringContainsString( '<strong>{username}</strong>', $current_options['wpuf_mails']['guest_email_body'] );
+        $this->assertStringContainsString( 'href="https://example.com/x?a=1&amp;b=2"', $current_options['wpuf_mails']['guest_email_body'] );
+    }
+
+    /**
      * Without Pro, a Pro preview field or section is display only: develop's
      * legacy screen never posted it, so a save stores nothing for it (4.7,
      * free-only pass).
