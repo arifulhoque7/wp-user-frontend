@@ -78,7 +78,17 @@ export class Base {
     async navigateToURL(url: string) {
         try {
             await this.waitForLoading();
-            await this.page.goto(url);
+            try {
+                await this.page.goto(url);
+            } catch (error) {
+                // Leaving a React screen while its last request (e.g. a builder save) is still
+                // running is cancelled once by the screen's leave guard: let it settle, go again.
+                if (!String(error).includes('ERR_ABORTED')) {
+                    throw error;
+                }
+                await this.page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
+                await this.page.goto(url);
+            }
             await this.waitForLoading();
             console.log('\x1b[34m%s\x1b[0m', `✅ Navigated to ${url}`);
             return true;
