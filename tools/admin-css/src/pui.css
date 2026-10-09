@@ -276,13 +276,3 @@ body.wpuf-admin-react #wpbody-content .wpuf-help {
     max-width: none !important;
     margin-left: calc((100% - var(--wpuf-app-w, calc(100% + 40px))) / 2) !important;
 }
-
-/* Settings cards like FlyHR's: a divider between rows (`border-b py-4`, none
-   after the last). Sibling rule, so a row's own nested containers are untouched.
-   Main Settings and the builder's Settings tab. */
-#wpuf-settings-root .wpuf-input-container + .wpuf-input-container,
-.wpuf-settings-container .wpuf-input-container + .wpuf-input-container {
-    margin-top: 16px !important;
-    padding-top: 16px;
-    border-top: 1px solid #e5e7eb;
-}
