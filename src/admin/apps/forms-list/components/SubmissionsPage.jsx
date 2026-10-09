@@ -12,6 +12,7 @@ import { __, _n, sprintf } from '@wordpress/i18n';
 import { request, restPath } from '@wpuf/api';
 import { Button, EmptyState, ErrorState, Pagination, Tabs } from '@wpuf/components';
 import { ArrowLeft, Inbox, MessageSquare, SearchX } from 'lucide-react';
+import { Skeleton } from '@wedevs/plugin-ui';
 import { openRoute } from '../../../app/client';
 import SearchBar from './SearchBar';
 import TableSkeleton from './TableSkeleton';
@@ -78,7 +79,8 @@ const SubmissionsPage = ( { formId } ) => {
     }, [ formId, page, perPage, status, query, attempt ] );
 
     const counts = ( data && data.counts ) || {};
-    const tabs = STATUS_TABS().map( ( tab ) => ( { ...tab, count: counts[ tab.id ] || 0 } ) );
+    // Counts only once known (no "(0)" flash while the first page loads).
+    const tabs = STATUS_TABS().map( ( tab ) => ( data ? { ...tab, count: counts[ tab.id ] || 0 } : tab ) );
     const form = ( data && data.form ) || null;
     const items = ( data && data.items ) || [];
     const filtered = '' !== query || 'any' !== status;
@@ -93,7 +95,7 @@ const SubmissionsPage = ( { formId } ) => {
     let content;
 
     if ( loading && ! data ) {
-        content = <TableSkeleton />;
+        content = <TableSkeleton checkbox={ false } />;
     } else if ( error ) {
         content = (
             <ErrorState
@@ -220,7 +222,9 @@ const SubmissionsPage = ( { formId } ) => {
                             <ArrowLeft className="size-4" aria-hidden="true" />
                         </a>
                         <img src={ `${ ( window.wpuf_admin_script || {} ).asset_url || '' }/images/wpuf-icon-circle.svg` } alt="" className="mr-1.5 size-7 shrink-0" />
-                        <span className="truncate px-2 text-sm font-medium text-gray-900">{ form ? form.title : '' }</span>
+                        { form
+                            ? <span className="truncate px-2 text-sm font-medium text-gray-900">{ form.title }</span>
+                            : <Skeleton className="mx-2 h-4 w-40 rounded-md bg-gray-200" /> }
                         { form ? (
                             <span className="ml-3 shrink-0 rounded-md border border-solid border-gray-200 bg-gray-50 px-2.5 py-1.5 text-xs font-medium leading-none text-gray-600">#{ form.id }</span>
                         ) : null }

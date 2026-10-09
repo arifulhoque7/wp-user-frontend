@@ -11,16 +11,16 @@ import { Skeleton } from '@wedevs/plugin-ui';
 
 const ROW = 'flex items-center gap-4 px-4 border-0 border-b border-solid border-gray-200';
 
-const TableSkeleton = ( { rows = 6 } ) => (
+const TableSkeleton = ( { rows = 6, checkbox = true } ) => (
     <div role="status" aria-busy="true" aria-live="polite">
         <span className="sr-only">{ __( 'Loading…', 'wp-user-frontend' ) }</span>
         <div className={ ROW + ' h-10' }>
-            <Skeleton className="size-4 rounded-[4px] bg-gray-200" />
+            { checkbox ? <Skeleton className="size-4 rounded-[4px] bg-gray-200" /> : null }
             <Skeleton className="h-3 w-24 bg-gray-200" />
         </div>
         { Array.from( { length: rows } ).map( ( _, index ) => (
             <div key={ index } className={ ROW + ' h-14 last:border-b-0' }>
-                <Skeleton className="size-4 rounded-[4px] bg-gray-200" />
+                { checkbox ? <Skeleton className="size-4 rounded-[4px] bg-gray-200" /> : null }
                 <Skeleton className="h-3.5 flex-1 bg-gray-200" />
                 <Skeleton className="hidden h-3.5 w-32 bg-gray-200 sm:block" />
                 <Skeleton className="hidden h-3.5 w-24 bg-gray-200 md:block" />
