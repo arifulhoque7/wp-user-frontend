@@ -59,6 +59,10 @@ export default function BuilderCanvas() {
                         />
                     </Fragment>
                 ) ) }
+                { /* And one after the last shown field, to add at the end. */ }
+                { ! placeholder && formFields.some( ( field ) => 'custom_hidden_field' !== field.template )
+                    ? <InsertPoint index={ formFields.length } />
+                    : null }
             </ul>
             <BuilderSlot name={ BUILDER_SLOTS.CANVAS_SUBMIT_AREA } fillProps={ { fields: formFields } } />
             <HiddenFieldsList />
