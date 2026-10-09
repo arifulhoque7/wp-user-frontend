@@ -104,7 +104,7 @@ test.describe('Parity registration settings', () => {
         await admin.doOpenBuilderSettings([]);
         const toggle = admin.page.locator('.wpuf-input-container', { hasText: 'Required Approval After Registration' }).locator('[role="switch"]');
         await expect(toggle, 'approval toggle shows on').toHaveAttribute('aria-checked', 'true');
-        await admin.doSaveBuilder();
+        await admin.doSaveBuilder({ untouched: true });
         let settings = (parity.readForm(site, formId).meta as Record<string, Settings>).wpuf_form_settings;
         expect(settings.wpuf_user_status, 'untouched save keeps pending').toBe('pending');
         expect('user_status' in settings, 'nothing added').toBe(false);

@@ -237,7 +237,8 @@ test.describe('Parity module dependencies', () => {
                 for (const tab of tabs[name].filter((t) => /MailPoet|BuddyPress/i.test(t))) {
                     lines[name].push(`# ${tab}`, ...(await admin.doProbeSettingsConditions(tab)));
                 }
-                await admin.doSaveBuilder();
+                // The probe puts every control back, so the branch may have nothing to save.
+                await admin.doSaveBuilder({ untouched: true });
                 await admin.doClose();
                 php[name] = wpufLogLines(site, from);
             }));

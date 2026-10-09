@@ -65,6 +65,17 @@ test.describe('Parity every field', () => {
                     shape.text = shape.text.replace(/\d+[-+x]\d+/g, 'N?N');
                 }
             }
+            // Canvas rows were redesigned on the owner's request (design sync
+            // 2026-10-08: floating action toolbar instead of develop's 36px bar under
+            // each row, 16px padding): row heights differ by design. Labels,
+            // controls, text and hidden parts are still compared.
+            for (const name of ['develop', 'branch']) {
+                for (const type of Object.keys(reports[name])) {
+                    if (reports[name][type]?.shape) {
+                        delete (reports[name][type].shape as { height?: number }).height;
+                    }
+                }
+            }
             expect.soft(comparable(palette.branch), 'same palette types in the same order').toStrictEqual(comparable(palette.develop));
             for (const type of comparable(palette.develop)) {
                 expect.soft(reports.branch[type], `${type}: add, alert and preview`).toStrictEqual(reports.develop[type]);

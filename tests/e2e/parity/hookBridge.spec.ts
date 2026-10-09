@@ -42,7 +42,7 @@ test.describe('Parity builder hook bridge', () => {
             expect(await page.evaluate(() => (window as any).tpScriptRan), 'scripts are not run').toBeUndefined();
             expect(await page.locator('.tp-label').getAttribute('onclick'), 'event attributes stripped').toBeNull();
             await expect(page.locator('submit-button-conditional-logics'), "WPUF's own Vue listener output is not printed").toHaveCount(0);
-            await admin.doSaveBuilder();
+            await admin.doSaveBuilder({ untouched: true });
             const untouched = settingsOf();
             expect(['tp_enabled', 'tp_label', 'tp_extra'].filter((key) => key in untouched), 'untouched save adds no third-party keys').toEqual([]);
 

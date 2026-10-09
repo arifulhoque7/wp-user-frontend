@@ -252,20 +252,32 @@ export class ParitySitePage {
         return new ParitySitePage(site, context, page);
     }
 
-    /** Open the builder of a form and wait until its Save button is usable. */
+    /** Open the builder of a form and wait until its Save button is shown. */
     async doOpenBuilder(postType: string, formId: number) {
-        // DOM ready, then the enabled Save button is the readiness signal; the full
-        // load event can take long when several builders open at once.
+        // DOM ready, then the Save button is the readiness signal; the full load event
+        // can take long when several builders open at once. Visible, not enabled: the
+        // branch keeps Save disabled until something changes.
         await this.page.goto(`/wp-admin/admin.php?page=${builderPage[postType]}&action=edit&id=${formId}`, { waitUntil: 'domcontentloaded', timeout: 45000 });
-        await expect(this.page.locator(Selectors.parity.builderSaveButton).first()).toBeEnabled({ timeout: 45000 });
+        await expect(this.page.locator(Selectors.parity.builderSaveButton).first()).toBeVisible({ timeout: 45000 });
     }
 
     /**
-     * Click Save without touching anything and wait for the save request to
-     * succeed: develop posts the AJAX action, the branch the REST route
-     * `wpuf/v1/admin/forms/{id}` (same payload and `{ success, data }` body).
+     * Click Save and wait for the save request to succeed: develop posts the AJAX
+     * action, the branch the REST route `wpuf/v1/admin/forms/{id}` (same payload and
+     * `{ success, data }` body).
+     *
+     * `untouched`: nothing was changed. The branch keeps Save disabled then ("No
+     * changes to save"), so no request is sent and the stored form stays as it was;
+     * develop still posts. Without it Save must be enabled (an edit marks the form dirty).
+     * Returns whether a save request was sent.
      */
-    async doSaveBuilder() {
+    async doSaveBuilder({ untouched = false }: { untouched?: boolean } = {}): Promise<boolean> {
+        const button = this.page.locator(Selectors.parity.builderSaveButton).first();
+        if (untouched && await button.isDisabled()) {
+            await expect(button, 'disabled Save says why').toHaveAttribute('title', 'No changes to save');
+            return false;
+        }
+        await expect(button, 'Save is enabled after a change').toBeEnabled();
         const saved = this.page.waitForResponse((response) =>
             response.request().method() === 'POST'
             && ((response.url().includes('admin-ajax.php')
@@ -277,6 +289,7 @@ export class ParitySitePage {
         const response = await saved;
         expect(response.ok(), 'builder save request must succeed').toBeTruthy();
         expect(await response.json(), 'builder save must report success').toMatchObject({ success: true });
+        return true;
     }
 
     /**
@@ -414,7 +427,7 @@ export class ParitySitePage {
         await this.page.goto(`/wp-admin/admin.php?page=${builderPage[postType]}&action=add-new`);
         // The builder page (`action=edit&id=N`) or, with the admin app, its route (`#/post-forms/N/edit`).
         await this.page.waitForURL(BUILDER_URL);
-        await expect(this.page.locator(Selectors.parity.builderSaveButton).first()).toBeEnabled();
+        await expect(this.page.locator(Selectors.parity.builderSaveButton).first()).toBeVisible();
         return Number(builderFormId(this.page.url()));
     }
 

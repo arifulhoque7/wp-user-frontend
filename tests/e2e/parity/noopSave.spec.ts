@@ -14,7 +14,7 @@ test.describe('Parity no-op save', () => {
     for (const fixture of ['post-form-parity.json', 'post-form-all-fields.json', 'registration-form.json']) {
         test(`PAR0002 : untouched builder save keeps ${fixture} byte-identical on the branch`, { tag: ['@Parity', '@Test_PAR0002'] }, async ({ browser }) => {
             const parity = new ParityPage();
-            const results: Record<string, { before: FormDump; after: FormDump }> = {};
+            const results: Record<string, { before: FormDump; after: FormDump; saved: boolean }> = {};
 
             for (const name of ['develop', 'branch'] as const) {
                 const site = paritySite(name);
@@ -22,16 +22,19 @@ test.describe('Parity no-op save', () => {
                 const before = parity.readForm(site, formId);
                 const admin = await ParitySitePage.doOpen(browser, site);
                 await admin.doOpenBuilder(before.post_type, formId);
-                await admin.doSaveBuilder();
+                const saved = await admin.doSaveBuilder({ untouched: true });
                 await admin.doClose();
-                results[name] = { before, after: parity.readForm(site, formId) };
+                results[name] = { before, after: parity.readForm(site, formId), saved };
             }
 
             for (const name of ['develop', 'branch'] as const) {
                 await test.info().attach(`${name}-noop-save.json`, { path: parity.doWriteJson(test.info().outputPath(`${name}-noop-save.json`), results[name]) });
             }
 
-            parity.validateFormsEqual(parity.withoutNewFieldMarkers(results.branch.before), results.branch.after);
+            // Saved: the store drops the seeded new-field markers. Not saved (Save stays
+            // disabled while nothing changed): the stored form is untouched, markers included.
+            const expected = results.branch.saved ? parity.withoutNewFieldMarkers(results.branch.before) : results.branch.before;
+            parity.validateFormsEqual(expected, results.branch.after);
         });
 
     }

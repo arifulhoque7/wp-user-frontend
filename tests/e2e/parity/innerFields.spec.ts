@@ -94,7 +94,7 @@ test.describe('Parity inner fields', () => {
         expect(Object.values(second.options as Record<string, string>), 'second dropdown untouched').toEqual(['Option']);
     });
 
-    test('PAR0019 : column and repeat inner rows lay out like develop', { tag: ['@Parity', '@Test_PAR0019'] }, async ({ browser }) => {
+    test('PAR0019 : column and repeat inner rows keep develop\'s rows, labels, inputs and hidden action bar', { tag: ['@Parity', '@Test_PAR0019'] }, async ({ browser }) => {
         const rows: Record<string, string[]> = {};
 
         for (const name of ['develop', 'branch'] as const) {
@@ -120,7 +120,17 @@ test.describe('Parity inner fields', () => {
         }
 
         expect(rows.develop.length, 'fixture has inner fields').toBeGreaterThan(0);
-        expect(rows.branch, 'inner rows: size, label, input and action bar').toStrictEqual(rows.develop);
+        await test.info().attach('inner-rows.json', { path: new ParityPage().doWriteJson(test.info().outputPath('inner-rows.json'), rows) });
+        // The inner rows were redesigned on the owner's request (design sync
+        // 2026-10-08: compact rows, floating 28px toolbar), so row, toolbar and
+        // input boxes no longer match develop's. Still the same: which rows, label
+        // type and height, 40px inputs, a hidden toolbar with the same buttons.
+        const kept = (row: string) => row
+            .replace(/row=\d+x\d+ /, '')
+            .replace(/label=\d+x(\d+)/, 'label=*x$1')
+            .replace(/input=\d+x(\d+)/, 'input=*x$1')
+            .replace(/bar=\d+x\d+ /, '');
+        expect(rows.branch.map(kept), 'inner rows: label, input and action bar').toStrictEqual(rows.develop.map(kept));
     });
 
     test('PAR0020 : an inner field moves from one column to another', { tag: ['@Parity', '@Test_PAR0020'] }, async ({ browser }) => {

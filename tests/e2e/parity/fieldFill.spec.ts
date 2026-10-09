@@ -43,10 +43,12 @@ test.describe('Parity field fill', () => {
                 const formId = parity.doSeedForm(site, FIXTURE, `Parity field fill ${String(index).padStart(2, '0')}`);
                 const admin = await ParitySitePage.doOpen(browser, site);
                 await admin.doOpenBuilder('wpuf_forms', formId);
-                rows[name] = await admin.doOpenFieldSettings(index)
+                const opened = await admin.doOpenFieldSettings(index);
+                rows[name] = opened
                     ? await admin.doFillFieldOptions(String(index), SKIP_ROWS)
                     : ['stage item not visible'];
-                await admin.doSaveBuilder();
+                // Nothing edited when the field is not on the stage (hidden fields).
+                await admin.doSaveBuilder({ untouched: !opened });
                 await admin.doClose();
                 stored[name] = parity.readForm(site, formId);
             }));
