@@ -1,3 +1,5 @@
+import { existsSync } from 'fs';
+import { join } from 'path';
 import { Browser, BrowserContext, Page, test, expect, chromium } from '@playwright/test';
 import { faker } from '@faker-js/faker';
 import { BasicLoginPage } from '../pages/basicLogin';
@@ -5,7 +7,10 @@ import { SettingsReactPage } from '../pages/settingsReact';
 import { aiWp, AiFormBuilderPage } from '../pages/aiFormBuilder';
 
 /** WP-CLI reachable: a local WordPress root (WPUF_E2E_WP_PATH) or a wp-env project (WPUF_E2E_WP_ENV_DIR, e.g. the QA sites). */
-const HAS_WP_CLI = !!(process.env.WPUF_E2E_WP_PATH || process.env.WPUF_E2E_WP_ENV_DIR);
+// WP-CLI reaches the site through a local WordPress path, a wp-env project dir, or the
+// wp-env project in this directory (CI and the worktree run): without this last case
+// the WP-CLI tests skipped silently under wp-env.
+const HAS_WP_CLI = !!(process.env.WPUF_E2E_WP_PATH || process.env.WPUF_E2E_WP_ENV_DIR || existsSync(join(process.cwd(), '.wp-env.json')));
 import { Users, Urls } from '../utils/testData';
 import { builderFormId } from '../utils/builderUrl';
 
