@@ -309,12 +309,13 @@ const SettingsApp = () => {
                 />
             ) : null }
 
-            { /* Title row over both columns (FlyHR settings). */ }
+            { /* Title row over both columns (FlyHR settings: a fixed page title; the
+               section name is the card title). */ }
             <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
                 <h2 className="mt-0 mb-0 text-2xl! font-bold leading-8 text-gray-900">
                     { searching
                         ? __( 'Search results', 'wp-user-frontend' )
-                        : ( currentTab ? currentTab.title : '' ) }
+                        : __( 'Settings', 'wp-user-frontend' ) }
                 </h2>
             </div>
 

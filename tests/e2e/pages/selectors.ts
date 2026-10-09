@@ -1305,7 +1305,7 @@ export const Selectors = {
 
         // Advanced Settings Section
         advancedSettingsSection: {
-            advancedSettingsHeader: '//h2[normalize-space()="Advanced"]',
+            advancedSettingsHeader: '//li[contains(concat(" ", normalize-space(@class), " "), " active_settings_tab ") and normalize-space()="Advanced"]',
 
             // Comment Status
             commentStatusContainer: '(//*[self::label or self::div or self::span][(@for="comment_status" or @for="comment_status-selectized")]/following::*[@role="combobox"][1] | //label[@for="comment_status-selectized"]//..//..//div[contains(@class,"selectize-control")]//div[contains(@class,"selectize-input")])[1]',
@@ -1345,7 +1345,7 @@ export const Selectors = {
 
         // Post Expiration Settings Section
         postExpirationSettingsSection: {
-            postExpirationSettingsHeader: '//h2[normalize-space()="Post Expiration"]',
+            postExpirationSettingsHeader: '//li[contains(concat(" ", normalize-space(@class), " "), " active_settings_tab ") and normalize-space()="Post Expiration"]',
             postExpirationToggle: 'xpath=//*[@role="switch"][following-sibling::input[1][@id="enable_post_expiration" or contains(@id,"[enable_post_expiration]")]] | //label[normalize-space()="Enable Post Expiration"]/following::*[@role="switch"][1] | //input[@id="enable_post_expiration"]/following-sibling::span[1] >> visible=true >> nth=0',
             postExpirationTime: '//input[@id="expiration_time_value" or contains(@id,"[expiration_time_value]")]',
             enablePostExpirationMessage: 'xpath=//*[@role="checkbox"][following-sibling::input[1][@id="enable_mail_after_expired" or contains(@id,"[enable_mail_after_expired]")]] | //*[@role="checkbox"][@id="enable_mail_after_expired" or contains(@id,"[enable_mail_after_expired]")] | //input[@id="enable_mail_after_expired"] >> visible=true >> nth=0',
@@ -1386,7 +1386,7 @@ export const Selectors = {
         wpLoginErrorMessage: '//div[@id="login_error"]',
 
         regSettingsSection: {
-            regSettingsHeader: '//h2[normalize-space()="General"]',
+            regSettingsHeader: '//li[contains(concat(" ", normalize-space(@class), " "), " active_settings_tab ") and normalize-space()="General"]',
 
             userRoleContainer: '(//label[(@for="role" or @for="role-selectized")]/following::*[@role="combobox"][1] | //label[@for="role-selectized"]//..//..//div[contains(@class,"selectize-control")]//div[contains(@class,"selectize-input")])[1]',
             userRoleDropdown: 'xpath=//*[@role="listbox"] | //label[@for="role-selectized"]//..//..//div[contains(@class,"selectize-dropdown-content")] >> visible=true >> nth=0',
@@ -1455,7 +1455,7 @@ export const Selectors = {
         // Notification Settings Section  
         notificationSettingsSection: {
             notificationSettingsTab: '//span[normalize-space()="Notification Settings"]',
-            notificationSettingsHeader: '//h2[normalize-space()="Notification Settings"]',
+            notificationSettingsHeader: '//li[contains(concat(" ", normalize-space(@class), " "), " active_settings_tab ") and normalize-space()="Notification Settings"]',
 
             // User Notification
             userNotificationHeader: '//p[normalize-space()="User Notification"]',
@@ -1519,7 +1519,7 @@ export const Selectors = {
 
         // Multi-Step Settings Section
         advancedSettingsSection: {
-            advancedSettingsHeader: '//h2[normalize-space()="Advanced Settings"]',
+            advancedSettingsHeader: '//li[contains(concat(" ", normalize-space(@class), " "), " active_settings_tab ") and normalize-space()="Advanced Settings"]',
             advancedSettingsTab: '//span[normalize-space()="Advanced Settings"]',
             multiStepSettingsHeader: '//p[normalize-space()="Multistep Form"]',
             enableMultiStepToggle: 'xpath=//input[@id="enable_multistep"]/preceding-sibling::*[@role="switch"][1] | //input[@id="enable_multistep"]/following-sibling::span[1] >> visible=true >> nth=0',
@@ -2232,6 +2232,8 @@ export const Selectors = {
         // Panel/tab title is the gray-900 h2. The other h2 is the app header
         // ("WP User Frontend [Pro]"), which has no gray-900 class.
         panelTitle: '#wpuf-settings-root h2.wpuf-text-gray-900, #wpuf-settings-root h2.text-gray-900',
+        // The page title is fixed ("Settings", FlyHR); the open tab is the current nav item.
+        activeNavItem: '#wpuf-settings-root nav button[aria-current="page"]',
         searchInput: '#wpuf-settings-root input[placeholder^="Search"]',
         searchClearButton: '#wpuf-settings-root button[aria-label="Clear search"]',
         noResults: 'text=No settings found',

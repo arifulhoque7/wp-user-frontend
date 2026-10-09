@@ -55,6 +55,7 @@ export default function SettingsNav( { ia, activeTab, onSelect, search, onSearch
                     <button
                         type="button"
                         key={ tab.id }
+                        aria-current={ activeTab === tab.id ? 'page' : undefined }
                         onClick={ () => onSelect( tab.id ) }
                         className={ `focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/40 flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium ${
                             activeTab === tab.id

@@ -32,6 +32,8 @@ function showGenerationError( message, notAFormHint ) {
     const i18n = config().i18n || {};
 
     return dialogs.oops( message, {
+        // Develop's AI error title is orange (the builder's Oops alerts are green).
+        title: <span style={ { color: '#FF9000' } }>{ __( 'Oops...', 'wp-user-frontend' ) }</span>,
         confirmText: i18n.tryAgain || __( 'Try Again', 'wp-user-frontend' ),
         className: 'wpuf-ai-error-dialog',
         children: notAFormHint ? (

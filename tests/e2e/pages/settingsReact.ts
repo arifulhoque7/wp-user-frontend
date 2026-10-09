@@ -43,9 +43,16 @@ export class SettingsReactPage extends Base {
         await this.root.locator('button', { hasText: name }).first().click();
     }
 
-    /** Assert the panel title (the big tab heading / "Search results"). */
+    /**
+     * Assert the open panel: "Search results" is the page title while searching,
+     * otherwise the tab is the current nav item (the page title is always "Settings").
+     */
     async expectPanelTitle(text: string) {
-        await expect(this.page.locator(this.S.panelTitle).first()).toContainText(text);
+        if ('Search results' === text) {
+            await expect(this.page.locator(this.S.panelTitle).first()).toContainText(text);
+            return;
+        }
+        await expect(this.page.locator(this.S.activeNavItem).first()).toContainText(text);
     }
 
     /** Locate a field control by its visible label text (label sits above the input/textarea). */

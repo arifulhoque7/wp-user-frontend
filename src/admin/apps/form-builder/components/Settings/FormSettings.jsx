@@ -53,17 +53,6 @@ export default function FormSettings() {
         setRouteQuery( { tab: 'settings', section } );
     };
 
-    // Compute active settings title from settings_titles sub_items
-    const activeSettingsTitle = useMemo( () => {
-        for ( const topKey in settingsTitles ) {
-            const subItems = settingsTitles[ topKey ].sub_items || {};
-            if ( subItems[ activeTab ] ) {
-                return subItems[ activeTab ].label || '';
-            }
-        }
-        return '';
-    }, [ settingsTitles, activeTab ] );
-
     // Find the section data for the active tab
     const activeSectionData = useMemo( () => {
         for ( const topKey in settingsItems ) {
@@ -81,11 +70,13 @@ export default function FormSettings() {
         : ( window.wpuf_admin_url || '' ) + ( isProfileForm ? 'admin.php?page=wpuf-profile-forms' : 'admin.php?page=wpuf-post-forms' );
 
     return (
-        <div className="wpuf-settings-container mx-4 mt-3 mb-6">
-            { /* Title row over both columns, actions on the right (FlyHR settings). */ }
+        <div className="wpuf-settings-container mx-auto mt-3 mb-6 box-border w-full max-w-[1400px] px-4">
+            { /* Title row over both columns, actions on the right (FlyHR settings: a
+               fixed page title; the section name is the card title). Capped at
+               FlyHR's 1400px content width; the Form Editor keeps the full width. */ }
             <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
                 <h2 className="text-2xl! font-bold m-0 leading-8 text-gray-900">
-                    { activeSettingsTitle }
+                    { __( 'Form Settings', 'wp-user-frontend' ) }
                 </h2>
                 { /* Cancel + Save buttons */ }
                 <div className="flex items-center gap-3">
