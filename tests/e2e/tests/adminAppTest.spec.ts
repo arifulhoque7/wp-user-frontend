@@ -45,6 +45,7 @@ const APP = `${Urls.baseUrl}/wp-admin/admin.php?page=wp-user-frontend`;
  * @Test_APP0020 : Post forms list Submissions column: total and pending counts link to the posts list filtered by the form (`wpuf_form`)
  * @Test_APP0021 : Builder seam "+": between two fields and after the last one it opens the field list and adds the picked field at that position
  * @Test_APP0022 : Column cell "+": adds a field into that column; the list leaves out types a column refuses
+ * @Test_APP0023 : A column stored the develop way (inner fields without ids, as after an update) opens each inner field for editing
  */
 
 test.beforeAll(async () => {
@@ -768,6 +769,36 @@ test.describe('Admin app', () => {
         await pickFromPlus(cell, plus, 'Text', 'text_field');
         await expect(cell.locator('li.form-field-text_field')).toHaveCount(1);
         await expect(column.locator('[data-column="column-1"] li[class*="form-field-"]')).toHaveCount(0);
+
+        await discardBuilder();
+        aiWp(['post', 'delete', String(id), '--force']);
+    });
+
+    test('APP0023 : Inner fields stored without ids open for editing', { tag: ['@Lite', '@Test_APP0023'] }, async () => {
+        test.skip(!(await appOn()), 'admin app is off');
+        test.skip(!HAS_WP_CLI, 'needs WP-CLI on the site');
+
+        // Develop stores column inner fields without an id; build such a form directly.
+        const php = "$f = wpuf_create_sample_form( 'APP0023 legacy column', 'wpuf_forms', true );"
+            + " $col = [ 'template' => 'column_field', 'input_type' => 'column_field', 'columns' => 2, 'label' => '', 'is_meta' => 'no', 'inner_fields' => [ 'column-1' => [ [ 'template' => 'text_field', 'input_type' => 'text', 'label' => 'Inner A', 'name' => 'inner_a_1', 'is_meta' => 'yes' ] ], 'column-2' => [ [ 'template' => 'text_field', 'input_type' => 'text', 'label' => 'Inner B', 'name' => 'inner_b_1', 'is_meta' => 'yes' ] ] ] ];"
+            + " wp_insert_post( [ 'post_type' => 'wpuf_input', 'post_status' => 'publish', 'post_parent' => $f, 'menu_order' => 0, 'post_content' => maybe_serialize( wp_slash( $col ) ) ] ); echo $f;";
+        const id = Number(aiWp(['eval', php], true).trim().split('\n').pop());
+
+        await page.goto(`${APP}#/post-forms/${id}/edit`);
+        await builderReady('APP0023 legacy column');
+        const column = page.locator('#form-preview-stage li.form-field-column_field').first();
+        await expect(column).toBeVisible();
+
+        for (const [cell, label] of [['column-1', 'Inner A'], ['column-2', 'Inner B']]) {
+            const inner = column.locator(`[data-column="${cell}"] li[class*="form-field-"]`).first();
+            await inner.hover();
+            await inner.locator('.wpuf-column-field-control-buttons span.inline-flex.h-6').first().click();
+            await expect.poll(() => page.evaluate(() => {
+                const w = window as unknown as { wp: { data: { select: ( n: string ) => { getEditingField: () => { label?: string } | null } } }; wpuf: { storeName: string } };
+                const f = w.wp.data.select( w.wpuf.storeName ).getEditingField();
+                return f ? f.label : null;
+            }), { message: `${label} opens its own settings` }).toBe(label);
+        }
 
         await discardBuilder();
         aiWp(['post', 'delete', String(id), '--force']);
