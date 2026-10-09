@@ -307,6 +307,37 @@ class FormsRestTest extends WP_UnitTestCase {
         $this->assertSame( 'publish', get_post_status( $page ) );
     }
 
+    public function test_trash_restore_delete_need_the_delete_cap_of_the_form() {
+        wp_set_current_user( self::factory()->user->create( [ 'role' => 'administrator' ] ) );
+        $form_id = $this->make_form();
+
+        // A site that splits the form caps: deleting a form needs a cap the admin lacks.
+        $split = function ( $args, $post_type ) {
+            if ( 'wpuf_forms' === $post_type ) {
+                $args['capabilities']['delete_post'] = 'wpuf_test_delete_forms';
+            }
+
+            return $args;
+        };
+        add_filter( 'register_post_type_args', $split, 10, 2 );
+        // The admin layer registers the form post types (and their caps); it is not loaded here.
+        ( new \WeDevs\Wpuf\Admin\Forms\Admin_Form() )->register_post_type();
+        remove_filter( 'register_post_type_args', $split, 10 );
+
+        foreach ( [ 'trash', 'restore' ] as $action ) {
+            $this->assertSame( 403, $this->server->dispatch( new WP_REST_Request( 'POST', '/wpuf/v1/admin/forms/' . $form_id . '/' . $action ) )->get_status() );
+        }
+        $this->assertSame( 403, $this->server->dispatch( new WP_REST_Request( 'DELETE', '/wpuf/v1/admin/forms/' . $form_id ) )->get_status() );
+        $this->assertSame( 'publish', get_post_status( $form_id ) );
+
+        // Editing and copying stay allowed.
+        $this->assertSame( 200, $this->server->dispatch( new WP_REST_Request( 'GET', '/wpuf/v1/admin/forms/' . $form_id ) )->get_status() );
+        $this->assertSame( 201, $this->server->dispatch( new WP_REST_Request( 'POST', '/wpuf/v1/admin/forms/' . $form_id . '/duplicate' ) )->get_status() );
+
+        unregister_post_type( 'wpuf_forms' );
+        unregister_post_type( 'wpuf_profile' );
+    }
+
     public function test_save_gives_listeners_the_develop_request_and_restores_it() {
         wp_set_current_user( self::factory()->user->create( [ 'role' => 'administrator' ] ) );
         $form_id = $this->make_form();

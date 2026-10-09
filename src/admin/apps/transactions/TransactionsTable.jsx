@@ -86,15 +86,18 @@ export default function TransactionsTable( { rows, selected, onSelect, sort, onS
             <table className="w-full border-collapse text-left">
                 <thead className="border-0 border-b border-solid border-gray-200 bg-white">
                     <tr className="h-10 text-xs font-normal uppercase leading-[1.4] text-[#828282]">
-                        <th scope="col" className="w-10 px-4">
-                            <Checkbox
-                                value={ all }
-                                indeterminate={ some }
-                                onChange={ () => onSelect( all ? [] : rows.map( ( row ) => row.key ) ) }
-                                aria-label={ __( 'Select all', 'wp-user-frontend' ) }
-                                className="align-middle"
-                            />
-                        </th>
+                        { /* Selecting is only for the bulk actions, which need canManage. */ }
+                        { canManage && (
+                            <th scope="col" className="w-10 px-4">
+                                <Checkbox
+                                    value={ all }
+                                    indeterminate={ some }
+                                    onChange={ () => onSelect( all ? [] : rows.map( ( row ) => row.key ) ) }
+                                    aria-label={ __( 'Select all', 'wp-user-frontend' ) }
+                                    className="align-middle"
+                                />
+                            </th>
+                        ) }
                         <SortHeader column="id" label={ __( 'ID', 'wp-user-frontend' ) } sort={ sort } onSort={ onSort } />
                         <th scope="col" className={ TH }>{ __( 'Status', 'wp-user-frontend' ) }</th>
                         <th scope="col" className={ TH }>{ __( 'User', 'wp-user-frontend' ) }</th>
@@ -109,15 +112,17 @@ export default function TransactionsTable( { rows, selected, onSelect, sort, onS
                 <tbody>
                     { rows.map( ( row ) => (
                         <tr key={ row.key } className="h-14 border-0 border-b border-solid border-gray-200 bg-white last:border-b-0 hover:bg-gray-50">
-                            <td className="w-10 px-4 align-middle">
-                                <Checkbox
-                                    value={ selected.includes( row.key ) }
-                                    onChange={ () => toggle( row.key ) }
-                                    /* translators: %d: payment ID */
-                                    aria-label={ sprintf( __( 'Select payment %d', 'wp-user-frontend' ), row.id ) }
-                                    className="align-middle"
-                                />
-                            </td>
+                            { canManage && (
+                                <td className="w-10 px-4 align-middle">
+                                    <Checkbox
+                                        value={ selected.includes( row.key ) }
+                                        onChange={ () => toggle( row.key ) }
+                                        /* translators: %d: payment ID */
+                                        aria-label={ sprintf( __( 'Select payment %d', 'wp-user-frontend' ), row.id ) }
+                                        className="align-middle"
+                                    />
+                                </td>
+                            ) }
                             <td className={ TD + ' whitespace-nowrap' }>
                                 <button type="button" onClick={ () => onView( row ) } className="cursor-pointer border-0 bg-transparent p-0 text-sm font-medium text-gray-900 hover:text-primary hover:underline">
                                     #{ row.id }

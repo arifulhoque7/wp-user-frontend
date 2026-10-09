@@ -191,7 +191,8 @@ class FormsController extends RestController {
                     [
                         'methods'             => WP_REST_Server::CREATABLE,
                         'callback'            => [ $this, $action . '_item' ],
-                        'permission_callback' => [ $this, 'update_item_permissions_check' ],
+                        // Trash and restore need the delete cap, like WordPress's own trash.
+                        'permission_callback' => [ $this, 'duplicate' === $action ? 'update_item_permissions_check' : 'delete_item_permissions_check' ],
                     ],
                 ]
             );
@@ -296,7 +297,7 @@ class FormsController extends RestController {
                 return $this->error( 'invalid_template', __( 'This template is not available.', 'wp-user-frontend' ), 400 );
             }
 
-            $form_id   = false === $object ? null : $templates->create_from_template( $template );
+            $form_id = false === $object ? null : $templates->create_from_template( $template );
         }
 
         /**
@@ -384,7 +385,7 @@ class FormsController extends RestController {
     }
 
     /**
-     * Delete permission: manage forms, and edit this form.
+     * Delete permission (also trash and restore): manage forms, and delete this form.
      *
      * @since WPUF_SINCE
      *
@@ -393,7 +394,7 @@ class FormsController extends RestController {
      * @return true|\WP_Error
      */
     public function delete_item_permissions_check( $request ) {
-        return $this->form_permission( $request );
+        return $this->form_permission( $request, 'delete_post' );
     }
 
     /**
@@ -588,13 +589,14 @@ class FormsController extends RestController {
 
     /**
      * Logged in (401), may manage forms (403), the id is a builder form (404)
-     * and the user may edit it (403).
+     * and the user may edit (or delete) it (403).
      *
-     * @param WP_REST_Request $request Request
+     * @param WP_REST_Request $request  Request
+     * @param string          $meta_cap `edit_post` or `delete_post`
      *
      * @return true|\WP_Error
      */
-    private function form_permission( $request ) {
+    private function form_permission( $request, $meta_cap = 'edit_post' ) {
         $allowed = call_user_func( $this->permission( Caps::MANAGE_FORMS ) );
 
         if ( true !== $allowed ) {
@@ -607,11 +609,15 @@ class FormsController extends RestController {
             return $this->error( 'not_found', __( 'Invalid form id', 'wp-user-frontend' ), 404 );
         }
 
-        // Both form post types map edit_post to wpuf_admin_role() (the cap checked
-        // above). They are registered with the admin layer, which a REST request
-        // without Pro does not load: check the object cap only when registered.
-        if ( post_type_exists( get_post_type( $form_id ) ) && ! current_user_can( 'edit_post', $form_id ) ) {
-            return $this->error( 'forbidden', __( 'Sorry, you are not allowed to edit this form.', 'wp-user-frontend' ), 403 );
+        // Both form post types map edit_post / delete_post to wpuf_admin_role() (the
+        // cap checked above). They are registered with the admin layer, which a REST
+        // request without Pro does not load: check the object cap only when registered.
+        if ( post_type_exists( get_post_type( $form_id ) ) && ! current_user_can( $meta_cap, $form_id ) ) {
+            $message = 'delete_post' === $meta_cap
+                ? __( 'Sorry, you are not allowed to delete this form.', 'wp-user-frontend' )
+                : __( 'Sorry, you are not allowed to edit this form.', 'wp-user-frontend' );
+
+            return $this->error( 'forbidden', $message, 403 );
         }
 
         return true;
