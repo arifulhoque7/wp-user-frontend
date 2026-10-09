@@ -3,6 +3,7 @@ import { WpufApi } from '../pages/api/WpufApi';
 import { createAdminAppPassword, wpCli } from '../utils/wpEnvCli';
 import { Urls } from '../utils/testData';
 import { configureSpecFailFast } from '../utils/specFailFast';
+import { aiWp } from '../pages/aiFormBuilder';
 
 /**
  * QR Code field (Pro module) from the frontend: the posted value is stored and
@@ -32,6 +33,9 @@ let cfShowFront = '';
 const author = { login: `qr_e2e_${ stamp }`, pass: `Qr-${ stamp }-${ Math.random().toString( 36 ).slice( 2 ) }` };
 let authorId = '';
 let pageId = '';
+// Set when this spec switched the QR Code module on (switched off again after).
+let qrModuleTurnedOn = false;
+const QR_MODULE = 'qr-code-field/wpuf-qr-code.php';
 
 const field = (extra: Record<string, unknown>) => ( {
     required: 'no',
@@ -79,6 +83,13 @@ test.beforeAll(async () => {
 });
 
 test.afterAll(async () => {
+    if ( qrModuleTurnedOn ) {
+        try {
+            aiWp( [ 'eval', `wpuf_pro_deactivate_module( '${ QR_MODULE }' );` ], true );
+        } catch ( e ) {
+            // Leave it on.
+        }
+    }
     // Put "Show custom fields in post" back as the run found it.
     try {
         if ( cfShowFront ) {
@@ -126,8 +137,13 @@ test.describe('QR Code field', () => {
     configureSpecFailFast();
 
     test('QR0001 : Admin seeds a post form with Post Title + QR Code, its page and an author', { tag: [ '@Pro', '@Test_QR0001' ] }, async () => {
-        const modules = wpCli( 'option get wpuf_pro_active_modules --format=json' );
-        test.skip( ! modules.includes( 'qr-code-field' ), 'QR Code module is off' );
+        // The setup's module tests end with Deactivate All: switch the module on the
+        // way the Modules page does (activation hooks run), and off again after.
+        if ( ! wpCli( 'option get wpuf_pro_active_modules --format=json' ).includes( 'qr-code-field' ) ) {
+            aiWp( [ 'eval', `wpuf_pro_activate_module( '${ QR_MODULE }' );` ], true );
+            qrModuleTurnedOn = true;
+        }
+        expect( wpCli( 'option get wpuf_pro_active_modules --format=json' ) ).toContain( 'qr-code-field' );
 
         const created = await api.post( '/admin/forms', { type: 'wpuf_forms' } );
         expect( created.status() ).toBe( 201 );

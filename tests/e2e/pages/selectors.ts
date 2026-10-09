@@ -2375,12 +2375,12 @@ export const Selectors = {
         userDirectoryMenu: '//li[@id="toplevel_page_wp-user-frontend"]//a[contains(@href,"page=wpuf_userlisting")]',
         // The page link, or its admin app route.
         subscriptionsMenu: '//li[@id="toplevel_page_wp-user-frontend"]//a[contains(@href,"page=wpuf_subscription") or contains(@href,"#/subscriptions")]',
-        transactionsMenu: '//li[@id="toplevel_page_wp-user-frontend"]//a[contains(@href,"page=wpuf_transaction")]',
+        transactionsMenu: '//li[@id="toplevel_page_wp-user-frontend"]//a[contains(@href,"page=wpuf_transaction") or contains(@href,"#/transactions")]',
         settingsMenu: '//li[@id="toplevel_page_wp-user-frontend"]//a[contains(@href,"page=wpuf-settings") or contains(@href,"#/settings")]',
         // Registered only when Pro is inactive, so its absence is what identifies a
         // Pro build. The registration forms menu cannot be used: free registers it too.
         premiumMenu: '//li[@id="toplevel_page_wp-user-frontend"]//a[contains(@href,"page=wpuf_premium")]',
-        toolsMenu: '//li[@id="toplevel_page_wp-user-frontend"]//a[contains(@href,"page=wpuf_tools")]',
+        toolsMenu: '//li[@id="toplevel_page_wp-user-frontend"]//a[contains(@href,"page=wpuf_tools") or contains(@href,"#/tools")]',
     },
 
     // The settings screen fields the wizard writes, so a wizard choice can be
