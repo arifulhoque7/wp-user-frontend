@@ -80,6 +80,11 @@ trait QueriesPosts {
             $query_args['s'] = sanitize_text_field( (string) $args['search'] );
         }
 
+        // Only these ids (export of picked forms).
+        if ( ! empty( $args['include'] ) ) {
+            $query_args['post__in'] = array_values( array_filter( array_map( 'absint', (array) $args['include'] ) ) );
+        }
+
         return $query_args;
     }
 }

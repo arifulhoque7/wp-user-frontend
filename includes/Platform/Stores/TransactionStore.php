@@ -224,6 +224,19 @@ class TransactionStore implements DataStore {
     }
 
     /**
+     * Empty the transactions table (Tools > Transactions).
+     *
+     * @since WPUF_SINCE
+     *
+     * @return void
+     */
+    public function truncate() {
+        global $wpdb;
+
+        $wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}wpuf_transaction" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- the tool empties the plugin's own table.
+    }
+
+    /**
      * Defaults and allowlists of the list arguments.
      *
      * @param array $args Raw arguments

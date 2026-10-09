@@ -52,6 +52,17 @@ class Stores {
     }
 
     /**
+     * The transaction store.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return TransactionStore
+     */
+    public static function transactions() {
+        return self::get( TransactionStore::class );
+    }
+
+    /**
      * Settings store
      *
      * @since WPUF_SINCE

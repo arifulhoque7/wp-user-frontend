@@ -228,6 +228,19 @@ class SettingsStore {
     }
 
     /**
+     * Delete a section option (Tools > Reset Settings).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param string $section_id Section option name
+     *
+     * @return bool Whether an option was deleted
+     */
+    public function delete_section( $section_id ) {
+        return delete_option( $section_id );
+    }
+
+    /**
      * Set one key of a section option (wpuf_update_option()).
      *
      * @since WPUF_SINCE

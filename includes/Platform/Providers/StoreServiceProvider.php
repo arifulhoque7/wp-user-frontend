@@ -67,8 +67,13 @@ class StoreServiceProvider extends ServiceProvider {
         // Domain services over the stores and develop's tables (Tools, Transactions).
         $this->share_tagged(
             ToolsService::class,
-            function () {
-                return new ToolsService();
+            function ( $container ) {
+                return new ToolsService(
+                    $container->get( FormStore::class ),
+                    $container->get( SubscriptionStore::class ),
+                    $container->get( TransactionStore::class ),
+                    $container->get( SettingsStore::class )
+                );
             }
         );
 

@@ -318,6 +318,25 @@ class SubscriptionStore implements DataStore {
     }
 
     /**
+     * Delete every pack for good, any status, trash included (Tools > Delete Forms).
+     *
+     * @since WPUF_SINCE
+     *
+     * @return int Packs deleted
+     */
+    public function delete_all() {
+        $deleted = 0;
+
+        foreach ( $this->query_ids( 'wpuf_subscription', [ 'status' => [ 'publish', 'draft', 'pending', 'trash' ] ] ) as $id ) {
+            if ( wp_delete_post( $id, true ) ) {
+                $deleted++;
+            }
+        }
+
+        return $deleted;
+    }
+
+    /**
      * Save the classic pack editor's fields (already unslashed `$_POST`). The
      * caller has checked the nonce and the capability.
      *

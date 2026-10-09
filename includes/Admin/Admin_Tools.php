@@ -2,6 +2,8 @@
 
 namespace WeDevs\Wpuf\Admin;
 
+use WeDevs\Wpuf\Platform\Tools\ToolsService;
+
 use WP_Error;
 use WP_Http;
 use WP_Query;
@@ -28,55 +30,9 @@ class Admin_Tools {
      * @return bool
      */
     public static function import_json_file( $file ) {
-        $encode_data = file_get_contents( $file );
-        $options     = json_decode( $encode_data, true );
+        $forms = json_decode( (string) file_get_contents( $file ), true ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 
-        $errors = new WP_Error();
-
-        $allowed_post_types    = [ 'wpuf_forms', 'wpuf_profile' ];
-        $allowed_post_statuses = [ 'publish', 'draft', 'pending' ];
-
-        foreach ( $options as $key => $value ) {
-            // Allowlist post_type and post_status to prevent mass-assignment of an
-            // arbitrary post type/status through an imported JSON file.
-            $post_type   = $value['post_data']['post_type'] ?? '';
-            $post_status = $value['post_data']['post_status'] ?? '';
-
-            if ( ! in_array( $post_type, $allowed_post_types, true ) ) {
-                $post_type = 'wpuf_forms';
-            }
-
-            if ( ! in_array( $post_status, $allowed_post_statuses, true ) ) {
-                $post_status = 'publish';
-            }
-
-            $generate_post = [
-                'post_title'     => $value['post_data']['post_title'] ?? '',
-                'post_status'    => $post_status,
-                'post_type'      => $post_type,
-                'ping_status'    => $value['post_data']['ping_status'] ?? '',
-                'comment_status' => $value['post_data']['comment_status'] ?? '',
-            ];
-
-            $post_id = wp_insert_post( $generate_post, true );
-
-            if ( is_wp_error( $post_id ) ) {
-                $errors->add( $post_id->get_error_code(), $post_id->get_error_message() );
-            } else {
-                foreach ( $value['meta_data']['fields'] as $order => $field ) {
-                    wpuf_insert_form_field( $post_id, $field, false, $order );
-                }
-
-                update_post_meta( $post_id, 'wpuf_form_settings', $value['meta_data']['settings'] );
-                update_post_meta( $post_id, 'notifications', $value['meta_data']['notifications'] );
-            }
-        }
-
-        if ( $errors->has_errors() ) {
-            return $errors;
-        }
-
-        return true;
+        return wpuf()->platform()->get( ToolsService::class )->import_forms( is_array( $forms ) ? $forms : [] );
     }
 
     /**

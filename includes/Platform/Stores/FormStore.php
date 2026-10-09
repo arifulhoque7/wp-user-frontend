@@ -266,6 +266,7 @@ class FormStore implements DataStore {
      *     @type bool       $settings_first Store settings before fields (templates)
      *     @type bool       $store_empty_settings Store settings even when empty (templates)
      *     @type array      $meta           Extra post meta to store, key => value (AI form builder)
+     *     @type array|null $notifications  Notifications to store as given (import); null: not stored
      * }
      *
      * @return int|WP_Error Form id
@@ -284,6 +285,7 @@ class FormStore implements DataStore {
                 'settings_first'       => false,
                 'store_empty_settings' => false,
                 'meta'                 => [],
+                'notifications'        => null,
             ]
         );
 
@@ -293,7 +295,7 @@ class FormStore implements DataStore {
             'post_status' => $args['post_status'],
         ];
 
-        foreach ( [ 'post_author', 'comment_status', 'post_content' ] as $key ) {
+        foreach ( [ 'post_author', 'comment_status', 'ping_status', 'post_content' ] as $key ) {
             if ( isset( $args[ $key ] ) ) {
                 $post[ $key ] = $args[ $key ];
             }
@@ -526,6 +528,32 @@ class FormStore implements DataStore {
     }
 
     /**
+     * Delete every form of a type for good, any status, trash included,
+     * with their field posts (Tools > Delete Forms).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param string $post_type wpuf_forms or wpuf_profile
+     *
+     * @return int Forms deleted
+     */
+    public function delete_all_of_type( $post_type ) {
+        if ( ! in_array( $post_type, [ 'wpuf_forms', 'wpuf_profile' ], true ) ) {
+            return 0;
+        }
+
+        $deleted = 0;
+
+        foreach ( $this->query_ids( $post_type, [ 'status' => [ 'publish', 'draft', 'pending', 'trash' ] ] ) as $form_id ) {
+            if ( $this->delete_permanently( $form_id ) ) {
+                $deleted++;
+            }
+        }
+
+        return $deleted;
+    }
+
+    /**
      * Legacy delete (wpuf_delete_form(), Form_Manager::delete()): delete or
      * trash the post and remove its field rows directly, as those functions did.
      *
@@ -584,6 +612,10 @@ class FormStore implements DataStore {
 
         if ( $args['version'] ) {
             update_post_meta( $form_id, 'wpuf_form_version', WPUF_VERSION );
+        }
+
+        if ( null !== $args['notifications'] ) {
+            update_post_meta( $form_id, 'notifications', $args['notifications'] );
         }
 
         $this->write_meta( $form_id, (array) $args['meta'] );

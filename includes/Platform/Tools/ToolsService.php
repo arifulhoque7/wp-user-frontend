@@ -10,18 +10,77 @@ namespace WeDevs\Wpuf\Platform\Tools;
 
 use WeDevs\Wpuf\Admin\Admin_Installer;
 use WeDevs\Wpuf\Admin\Admin_Tools;
+use WeDevs\Wpuf\Platform\Stores\FormStore;
+use WeDevs\Wpuf\Platform\Stores\SettingsStore;
+use WeDevs\Wpuf\Platform\Stores\Stores;
+use WeDevs\Wpuf\Platform\Stores\SubscriptionStore;
+use WeDevs\Wpuf\Platform\Stores\TransactionStore;
 use WP_Error;
-use WP_Query;
 
 /**
  * What User Frontend > Tools does, for the admin app's `#/tools` route
- * (Platform\REST\Controllers\ToolsController). The same writes as the
- * classic page's handlers (Admin_Tools, Admin_Installer), which stay as
- * they are for the classic page and old links.
+ * (Platform\REST\Controllers\ToolsController) and the old links Admin_Tools
+ * still answers. Every write goes through the stores: forms, packs,
+ * transactions and the settings sections.
  *
  * @since WPUF_SINCE
  */
 class ToolsService {
+
+    /**
+     * Settings sections "Reset Settings" deletes.
+     */
+    const SETTINGS_SECTIONS = [ 'wpuf_general', 'wpuf_dashboard', 'wpuf_profile', 'wpuf_payment', '_wpuf_page_created' ];
+
+    /**
+     * Post statuses an import may set.
+     */
+    const IMPORT_STATUSES = [ 'publish', 'draft', 'pending' ];
+
+    /**
+     * The form store.
+     *
+     * @var FormStore
+     */
+    private $forms;
+
+    /**
+     * The subscription store.
+     *
+     * @var SubscriptionStore
+     */
+    private $subscriptions;
+
+    /**
+     * The transaction store.
+     *
+     * @var TransactionStore
+     */
+    private $transactions;
+
+    /**
+     * The settings store.
+     *
+     * @var SettingsStore
+     */
+    private $settings;
+
+    /**
+     * Constructor.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param FormStore|null         $forms         The form store (container default)
+     * @param SubscriptionStore|null $subscriptions The subscription store (container default)
+     * @param TransactionStore|null  $transactions  The transaction store (container default)
+     * @param SettingsStore|null     $settings      The settings store (container default)
+     */
+    public function __construct( $forms = null, $subscriptions = null, $transactions = null, $settings = null ) {
+        $this->forms         = $forms instanceof FormStore ? $forms : Stores::forms();
+        $this->subscriptions = $subscriptions instanceof SubscriptionStore ? $subscriptions : Stores::subscriptions();
+        $this->transactions  = $transactions instanceof TransactionStore ? $transactions : Stores::transactions();
+        $this->settings      = $settings instanceof SettingsStore ? $settings : Stores::settings();
+    }
 
     /**
      * Post types the "Delete Forms" tools empty.
@@ -58,8 +117,8 @@ class ToolsService {
      * @return void
      */
     public function reset_settings() {
-        foreach ( [ 'wpuf_general', 'wpuf_dashboard', 'wpuf_profile', 'wpuf_payment', '_wpuf_page_created' ] as $option ) {
-            delete_option( $option );
+        foreach ( self::SETTINGS_SECTIONS as $section ) {
+            $this->settings->delete_section( $section );
         }
     }
 
@@ -77,6 +136,15 @@ class ToolsService {
             return new WP_Error( 'wpuf_tools_invalid_type', __( 'This content cannot be deleted from Tools.', 'wp-user-frontend' ), [ 'status' => 400 ] );
         }
 
+        if ( 'wpuf_subscription' === $post_type ) {
+            return $this->subscriptions->delete_all();
+        }
+
+        if ( in_array( $post_type, self::FORM_TYPES, true ) ) {
+            return $this->forms->delete_all_of_type( $post_type );
+        }
+
+        // Types without a free store (coupons: Pro's).
         $ids = get_posts(
             [
                 'post_type'      => $post_type,
@@ -101,9 +169,7 @@ class ToolsService {
      * @return void
      */
     public function clear_transactions() {
-        global $wpdb;
-
-        $wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}wpuf_transaction" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange
+        $this->transactions->truncate();
     }
 
     /**
@@ -182,18 +248,10 @@ class ToolsService {
     public function forms( $post_type ) {
         $forms = [];
 
-        foreach ( get_posts(
-            [
-				'post_type' => $post_type,
-				'post_status' => 'publish',
-				'posts_per_page' => -1,
-				'orderby' => 'title',
-				'order' => 'ASC',
-			]
-        ) as $form ) {
+        foreach ( $this->forms->query( [ 'post_type' => $post_type, 'status' => 'publish', 'orderby' => 'title', 'order' => 'ASC' ] ) as $form ) {
             $forms[] = [
-                'id'    => (int) $form->ID,
-                'title' => $form->post_title ? $form->post_title : __( '(no title)', 'wp-user-frontend' ),
+                'id'    => (int) $form->get_id(),
+                'title' => $form->get_title() ? $form->get_title() : __( '(no title)', 'wp-user-frontend' ),
             ];
         }
 
@@ -217,28 +275,19 @@ class ToolsService {
             return new WP_Error( 'wpuf_tools_invalid_type', __( 'Unknown form type.', 'wp-user-frontend' ), [ 'status' => 400 ] );
         }
 
-        $ids   = array_filter( array_map( 'absint', (array) $ids ) );
-        $query = new WP_Query(
-            [
-                'post_status'    => 'publish',
-                'post_type'      => $post_type,
-                'post__in'       => $ids,
-                'posts_per_page' => -1,
-                'no_found_rows'  => true,
-            ]
-        );
         $forms = [];
 
-        foreach ( $query->posts as $post ) {
-            $data = get_object_vars( $post );
+        foreach ( $this->forms->query( [ 'post_type' => $post_type, 'status' => 'publish', 'include' => $ids ] ) as $form ) {
+            $read = $this->forms->read( $form->get_id() );
+            $data = get_object_vars( $read['post'] );
             unset( $data['ID'] );
 
             $forms[] = [
                 'post_data' => $data,
                 'meta_data' => [
-                    'fields'        => wpuf_get_form_fields( $post->ID ),
-                    'settings'      => wpuf_get_form_settings( $post->ID ),
-                    'notifications' => wpuf_get_form_notifications( $post->ID ),
+                    'fields'        => $read['fields'],
+                    'settings'      => $read['settings'],
+                    'notifications' => $read['notifications'],
                 ],
             ];
         }
@@ -290,13 +339,54 @@ class ToolsService {
             }
         }
 
-        $result = Admin_Tools::import_json_file( $file['tmp_name'] );
+        $result = $this->import_forms( $forms );
 
         if ( is_wp_error( $result ) ) {
             return new WP_Error( 'wpuf_tools_import_failed', $result->get_error_message(), [ 'status' => 422 ] );
         }
 
         return true;
+    }
+
+    /**
+     * Create the forms of a decoded export file through the form store: post
+     * type and status allowlisted (an imported file cannot set any other), the
+     * fields, settings and notifications stored as exported.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param array $forms Decoded export: `[ [ 'post_data' => [...], 'meta_data' => [ 'fields', 'settings', 'notifications' ] ], ... ]`
+     *
+     * @return true|WP_Error Every creation error collected
+     */
+    public function import_forms( array $forms ) {
+        $errors = new WP_Error();
+
+        foreach ( $forms as $form ) {
+            $post = isset( $form['post_data'] ) && is_array( $form['post_data'] ) ? $form['post_data'] : [];
+            $meta = isset( $form['meta_data'] ) && is_array( $form['meta_data'] ) ? $form['meta_data'] : [];
+
+            $form_id = $this->forms->create(
+                [
+                    'post_title'           => isset( $post['post_title'] ) ? $post['post_title'] : '',
+                    'post_status'          => isset( $post['post_status'] ) && in_array( $post['post_status'], self::IMPORT_STATUSES, true ) ? $post['post_status'] : 'publish',
+                    'post_type'            => isset( $post['post_type'] ) && in_array( $post['post_type'], self::FORM_TYPES, true ) ? $post['post_type'] : 'wpuf_forms',
+                    'ping_status'          => isset( $post['ping_status'] ) ? $post['ping_status'] : '',
+                    'comment_status'       => isset( $post['comment_status'] ) ? $post['comment_status'] : '',
+                    'fields'               => isset( $meta['fields'] ) && is_array( $meta['fields'] ) ? $meta['fields'] : [],
+                    'settings'             => isset( $meta['settings'] ) ? $meta['settings'] : null,
+                    'store_empty_settings' => true,
+                    'notifications'        => isset( $meta['notifications'] ) ? $meta['notifications'] : null,
+                    'version'              => false,
+                ]
+            );
+
+            if ( is_wp_error( $form_id ) ) {
+                $errors->add( $form_id->get_error_code(), $form_id->get_error_message() );
+            }
+        }
+
+        return $errors->has_errors() ? $errors : true;
     }
 
     /**
