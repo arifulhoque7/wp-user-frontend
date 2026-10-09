@@ -14,8 +14,8 @@ use WeDevs\Wpuf\Free\Pro_Prompt;
  * User Frontend > Registration Forms while Pro is not active
  * (`page=wpuf-profile-forms`, Free_Loader): the free registration shortcode
  * and what Pro adds. In the admin app it is the React route
- * `#/registration-forms` on the shared components; with the app off
- * Free_Loader prints its template as before.
+ * `#/registration-forms` on the shared components (the old URL redirects
+ * there).
  *
  * @since WPUF_SINCE
  */

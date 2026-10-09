@@ -9,6 +9,14 @@ if ( ! class_exists( 'WP_List_Table' ) ) {
     require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
 }
 
+/**
+ * Develop's Transactions list table.
+ *
+ * @deprecated WPUF_SINCE The screen is the admin app route `#/transactions`
+ *             (Platform\Transactions\TransactionService); its old action links
+ *             are handled by TransactionService::legacy_request(). Kept for
+ *             outside code that names the class.
+ */
 #[AllowDynamicProperties]
 class List_Table_Transactions extends WP_List_Table {
     /**

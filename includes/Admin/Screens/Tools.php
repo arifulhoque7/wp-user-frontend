@@ -8,15 +8,14 @@
 
 namespace WeDevs\Wpuf\Admin\Screens;
 
-use WeDevs\Wpuf\Admin\Admin_Tools;
 use WeDevs\Wpuf\Platform\Caps;
 use WeDevs\Wpuf\Platform\Tools\ToolsService;
 
 /**
- * User Frontend > Tools. In the admin app as `#/tools` (tabs Tools, Import,
- * Export, Shortcodes) on Platform\REST\Controllers\ToolsController; the
- * classic page (load + render, moved from Admin\Menu) stays for a disabled
- * app, and its GET / POST handlers still run on the old URL.
+ * User Frontend > Tools: the admin app route `#/tools` (tabs Tools, Import,
+ * Export, Shortcodes) on Platform\REST\Controllers\ToolsController. The old
+ * URL redirects there after `wpuf_load_tools`, so develop's GET / POST handlers
+ * (Admin_Tools) still run on it.
  *
  * @since WPUF_SINCE
  */
@@ -34,55 +33,13 @@ class Tools extends Screen {
     }
 
     /**
-     * Load the screen (moved from Admin\Menu).
+     * Nothing to print: the old URL always redirects to the app route.
      *
      * @since WPUF_SINCE
      *
      * @return void
      */
-    public function load() {
-        /**
-         * Backdoor for calling the menu hook.
-         * This hook won't get translated even the site language is changed
-         */
-        do_action( 'wpuf_load_tools' );
-
-        wp_enqueue_media(); // for uploading JSON
-
-        wp_enqueue_script( 'wpuf-vue' );
-        wp_enqueue_script( 'wpuf-admin-tools' );
-
-        wp_localize_script(
-            'wpuf-admin-tools',
-            'wpuf_admin_tools',
-            [
-                'url'   => [
-                    'ajax' => admin_url( 'admin-ajax.php' ),
-                ],
-                'nonce' => wp_create_nonce( 'wpuf_admin_tools' ),
-                'i18n'  => [
-                    'wpuf_import_forms'      => __( 'WPUF Import Forms', 'wp-user-frontend' ),
-                    'add_json_file'          => __( 'Add JSON file', 'wp-user-frontend' ),
-                    'could_not_import_forms' => __( 'Could not import forms.', 'wp-user-frontend' ),
-                ],
-            ]
-        );
-    }
-
-    /**
-     * Render the screen (moved from Admin\Menu).
-     *
-     * @since WPUF_SINCE
-     *
-     * @return void
-     */
-    public function render() {
-        wpuf()->admin->tools = new Admin_Tools();
-
-        $tools_page = WPUF_INCLUDES . '/Admin/views/tools.php';
-
-        wpuf_include_once( $tools_page );
-    }
+    public function render() {}
 
     /**
      * The admin app route.
@@ -138,7 +95,10 @@ class Tools extends Screen {
      * @return void
      */
     public function load_before_redirect() {
-        /** This action is documented in includes/Admin/Screens/Tools.php */
+        /**
+         * Backdoor for calling the menu hook.
+         * This hook won't get translated even the site language is changed
+         */
         do_action( 'wpuf_load_tools' );
     }
 

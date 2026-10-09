@@ -125,39 +125,30 @@ class Onboarding {
     }
 
     /**
-     * A link to a WPUF admin screen: its admin app route when the app is on
-     * (no redirect hop through the old page), else the classic page.
+     * A link to a WPUF admin screen: its admin app route (no redirect hop
+     * through the old page).
      *
      * @since WPUF_SINCE
      *
      * @param string $route   App route path, e.g. `/settings`.
      * @param array  $args    Route query, e.g. `[ 'tab' => 'wpuf_payment' ]`.
-     * @param string $classic Classic page, relative to wp-admin.
+     * @param string $classic Unused since the classic screens were removed; kept for callers.
      *
      * @return string
      */
-    public function app_or_classic_url( $route, $args, $classic ) {
-        if ( function_exists( 'wpuf_admin_app_enabled' ) && wpuf_admin_app_enabled() ) {
-            return wpuf_admin_app_url( $route, $args );
-        }
-
-        return admin_url( $classic );
+    public function app_or_classic_url( $route, $args, $classic ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed -- kept for callers.
+        return wpuf_admin_app_url( $route, $args );
     }
 
     /**
-     * Tools: the admin app route when the app is on (no redirect), else the
-     * classic page.
+     * Tools: the admin app route (no redirect hop through the old page).
      *
      * @since WPUF_SINCE
      *
      * @return string
      */
     public function tools_url() {
-        if ( function_exists( 'wpuf_admin_app_enabled' ) && wpuf_admin_app_enabled() ) {
-            return admin_url( 'admin.php?page=wp-user-frontend#/tools' );
-        }
-
-        return admin_url( 'admin.php?page=wpuf_tools&tab=tools' );
+        return admin_url( 'admin.php?page=wp-user-frontend#/tools' );
     }
 
     /**
@@ -244,12 +235,6 @@ class Onboarding {
             return;
         }
 
-        // The wizard is an admin app route: with the app off (WPUF_ADMIN_APP)
-        // there is nothing to open, so the activation stays on Plugins.
-        if ( ! wpuf_admin_app_enabled() ) {
-            return;
-        }
-
         // Give the post form and registration steps something to pick from. Only
         // the pages those two steps offer; the rest wait for the settings step.
         $installer = new Admin_Installer();
@@ -282,12 +267,6 @@ class Onboarding {
             add_action(
                 'load-' . $hook,
                 function () {
-                    // No admin app, no wizard: the classic forms list instead of a blank page.
-                    if ( ! wpuf_admin_app_enabled() ) {
-                        wp_safe_redirect( admin_url( 'admin.php?page=wpuf-post-forms' ) );
-                        exit;
-                    }
-
                     wpuf()->platform()->get( Screens\Registry::class )->load( self::PAGE_SLUG );
                 }
             );

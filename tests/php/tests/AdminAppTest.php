@@ -41,11 +41,12 @@ class AdminAppTest extends WP_UnitTestCase {
         return wpuf()->platform()->get( AppPage::class );
     }
 
-    public function test_app_is_on_by_default_and_filterable() {
+    public function test_app_is_always_on() {
         $this->assertTrue( wpuf_admin_app_enabled() );
 
+        // The classic per-page screens are gone: the old filter cannot bring them back.
         add_filter( 'wpuf_admin_app_enabled', '__return_false' );
-        $this->assertFalse( wpuf_admin_app_enabled() );
+        $this->assertTrue( wpuf_admin_app_enabled() );
     }
 
     public function test_app_url_points_at_the_top_level_page_with_a_hash_route() {

@@ -153,7 +153,7 @@ class Registry {
      * @return bool
      */
     private function redirects_to_app( Screen $screen ) {
-        return function_exists( 'wpuf_admin_app_enabled' ) && wpuf_admin_app_enabled() && '' !== $screen->app_route_for_request();
+        return '' !== $screen->app_route_for_request();
     }
 
     /**
@@ -185,8 +185,9 @@ class Registry {
             exit;
         }
 
-        wp_safe_redirect( add_query_arg( array_map( 'rawurlencode', $screen->app_redirect_args() ), self::app_redirect_url( $screen->app_route_for_request() ) ) );
-        exit;
+        if ( wp_safe_redirect( add_query_arg( array_map( 'rawurlencode', $screen->app_redirect_args() ), self::app_redirect_url( $screen->app_route_for_request() ) ) ) ) {
+            exit;
+        }
     }
 
     /**

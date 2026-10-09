@@ -149,10 +149,6 @@ class AI_Form_Handler {
      * @return void
      */
     private function redirect_to_app_route( $form_type ) {
-        if ( ! function_exists( 'wpuf_admin_app_enabled' ) || ! wpuf_admin_app_enabled() ) {
-            return;
-        }
-
         $route_id = 'profile' === $form_type ? 'registration-forms-ai' : 'post-forms-ai';
         $route    = null;
 

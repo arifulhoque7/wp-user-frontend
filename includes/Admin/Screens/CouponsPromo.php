@@ -32,7 +32,7 @@ class CouponsPromo extends Screen {
     }
 
     /**
-     * The classic page (app off): Free_Loader::admin_coupon_page().
+     * The old page callback (Free_Loader::admin_coupon_page()); the old URL redirects to the app route.
      *
      * @since WPUF_SINCE
      *

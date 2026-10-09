@@ -8,15 +8,14 @@
 
 namespace WeDevs\Wpuf\Admin\Screens;
 
-use WeDevs\Wpuf\Admin\List_Table_Transactions;
 use WeDevs\Wpuf\Platform\Caps;
 use WeDevs\Wpuf\Platform\Transactions\TransactionService;
 
 /**
- * User Frontend > Transactions. In the admin app as `#/transactions` on
- * Platform\REST\Controllers\TransactionsController; the classic list table
- * (load + render, moved from Admin\Menu) stays for a disabled app, and its
- * action links still run on the old URL.
+ * User Frontend > Transactions: the admin app route `#/transactions` on
+ * Platform\REST\Controllers\TransactionsController. The old URL redirects
+ * there; an action link of develop's list table still runs first, through
+ * TransactionService.
  *
  * @since WPUF_SINCE
  */
@@ -34,37 +33,13 @@ class Transactions extends Screen {
     }
 
     /**
-     * Load the screen (moved from Admin\Menu).
+     * Nothing to print: the old URL always redirects to the app route.
      *
      * @since WPUF_SINCE
      *
      * @return void
      */
-    public function load() {
-        $option = 'per_page';
-        $args   = [
-            'label'   => __( 'Number of items per page:', 'wp-user-frontend' ),
-            'default' => 20,
-            'option'  => 'transactions_per_page',
-        ];
-
-        add_screen_option( $option, $args );
-
-        wpuf()->admin->transaction_list_table = new List_Table_Transactions();
-    }
-
-    /**
-     * Render the screen (moved from Admin\Menu).
-     *
-     * @since WPUF_SINCE
-     *
-     * @return void
-     */
-    public function render() {
-        $page = WPUF_INCLUDES . '/Admin/views/transactions-list-table-view.php';
-
-        wpuf_require_once( $page );
-    }
+    public function render() {}
 
     /**
      * The admin app route.
@@ -105,21 +80,27 @@ class Transactions extends Screen {
     }
 
     /**
-     * The old URL: an action link of the classic table (accept, reject,
-     * delete, bulk) still runs there, with its own nonce check, then the
-     * app opens.
+     * The old URL: an action link of develop's list table (accept, reject,
+     * delete, bulk) runs with its nonce and the site capability, then the app
+     * opens.
      *
      * @since WPUF_SINCE
      *
      * @return void
      */
     public function load_before_redirect() {
-        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- the table verifies the nonce of each action.
-        if ( empty( $_REQUEST['action'] ) && empty( $_REQUEST['action2'] ) ) {
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- legacy_request() verifies the nonce of each action.
+        if ( ( empty( $_REQUEST['action'] ) && empty( $_REQUEST['action2'] ) ) || ! Caps::can( Caps::MANAGE_SITE ) ) {
             return;
         }
 
-        ( new List_Table_Transactions() )->prepare_items();
+        $service = wpuf()->platform()->get( TransactionService::class );
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- verified in legacy_request().
+        $legacy = $service->legacy_request( wp_unslash( $_REQUEST ) );
+
+        if ( $legacy ) {
+            $service->run( $legacy[0], $legacy[1] );
+        }
     }
 
     /**

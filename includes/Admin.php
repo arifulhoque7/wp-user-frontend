@@ -112,7 +112,7 @@ class Admin {
         $selected_page = [ 'wpuf-post-forms', 'wpuf-profile-forms', 'wpuf_subscription', 'wpuf_subscriptions', 'wpuf_transaction', 'wpuf_tools', 'wpuf-settings' ];
 
         // The admin app page shows these screens as routes.
-        if ( in_array( $page, $selected_page, true ) || ( function_exists( 'wpuf_admin_app_enabled' ) && wpuf_admin_app_enabled() && 'wp-user-frontend' === $page ) ) {
+        if ( in_array( $page, $selected_page, true ) || 'wp-user-frontend' === $page ) {
             // Printed in the footer (task 2.5b): called here on `init`, its script
             // landed before <!DOCTYPE> and put these screens in quirks mode.
             // admin_footer passes '' as its first argument, so keep the default selector.

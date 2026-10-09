@@ -483,10 +483,6 @@ class Assets {
                 'src'  => WPUF_ASSET_URI . '/js/metabox-tabs.js',
                 'deps' => [ 'jquery' ],
             ],
-            'admin-tools'              => [
-                'src'  => WPUF_ASSET_URI . '/js/wpuf-admin-tools.js',
-                'deps' => [ 'jquery', 'wpuf-vue' ],
-            ],
             'settings'                 => [
                 'src' => WPUF_ASSET_URI . '/js/admin/settings.js',
             ],

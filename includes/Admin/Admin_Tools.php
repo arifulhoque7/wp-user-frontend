@@ -23,6 +23,8 @@ class Admin_Tools {
     /**
      * List of All the post forms
      *
+     * @deprecated WPUF_SINCE Printed the classic Tools page, which is now the admin app route `#/tools`.
+     *
      * @return void
      */
     public function list_forms() {
@@ -82,6 +84,8 @@ class Admin_Tools {
 
     /**
      * List of All Registration forms
+     *
+     * @deprecated WPUF_SINCE Printed the classic Tools page, which is now the admin app route `#/tools`.
      *
      * @return void
      */
@@ -147,6 +151,8 @@ class Admin_Tools {
 
     /**
      * Import functionality
+     *
+     * @deprecated WPUF_SINCE Printed the classic Tools page, which is now the admin app route `#/tools`.
      */
     public function import_data() {
         ?>
@@ -306,6 +312,13 @@ class Admin_Tools {
         exit();
     }
 
+    /**
+     * The classic Tools tab.
+     *
+     * @deprecated WPUF_SINCE Printed the classic Tools page, which is now the admin app route `#/tools`.
+     *
+     * @return void
+     */
     public function tool_page() {
         $msg                   = isset( $_GET['msg'] ) ? sanitize_text_field( wp_unslash( $_GET['msg'] ) ) : '';
         $text                  = '';
@@ -359,8 +372,6 @@ class Admin_Tools {
         <?php } ?>
 
         <div class="metabox-holder">
-            <?php // The onboarding wizard is an admin app route: no box while the app is off. ?>
-            <?php if ( wpuf_admin_app_enabled() ) : ?>
             <div class="postbox">
                 <h3><?php esc_html_e( 'Onboarding', 'wp-user-frontend' ); ?></h3>
 
@@ -380,7 +391,6 @@ class Admin_Tools {
                     </a>
                 </div>
             </div>
-            <?php endif; ?>
 
             <div class="postbox">
                 <h3><?php esc_html_e( 'Page Installation', 'wp-user-frontend' ); ?></h3>
@@ -539,6 +549,7 @@ class Admin_Tools {
      * Display shortcodes page with all available shortcodes
      *
      * @since 4.2.9
+     * @deprecated WPUF_SINCE Printed the classic Tools page, which is now the admin app route `#/tools`.
      *
      * @return void
      */

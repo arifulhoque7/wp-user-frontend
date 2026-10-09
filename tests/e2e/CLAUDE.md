@@ -167,13 +167,13 @@ The React screens run as one admin app on `admin.php?page=wp-user-frontend`
 (`#/post-forms`, `#/post-forms/:id/edit`, `#/post-forms/new`, `#/post-forms/ai`,
 `#/registration-forms…` with Pro, `#/subscriptions`, `#/settings?tab=&sub=`).
 Old URLs still work: the old page's load step runs (row actions, template
-actions, add-new), then it redirects to the route. `define( 'WPUF_ADMIN_APP', false )`
-turns the app off (each screen on its own page again). App tests: `adminAppTest.spec.ts`
+actions, add-new), then it redirects to the route. There is no switch back to
+per-page screens (they were removed). App tests: `adminAppTest.spec.ts`
 (APP0001-APP0014); release smoke RS0007 (no reload across menu rows) and RS0008
 (reload on each route).
 
-- **Builder URLs have two shapes**: the builder page (`action=edit&id=N`, app off)
-  and the route (`#/post-forms/N/edit`). Wait with `BUILDER_URL` and read the id
+- **Builder URLs have two shapes**: the old builder page (`action=edit&id=N`,
+  redirects) and the route (`#/post-forms/N/edit`). Wait with `BUILDER_URL` and read the id
   with `builderFormId()` (`utils/builderUrl.ts`); `Base::getFormId()` reads both.
 - **Menu rows are route changes**, not page loads: after a click, wait for the
   screen, not for a navigation. Reloading right after a menu click can reload the

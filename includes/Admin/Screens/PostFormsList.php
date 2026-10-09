@@ -90,29 +90,11 @@ class PostFormsList extends Screen {
             return;
         }
 
-        // phpcs:ignore WordPress.Security.NonceVerification
-        $action           = ! empty( $_GET['action'] ) ? sanitize_text_field( wp_unslash( $_GET['action'] ) ) : null;
-        $add_new_page_url = admin_url( 'admin.php?page=wpuf-post-forms&action=add-new' );
-        $form_type        = __( 'Post Form', 'wp-user-frontend' );
-
-        switch ( $action ) {
-            case 'edit':
-            case 'add-new':
-                require_once WPUF_INCLUDES . '/Admin/views/post-form.php';
-                break;
-
-            default:
-                $this->enqueue_list_assets();
-                wpuf()->platform()->get( BootPayload::class )->attach( 'post_forms', 'wpuf-forms-list-react' );
-
-                foreach ( $this->list_globals() as $name => $value ) {
-                    wp_localize_script( 'wpuf-forms-list-react', $name, $value );
-                }
-
-                $this->print_notices();
-                require_once WPUF_INCLUDES . '/Admin/views/post-forms-list-table-view.php';
-
-                break;
+        // The list and the builder are app routes (the old URL redirects in the
+        // load step). Only add-new gets here, after its load step created the
+        // form and sent the Location header to its builder.
+        if ( in_array( $this->action(), [ 'edit', 'add-new' ], true ) ) {
+            require_once WPUF_INCLUDES . '/Admin/views/post-form.php';
         }
     }
 

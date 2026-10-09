@@ -11,10 +11,9 @@ namespace WeDevs\Wpuf\Admin\Screens;
 use WeDevs\Wpuf\Admin\Help_Content;
 
 /**
- * User Frontend > Help. Load and render moved from Admin\Menu, whose callbacks
- * forward here. In the admin app it is the route `#/help` (React app
- * src/admin/apps/help); the content comes from Admin\Help_Content, as on the
- * classic page.
+ * User Frontend > Help: the admin app route `#/help` (React app
+ * src/admin/apps/help); the content comes from Admin\Help_Content. The old
+ * `page=wpuf-support` URL redirects there.
  *
  * @since WPUF_SINCE
  */
@@ -32,27 +31,13 @@ class Help extends Screen {
     }
 
     /**
-     * Load the screen (moved from Admin\Menu).
+     * Nothing to print: the old URL always redirects to the app route.
      *
      * @since WPUF_SINCE
      *
      * @return void
      */
-    public function load() {
-        wp_enqueue_script( 'wpuf-admin' );
-        wp_enqueue_style( 'wpuf-admin' );
-    }
-
-    /**
-     * Render the screen (moved from Admin\Menu).
-     *
-     * @since WPUF_SINCE
-     *
-     * @return void
-     */
-    public function render() {
-        require_once WPUF_INCLUDES . '/Admin/views/support.php';
-    }
+    public function render() {}
 
     /**
      * Admin app route.
@@ -103,7 +88,7 @@ class Help extends Screen {
     }
 
     /**
-     * Window globals of the route: the same content as the classic page.
+     * Window globals of the route (Admin\Help_Content).
      *
      * @since WPUF_SINCE
      *

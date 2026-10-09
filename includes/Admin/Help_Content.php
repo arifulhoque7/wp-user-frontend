@@ -11,7 +11,7 @@ namespace WeDevs\Wpuf\Admin;
 /**
  * What User Frontend > Help shows: the topics (nav label, icon, title, body,
  * docs button, related articles), the help cards and the newsletter form.
- * Used by the classic page (views/support.php) and the admin app's `#/help`
+ * Used by the admin app's `#/help`
  * route (Admin\Screens\Help), so both show the same text.
  *
  * @since WPUF_SINCE

@@ -17,12 +17,13 @@ class AdminScreensTest extends WP_UnitTestCase {
 
     public function set_up() {
         parent::set_up();
-        // These tests cover the screens on their own pages (the admin app off).
-        add_filter( 'wpuf_admin_app_enabled', '__return_false' );
+        // The old page URLs redirect to the app route: block the redirect the
+        // WordPress way (Registry exits only when the header went out).
+        add_filter( 'wp_redirect', '__return_false' );
     }
 
     public function tear_down() {
-        remove_filter( 'wpuf_admin_app_enabled', '__return_false' );
+        remove_filter( 'wp_redirect', '__return_false' );
         global $plugin_page;
 
         $plugin_page = null; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
@@ -70,7 +71,18 @@ class AdminScreensTest extends WP_UnitTestCase {
 
     public function test_notices_are_captured_and_printed_once_in_the_wrapper() {
         $registry = new Registry();
-        $registry->load( 'wpuf-post-forms' );
+        $registry->add( new class() extends WeDevs\Wpuf\Admin\Screens\Screen {
+            public function slug() {
+                return 'wpuf-test-notices';
+            }
+
+            public function render() {}
+
+            public function captures_notices() {
+                return true;
+            }
+        } );
+        $registry->load( 'wpuf-test-notices' );
 
         $this->assertSame( PHP_INT_MIN, has_action( 'admin_notices', [ $registry, 'start_capture' ] ) );
         $this->assertSame( PHP_INT_MAX, has_action( 'all_admin_notices', [ $registry, 'end_capture' ] ) );

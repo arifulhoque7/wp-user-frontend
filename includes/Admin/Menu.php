@@ -25,10 +25,8 @@ class Menu {
         $app_hook = add_menu_page( __( 'WP User Frontend', 'wp-user-frontend' ), __( 'User Frontend', 'wp-user-frontend' ), $capability, $this->parent_slug, [ $this, 'wpuf_post_forms_page' ], $wpuf_icon, '54.2' );
 
         // The single React admin app runs on the top-level page (task 5d).
-        if ( wpuf_admin_app_enabled() ) {
-            $this->all_submenu_hooks['app'] = $app_hook;
-            wpuf()->platform()->get( App\AppPage::class )->register( $app_hook );
-        }
+        $this->all_submenu_hooks['app'] = $app_hook;
+        wpuf()->platform()->get( App\AppPage::class )->register( $app_hook );
 
         $post_forms_hook = add_submenu_page(
             $this->parent_slug,

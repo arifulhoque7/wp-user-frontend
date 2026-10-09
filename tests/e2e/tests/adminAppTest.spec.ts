@@ -24,8 +24,7 @@ const APP = `${Urls.baseUrl}/wp-admin/admin.php?page=wp-user-frontend`;
 /**
  * The single React admin app (task 5d): one admin page, hash routes. These
  * tests check what only the app does (menu links, redirects of old URLs,
- * route guards); the screens' own specs run inside the app too. Skipped when
- * the app is off (`wpuf_admin_app_enabled`).
+ * route guards); the screens' own specs run inside the app too.
  *
  * @TestScenario : [Admin app]
  * @Test_APP0001 : The Settings menu row opens the app's settings route

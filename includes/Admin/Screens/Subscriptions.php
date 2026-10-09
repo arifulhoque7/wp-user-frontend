@@ -54,15 +54,13 @@ class Subscriptions extends Screen {
     }
 
     /**
-     * Print the screen.
+     * Nothing to print: the old URL always redirects to the app route.
      *
      * @since WPUF_SINCE
      *
      * @return void
      */
-    public function render() {
-        wpuf_require_once( WPUF_INCLUDES . '/Admin/views/subscriptions.php' );
-    }
+    public function render() {}
 
     /**
      * Admin app route of the subscriptions screen (task 5d).
