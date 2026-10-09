@@ -4,6 +4,7 @@ import { expect, type Page, type Dialog } from '@playwright/test';
 import { Selectors } from './selectors';
 import { Urls, Users } from '../utils/testData';
 import { Base } from './base';
+import { OnboardingPage } from './onboarding';
 import { waitForSiteReady } from '../utils/siteReady';
 import { clearSavedSession } from '../utils/authSession';
 export class SettingsSetupPage extends Base {
@@ -44,38 +45,34 @@ export class SettingsSetupPage extends Base {
         await this.completeOnboarding();
     }
 
-    // Walk the onboarding wizard: every feature, pages installed, no extra plugins.
+    // Walk the onboarding wizard (React app route #/onboarding/:step): every
+    // feature, no post form template (the page installer then builds the
+    // "Sample Form" the suite uses), pages installed, no extra plugins.
     async completeOnboarding() {
-        const wizard = /page=wpuf-onboarding/;
-        if (!wizard.test(this.page.url())) {
-            await this.navigateToURL(Urls.baseUrl + '/wp-admin/index.php?page=wpuf-onboarding');
-        }
+        const onboarding = new OnboardingPage(this.page);
+        const stepOf = () => (this.page.url().match(/#\/onboarding\/([a-z_]+)/) || [])[1] || '';
 
-        const save = this.page.locator(Selectors.onboarding.chrome.continueButton);
-        const template = this.page.locator('//select[@name="post_form_template"]');
-        const otherPlugins = this.page.locator('//input[@name="plugins[]"]');
-        const installPages = this.page.locator(Selectors.onboarding.common.installPages);
+        await onboarding.gotoWizard();
 
-        // Six steps; the loop ends when the wizard is left.
-        for (let step = 0; step < 10 && wizard.test(this.page.url()); step++) {
-            if (await otherPlugins.count() > 0) {
-                // Other weDevs plugins are not part of this suite.
-                await this.page.locator(Selectors.onboarding.chrome.skipLink).first().click();
-                await this.page.waitForLoadState('domcontentloaded');
-                continue;
-            }
-            if (await template.count() > 0) {
-                // No template: the page installer then builds the "Sample Form" the suite uses.
-                await template.first().selectOption('skip');
-            }
-            if (await installPages.count() > 0 && !(await installPages.first().isChecked())) {
-                await installPages.first().check();
-            }
-            if (await save.count() === 0) {
+        for (let i = 0; i < 10; i++) {
+            const step = stepOf();
+            if (!step || 'ready' === step) {
                 break;
             }
-            await save.first().click();
-            await this.page.waitForLoadState('domcontentloaded');
+            if ('plugins' === step) {
+                // Other weDevs plugins are not part of this suite.
+                await onboarding.skipStep();
+            } else {
+                if ('post_form' === step) {
+                    await this.page.locator('#wpuf-onboarding-template').click();
+                    await this.page.getByRole('option', { name: 'Do not create a form' }).click();
+                }
+                if ('common' === step) {
+                    await onboarding.setCommonOptions({ installPages: true });
+                }
+                await onboarding.continueStep();
+            }
+            await expect.poll(stepOf, { timeout: 30000 }).not.toBe(step);
         }
     }
 

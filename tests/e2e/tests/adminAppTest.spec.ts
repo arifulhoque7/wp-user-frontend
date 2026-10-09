@@ -42,6 +42,9 @@ const APP = `${Urls.baseUrl}/wp-admin/admin.php?page=wp-user-frontend`;
  * @Test_APP0017 : License (Pro) is the app route #/license: old URL lands there, the key is masked (never in the page), a site without an active key gets the key form
  * @Test_APP0018 : Without Pro, Registration Forms is the app route #/registration-forms on the new components (free shortcode with Copy, Pro features, modules icons) and shows admin notices
  * @Test_APP0019 : Help, Tools, Transactions and Coupons: old URLs land on their app routes with the menu row lit, and those routes show admin notices as develop's pages did
+ * @Test_APP0020 : Post forms list Submissions column: total and pending counts link to the posts list filtered by the form (`wpuf_form`)
+ * @Test_APP0021 : Builder seam "+": between two fields and after the last one it opens the field list and adds the picked field at that position
+ * @Test_APP0022 : Column cell "+": adds a field into that column; the list leaves out types a column refuses
  */
 
 test.beforeAll(async () => {
@@ -657,5 +660,108 @@ test.describe('Admin app', () => {
             const notices = await page.evaluate((id) => ((window as unknown as { wpufAdmin: { app: { routes: { id: string; notices?: boolean }[] } } }).wpufAdmin.app.routes.find((r) => id === r.id) || {}).notices, item.id);
             expect(notices, item.id + ' shows admin notices').toBe(true);
         }
+    });
+
+    test('APP0020 : Post forms list Submissions column links to the filtered posts list', { tag: ['@Lite', '@Test_APP0020'] }, async () => {
+        test.skip(!(await appOn()), 'admin app is off');
+        test.skip(!HAS_WP_CLI, 'needs WP-CLI on the site');
+
+        const title = 'APP0020 subs ' + faker.string.alphanumeric(6);
+        const id = newForm(title);
+        const posts = ['publish', 'pending', 'pending'].map((status, i) => {
+            const pid = aiWp(['post', 'create', `--post_title=APP0020 post ${i}`, `--post_status=${status}`, '--porcelain'], true).trim().split('\n').pop() as string;
+            aiWp(['post', 'meta', 'add', pid, '_wpuf_form_id', String(id)]);
+            return pid;
+        });
+
+        await page.goto(`${APP}#/post-forms`);
+        await page.locator('#wpuf-post-forms-list-table-view input[type="search"], #wpuf-post-forms-list-table-view input[placeholder="Search Forms"]').first().fill(title);
+        const row = page.locator('tr', { has: page.locator(`a[href*="wpuf_form=${id}"]`) }).first();
+        await expect(row).toBeVisible({ timeout: 30000 });
+        await expect(page.locator('thead th', { hasText: /^Submissions$/i })).toHaveCount(1);
+        await expect(row.locator(`a[href$="wpuf_form=${id}"]`)).toHaveText('3');
+        await expect(row.locator(`a[href*="wpuf_form=${id}&post_status=pending"]`)).toHaveText('2 pending');
+
+        await row.locator(`a[href*="wpuf_form=${id}&post_status=pending"]`).click();
+        await expect(page).toHaveURL(/edit\.php\?post_type=post&wpuf_form=\d+&post_status=pending/);
+        await expect(page.locator('#the-list .row-title')).toHaveCount(2);
+        await expect(page.locator('#the-list .row-title', { hasText: 'APP0020 post 0' })).toHaveCount(0);
+
+        posts.forEach((pid) => aiWp(['post', 'delete', pid, '--force']));
+        aiWp(['post', 'delete', String(id), '--force']);
+    });
+
+    /** Hover a seam / cell and pick a field type from its "+" list (real mouse: the "+" shows on hover). */
+    const pickFromPlus = async (hoverTarget: import('@playwright/test').Locator, button: import('@playwright/test').Locator, search: string, template: string) => {
+        await hoverTarget.scrollIntoViewIfNeeded();
+        await hoverTarget.hover();
+        await expect(button).toBeVisible();
+        await expect.poll(() => button.evaluate((b) => getComputedStyle(b).opacity)).toBe('1');
+        await button.click();
+        await page.locator('input[type="search"][placeholder="Search fields"]').fill(search);
+        await page.locator(`[data-insert-field="${template}"]`).click();
+        // A custom (meta) field opens the custom field tip once, as a palette click does: close it.
+        const tip = page.locator('[role="alertdialog"]').filter({ hasText: 'custom field data' });
+        if (await tip.waitFor({ state: 'visible', timeout: 2000 }).then(() => true).catch(() => false)) {
+            await tip.getByRole('button', { name: 'Okay' }).click();
+            await expect(tip).toHaveCount(0);
+        }
+    };
+
+    test('APP0021 : Builder seam + adds a field at that position', { tag: ['@Lite', '@Test_APP0021'] }, async () => {
+        test.skip(!(await appOn()), 'admin app is off');
+        test.skip(!HAS_WP_CLI, 'needs WP-CLI on the site');
+
+        const id = newForm('APP0021 seam');
+        await page.goto(`${APP}#/post-forms/${id}/edit`);
+        await builderReady('APP0021 seam');
+        const rows = page.locator('#form-preview-stage ul.wpuf-form > li[data-dnd-item]');
+        const before = await rows.count();
+        expect(before, 'sample form has fields').toBeGreaterThan(1);
+
+        // Between the first and the second field: the seam before row 2 (index 1).
+        const seam = page.locator('#form-preview-stage li.wpuf-insert-seam[data-insert-index="1"]');
+        await pickFromPlus(seam, seam.locator('button'), 'Website', 'website_url');
+        await expect(rows).toHaveCount(before + 1);
+        await expect(rows.nth(1)).toHaveClass(/form-field-website_url/);
+
+        // After the last field.
+        const last = page.locator('#form-preview-stage ul.wpuf-form > li.wpuf-insert-seam').last();
+        await expect(last).toHaveAttribute('data-insert-index', String(before + 1));
+        await pickFromPlus(last, last.locator('button'), 'Email', 'email_address');
+        await expect(rows).toHaveCount(before + 2);
+        await expect(rows.last()).toHaveClass(/form-field-email_address/);
+        expect((await builderState()).dirty, 'adding marks the form changed').toBe(true);
+
+        aiWp(['post', 'delete', String(id), '--force']);
+    });
+
+    test('APP0022 : Column cell + adds a field into that column', { tag: ['@Lite', '@Test_APP0022'] }, async () => {
+        test.skip(!(await appOn()), 'admin app is off');
+        test.skip(!HAS_WP_CLI, 'needs WP-CLI on the site');
+
+        const id = newForm('APP0022 column');
+        await page.goto(`${APP}#/post-forms/${id}/edit`);
+        await builderReady('APP0022 column');
+        await page.locator('[data-form-field="column_field"]').first().click();
+        const column = page.locator('#form-preview-stage li.form-field-column_field').last();
+        await expect(column).toBeVisible();
+        const cell = column.locator('[data-column="column-2"]');
+        const plus = cell.locator('button[aria-label="Add a field to this column"]');
+
+        await cell.scrollIntoViewIfNeeded();
+        await cell.hover();
+        await expect.poll(() => plus.evaluate((b) => getComputedStyle(b).opacity)).toBe('1');
+        await plus.click();
+        // A column refuses columns: not in its list.
+        await expect(page.locator('[data-insert-field="column_field"]')).toHaveCount(0);
+        await expect(page.locator('[data-insert-field="text_field"]')).toHaveCount(1);
+        await page.keyboard.press('Escape');
+
+        await pickFromPlus(cell, plus, 'Text', 'text_field');
+        await expect(cell.locator('li.form-field-text_field')).toHaveCount(1);
+        await expect(column.locator('[data-column="column-1"] li[class*="form-field-"]')).toHaveCount(0);
+
+        aiWp(['post', 'delete', String(id), '--force']);
     });
 });
