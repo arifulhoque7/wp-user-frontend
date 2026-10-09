@@ -9,6 +9,8 @@ import { ThemeProvider, Toaster } from '@wedevs/plugin-ui';
 import { wpufDarkTokens, wpufTokens } from '../theme';
 import ErrorBoundary from './ErrorBoundary';
 import { DialogHost } from '../ui/dialogs';
+// Every toast renders through the FlyHR toast card (patches plugin-ui's toast once).
+import '../toast/install';
 
 export const PLUGIN_ID = 'wpuf-admin';
 

@@ -359,3 +359,13 @@ body.wpuf-admin-react #wpbody-content .wpuf-help {
 .wpuf-admin-notices .wpuf-own-notice:empty {
     display: none;
 }
+
+/* Toast card (src/admin/shared/toast/ToastCard.jsx, FlyHR's): the body drains
+   as the timer runs (a countdown, so no reduced-motion guard, like FlyHR). */
+@keyframes wpuf-toast-progress {
+    from { transform: scaleX(1); }
+    to { transform: scaleX(0); }
+}
+@keyframes wpuf-toast-spin {
+    to { transform: rotate(360deg); }
+}
