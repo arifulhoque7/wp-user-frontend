@@ -462,8 +462,10 @@ export class FieldAddPage extends Base {
     //Admin checks if Created form is displayed in Post Forms - Table/List
     async validatePostFormCreated(validateNewPostName_PF: string) {
         //Return HOME
-        await this.clickWpufSubmenu(Selectors.postForms.createBlankForm_PF.clickpostFormsMenuOption);
-        // In the admin app the menu row is a route change: wait for the list before reloading it.
+        // The save must be finished first: leaving the builder while it is still saving
+        // stops at the unsaved-changes guard and the list never opens.
+        await expect(this.page.locator(Selectors.postForms.saveForm_Common.saveFormButton).first()).toBeDisabled({ timeout: 30000 }).catch(() => {});
+        await this.navigateToURL(this.wpufPostFormPage);
         await this.isVisibleSoon(Selectors.postForms.navigatePage_PF.checkAddButton_PF);
         await this.page.reload();
          
@@ -482,8 +484,10 @@ export class FieldAddPage extends Base {
 
     async validateProductPostFormCreated(validateNewPostName_PF: string) {
         //Return HOME
-        await this.clickWpufSubmenu(Selectors.postForms.createBlankForm_PF.clickpostFormsMenuOption);
-        // In the admin app the menu row is a route change: wait for the list before reloading it.
+        // The save must be finished first: leaving the builder while it is still saving
+        // stops at the unsaved-changes guard and the list never opens.
+        await expect(this.page.locator(Selectors.postForms.saveForm_Common.saveFormButton).first()).toBeDisabled({ timeout: 30000 }).catch(() => {});
+        await this.navigateToURL(this.wpufPostFormPage);
         await this.isVisibleSoon(Selectors.postForms.navigatePage_PF.checkAddButton_PF);
         await this.page.reload();
          
