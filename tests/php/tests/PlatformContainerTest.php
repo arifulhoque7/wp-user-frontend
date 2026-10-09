@@ -35,6 +35,34 @@ class WPUF_Test_Hookable_Service implements Hookable {
 }
 
 /**
+ * Provider test double counting its registrations.
+ */
+class WPUF_Test_Counting_Provider extends ServiceProvider {
+
+    /**
+     * Registrations so far.
+     *
+     * @var int
+     */
+    public static $registered = 0;
+
+    /**
+     * Register the hookable double, count the call.
+     *
+     * @return void
+     */
+    public function register() {
+        self::$registered++;
+        $this->share_tagged(
+            WPUF_Test_Hookable_Service::class,
+            function () {
+                return new WPUF_Test_Hookable_Service();
+            }
+        );
+    }
+}
+
+/**
  * Provider test double registering the hookable double.
  */
 class WPUF_Test_Provider extends ServiceProvider {
@@ -156,5 +184,64 @@ class PlatformContainerTest extends WP_UnitTestCase {
         $this->assertInstanceOf( \WeDevs\Wpuf\Integrations::class, wpuf()->integrations );
         $this->assertNull( wpuf()->no_such_service );
         $this->assertNull( wpuf()->{HookBridge::class}, 'factory-only platform services are not exposed as properties' );
+    }
+
+    /**
+     * The legacy services are the platform's: one instance for wpuf()->key and the class id, built in the plugin's order.
+     */
+    public function test_legacy_services_are_the_platform_services() {
+        $platform = wpuf()->platform();
+
+        foreach ( \WeDevs\Wpuf\Platform\Providers\LegacyServiceProvider::SERVICES as $key => $class ) {
+            $this->assertTrue( $platform->has( $class ), $class . ' registered' );
+            $this->assertSame( $class, \WeDevs\Wpuf\Platform\Providers\LegacyServiceProvider::class_of( $key ) );
+        }
+
+        // The keys the plugin builds in the test context (no wp-admin, no AJAX;
+        // other tests may put their own Admin into the legacy array).
+        foreach ( [ 'tracker', 'assets', 'subscription', 'fields', 'customize', 'bank', 'paypal', 'api', 'integrations', 'ai_manager', 'post_form_block', 'frontend', 'gateway_manager', 'widgets' ] as $key ) {
+            $this->assertNotNull( wpuf()->$key, $key );
+            $this->assertSame( wpuf()->$key, $platform->get( \WeDevs\Wpuf\Platform\Providers\LegacyServiceProvider::class_of( $key ) ), $key );
+        }
+
+        $this->assertNull( \WeDevs\Wpuf\Platform\Providers\LegacyServiceProvider::class_of( 'nope' ) );
+        $this->assertSame( wpuf()->assets, $platform->get( \WeDevs\Wpuf\Assets::class ) );
+        $this->assertSame( wpuf()->subscription, $platform->get( \WeDevs\Wpuf\Admin\Subscription::class ) );
+        $this->assertSame( wpuf()->api, $platform->get( \WeDevs\Wpuf\API::class ) );
+    }
+
+    /**
+     * Bootstrap::register() registers the providers once and boot() still hooks and fires once.
+     */
+    public function test_bootstrap_register_is_idempotent_and_boot_hooks_once() {
+        $container = new Container();
+        $bootstrap = new class( $container ) extends Bootstrap {
+            public $registrations = 0;
+
+            public function providers() {
+                return [ WPUF_Test_Counting_Provider::class ];
+            }
+        };
+        WPUF_Test_Counting_Provider::$registered = 0;
+
+        $bootstrap->register();
+        $bootstrap->register();
+        $this->assertSame( 1, WPUF_Test_Counting_Provider::$registered, 'providers register once' );
+        $this->assertFalse( $bootstrap->is_booted() );
+        $this->assertTrue( $container->has( WPUF_Test_Hookable_Service::class ) );
+        $this->assertSame( 0, $container->get( WPUF_Test_Hookable_Service::class )->hooked, 'no hooks before boot' );
+
+        $fired = 0;
+        $count = function () use ( &$fired ) {
+            $fired++;
+        };
+        add_action( 'wpuf_platform_loaded', $count );
+        $bootstrap->boot();
+        $bootstrap->boot();
+        remove_action( 'wpuf_platform_loaded', $count );
+
+        $this->assertSame( 1, WPUF_Test_Counting_Provider::$registered, 'boot does not register again' );
+        $this->assertSame( 1, $container->get( WPUF_Test_Hookable_Service::class )->hooked );
+        $this->assertSame( 1, $fired );
     }
 }

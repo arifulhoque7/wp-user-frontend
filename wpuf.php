@@ -199,7 +199,7 @@ final class WP_User_Frontend {
 
     public function init_insights() {
         // Insight class instantiate
-        $this->container['tracker'] = new WeDevs\Wpuf\Lib\WeDevs_Insights( __FILE__ );
+        $this->legacy( 'tracker' );
     }
 
     /**
@@ -229,28 +229,28 @@ final class WP_User_Frontend {
      * @return void
      */
     public function instantiate() {
-        $this->container['assets']       = new WeDevs\Wpuf\Assets();
-        $this->container['subscription'] = new WeDevs\Wpuf\Admin\Subscription();
-        $this->container['fields']       = new WeDevs\Wpuf\Admin\Forms\Field_Manager();
-        $this->container['customize']    = new WeDevs\Wpuf\Admin\Customizer_Options();
+        // Legacy services come from the platform container (one instance for
+        // wpuf()->key and the container), built eagerly in this order because
+        // their constructors add hooks.
+        foreach ( [ 'assets', 'subscription', 'fields', 'customize' ] as $key ) {
+            $this->legacy( $key );
+        }
 
         // Initialize legacy gateway classes for backward compatibility
-        $this->container['bank']         = new WeDevs\Wpuf\Lib\Gateway\Bank();
-        $this->container['paypal']       = new WeDevs\Wpuf\Lib\Gateway\Paypal();
+        $this->legacy( 'bank' );
+        $this->legacy( 'paypal' );
 
         // Initialize new gateway manager inside init hook for translation issue
         add_action( 'init', [ $this, 'init_gateway_manager' ] );
 
-        $this->container['api']          = new WeDevs\Wpuf\API();
-        $this->container['integrations'] = new WeDevs\Wpuf\Integrations();
-        $this->container['ai_manager']   = new WeDevs\Wpuf\AI_Manager();
-        $this->container['post_form_block'] = new WeDevs\Wpuf\Blocks\PostForm();
+        foreach ( [ 'api', 'integrations', 'ai_manager', 'post_form_block' ] as $key ) {
+            $this->legacy( $key );
+        }
 
         if ( is_admin() ) {
-            $this->container['admin']        = new WeDevs\Wpuf\Admin();
-            $this->container['setup_wizard'] = new WeDevs\Wpuf\Setup_Wizard();
-            $this->container['pro_upgrades'] = new WeDevs\Wpuf\Pro_Upgrades();
-            $this->container['privacy']      = new WeDevs\Wpuf\WPUF_Privacy();
+            foreach ( [ 'admin', 'setup_wizard', 'pro_upgrades', 'privacy' ] as $key ) {
+                $this->legacy( $key );
+            }
 
             // Load Frontend when in Elementor editor or Elementor AJAX so shortcodes
             // like wpuf_form and wpuf_account are registered and do_shortcode() works.
@@ -263,10 +263,10 @@ final class WP_User_Frontend {
                 || ( ( defined( 'DOING_AJAX' ) && DOING_AJAX ) && $request_act === 'elementor_ajax' );
 
             if ( $is_elementor ) {
-                $this->container['frontend'] = new WeDevs\Wpuf\Frontend();
+                $this->legacy( 'frontend' );
             }
         } else {
-            $this->container['frontend'] = new WeDevs\Wpuf\Frontend();
+            $this->legacy( 'frontend' );
         }
 
         if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) {
@@ -311,6 +311,24 @@ final class WP_User_Frontend {
     }
 
     /**
+     * Build a legacy service from the platform container and keep it under its
+     * legacy key (`wpuf()->key`): one instance for both.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param string $key Legacy key (see Platform\Providers\LegacyServiceProvider::SERVICES)
+     *
+     * @return object
+     */
+    private function legacy( $key ) {
+        $this->platform_bootstrap()->register();
+
+        $this->container[ $key ] = $this->platform()->get( WeDevs\Wpuf\Platform\Providers\LegacyServiceProvider::class_of( $key ) );
+
+        return $this->container[ $key ];
+    }
+
+    /**
      * Initialize the ajax class
      *
      * @since 4.1.4
@@ -318,7 +336,7 @@ final class WP_User_Frontend {
      * @return void
      */
     public function init_ajax() {
-        $this->container['ajax'] = new WeDevs\Wpuf\Ajax();
+        $this->legacy( 'ajax' );
     }
 
     /**
@@ -329,7 +347,7 @@ final class WP_User_Frontend {
      * @return void
      */
     public function init_gateway_manager() {
-        $this->container['gateway_manager'] = new WeDevs\Wpuf\Lib\Gateway\Gateway_Manager();
+        $this->legacy( 'gateway_manager' );
     }
 
     /**
@@ -354,7 +372,7 @@ final class WP_User_Frontend {
             return;
         }
 
-        $this->container['upgrades'] = new WeDevs\Wpuf\Admin\Upgrades();
+        $this->legacy( 'upgrades' );
     }
 
     /**
@@ -409,7 +427,7 @@ final class WP_User_Frontend {
         if ( $has_pro ) {
             $this->is_pro = true;
         } else {
-            $this->container['free_loader'] = new WeDevs\Wpuf\Free\Free_Loader();
+            $this->legacy( 'free_loader' );
 
             $this->container['free_loader']->includes();
             $this->container['free_loader']->instantiate();
@@ -494,7 +512,7 @@ final class WP_User_Frontend {
      * @return void
      */
     public function register_widgets() {
-        $this->container['widgets'] = new WeDevs\Wpuf\Widgets\Manager();
+        $this->legacy( 'widgets' );
     }
     public function license_expired() {
         echo '<div class="error">';

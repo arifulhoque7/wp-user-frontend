@@ -10,6 +10,7 @@ namespace WeDevs\Wpuf\Platform;
 
 use WeDevs\Wpuf\Platform\Contracts\Hookable;
 use WeDevs\Wpuf\Platform\Providers\CoreServiceProvider;
+use WeDevs\Wpuf\Platform\Providers\LegacyServiceProvider;
 use WeDevs\Wpuf\Platform\Providers\StoreServiceProvider;
 use WeDevs\Wpuf\Platform\Providers\RestServiceProvider;
 use WeDevs\Wpuf\Platform\Providers\AiServiceProvider;
@@ -45,6 +46,13 @@ class Bootstrap {
     private $hooked = [];
 
     /**
+     * Whether the providers are registered.
+     *
+     * @var bool
+     */
+    private $registered = false;
+
+    /**
      * Constructor
      *
      * @since WPUF_SINCE
@@ -64,6 +72,7 @@ class Bootstrap {
      */
     public function providers() {
         return [
+            LegacyServiceProvider::class,
             CoreServiceProvider::class,
             StoreServiceProvider::class,
             RestServiceProvider::class,
@@ -86,10 +95,7 @@ class Bootstrap {
 
         $this->booted = true;
 
-        foreach ( $this->providers() as $provider ) {
-            ( new $provider( $this->container ) )->register();
-        }
-
+        $this->register();
         $this->hook_services();
 
         /**
@@ -102,6 +108,27 @@ class Bootstrap {
          * @param Bootstrap $bootstrap Platform bootstrap
          */
         do_action( 'wpuf_platform_loaded', $this->container, $this );
+    }
+
+    /**
+     * Register the providers once (no hooks yet): the plugin calls this before
+     * it builds its legacy services, so they resolve from the container; boot()
+     * calls it too.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return void
+     */
+    public function register() {
+        if ( $this->registered ) {
+            return;
+        }
+
+        $this->registered = true;
+
+        foreach ( $this->providers() as $provider ) {
+            ( new $provider( $this->container ) )->register();
+        }
     }
 
     /**
