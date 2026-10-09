@@ -1,3 +1,4 @@
+import { Fragment } from '@wordpress/element';
 import { useSelect } from '@wordpress/data';
 import { STORE_NAME } from '../../store';
 import { filterCanvasRender } from '../../extensions/hooks';
@@ -5,6 +6,7 @@ import { TOP } from '../../utils/dndTree';
 import { usePlaceholder } from '../Dnd/dropTarget';
 import { Indicator, dropListProps, indicatorFor } from '../Dnd/DropList';
 import SortableField from './SortableField';
+import InsertPoint from './InsertPoint';
 import EmptyState from './EmptyState';
 import HiddenFieldsList from './HiddenFieldsList';
 import { BUILDER_SLOTS, BuilderSlot } from '../../slots';
@@ -43,12 +45,15 @@ export default function BuilderCanvas() {
         <div id="form-preview-stage" className="h-[70vh]" { ...dropListProps( TOP, formFields.length ) }>
             <ul data-dnd-rows="" className={ `wpuf-form sortable-list py-4 form-label-${ labelType } ${ canvasClass }` }>
                 { formFields.map( ( field, index ) => (
-                    <SortableField
-                        key={ field.id }
-                        field={ field }
-                        index={ index }
-                        indicator={ indicatorFor( placeholder, index, formFields.length ) }
-                    />
+                    <Fragment key={ field.id }>
+                        { /* "+" on the seam between two fields (FlyForms): add a field here. */ }
+                        { index > 0 && ! placeholder ? <InsertPoint index={ index } /> : null }
+                        <SortableField
+                            field={ field }
+                            index={ index }
+                            indicator={ indicatorFor( placeholder, index, formFields.length ) }
+                        />
+                    </Fragment>
                 ) ) }
             </ul>
             <BuilderSlot name={ BUILDER_SLOTS.CANVAS_SUBMIT_AREA } fillProps={ { fields: formFields } } />
