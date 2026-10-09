@@ -16,9 +16,11 @@ const builderData = () => window.wpuf_form_builder || {};
 // Inline styles for content inside the dialogs: they render in a body-level
 // portal, where the builder screen's own utility classes do not reach.
 const PRIMARY = '#059669';
-const BODY = { margin: '18px 28.8px 0', fontSize: 18, color: '#545454', textAlign: 'center' };
+// Same scale as ConfirmDialog's message (16px gray-500, 8px under the title),
+// one even 16px gap between the paragraphs and the screenshots.
+const BODY = { margin: '8px 0 0', display: 'flex', flexDirection: 'column', gap: 16, fontSize: 16, lineHeight: 1.5, color: '#6b7280', textAlign: 'center' };
 const LINK = { border: 0, background: 'none', padding: 0, font: 'inherit', fontWeight: 700, color: PRIMARY, cursor: 'pointer' };
-const IMAGE = { display: 'block', width: '100%', borderRadius: 6 };
+const IMAGE = { display: 'block', width: '100%', borderRadius: 8, border: '1px solid #e5e7eb', boxSizing: 'border-box' };
 
 const assetUrl = () => ( window.wpuf_admin_script || {} ).asset_url || builderData().asset_url || '';
 
@@ -76,7 +78,7 @@ export function openCustomFieldTooltip( fieldId ) {
                     { __( 'Navigate through', 'wp-user-frontend' ) }{ ' ' }
                     <a href={ settingsUrl } target="_blank" rel="noreferrer" style={ { fontWeight: 700, color: PRIMARY } }>
                         { __( 'WP-admin > WPUF > Settings > Frontend Posting', 'wp-user-frontend' ) }
-                    </a>
+                    </a>{ ' ' }
                     { __( '- there you have to check the checkbox: "Show custom field data in the post content area', 'wp-user-frontend' ) }"
                 </p>
                 <img src={ assetUrl() + '/images/custom-fields/settings.png' } alt="" style={ IMAGE } />
