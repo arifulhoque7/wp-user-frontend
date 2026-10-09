@@ -54,7 +54,11 @@ export default function Select( { value, options, onChange, placeholder, disable
                     { ( val ) => ( null === val || undefined === val ? placeholder ?? __( '- Select -', 'wp-user-frontend' ) : labelOf( val ) ) }
                 </SelectValue>
             </SelectTrigger>
-            <SelectContent>
+            { /* Drop below the trigger (flip up only without room) instead of laying the
+               list over it around the selected item: that layout pushed the first options
+               above the viewport top, under the fixed WordPress admin bar. The height cap
+               keeps a list that flips up clear of the bar too (it scrolls). */ }
+            <SelectContent alignItemWithTrigger={ false } className="max-h-[min(var(--available-height),18rem)]">
                 { items.map( ( item ) => (
                     // data-value: the stored value, for tests and scripts that pick by value.
                     <SelectItem key={ item.value } value={ item.value } disabled={ item.disabled } data-value={ item.value }>
