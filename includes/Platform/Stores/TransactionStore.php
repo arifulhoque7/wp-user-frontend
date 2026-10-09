@@ -438,4 +438,137 @@ class TransactionStore implements DataStore {
         // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- allowlisted column
         return $wpdb->get_var( $wpdb->prepare( "SELECT {$column} FROM {$wpdb->prefix}wpuf_transaction WHERE pack_id != 0 AND user_id = %d ORDER BY id DESC LIMIT 1", $user_id ) );
     }
+
+    /**
+     * Every transaction row of a user, newest first (privacy export, invoices).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int      $user_id User id
+     * @param string[] $columns Columns to select (self::COLUMNS), empty = all
+     * @param int      $number  Rows (0 = all)
+     * @param int      $offset  Offset
+     * @param bool     $assoc   Rows as arrays instead of objects
+     *
+     * @return array
+     */
+    public function rows_for_user( $user_id, array $columns = [], $number = 0, $offset = 0, $assoc = false ) {
+        global $wpdb;
+
+        $columns = array_values( array_intersect( $columns, self::COLUMNS ) );
+        $select  = $columns ? implode( ', ', $columns ) : '*';
+        $sql     = "SELECT {$select} FROM {$wpdb->prefix}wpuf_transaction WHERE user_id = %d ORDER BY id DESC";
+        $values  = [ (int) $user_id ];
+
+        if ( (int) $number > 0 ) {
+            $sql     .= ' LIMIT %d OFFSET %d';
+            $values[] = (int) $number;
+            $values[] = max( 0, (int) $offset );
+        }
+
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery -- columns allowlisted, values prepared
+        return (array) $wpdb->get_results( $wpdb->prepare( $sql, $values ), $assoc ? ARRAY_A : OBJECT );
+    }
+
+    /**
+     * How many transaction rows a user has.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int $user_id User id
+     *
+     * @return int
+     */
+    public function count_for_user( $user_id ) {
+        global $wpdb;
+
+        return (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->prefix}wpuf_transaction WHERE user_id = %d", (int) $user_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+    }
+
+    /**
+     * The row carrying a gateway transaction id (invoices).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param string $transaction_id Gateway transaction id
+     *
+     * @return object|null
+     */
+    public function find_by_transaction_id( $transaction_id ) {
+        global $wpdb;
+
+        if ( '' === (string) $transaction_id ) {
+            return null;
+        }
+
+        $row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}wpuf_transaction WHERE transaction_id = %s ORDER BY id DESC LIMIT 1", (string) $transaction_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+
+        return $row ? $row : null;
+    }
+
+    /**
+     * The pending order's payment info (`_data` of a wpuf_order post).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int $order_id Order post id
+     *
+     * @return array|null Null when the post has none
+     */
+    public function order_info( $order_id ) {
+        $info = get_post_meta( $order_id, '_data', true );
+
+        return is_array( $info ) ? $info : null;
+    }
+
+    /**
+     * Count one more use of a coupon (the coupon post's `_coupon_used`).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int $coupon_id Coupon post id
+     *
+     * @return int The new count
+     */
+    public function record_coupon_use( $coupon_id ) {
+        $used = (int) get_post_meta( $coupon_id, '_coupon_used', true ) + 1;
+        update_post_meta( $coupon_id, '_coupon_used', $used );
+
+        return $used;
+    }
+
+    /**
+     * Every row of the transaction table, sorted and paged (the legacy completed-transactions helper).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param string $orderby One of id, status, created
+     * @param string $order   ASC|DESC
+     * @param int    $offset  Offset
+     * @param int    $number  Rows
+     *
+     * @return object[]
+     */
+    public function all_rows( $orderby = 'id', $order = 'DESC', $offset = 0, $number = 20 ) {
+        global $wpdb;
+
+        $orderby = in_array( $orderby, [ 'id', 'status', 'created' ], true ) ? $orderby : 'id';
+        $order   = 'ASC' === strtoupper( (string) $order ) ? 'ASC' : 'DESC';
+
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery -- sort column and order allowlisted
+        return (array) $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}wpuf_transaction ORDER BY `{$orderby}` {$order} LIMIT %d, %d", absint( $offset ), absint( $number ) ) );
+    }
+
+    /**
+     * How many rows the transaction table has.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return int
+     */
+    public function count_all() {
+        global $wpdb;
+
+        return (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}wpuf_transaction" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+    }
 }

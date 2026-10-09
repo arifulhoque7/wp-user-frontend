@@ -8,6 +8,8 @@
 
 namespace WeDevs\Wpuf\Free;
 
+use WeDevs\Wpuf\Platform\Stores\Stores;
+
 /**
  * Pro subscription features previewed in the free plugin: gateways, the pack tabs and the subscriber detail rows.
  *
@@ -94,7 +96,8 @@ class Subscription_Preview extends Pro_Prompt {
      * @return void
      */
     public function subscription_tab_contents() {
-        $allowed_tax_id_arr = get_post_meta( get_the_ID(), '_sub_allowed_term_ids', true );
+        $pack               = Stores::subscriptions()->read( get_the_ID() );
+        $allowed_tax_id_arr = $pack && isset( $pack['meta']['_sub_allowed_term_ids'] ) ? $pack['meta']['_sub_allowed_term_ids'] : [];
         if ( ! $allowed_tax_id_arr ) {
             $allowed_tax_id_arr = [];
         }

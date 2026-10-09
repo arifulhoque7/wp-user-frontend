@@ -108,6 +108,21 @@ class Container {
     }
 
     /**
+     * Drop the built instance of a shared service; the next get() builds it again.
+     * (Tests: the WordPress test framework restores the hooks between tests, so an
+     * instance built in an earlier test carries none.)
+     *
+     * @since WPUF_SINCE
+     *
+     * @param string $id Service id
+     *
+     * @return void
+     */
+    public function forget( $id ) {
+        unset( $this->instances[ $id ] );
+    }
+
+    /**
      * Whether a service id is registered.
      *
      * @since WPUF_SINCE

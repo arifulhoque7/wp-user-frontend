@@ -8,6 +8,7 @@
 
 namespace WeDevs\Wpuf\Admin\Screens;
 
+use WeDevs\Wpuf\AI\Services\Provider_Settings;
 use WeDevs\Wpuf\Admin\BootPayload;
 
 /**
@@ -151,7 +152,7 @@ class AiFormBuilder extends Screen {
      * @return array
      */
     public function localize_data( $form_type = 'post' ) {
-        $ai_settings     = get_option( 'wpuf_ai', [] );
+        $ai_status       = wpuf()->platform()->get( Provider_Settings::class )->status();
         $show_api_status = current_user_can( wpuf_admin_role() );
         $ai_manager      = wpuf()->ai_manager;
 
@@ -167,12 +168,12 @@ class AiFormBuilder extends Screen {
                 'integrations' => esc_url_raw( rest_url( 'wpuf/v1/ai-form-builder/integrations' ) ),
             ],
             'formType'             => $form_type,
-            'provider'             => isset( $ai_settings['ai_provider'] ) ? $ai_settings['ai_provider'] : 'openai',
-            'model'                => isset( $ai_settings['ai_model'] ) ? $ai_settings['ai_model'] : 'gpt-3.5-turbo',
-            'hasApiKey'            => $show_api_status ? ! empty( $ai_settings['ai_api_key'] ) : null,
+            'provider'             => '' !== $ai_status['provider'] ? $ai_status['provider'] : 'openai',
+            'model'                => '' !== $ai_status['model'] ? $ai_status['model'] : 'gpt-3.5-turbo',
+            'hasApiKey'            => $show_api_status ? $ai_status['has_api_key'] : null,
             'isProActive'          => class_exists( 'WP_User_Frontend_Pro' ),
-            'temperature'          => floatval( isset( $ai_settings['temperature'] ) ? $ai_settings['temperature'] : 0.7 ),
-            'maxTokens'            => intval( isset( $ai_settings['max_tokens'] ) ? $ai_settings['max_tokens'] : 2000 ),
+            'temperature'          => $ai_status['temperature'],
+            'maxTokens'            => $ai_status['max_tokens'],
             'promptTemplates'      => $ai_manager ? $ai_manager->get_all_prompt_templates() : [],
             'promptAIInstructions' => $ai_manager ? $ai_manager->get_all_prompt_ai_instructions() : [],
             'i18n'                 => [

@@ -2,6 +2,8 @@
 
 namespace WeDevs\Wpuf;
 
+use WeDevs\Wpuf\Platform\Providers\AdminServiceProvider;
+
 use WeDevs\WpUtils\ContainerTrait;
 
 /**
@@ -14,26 +16,24 @@ class Admin {
     use ContainerTrait;
 
     public function __construct() {
-        $this->container['admin_welcome']         = new Admin\Admin_Welcome();
-        $this->container['menu']                  = new Admin\Menu();
-        $this->container['dashboard_metabox']     = new Admin\Dashboard_Metabox();
-        $this->container['form_template']         = new Admin\Forms\Post\Templates\Post_Form_Templates();
-        $this->container['admin_form']            = new Admin\Forms\Admin_Form();
-        $this->container['admin_form_handler']    = new Admin\Forms\Admin_Form_Handler();
-        $this->container['ai_form_handler']       = new Admin\Forms\AI_Form_Handler();
-        $this->container['admin_subscription']    = new Admin\Admin_Subscription();
-        $this->container['admin_installer']       = new Admin\Admin_Installer();
-        $this->container['settings']              = new Admin\Admin_Settings();
-        $this->container['forms']                 = new Admin\Forms\Form_Manager();
-        // Legacy wpuf/form block. Superseded by the wpuf/post-form block but
-        // still registered so existing posts keep editing without an invalid
-        // block notice.
-        $this->container['gutenberg_block']       = new Frontend\Form_Gutenberg_Block();
-        $this->container['plugin_upgrade_notice'] = new Admin\Plugin_Upgrade_Notice();
-        $this->container['posting']               = new Admin\Posting();
-        $this->container['shortcodes_button']     = new Admin\Shortcodes_Button();
-        $this->container['tools']                 = new Admin\Admin_Tools();
-        $this->container['onboarding']            = new Admin\Onboarding();
+        // Every admin service comes from the platform container (AdminServiceProvider,
+        // Core for the installer, Ai for the AI handler): one instance per request,
+        // built here in the old order so the constructors add their hooks as before.
+        $platform = wpuf()->platform();
+
+        foreach ( [ 'admin_welcome', 'menu', 'dashboard_metabox', 'form_template', 'admin_form', 'admin_form_handler' ] as $key ) {
+            $this->container[ $key ] = $platform->get( AdminServiceProvider::class_of( $key ) );
+        }
+
+        $this->container['ai_form_handler']    = $platform->get( Admin\Forms\AI_Form_Handler::class );
+        $this->container['admin_subscription'] = $platform->get( Admin\Admin_Subscription::class );
+        $this->container['admin_installer']    = $platform->get( Admin\Admin_Installer::class );
+
+        // Legacy wpuf/form block (gutenberg_block). Superseded by the wpuf/post-form block but
+        // still registered so existing posts keep editing without an invalid block notice.
+        foreach ( [ 'settings', 'forms', 'gutenberg_block', 'plugin_upgrade_notice', 'posting', 'shortcodes_button', 'tools', 'onboarding' ] as $key ) {
+            $this->container[ $key ] = $platform->get( AdminServiceProvider::class_of( $key ) );
+        }
 
         // Notice for plugins that still use the retired Vue builder hooks (4.4g).
         // On admin_init: the platform providers register after this constructor.
@@ -46,7 +46,7 @@ class Admin {
 
         // only free users will see the promotion
         if ( ! class_exists( 'WP_User_Frontend_Pro' ) ) {
-            $this->container['promotion'] = new Admin\Promotion();
+            $this->container['promotion'] = $platform->get( AdminServiceProvider::class_of( 'promotion' ) );
         }
 
         // dynamic hook. format: "admin_action_{$action}". more details: wp-admin/admin.php

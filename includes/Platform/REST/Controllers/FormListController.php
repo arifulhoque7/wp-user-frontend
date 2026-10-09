@@ -2,6 +2,8 @@
 
 namespace WeDevs\Wpuf\Platform\REST\Controllers;
 
+use WeDevs\Wpuf\Platform\Stores\Stores;
+
 use WP_Error;
 use WeDevs\Wpuf\Platform\REST\RestController;
 use WP_REST_Request;
@@ -340,7 +342,7 @@ class FormListController extends RestController {
                 $post_id = $post->ID;
 
                 // Get form settings
-                $settings = get_post_meta( $post_id, 'wpuf_form_settings', true );
+                $settings = Stores::forms()->read_settings( $post_id );
 
                 // Get post count for this form
                 $post_count    = $this->get_form_post_count( $post_id, $settings );

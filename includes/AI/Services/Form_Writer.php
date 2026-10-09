@@ -607,7 +607,7 @@ class Form_Writer {
         }
 
         $map           = [];
-        $field_manager = new \WeDevs\Wpuf\Admin\Forms\Field_Manager();
+        $field_manager = wpuf()->platform()->get( \WeDevs\Wpuf\Admin\Forms\Field_Manager::class );
 
         foreach ( $field_manager->get_fields() as $template => $field_object ) {
             if ( is_object( $field_object ) && method_exists( $field_object, 'get_field_props' ) ) {

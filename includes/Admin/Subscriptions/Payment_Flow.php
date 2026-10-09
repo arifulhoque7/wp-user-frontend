@@ -73,7 +73,6 @@ class Payment_Flow {
      * Checks the posting validity after a new post
      *
      * @global object $userdata
-     * @global object $wpdb
      *
      * @param int $post_id
      */
@@ -134,7 +133,6 @@ class Payment_Flow {
      * Check if the post is draft and charging is enabled
      *
      * @global object $userdata
-     * @global object $wpdb
      *
      * @param int $post_id
      */

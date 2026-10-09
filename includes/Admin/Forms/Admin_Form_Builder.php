@@ -2,6 +2,7 @@
 
 namespace WeDevs\Wpuf\Admin\Forms;
 
+use WeDevs\Wpuf\AI\Services\Provider_Settings;
 use WeDevs\Wpuf\Admin\BootPayload;
 use WeDevs\Wpuf\Free\Pro_Prompt;
 use WeDevs\Wpuf\Builder\HookBridge;
@@ -290,13 +291,8 @@ class Admin_Form_Builder {
         // Load icon configuration
         $icon_config = $this->get_icon_config();
 
-        // Check AI configuration directly
-        $ai_settings   = get_option( 'wpuf_ai', [] );
-        $ai_provider   = isset( $ai_settings['ai_provider'] ) ? $ai_settings['ai_provider'] : '';
-        $ai_model      = isset( $ai_settings['ai_model'] ) ? $ai_settings['ai_model'] : '';
-        $provider_key  = $ai_provider . '_api_key';
-        $ai_api_key    = isset( $ai_settings[ $provider_key ] ) ? $ai_settings[ $provider_key ] : '';
-        $ai_configured = ! empty( $ai_provider ) && ! empty( $ai_api_key ) && ! empty( $ai_model );
+        // AI configuration: one answer for every screen (Provider_Settings::status()).
+        $ai_configured = wpuf()->platform()->get( Provider_Settings::class )->status()['configured'];
         $ai_settings_url = admin_url( 'admin.php?page=wpuf-settings#wpuf_ai' );
 
         $wpuf_form_builder = apply_filters(

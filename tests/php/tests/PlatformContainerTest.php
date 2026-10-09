@@ -244,4 +244,19 @@ class PlatformContainerTest extends WP_UnitTestCase {
         $this->assertSame( 1, $container->get( WPUF_Test_Hookable_Service::class )->hooked );
         $this->assertSame( 1, $fired );
     }
+
+    /**
+     * forget() drops a shared instance; the next get() builds a new one.
+     */
+    public function test_forget_rebuilds_a_shared_service() {
+        $container = new \WeDevs\Wpuf\Platform\Container();
+        $container->share( 'thing', function () { return new \stdClass(); } );
+
+        $first = $container->get( 'thing' );
+        $this->assertSame( $first, $container->get( 'thing' ) );
+
+        $container->forget( 'thing' );
+        $this->assertNotSame( $first, $container->get( 'thing' ) );
+        $this->assertTrue( $container->has( 'thing' ), 'the factory stays registered' );
+    }
 }

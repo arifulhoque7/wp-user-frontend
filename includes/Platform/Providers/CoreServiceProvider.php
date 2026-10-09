@@ -8,6 +8,10 @@
 
 namespace WeDevs\Wpuf\Platform\Providers;
 
+use WeDevs\Wpuf\Platform\Onboarding\State;
+
+use WeDevs\Wpuf\Admin\Admin_Installer;
+
 use WeDevs\Wpuf\Admin\React_Assets;
 use WeDevs\Wpuf\Admin\App\AppPage;
 use WeDevs\Wpuf\Admin\BootPayload;
@@ -33,6 +37,22 @@ class CoreServiceProvider extends ServiceProvider {
      * @return void
      */
     public function register() {
+        // The onboarding wizard's own state (options + the activation redirect).
+        $this->share_tagged(
+            State::class,
+            function () {
+                return new State();
+            }
+        );
+
+        // The page installer (admin notice + request handler): one instance for Admin, Tools and Onboarding.
+        $this->share_tagged(
+            Admin_Installer::class,
+            function () {
+                return new Admin_Installer();
+            }
+        );
+
         // Older Pro without the React admin: its Vue builder scripts are skipped, one notice.
         $this->share_tagged(
             VersionGuard::class,

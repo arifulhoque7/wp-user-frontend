@@ -1072,7 +1072,7 @@ function wpuf_get_draft_post_status( $form_settings ) {
  */
 function wpuf_set_all_terms_as_allowed() {
     if ( class_exists( 'WP_User_Frontend_Pro' ) ) {
-        $subscriptions  = ( new Subscription() )->get_subscriptions();
+        $subscriptions  = wpuf()->subscription->get_subscriptions();
         $allowed_term   = [];
 
         foreach ( $subscriptions as $pack ) {

@@ -97,14 +97,11 @@ class AiServiceProvider extends ServiceProvider {
             }
         );
 
-        // The admin_action handler Admin built (wpuf()->admin->ai_form_handler).
+        // The admin_action handler; Admin pulls it from here (wpuf()->admin->ai_form_handler).
         $this->share_tagged(
             AI_Form_Handler::class,
             function () {
-                $admin   = wpuf()->admin;
-                $handler = is_object( $admin ) ? $admin->ai_form_handler : null;
-
-                return $handler instanceof AI_Form_Handler ? $handler : new AI_Form_Handler();
+                return new AI_Form_Handler();
             }
         );
 

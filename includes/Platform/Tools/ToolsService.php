@@ -106,7 +106,7 @@ class ToolsService {
      */
     public function install_pages() {
         // init_pages() does not redirect inside a REST request.
-        ( new Admin_Installer() )->init_pages();
+        wpuf()->platform()->get( Admin_Installer::class )->init_pages();
     }
 
     /**

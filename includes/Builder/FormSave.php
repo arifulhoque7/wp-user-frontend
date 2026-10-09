@@ -8,6 +8,8 @@
 
 namespace WeDevs\Wpuf\Builder;
 
+use WeDevs\Wpuf\Platform\Stores\Stores;
+
 use WeDevs\Wpuf\Admin\Forms\Admin_Form_Builder;
 use WeDevs\Wpuf\Platform\Stores\Normalizers;
 use WP_Error;
@@ -79,7 +81,7 @@ class FormSave {
 
         if ( isset( $post_data['settings'] ) ) {
             // Develop posted these as a form: keep its CRLF line breaks.
-            $settings = Normalizers::form_post_newlines( json_decode( $post_data['settings'], true ), get_post_meta( $form_id, $form_settings_key, true ) );
+            $settings = Normalizers::form_post_newlines( json_decode( $post_data['settings'], true ), Stores::forms()->read_meta( $form_id, $form_settings_key ) );
         } else {
             $settings = isset( $form_data['wpuf_settings'] ) ? $form_data['wpuf_settings'] : [];
         }
@@ -101,7 +103,7 @@ class FormSave {
         }
 
         if ( isset( $post_data['integrations'] ) ) {
-            $integrations = Normalizers::form_post_newlines( json_decode( $post_data['integrations'], true ), get_post_meta( $form_id, 'integrations', true ) );
+            $integrations = Normalizers::form_post_newlines( json_decode( $post_data['integrations'], true ), Stores::forms()->read_meta( $form_id, 'integrations' ) );
         }
 
         $form_fields   = json_decode( $form_fields, true );

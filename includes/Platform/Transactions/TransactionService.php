@@ -167,7 +167,7 @@ class TransactionService {
      * @return array|null
      */
     private function format_order( $order_id ) {
-        $info = get_post_meta( $order_id, '_data', true );
+        $info = $this->store->order_info( $order_id );
 
         if ( ! is_array( $info ) ) {
             return null;
@@ -468,7 +468,7 @@ class TransactionService {
      * @return bool
      */
     private function reject( $order_id ) {
-        $info    = get_post_meta( $order_id, '_data', true );
+        $info    = $this->store->order_info( $order_id );
         $gateway = isset( $info['post_data']['wpuf_payment_method'] ) ? sanitize_key( $info['post_data']['wpuf_payment_method'] ) : '';
 
         // Same hook as the classic page's reject.
@@ -488,7 +488,7 @@ class TransactionService {
      * @return bool
      */
     private function accept( $order_id ) {
-        $info = get_post_meta( $order_id, '_data', true );
+        $info = $this->store->order_info( $order_id );
 
         if ( ! is_array( $info ) || empty( $info['type'] ) ) {
             return false;
@@ -521,8 +521,7 @@ class TransactionService {
         Payment::insert_payment( $transaction, $order_id );
 
         if ( $transaction['coupon_id'] ) {
-            $used = (int) get_post_meta( $transaction['coupon_id'], '_coupon_used', true );
-            update_post_meta( $transaction['coupon_id'], '_coupon_used', $used + 1 );
+            $this->store->record_coupon_use( $transaction['coupon_id'] );
         }
 
         wp_delete_post( $order_id, true );

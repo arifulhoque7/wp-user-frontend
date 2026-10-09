@@ -343,7 +343,7 @@ class User_Profile {
 
         if ( isset( $_POST['wpuf_profile_mail_noti'] ) ) {
             $wpuf_profile_mail_noti = sanitize_text_field( wp_unslash( $_POST['wpuf_profile_mail_noti'] ) );
-            update_user_meta( $user_id, '_pack_assign_notification', $wpuf_profile_mail_noti );
+            Stores::user_packs()->set_assign_notification( $user_id, $wpuf_profile_mail_noti );
         }
 
         $pack_id = isset( $_POST['pack_id'] ) ? intval( wp_unslash( $_POST['pack_id'] ) ) : '';
@@ -462,7 +462,7 @@ class User_Profile {
 
         $userid = isset( $_POST['userid'] ) ? intval( wp_unslash( $_POST['userid'] ) ) : 0;
 
-        echo esc_html( delete_user_meta( $userid, '_wpuf_subscription_pack' ) );
+        echo esc_html( Stores::user_packs()->delete( $userid ) ? '1' : '' );
         $wpuf_paypal = new Paypal();
         $wpuf_paypal->recurring_change_status( $userid, 'Cancel' );
 

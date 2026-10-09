@@ -215,7 +215,7 @@ class SettingsController extends RestController {
         $stored = [];
 
         foreach ( array_keys( $incoming ) as $section_id ) {
-            $stored[ $section_id ] = get_option( sanitize_key( $section_id ), [] );
+            $stored[ $section_id ] = Stores::settings()->read( sanitize_key( $section_id ) );
         }
 
         $incoming = Normalizers::form_post_newlines( $incoming, $stored );

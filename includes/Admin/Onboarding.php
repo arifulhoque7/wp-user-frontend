@@ -2,6 +2,8 @@
 
 namespace WeDevs\Wpuf\Admin;
 
+use WeDevs\Wpuf\Platform\Onboarding\State;
+
 use WeDevs\Wpuf\Platform\Onboarding\Pages;
 use WeDevs\Wpuf\Platform\Onboarding\Plugin_Installer;
 use WeDevs\Wpuf\Platform\Stores\Stores;
@@ -30,22 +32,22 @@ class Onboarding {
     /**
      * Option holding the wizard progress
      */
-    const PROGRESS_OPTION = 'wpuf_onboarding_progress';
+    const PROGRESS_OPTION = State::PROGRESS_OPTION;
 
     /**
      * Option holding the features the admin picked in the first step
      */
-    const FEATURES_OPTION = 'wpuf_onboarding_features';
+    const FEATURES_OPTION = State::FEATURES_OPTION;
 
     /**
      * Option holding plugins the wizard could not install
      */
-    const PLUGIN_ERRORS_OPTION = 'wpuf_onboarding_plugin_errors';
+    const PLUGIN_ERRORS_OPTION = State::PLUGIN_ERRORS_OPTION;
 
     /**
      * Option marking a finished run
      */
-    const COMPLETED_OPTION = 'wpuf_onboarding_completed';
+    const COMPLETED_OPTION = State::COMPLETED_OPTION;
 
     /**
      * All the steps of the wizard
@@ -74,6 +76,17 @@ class Onboarding {
      * @var Plugin_Installer|null
      */
     protected $plugins = null;
+
+    /**
+     * The wizard's own state (options, redirect).
+     *
+     * @since WPUF_SINCE
+     *
+     * @return State
+     */
+    protected function state() {
+        return wpuf()->platform()->get( State::class );
+    }
 
     /**
      * Boot the wizard
@@ -183,7 +196,7 @@ class Onboarding {
      * @return void
      */
     public function hide_menus_for_unpicked_features() {
-        $saved = get_option( self::FEATURES_OPTION, null );
+        $saved = $this->state()->features();
 
         // Never answered, so nothing is switched off. Leave every menu alone.
         if ( ! is_array( $saved ) ) {
@@ -227,7 +240,7 @@ class Onboarding {
      * @return void
      */
     public function maybe_redirect_after_activation() {
-        if ( ! get_transient( 'wpuf_onboarding_redirect' ) ) {
+        if ( ! $this->state()->has_redirect() ) {
             return;
         }
 
@@ -237,11 +250,10 @@ class Onboarding {
             return;
         }
 
-        delete_transient( 'wpuf_onboarding_redirect' );
+        $this->state()->consume_redirect(); // the legacy wizard's transient too
 
         // The legacy wizard reads its own transient later in this same request.
         // Clearing it here keeps the two from fighting over one activation.
-        delete_transient( 'wpuf_activation_redirect' );
 
         // Match the legacy wizard: single site only, and never mid bulk activation.
         // Presence of the flag is all that is read, and the transient consumed above
@@ -253,7 +265,7 @@ class Onboarding {
 
         // Give the post form and registration steps something to pick from. Only
         // the pages those two steps offer; the rest wait for the settings step.
-        $installer = new Admin_Installer();
+        $installer = wpuf()->platform()->get( Admin_Installer::class );
 
         $installer->init_essential_pages();
 
@@ -421,7 +433,7 @@ class Onboarding {
      * @return array
      */
     public function get_features() {
-        $saved = get_option( self::FEATURES_OPTION, null );
+        $saved = $this->state()->features();
 
         if ( ! is_array( $saved ) ) {
             return array_keys( $this->get_feature_definitions() );
@@ -503,7 +515,7 @@ class Onboarding {
      * @return bool
      */
     public function is_completed() {
-        return (bool) get_option( self::COMPLETED_OPTION );
+        return $this->state()->is_completed();
     }
 
     /**
@@ -521,8 +533,7 @@ class Onboarding {
 
         check_admin_referer( 'wpuf-onboarding-restart' );
 
-        delete_option( self::PROGRESS_OPTION );
-        delete_option( self::COMPLETED_OPTION );
+        $this->state()->reset();
 
         wp_safe_redirect( $this->get_step_link( 'features' ) );
         exit;
@@ -571,12 +582,7 @@ class Onboarding {
      * @return array
      */
     public function get_progress() {
-        $progress = get_option(
-            self::PROGRESS_OPTION, [
-                'completed' => [],
-                'last_step' => '',
-            ]
-        );
+        $progress = $this->state()->progress();
 
         if ( ! is_array( $progress ) ) {
             $progress = [];
@@ -606,7 +612,7 @@ class Onboarding {
             $progress['completed'][] = $step;
         }
 
-        update_option( self::PROGRESS_OPTION, $progress );
+        $this->state()->set_progress( $progress );
     }
 
     /**
@@ -622,11 +628,9 @@ class Onboarding {
         $progress = $this->get_progress();
 
         if ( 'ready' === $step ) {
-            update_option( self::COMPLETED_OPTION, 1 );
-
             // Finishing here counts as finishing setup, so the legacy three step
             // wizard stops claiming the activation redirect and stops nagging.
-            update_option( 'wpuf_setup_wizard', 1 );
+            $this->state()->mark_completed();
         }
 
         if ( $progress['last_step'] === $step ) {
@@ -635,7 +639,7 @@ class Onboarding {
 
         $progress['last_step'] = $step;
 
-        update_option( self::PROGRESS_OPTION, $progress );
+        $this->state()->set_progress( $progress );
     }
 
     /**
@@ -934,8 +938,7 @@ class Onboarding {
      */
     private function plugins_state() {
         $items  = [];
-        $errors = get_option( self::PLUGIN_ERRORS_OPTION, [] );
-        $errors = is_array( $errors ) ? $errors : [];
+        $errors = $this->state()->plugin_errors();
         $failed = [];
 
         foreach ( $this->get_pending_plugins() as $slug => $plugin ) {
@@ -1074,7 +1077,7 @@ class Onboarding {
             $picked = array_values( array_intersect( $allowed, array_merge( $picked, [ 'user_directory' ] ) ) );
         }
 
-        update_option( self::FEATURES_OPTION, $picked );
+        $this->state()->set_features( $picked );
 
         // The directory has no step of its own, so the choice made here is
         // what switches the module on or off.
@@ -1101,7 +1104,7 @@ class Onboarding {
      * @return void
      */
     public function toggle_payments( $enabled ) {
-        $payment = get_option( 'wpuf_payment', [] );
+        $payment = Stores::settings()->read( 'wpuf_payment' );
         $payment = is_array( $payment ) ? $payment : [];
 
         $payment['enable_payment'] = $enabled ? 'on' : 'off';
@@ -1128,7 +1131,7 @@ class Onboarding {
             }
         }
 
-        $settings = get_option( 'wpuf_frontend_posting', [] );
+        $settings = Stores::settings()->read( 'wpuf_frontend_posting' );
         $settings = is_array( $settings ) ? $settings : [];
 
         if ( $form_id ) {
@@ -1139,7 +1142,7 @@ class Onboarding {
 
         // Editing and deleting live under the dashboard section, which is what
         // the frontend actually reads.
-        $dashboard = get_option( 'wpuf_dashboard', [] );
+        $dashboard = Stores::settings()->read( 'wpuf_dashboard' );
         $dashboard = is_array( $dashboard ) ? $dashboard : [];
 
         $dashboard['enable_post_edit'] = $this->posted( 'enable_post_edit' ) ? 'yes' : 'no';
@@ -1156,10 +1159,10 @@ class Onboarding {
      * @return void
      */
     public function save_registration() {
-        $profile = get_option( 'wpuf_profile', [] );
+        $profile = Stores::settings()->read( 'wpuf_profile' );
         $profile = is_array( $profile ) ? $profile : [];
 
-        $installer = new Admin_Installer();
+        $installer = wpuf()->platform()->get( Admin_Installer::class );
 
         $login_choice = $this->posted_value( 'login_page' );
 
@@ -1196,7 +1199,7 @@ class Onboarding {
                 // Free ships its own registration form on [wpuf-registration], so a
                 // site without Pro still gets a working sign-up page. Only building
                 // custom forms on top of it is the Pro part.
-                $installer = new Admin_Installer();
+                $installer = wpuf()->platform()->get( Admin_Installer::class );
                 $reg_page  = $installer->get_or_create_page(
                     __( 'Registration', 'wp-user-frontend' ),
                     '[wpuf-registration]',
@@ -1270,7 +1273,7 @@ class Onboarding {
             return absint( $forms[0] );
         }
 
-        $installer = new Admin_Installer();
+        $installer = wpuf()->platform()->get( Admin_Installer::class );
 
         return absint( $installer->create_reg_form() );
     }
@@ -1289,11 +1292,11 @@ class Onboarding {
             return;
         }
 
-        $account = get_option( 'wpuf_my_account', [] );
+        $account = Stores::settings()->read( 'wpuf_my_account' );
         $account = is_array( $account ) ? $account : [];
 
         if ( 'create' === $choice ) {
-            $installer = new Admin_Installer();
+            $installer = wpuf()->platform()->get( Admin_Installer::class );
             $page_id   = $installer->get_or_create_page(
                 __( 'Account', 'wp-user-frontend' ),
                 '[wpuf_account]',
@@ -1359,7 +1362,7 @@ class Onboarding {
      * @return void
      */
     public function save_payment_settings() {
-        $payment = get_option( 'wpuf_payment', [] );
+        $payment = Stores::settings()->read( 'wpuf_payment' );
         $payment = is_array( $payment ) ? $payment : [];
 
         $enabled = $this->posted( 'enable_payment' );
@@ -1402,7 +1405,7 @@ class Onboarding {
             $this->save_payment_settings();
         }
 
-        $general = get_option( 'wpuf_general', [] );
+        $general = Stores::settings()->read( 'wpuf_general' );
         $general = is_array( $general ) ? $general : [];
 
         $general['show_admin_bar'] = $this->posted( 'hide_admin_bar' )
@@ -1416,7 +1419,7 @@ class Onboarding {
         Stores::settings()->write_section( 'wpuf_general', $general );
 
         if ( $this->posted( 'install_wpuf_pages' ) ) {
-            $installer = new Admin_Installer();
+            $installer = wpuf()->platform()->get( Admin_Installer::class );
 
             $installer->init_pages();
 
@@ -1443,7 +1446,7 @@ class Onboarding {
         }
 
         if ( $this->posted( 'add_logout_menu' ) ) {
-            $installer = new Admin_Installer();
+            $installer = wpuf()->platform()->get( Admin_Installer::class );
 
             $installer->auto_add_logout_to_menu();
         }
@@ -1459,7 +1462,7 @@ class Onboarding {
      */
     public function save_share() {
         $share   = $this->posted( 'share_essentials' ) ? 'on' : 'off';
-        $general = get_option( 'wpuf_general', [] );
+        $general = Stores::settings()->read( 'wpuf_general' );
         $general = is_array( $general ) ? $general : [];
 
         $general['share_wpuf_essentials'] = $share;
@@ -1524,9 +1527,9 @@ class Onboarding {
      * @return array
      */
     public function get_checklist() {
-        $frontend_posting = get_option( 'wpuf_frontend_posting', [] );
-        $profile          = get_option( 'wpuf_profile', [] );
-        $payment          = get_option( 'wpuf_payment', [] );
+        $frontend_posting = Stores::settings()->read( 'wpuf_frontend_posting' );
+        $profile          = Stores::settings()->read( 'wpuf_profile' );
+        $payment          = Stores::settings()->read( 'wpuf_payment' );
 
         $directory_on = $this->is_directory_active();
 

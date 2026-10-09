@@ -8,6 +8,8 @@
 
 namespace WeDevs\Wpuf\AI\Services;
 
+use WeDevs\Wpuf\AI\Services\Provider_Settings;
+
 use WeDevs\Wpuf\AI\FormGenerator;
 use WeDevs\Wpuf\Platform\Stores\SettingsStore;
 use WeDevs\Wpuf\Platform\Stores\Stores;
@@ -112,7 +114,7 @@ class Generation {
         $stored_ai    = is_array( $stored_ai ) ? $stored_ai : [];
         $key_provider = ! empty( $provider ) && is_string( $provider ) ? $provider : ( isset( $stored_ai['ai_provider'] ) ? $stored_ai['ai_provider'] : 'openai' );
 
-        if ( empty( $stored_ai[ $key_provider . '_api_key' ] ) ) {
+        if ( '' === Provider_Settings::api_key_for( $stored_ai, $key_provider ) ) {
             return new WP_Error(
                 'generation_failed',
                 __( 'No API key is set for the selected AI provider. Add one in the AI settings.', 'wp-user-frontend' ),

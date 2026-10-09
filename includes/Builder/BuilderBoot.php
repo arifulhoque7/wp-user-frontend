@@ -154,14 +154,14 @@ class BuilderBoot {
         $wpuf = wpuf();
 
         if ( empty( $wpuf->container['admin'] ) ) {
-            $wpuf->container['admin'] = new \WeDevs\Wpuf\Admin();
+            $wpuf->container['admin'] = $wpuf->platform()->get( \WeDevs\Wpuf\Admin::class );
         }
 
         // The Pro preview fields (palette tiles, pricing section) come from
         // Pro_Upgrades, also built on admin requests only; it does nothing
         // when Pro is active.
         if ( empty( $wpuf->container['pro_upgrades'] ) ) {
-            $wpuf->container['pro_upgrades'] = new \WeDevs\Wpuf\Pro_Upgrades();
+            $wpuf->container['pro_upgrades'] = $wpuf->platform()->get( \WeDevs\Wpuf\Pro_Upgrades::class );
         }
     }
 

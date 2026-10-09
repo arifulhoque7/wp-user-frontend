@@ -549,7 +549,7 @@ class SubscriptionController extends RestController {
             $settings['button_color'] = '';
         }
 
-        update_option( 'wpuf_subscription_settings', $settings );
+        Stores::settings()->write_section( 'wpuf_subscription_settings', $settings );
 
         return rest_ensure_response(
             [

@@ -64,6 +64,54 @@ class Provider_Settings {
      *
      * @return array
      */
+    /**
+     * The stored API key of a provider: the settings screen stores `{provider}_api_key`,
+     * the AI settings REST route used to store a single `ai_api_key`; both are read.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param array  $settings The `wpuf_ai` option
+     * @param string $provider Provider id (openai, anthropic, google)
+     *
+     * @return string '' when none is stored
+     */
+    public static function api_key_for( $settings, $provider ) {
+        $settings = is_array( $settings ) ? $settings : [];
+        $provider = (string) $provider;
+
+        if ( '' !== $provider && ! empty( $settings[ $provider . '_api_key' ] ) ) {
+            return (string) $settings[ $provider . '_api_key' ];
+        }
+
+        return ! empty( $settings['ai_api_key'] ) ? (string) $settings['ai_api_key'] : '';
+    }
+
+    /**
+     * Provider, model and whether a key is stored: the one answer to "is AI configured?"
+     * for the builder, the forms lists, the AI builder screen and the manager.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return array { @type string $provider ('' when unset) @type string $model ('' when unset)
+     *                 @type bool $has_api_key @type bool $configured (provider, model and key present)
+     *                 @type float $temperature @type int $max_tokens }
+     */
+    public function status() {
+        $stored   = $this->stored();
+        $provider = isset( $stored['ai_provider'] ) ? (string) $stored['ai_provider'] : '';
+        $model    = isset( $stored['ai_model'] ) ? (string) $stored['ai_model'] : '';
+        $has_key  = '' !== self::api_key_for( $stored, $provider );
+
+        return [
+            'provider'    => $provider,
+            'model'       => $model,
+            'has_api_key' => $has_key,
+            'configured'  => '' !== $provider && '' !== $model && $has_key,
+            'temperature' => isset( $stored['temperature'] ) ? (float) $stored['temperature'] : 0.7,
+            'max_tokens'  => isset( $stored['max_tokens'] ) ? (int) $stored['max_tokens'] : 2000,
+        ];
+    }
+
     public function stored() {
         $stored = $this->settings->read( self::SECTION );
 
@@ -263,13 +311,24 @@ class Provider_Settings {
             $max_tokens = max( 100, min( 4000, (int) $max_tokens ) );
         }
 
-        $settings = [
-            'ai_provider' => $input['provider'] ? $input['provider'] : ( isset( $existing['ai_provider'] ) ? $existing['ai_provider'] : 'openai' ),
-            'ai_model'    => $input['model'] ? $input['model'] : ( isset( $existing['ai_model'] ) ? $existing['ai_model'] : 'gpt-3.5-turbo' ),
-            'ai_api_key'  => ! empty( $api_key ) ? $api_key : ( isset( $existing['ai_api_key'] ) ? $existing['ai_api_key'] : '' ),
-            'temperature' => null !== $temperature ? $temperature : ( isset( $existing['temperature'] ) ? $existing['temperature'] : 0.7 ),
-            'max_tokens'  => null !== $max_tokens ? $max_tokens : ( isset( $existing['max_tokens'] ) ? $existing['max_tokens'] : 2000 ),
-        ];
+        $provider = $input['provider'] ? sanitize_key( $input['provider'] ) : ( isset( $existing['ai_provider'] ) ? $existing['ai_provider'] : 'openai' );
+
+        // Merge into the stored section: the settings screen keeps one key per provider
+        // (`{provider}_api_key`) and other fields there; this route must not drop them.
+        $settings = array_merge(
+            $existing,
+            [
+                'ai_provider' => $provider,
+                'ai_model'    => $input['model'] ? $input['model'] : ( isset( $existing['ai_model'] ) ? $existing['ai_model'] : 'gpt-3.5-turbo' ),
+                'temperature' => null !== $temperature ? $temperature : ( isset( $existing['temperature'] ) ? $existing['temperature'] : 0.7 ),
+                'max_tokens'  => null !== $max_tokens ? $max_tokens : ( isset( $existing['max_tokens'] ) ? $existing['max_tokens'] : 2000 ),
+            ]
+        );
+
+        if ( ! empty( $api_key ) ) {
+            $settings[ $provider . '_api_key' ] = $api_key;
+            $settings['ai_api_key']             = $api_key;
+        }
 
         // Unchanged settings are not a failure to save (update_option() returns false then).
         $saved = $settings === $existing || $this->settings->write_section( self::SECTION, $settings ) === $settings;
@@ -298,15 +357,16 @@ class Provider_Settings {
      */
     public function read() {
         $stored = $this->stored();
+        $status = $this->status();
 
         return [
             'success'  => true,
             'settings' => [
-                'provider'    => isset( $stored['ai_provider'] ) ? $stored['ai_provider'] : 'openai',
-                'model'       => isset( $stored['ai_model'] ) ? $stored['ai_model'] : 'gpt-3.5-turbo',
+                'provider'    => '' !== $status['provider'] ? $status['provider'] : 'openai',
+                'model'       => '' !== $status['model'] ? $status['model'] : 'gpt-3.5-turbo',
                 'temperature' => isset( $stored['temperature'] ) ? $stored['temperature'] : 0.7,
                 'max_tokens'  => isset( $stored['max_tokens'] ) ? $stored['max_tokens'] : 2000,
-                'has_api_key' => ! empty( $stored['ai_api_key'] ),
+                'has_api_key' => $status['has_api_key'],
             ],
         ];
     }

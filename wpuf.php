@@ -532,6 +532,20 @@ final class WP_User_Frontend {
     }
 
     /**
+     * Answer isset( wpuf()->x ): true for a legacy service or a shared platform service.
+     * (Without this, isset() on a magic property is always false.)
+     *
+     * @since WPUF_SINCE
+     *
+     * @param string $prop Service key
+     *
+     * @return bool
+     */
+    public function __isset( $prop ) {
+        return array_key_exists( $prop, $this->container ) || ( null !== $this->platform && $this->platform->is_shared( $prop ) );
+    }
+
+    /**
      * Magic getter to bypass referencing objects
      *
      * @since 4.0.9

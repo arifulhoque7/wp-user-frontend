@@ -29,6 +29,13 @@ class UserPackStore implements DataStore {
     const POST_NOTICE = 'wpuf_post_sub_exp';
 
     /**
+     * Meta key: mail the user when an admin assigns a pack on the profile screen.
+     *
+     * @since WPUF_SINCE
+     */
+    const ASSIGN_NOTICE = '_pack_assign_notification';
+
+    /**
      * Whether a user holds pack data.
      *
      * @since WPUF_SINCE
@@ -237,5 +244,32 @@ class UserPackStore implements DataStore {
         }
 
         update_user_meta( $user_id, $notice, 'sent' );
+    }
+
+    /**
+     * The profile screen's "mail the user when a pack is assigned" flag, as stored.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int $user_id User id
+     *
+     * @return string 'true' / 'false' / ''
+     */
+    public function assign_notification( $user_id ) {
+        return (string) get_user_meta( $user_id, self::ASSIGN_NOTICE, true );
+    }
+
+    /**
+     * Set the profile screen's "mail the user when a pack is assigned" flag.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int    $user_id User id
+     * @param string $value   'yes' / 'no' (stored as given)
+     *
+     * @return void
+     */
+    public function set_assign_notification( $user_id, $value ) {
+        update_user_meta( $user_id, self::ASSIGN_NOTICE, $value );
     }
 }

@@ -8,6 +8,8 @@
 
 namespace WeDevs\Wpuf\Platform\REST\Controllers;
 
+use WeDevs\Wpuf\Platform\Stores\Stores;
+
 use WeDevs\Wpuf\Builder\BuilderBoot;
 use WeDevs\Wpuf\Builder\FormSave;
 use WeDevs\Wpuf\Platform\Caps;
@@ -338,8 +340,7 @@ class FormsController extends RestController {
      * @return void
      */
     private function store_shown_settings( $form_id, $type ) {
-        $settings = get_post_meta( $form_id, 'wpuf_form_settings', true );
-        $settings = is_array( $settings ) ? $settings : [];
+        $settings = Stores::forms()->read_settings( $form_id );
 
         if ( 'wpuf_profile' === $type ) {
             $settings = Normalizers::registration_form_selects( $settings );
@@ -355,7 +356,7 @@ class FormsController extends RestController {
             }
         }
 
-        update_post_meta( $form_id, 'wpuf_form_settings', $settings );
+        Stores::forms()->write_settings( $form_id, $settings );
     }
 
     /**

@@ -238,11 +238,6 @@ class WPUF_Privacy {
 
         $address = $wpuf_user->get_billing_address( true );
 
-        /**
-         * @var array
-         */
-        include_once WPUF_ROOT . '/includes/countries.php';
-
         if ( ! empty( $address ) ) {
             $address_data = [
                 [

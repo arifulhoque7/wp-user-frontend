@@ -2,6 +2,7 @@
 
 namespace WeDevs\Wpuf\Admin;
 
+use WeDevs\Wpuf\Platform\Stores\Stores;
 use WP_List_Table;
 
 if ( ! class_exists( 'WP_List_Table' ) ) {
@@ -137,11 +138,11 @@ class List_Table_Subscribers extends WP_List_Table {
                 error_log( 'WPUF Subscribers: Nonce verification failed for column_cb function' );
             }
         }
-        
+
         $post_ID = isset( $_REQUEST['post_ID'] ) ? intval( wp_unslash( $_REQUEST['post_ID'] ) ) : 0;
         return sprintf(
             '<input type="checkbox" name="subscriber_id[]" value="%d" />', $post_ID
-         );
+        );
     }
 
     /**
@@ -156,14 +157,24 @@ class List_Table_Subscribers extends WP_List_Table {
                 error_log( 'WPUF Subscribers: Nonce verification failed for get_views function' );
             }
         }
-        
+
         $status_links = [];
         $post_ID = isset( $_REQUEST['post_ID'] ) ? intval( wp_unslash( $_REQUEST['post_ID'] ) ) : 0;
         $base_link    = admin_url( 'admin.php?page=wpuf_subscribers&pack=' . $post_ID );
 
-        $subscribers_count          = count( wpuf()->subscription->subscription_pack_users( $post_ID ) );
-        $subscriptions_active_count = count( wpuf()->subscription->subscription_pack_users( $post_ID ) );
-        $subscriptions_cancel_count = count( wpuf()->subscription->subscription_pack_users( $post_ID ) );
+        $subscribers_count          = Stores::subscribers()->count( [ 'pack_id' => $post_ID ] );
+        $subscriptions_active_count = Stores::subscribers()->count(
+            [
+                'pack_id' => $post_ID,
+                'status' => 'Completed',
+            ]
+        );
+        $subscriptions_cancel_count = Stores::subscribers()->count(
+            [
+                'pack_id' => $post_ID,
+                'status' => 'Cancel',
+            ]
+        );
 
         $status = isset( $_REQUEST['status'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['status'] ) ) : 'all';
 
@@ -180,8 +191,6 @@ class List_Table_Subscribers extends WP_List_Table {
      * @return void
      */
     public function prepare_items() {
-        global $wpdb;
-
         // Verify nonce for security
         if ( ! $this->verify_nonce() ) {
             if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
@@ -194,84 +203,37 @@ class List_Table_Subscribers extends WP_List_Table {
         $sortable              = $this->get_sortable_columns();
         $this->_column_headers = [ $columns, $hidden, $sortable ];
 
-        $per_page              = 20;
-        $current_page          = $this->get_pagenum();
-        $offset                = ( $current_page - 1 ) * $per_page;
-        $this->page_status     = isset( $_GET['status'] ) ? sanitize_text_field( wp_unslash( $_GET['status'] ) ) : '2';
+        $per_page          = 20;
+        $current_page      = $this->get_pagenum();
+        $offset            = ( $current_page - 1 ) * $per_page;
+        $this->page_status = isset( $_GET['status'] ) ? sanitize_text_field( wp_unslash( $_GET['status'] ) ) : '2';
 
-        // only ncessary because we have sample data
+        // The pack and status filters, then the sort and the page: all through the store.
         $args = [
-            'offset' => $offset,
-            'number' => $per_page,
+            'pack_id' => ! empty( $_REQUEST['post_ID'] ) ? intval( wp_unslash( $_REQUEST['post_ID'] ) ) : 0,
+            'status'  => ! empty( $_REQUEST['status'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['status'] ) ) : '',
         ];
 
         if ( isset( $_REQUEST['orderby'] ) && isset( $_REQUEST['order'] ) ) {
-            $args['orderby'] = sanitize_text_field( wp_unslash( $_REQUEST['orderby'] ) ) ;
+            $args['orderby'] = sanitize_key( wp_unslash( $_REQUEST['orderby'] ) );
             $args['order']   = sanitize_text_field( wp_unslash( $_REQUEST['order'] ) );
         }
 
-        // Build the query with proper placeholders
-        $base_sql = 'SELECT * FROM ' . $wpdb->prefix . 'wpuf_subscribers';
-        $prepare_values = [];
-        $where_clause = '';
+        $total_items = Stores::subscribers()->count( $args );
+        $this->items = Stores::subscribers()->query(
+            array_merge(
+                $args, [
+                    'number' => $per_page,
+                    'offset' => $offset,
+                ]
+            )
+        );
 
-        // Add conditional WHERE clauses if params exist
-        $post_id = ! empty( $_REQUEST['post_ID'] ) ? intval( sanitize_text_field( wp_unslash( $_REQUEST['post_ID'] ) ) ) : '';
-        $status = ! empty( $_REQUEST['status'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['status'] ) ) : '';
-
-        if ( $post_id && $status ) {
-            $where_clause = ' WHERE subscribtion_id = %d AND subscribtion_status = %s';
-            $prepare_values = [ $post_id, $status ];
-        } elseif ( $post_id ) {
-            $where_clause = ' WHERE subscribtion_id = %d';
-            $prepare_values = [ $post_id ];
-        } elseif ( $status ) {
-            $where_clause = ' WHERE subscribtion_status = %s';
-            $prepare_values = [ $status ];
-        }
-
-        // Get total count for pagination
-        $count_sql = 'SELECT COUNT(*) FROM ' . $wpdb->prefix . 'wpuf_subscribers' . $where_clause;
-
-        if ( ! empty( $prepare_values ) ) {
-            $total_items = (int) $wpdb->get_var( $wpdb->prepare( $count_sql, ...$prepare_values ) );
-        } else {
-            $total_items = (int) $wpdb->get_var( $count_sql );
-        }
-
-        // Build ORDER BY clause with whitelisted columns
-        $order_by = 'id';
-        $order    = 'DESC';
-
-        if ( ! empty( $args['orderby'] ) ) {
-            $allowed_cols = [ 'id', 'user_id', 'subscribtion_id', 'subscribtion_status', 'starts_from', 'expire' ];
-            $candidate    = sanitize_key( $args['orderby'] );
-
-            if ( in_array( $candidate, $allowed_cols, true ) ) {
-                $order_by = $candidate;
-            }
-        }
-
-        if ( ! empty( $args['order'] ) && in_array( strtoupper( $args['order'] ), [ 'ASC', 'DESC' ], true ) ) {
-            $order = strtoupper( $args['order'] );
-        }
-
-        // Build final query with ORDER BY, LIMIT, and OFFSET
-        $sql = $base_sql . $where_clause . " ORDER BY {$order_by} {$order} LIMIT %d OFFSET %d";
-        $prepare_values[] = (int) $per_page;
-        $prepare_values[] = (int) $offset;
-
-        // Execute the paginated query
-        if ( ! empty( $prepare_values ) ) {
-            $this->items = $wpdb->get_results( $wpdb->prepare( $sql, ...$prepare_values ) );
-        } else {
-            // This should not happen as we always have LIMIT and OFFSET
-            $this->items = [];
-        }
-
-        $this->set_pagination_args( [
-            'total_items' => $total_items,
-            'per_page'    => $per_page,
-        ] );
+        $this->set_pagination_args(
+            [
+                'total_items' => $total_items,
+                'per_page'    => $per_page,
+            ]
+        );
     }
 }

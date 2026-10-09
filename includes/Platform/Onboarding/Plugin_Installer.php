@@ -8,7 +8,8 @@
 
 namespace WeDevs\Wpuf\Platform\Onboarding;
 
-use WeDevs\Wpuf\Admin\Onboarding;
+use WeDevs\Wpuf\Platform\Onboarding\State;
+
 
 /**
  * The wizard's plugin step: the recommended plugins and gateway cards, what is
@@ -18,6 +19,17 @@ use WeDevs\Wpuf\Admin\Onboarding;
  * @since WPUF_SINCE Moved out of Admin\Onboarding, which delegates to it.
  */
 class Plugin_Installer {
+
+    /**
+     * The wizard's own state.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return State
+     */
+    private function state() {
+        return wpuf()->platform()->get( State::class );
+    }
 
     /**
      * Step 6: companion plugins
@@ -36,7 +48,7 @@ class Plugin_Installer {
         $errors  = [];
 
         if ( ! $picked || ! current_user_can( 'install_plugins' ) ) {
-            delete_option( Onboarding::PLUGIN_ERRORS_OPTION );
+            $this->state()->set_plugin_errors( [] );
 
             return;
         }
@@ -78,9 +90,9 @@ class Plugin_Installer {
         }
 
         if ( $errors ) {
-            update_option( Onboarding::PLUGIN_ERRORS_OPTION, $errors );
+            $this->state()->set_plugin_errors( $errors );
         } else {
-            delete_option( Onboarding::PLUGIN_ERRORS_OPTION );
+            $this->state()->set_plugin_errors( [] );
         }
     }
 

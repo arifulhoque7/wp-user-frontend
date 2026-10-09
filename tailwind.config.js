@@ -17,7 +17,6 @@ module.exports = {
         '!./assets/vendor/**',
         './includes/Admin/**/*.php',
         './includes/Free/Free_Loader.php',
-        './includes/Admin/template-parts/*.php',
         './admin/form-builder/views/*.php',
         // Class lists of removed Vue admin views. The frontend sheets built from
         // this config (account, frontend subscriptions) still rely on some of
@@ -69,7 +68,6 @@ module.exports = {
                     '.wpuf-ai-form-wrapper',
                     '.swal2-container',
                     '.wpuf-account-container',
-                    '.wpuf-form-template-modal'
                 ], {}
             ),
         } ),

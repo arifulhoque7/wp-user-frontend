@@ -150,7 +150,6 @@ class Subscription {
     /**
      * Get a subscription row from database
      *
-     * @global object $wpdb
      *
      * @param int $sub_id subscription pack id
      *

@@ -89,14 +89,14 @@ class AI_Manager {
      * @return array
      */
     public function get_ai_settings() {
-        $settings = get_option( 'wpuf_ai', [] );
+        $status = wpuf()->platform()->get( \WeDevs\Wpuf\AI\Services\Provider_Settings::class )->status();
 
         return [
-            'provider'   => $settings['ai_provider'] ?? 'openai',
-            'model'      => $settings['ai_model'] ?? 'gpt-3.5-turbo',
-            'temperature' => isset( $settings['temperature'] ) ? floatval( $settings['temperature'] ) : 0.7,
-            'max_tokens' => isset( $settings['max_tokens'] ) ? intval( $settings['max_tokens'] ) : 2000,
-            'has_api_key' => ! empty( $settings['ai_api_key'] ),
+            'provider'    => '' !== $status['provider'] ? $status['provider'] : 'openai',
+            'model'       => '' !== $status['model'] ? $status['model'] : 'gpt-3.5-turbo',
+            'temperature' => $status['temperature'],
+            'max_tokens'  => $status['max_tokens'],
+            'has_api_key' => $status['has_api_key'],
         ];
     }
 

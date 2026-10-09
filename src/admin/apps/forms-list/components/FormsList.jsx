@@ -242,7 +242,7 @@ const FormsList = ( {
         await runAction( bulkAction, [ ...selectedForms ] );
     }, [ selectedForms, confirm, runAction ] );
 
-    // Open the template picker (the PHP modal of an older Pro as fallback).
+    // Open the template picker, or go to the blank form when the screen has no templates.
     const openModal = useCallback( ( event ) => {
         event?.preventDefault();
 
@@ -251,24 +251,7 @@ const FormsList = ( {
             return;
         }
 
-        const $ = window.jQuery;
-        const $modal = $ ? $( '.wpuf-form-template-modal' ) : null;
-
-        if ( ! $modal || ! $modal.length ) {
-            openRoute( `${ routeBase }/new`, newFormUrl );
-            return;
-        }
-
-        $modal.show().removeClass( 'wpuf-hidden' );
-        $modal[ 0 ].offsetHeight; // eslint-disable-line no-unused-expressions
-
-        setTimeout( function () {
-            $modal.addClass( 'wpuf-modal-show' );
-        }, 10 );
-
-        $( 'body' ).addClass( 'wpuf-modal-open' );
-        $( 'body' ).css( 'overflow', 'hidden' );
-        $( '#wpbody-content .wrap' ).hide();
+        openRoute( `${ routeBase }/new`, newFormUrl );
     }, [ newFormUrl, routeBase, templateData ] );
 
     // AI Form Builder handler

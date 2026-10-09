@@ -10,6 +10,7 @@
  */
 
 use WeDevs\Wpuf\Frontend\Payment;
+use WeDevs\Wpuf\Platform\Stores\Stores;
 
 /**
  * Get all the payment gateways
@@ -101,7 +102,6 @@ function wpuf_get_subscription_page_url() {
  * @return array|string
  */
 function wpuf_get_completed_transactions( $args = [] ) {
-    global $wpdb;
 
     $orderby = [ 'id', 'status', 'created' ];
     $order   = [ 'asc', 'desc' ];
@@ -125,16 +125,10 @@ function wpuf_get_completed_transactions( $args = [] ) {
     }
 
     if ( $args['count'] ) {
-        return $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}wpuf_transaction" );
+        return Stores::transactions()->count_all();
     }
 
-    $offset = absint( $args['offset'] );
-    $number = absint( $args['number'] );
-
-    // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- orderby and order are allowlisted above.
-    $result = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}wpuf_transaction ORDER BY `{$args['orderby']}` {$args['order']} LIMIT %d, %d", $offset, $number ), OBJECT );
-
-    return $result;
+    return Stores::transactions()->all_rows( $args['orderby'], $args['order'], absint( $args['offset'] ), absint( $args['number'] ) );
 }
 
 /**
@@ -188,7 +182,7 @@ function wpuf_get_pending_transactions( $args = [] ) {
     $items = [];
 
     foreach ( $transactions as $transaction ) {
-        $info = get_post_meta( $transaction->ID, '_data', true );
+        $info = Stores::transactions()->order_info( $transaction->ID );
 
         if ( ! $info ) {
             continue;
@@ -293,7 +287,7 @@ function wpuf_get_all_transactions( $args = [] ) {
         }
 
         // get metadata for pending transactions
-        $info = get_post_meta( $transaction->id, '_data', true );
+        $info = Stores::transactions()->order_info( $transaction->id );
         $payment_method = isset( $info['post_data']['wpuf_payment_method'] ) ? $info['post_data']['wpuf_payment_method'] : '';
 
         $type = isset( $info['type'] ) ? $info['type'] : '';

@@ -19,7 +19,7 @@ class BuilderBootTest extends WP_UnitTestCase {
         // A REST request builds free's admin layer once (BuilderBoot); build it
         // here, before each test backs up the hooks, so its listeners stay.
         if ( empty( wpuf()->container['admin'] ) ) {
-            wpuf()->container['admin'] = new \WeDevs\Wpuf\Admin();
+            wpuf()->container['admin'] = wpuf()->platform()->get( \WeDevs\Wpuf\Admin::class );
         }
     }
 
@@ -112,8 +112,10 @@ class BuilderBootTest extends WP_UnitTestCase {
             $this->markTestSkipped( 'Pro is active: no preview fields.' );
         }
 
-        // A REST request (not is_admin()) has no Pro_Upgrades until the boot builds it.
+        // A REST request (not is_admin()) has no Pro_Upgrades until the boot builds it
+        // (the platform's instance is dropped too: its hooks were restored away after the test that built it).
         unset( wpuf()->container['pro_upgrades'] );
+        wpuf()->platform()->forget( \WeDevs\Wpuf\Pro_Upgrades::class );
 
         $form_id  = wpuf_create_sample_form( 'Boot Form', 'wpuf_forms' );
         $sections = wp_list_pluck( ( new BuilderBoot() )->boot( $form_id )['wpuf_form_builder']['panel_sections'], 'fields', 'id' );

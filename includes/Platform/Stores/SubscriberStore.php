@@ -20,6 +20,13 @@ use WeDevs\Wpuf\Platform\Contracts\DataStore;
 class SubscriberStore implements DataStore {
 
     /**
+     * Columns a list may sort by.
+     *
+     * @since WPUF_SINCE
+     */
+    const ORDERBY = [ 'id', 'user_id', 'subscribtion_id', 'subscribtion_status', 'starts_from', 'expire' ];
+
+    /**
      * Columns of a row, in table order.
      */
     const COLUMNS = [ 'user_id', 'name', 'subscribtion_id', 'subscribtion_status', 'gateway', 'transaction_id', 'starts_from', 'expire' ];
@@ -85,7 +92,9 @@ class SubscriberStore implements DataStore {
      *
      * @since WPUF_SINCE
      *
-     * @param array $args { @type int $pack_id Pack id @type string $status Status @type int $user_id User id }
+     * @param array $args { @type int $pack_id Pack id @type string $status Status @type int $user_id User id
+     *                     @type string $orderby One of self::ORDERBY (default id) @type string $order ASC|DESC (default DESC)
+     *                     @type int $number Rows per page (0 = all) @type int $offset Offset }
      *
      * @return object[]
      */
@@ -93,9 +102,19 @@ class SubscriberStore implements DataStore {
         global $wpdb;
 
         list( $where, $values ) = $this->where( $args );
-        $sql = "SELECT * FROM {$wpdb->prefix}wpuf_subscribers{$where}";
 
-        return (array) ( $values ? $wpdb->get_results( $wpdb->prepare( $sql, $values ) ) : $wpdb->get_results( $sql ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared -- $where holds placeholders only.
+        $orderby = isset( $args['orderby'] ) && in_array( $args['orderby'], self::ORDERBY, true ) ? $args['orderby'] : 'id';
+        $order   = isset( $args['order'] ) && 'ASC' === strtoupper( (string) $args['order'] ) ? 'ASC' : 'DESC';
+        $number  = isset( $args['number'] ) ? absint( $args['number'] ) : 0;
+        $sql     = "SELECT * FROM {$wpdb->prefix}wpuf_subscribers{$where} ORDER BY {$orderby} {$order}";
+
+        if ( $number > 0 ) {
+            $sql     .= ' LIMIT %d OFFSET %d';
+            $values[] = $number;
+            $values[] = isset( $args['offset'] ) ? absint( $args['offset'] ) : 0;
+        }
+
+        return (array) ( $values ? $wpdb->get_results( $wpdb->prepare( $sql, $values ) ) : $wpdb->get_results( $sql ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared -- placeholders only; sort column and order allowlisted.
     }
 
     /**

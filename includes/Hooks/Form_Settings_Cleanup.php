@@ -2,6 +2,8 @@
 
 namespace WeDevs\Wpuf\Hooks;
 
+use WeDevs\Wpuf\Platform\Stores\Stores;
+
 use WeDevs\Wpuf\Platform\Stores\Normalizers;
 
 /**
@@ -40,7 +42,7 @@ class Form_Settings_Cleanup {
 
         // Update if settings were modified
         if ( $cleaned_settings !== $form_settings ) {
-            update_post_meta( $form_id, 'wpuf_form_settings', $cleaned_settings );
+            Stores::forms()->write_settings( $form_id, $cleaned_settings );
         }
     }
 
@@ -55,7 +57,7 @@ class Form_Settings_Cleanup {
             return;
         }
 
-        $form_settings = get_post_meta( $post_id, 'wpuf_form_settings', true );
+        $form_settings = Stores::forms()->read_meta( $post_id, 'wpuf_form_settings' );
 
         if ( empty( $form_settings ) ) {
             return;
@@ -65,7 +67,7 @@ class Form_Settings_Cleanup {
 
         // Update if settings were modified
         if ( $cleaned_settings !== $form_settings ) {
-            update_post_meta( $post_id, 'wpuf_form_settings', $cleaned_settings );
+            Stores::forms()->write_settings( $post_id, $cleaned_settings );
         }
     }
 

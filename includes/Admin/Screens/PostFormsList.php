@@ -8,6 +8,7 @@
 
 namespace WeDevs\Wpuf\Admin\Screens;
 
+use WeDevs\Wpuf\AI\Services\Provider_Settings;
 use WeDevs\Wpuf\Admin\BootPayload;
 use WeDevs\Wpuf\Admin\Forms\Admin_Form_Builder;
 use WeDevs\Wpuf\Admin\Forms\Template_Picker;
@@ -117,13 +118,8 @@ class PostFormsList extends Screen {
      * @return array
      */
     private function list_globals() {
-        $ai_settings        = get_option( 'wpuf_ai', [] );
-        $ai_provider        = isset( $ai_settings['ai_provider'] ) ? $ai_settings['ai_provider'] : '';
-        $ai_model           = isset( $ai_settings['ai_model'] ) ? $ai_settings['ai_model'] : '';
-        $provider_key_field = $ai_provider . '_api_key';
-        $ai_api_key         = isset( $ai_settings[ $provider_key_field ] ) ? $ai_settings[ $provider_key_field ] : '';
-        $ai_configured      = ! empty( $ai_provider ) && ! empty( $ai_api_key ) && ! empty( $ai_model );
-        $in_app             = function_exists( 'wpuf_is_admin_app' ) && wpuf_is_admin_app();
+        $ai_configured = wpuf()->platform()->get( Provider_Settings::class )->status()['configured'];
+        $in_app        = function_exists( 'wpuf_is_admin_app' ) && wpuf_is_admin_app();
 
         return [
             'wpuf_forms_list'     => [
