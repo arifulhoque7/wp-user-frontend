@@ -290,11 +290,10 @@ body.wpuf-admin-react #wpbody-content .wpuf-help {
 /* WPUF's own admin notices on the app screens (AppPage wraps them in
    .wpuf-own-notice; other plugins' notices keep WordPress's look): framed like
    the shared Notice (10px radius, 1px light border, tinted background by type,
-   14px text, no left bar). The notices area is centred at the content width. */
+   14px text, no left bar). The notices area spans the full width. */
 .wpuf-admin-notices {
     box-sizing: border-box;
-    max-width: 1400px;
-    margin: 16px auto 0;
+    margin: 16px 0 0;
     padding: 0 20px;
 }
 .wpuf-admin-notices .wpuf-own-notice .notice,

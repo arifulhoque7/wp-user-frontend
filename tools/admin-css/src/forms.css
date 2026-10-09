@@ -120,3 +120,12 @@ body.wpuf-builder-dragging * {
         animation: none;
     }
 }
+
+/* Builder settings nav: the redesigned nav hovers in light gray (develop's
+   hover was primary, so the generated base turns the icon white on hover).
+   Dark icon on hover; the active (primary) item keeps its white icon. */
+#wpuf-form-builder-app ul.wpuf-sidebar-menu li:hover:not(.active_settings_tab) a svg.custom-stroke,
+#wpuf-form-builder-settings ul.wpuf-sidebar-menu li:hover:not(.active_settings_tab) a svg.custom-stroke,
+h2#modules-menu:hover:not(.active_settings_tab) svg.custom-stroke {
+    stroke: #111827;
+}
