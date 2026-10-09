@@ -22,6 +22,10 @@ const BODY = { margin: '8px 0 0', display: 'flex', flexDirection: 'column', gap:
 const LINK = { border: 0, background: 'none', padding: 0, font: 'inherit', fontWeight: 700, color: PRIMARY, cursor: 'pointer' };
 const IMAGE = { display: 'block', width: '100%', borderRadius: 8, border: '1px solid #e5e7eb', boxSizing: 'border-box' };
 
+// The config's Pro message comes wrapped in develop's `<p class="wpuf-...">`;
+// the dialog shows its text.
+const proMessage = () => ( ( builderData().i18n || {} ).pro_feature_msg || '' ).replace( /<[^>]*>/g, '' ).trim();
+
 const assetUrl = () => ( window.wpuf_admin_script || {} ).asset_url || builderData().asset_url || '';
 
 /**
@@ -121,7 +125,7 @@ export function openProFieldAlert( title, fieldMsg ) {
             <ConfirmDialog
                 open
                 title={ <><span style={ { color: PRIMARY } }>{ title }</span> { i18n.is_a_pro_feature || '' }</> }
-                message={ i18n.pro_feature_msg || '' }
+                message={ proMessage() }
                 media={ data.lock_icon ? <img src={ data.lock_icon } alt="" style={ { width: 110, height: 110 } } /> : null }
                 showClose
                 cancelText={ false }
@@ -140,6 +144,7 @@ export function openProFieldAlert( title, fieldMsg ) {
             open
             title={ title }
             hideTitle
+            icon="none"
             showClose
             cancelText={ false }
             confirmText={ upgradeText }
@@ -152,8 +157,8 @@ export function openProFieldAlert( title, fieldMsg ) {
             <div style={ { display: 'flex', width: '100%', gap: 24, textAlign: 'left' } }>
                 <div style={ { width: '50%' } }>
                     { data.lock_icon && <img src={ data.lock_icon } alt="" /> }
-                    <h2 style={ { color: '#000' } }><span style={ { color: PRIMARY } }>{ title } </span>{ i18n.is_a_pro_feature || '' }</h2>
-                    <p>{ i18n.pro_feature_msg || '' }</p>
+                    <h2 style={ { margin: '0 0 8px', fontSize: 20, lineHeight: 1.4, fontWeight: 500, color: '#000' } }><span style={ { color: PRIMARY } }>{ title } </span>{ i18n.is_a_pro_feature || '' }</h2>
+                    <p style={ { margin: 0, fontSize: 20, lineHeight: 1.4, fontWeight: 500, color: '#6b7280' } }>{ proMessage() }</p>
                 </div>
                 <div style={ { display: 'flex', width: '50%', alignItems: 'center', justifyContent: 'center' } }>
                     { 'video' === fieldMsg.asset_type

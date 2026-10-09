@@ -107,6 +107,22 @@ class BuilderBootTest extends WP_UnitTestCase {
         unset( $_GET['keep'] );
     }
 
+    public function test_boot_lists_the_pro_preview_fields_without_pro() {
+        if ( class_exists( 'WP_User_Frontend_Pro' ) ) {
+            $this->markTestSkipped( 'Pro is active: no preview fields.' );
+        }
+
+        // A REST request (not is_admin()) has no Pro_Upgrades until the boot builds it.
+        unset( wpuf()->container['pro_upgrades'] );
+
+        $form_id  = wpuf_create_sample_form( 'Boot Form', 'wpuf_forms' );
+        $sections = wp_list_pluck( ( new BuilderBoot() )->boot( $form_id )['wpuf_form_builder']['panel_sections'], 'fields', 'id' );
+
+        $this->assertContains( 'repeat_field', $sections['custom-fields'] );
+        $this->assertContains( 'qr_code', $sections['others'] );
+        $this->assertArrayHasKey( 'pricing-fields', $sections );
+    }
+
     public function test_non_forms_are_rejected() {
         $page = self::factory()->post->create( [ 'post_type' => 'page' ] );
 
