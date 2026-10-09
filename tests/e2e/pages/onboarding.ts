@@ -69,6 +69,8 @@ export class OnboardingPage extends Base {
 
     async gotoTools() {
         await this.navigateToURL(this.toolsUrl);
+        // React Tools route: wait for the Onboarding card before reading it.
+        await this.page.locator(Selectors.onboarding.entry.onboardingBox).waitFor({ timeout: 30000 }).catch(() => {});
     }
 
     /**

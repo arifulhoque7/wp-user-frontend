@@ -2025,7 +2025,8 @@ export const Selectors = {
                 showIcons: '(//*[self::label or self::div or self::span][normalize-space(text())="Show Icon"]/following::*[@role="radio" or @role="checkbox" or (self::input and not(@type="radio") and not(@type="checkbox") and not(@type="hidden") and not(@aria-hidden="true"))])[1]',
                 clickFieldIcon: '(//div[contains(@class,"panel-field-opt-icon-selector")]//div[contains(@class,"option-fields-section")]/div[@role="button"] | //*[self::label or self::div or self::span][normalize-space()="Field Icon"]//..//..//div[@class="option-fields-section wpuf-relative"])[1]',
                 searchIcons: '//input[@placeholder="Search icons... (e.g., user, email, home)"]',
-                envelope: '//i[@class="fas fa-envelope"]',
+                // React icon grid: the <i> carries size classes too, so match the class token.
+                envelope: '(//*[contains(@class,"wpuf-icon-grid-item")][.//i[contains(concat(" ",normalize-space(@class)," ")," fa-envelope ")]])[1]',
                 validateEnvelope: '//i[contains(@class,"fas fa-envelope")]'
             },
 
@@ -2280,9 +2281,10 @@ export const Selectors = {
     onboarding: {
         // Entry point on User Frontend > Tools
         entry: {
-            onboardingBox: '//div[@class="postbox"][.//h3[normalize-space()="Onboarding"]]',
-            startButton: '//div[@class="postbox"][.//h3[normalize-space()="Onboarding"]]//a[contains(@class,"button-primary")]',
-            rerunWarning: '//div[@class="postbox"][.//h3[normalize-space()="Onboarding"]]//p[contains(@class,"notice-warning")]',
+            // React Tools route (#/tools): the "Onboarding" tool card, its button and its warning Notice.
+            onboardingBox: '(//h3[normalize-space()="Onboarding"]/ancestor::div[.//button][1])',
+            startButton: '(//h3[normalize-space()="Onboarding"]/ancestor::div[.//button][1])//button',
+            rerunWarning: '(//h3[normalize-space()="Onboarding"]/ancestor::div[.//button][1])//*[@data-slot="alert"][@data-wpuf-tone="warning"]',
         },
 
         // Shared chrome
