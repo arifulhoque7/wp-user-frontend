@@ -35,11 +35,15 @@ Rules of the container: services are built only in providers (`share_tagged`), d
 | React admin assets | `Admin\React_Assets` (bundles under `assets/js/react/`, their `*.asset.php`, screen stylesheets); the legacy `WeDevs\Wpuf\Assets` keeps the full handle list and merges these in |
 | A React app | `src/admin/apps/<app>/` (forms-list, form-builder, subscriptions, settings, onboarding, tools, transactions, help, welcome, ai-form-builder, the Pro promos); shared parts in `src/admin/shared/`; the runtime `window.wpuf` in `src/admin/app/` |
 | Settings values and schema | `Platform\Stores\SettingsStore`, `includes/functions/settings-options.php` (the schema), `includes/functions/settings-react.php`; classic mode stays on `Lib/WeDevs_Settings_API.php` |
+| A global `wpuf_*` function | `includes/functions/<domain>.php` by what it touches (posts, users, forms, shortcodes, payments, settings, admin, helpers); all loaded by `wpuf-functions.php` |
+| Pro previews on a free site | `includes/Free/*` through `Free_Loader` (Pro off only) |
+| The AI form builder | `includes/AI/RestController.php` (routes, permissions, request parsing) delegating to `includes/AI/Services/` (`Generation`, `Provider_Settings`, `Field_Options`, `Form_Writer`); `AI\FormGenerator` and `AI\Config` stay |
+| Stray output in front of a JSON answer | `Platform\Http\JsonOutputGuard` (buffers `wpuf/v1` REST and `wpuf_*` AJAX requests from `plugins_loaded`, drops what other code printed before the JSON, logs it under WP_DEBUG); client side `src/admin/shared/api/parse.js` (`parseJsonBody`, published as `@wpuf/api`) |
 
 ## Folder map (PHP)
 
 ```
-includes/Platform/            the platform: Container, ServiceProvider, Bootstrap, Caps, VersionGuard
+includes/Platform/            the platform: Container, ServiceProvider, Bootstrap, Caps, VersionGuard, Http/JsonOutputGuard
   Contracts/                  Hookable, RestRoute, DataStore
   Providers/                  Core, Store, Rest, Ai service providers
   REST/                       Manager, RestController (base), Controllers/*
@@ -53,9 +57,13 @@ includes/Builder/             BuilderBoot, FormSave, HookBridge, HookDeprecation
 includes/Admin/               legacy admin services still in use (Menu, Admin_Tools, Admin_Subscription, Onboarding facade,
                               Posting, Help_Content, views/ for Subscribers / Premium / shortcode builder / help content)
 includes/Api/                 alias stubs of the old controller names (deprecated)
-includes/AI/                  AI form builder (Config, FormGenerator, prompts, its RestController)
-includes/Frontend/, Fields/, Integrations/, Free/   the site frontend, field types, third-party integrations, free-only promos
-wpuf-functions.php            global functions (public API)
+includes/AI/                  AI form builder (Config, FormGenerator, prompts, its RestController, Services/)
+includes/Frontend/, Fields/, Integrations/   the site frontend, field types, third-party integrations
+includes/Free/                free plugin only: Free_Loader (hooks, delegating facade) + Settings_Preview, Modules_Preview,
+                              Form_Settings_Preview, Subscription_Preview, Promo_Pages, Pro_Prompt, Edit_Profile, Simple_Login
+wpuf-functions.php            loader of the global functions (public API): includes/functions/{helpers,settings,posts,users,
+                              forms,shortcodes,payments,admin}.php, plus modules.php and admin-app.php; the file-scope hooks
+                              and the two Walker classes stay in the loader
 ```
 
 Pro mirrors this under `wpuf-pro/includes/Platform/<Feature>/` (Coupons, License, Modules, Settings, Subscriptions, Builder, Screens), each with its provider.

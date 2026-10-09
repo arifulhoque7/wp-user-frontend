@@ -128,6 +128,16 @@ class AiFormBuilderTest extends WP_UnitTestCase {
         $wp_rest_server = null; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
     }
 
+    public function test_read_routes_answer_through_the_services() {
+        wp_set_current_user( self::factory()->user->create( [ 'role' => 'administrator' ] ) );
+
+        foreach ( [ 'providers', 'settings', 'models', 'integrations' ] as $route ) {
+            $response = rest_do_request( new WP_REST_Request( 'GET', '/wpuf/v1/ai-form-builder/' . $route ) );
+            $this->assertSame( 200, $response->get_status(), $route );
+            $this->assertIsArray( $response->get_data(), $route );
+        }
+    }
+
     public function test_generate_without_a_key_fails_without_a_provider_request() {
         update_option( 'wpuf_ai', [ 'ai_provider' => 'openai', 'ai_model' => 'gpt-4o-mini', 'openai_api_key' => '' ] );
 
