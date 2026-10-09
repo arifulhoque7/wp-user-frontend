@@ -46,7 +46,7 @@ export function selectOptions( options ) {
  * the legacy `<select>`. Shows the stored value, else the default, else the
  * placeholder; nothing is written until a pick.
  */
-export default function SelectDropdown( { field, name, value, onChange } ) {
+export default function SelectDropdown( { field, name, value, onChange, disabled = false } ) {
     const options = selectOptions( field.options );
     const current = value !== undefined && value !== '' ? value : ( field.default || '' );
 
@@ -60,6 +60,7 @@ export default function SelectDropdown( { field, name, value, onChange } ) {
                     options={ options }
                     value={ current }
                     searchable={ options.length >= SEARCH_FROM }
+                    disabled={ disabled }
                     placeholder={ field.placeholder || __( 'Select…', 'wp-user-frontend' ) }
                     onChange={ ( next ) => onChange( name, next ) }
                 />

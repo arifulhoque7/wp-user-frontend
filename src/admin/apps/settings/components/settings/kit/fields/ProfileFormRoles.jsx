@@ -11,7 +11,8 @@ import QuickLinks from './QuickLinks';
  *
  * Roles, available forms and the current map arrive in the `profile_role_forms`
  * side-channel (`extra`); edits are written back there and persisted server-side
- * via `wpuf_settings_saved` (Pro only).
+ * via `wpuf_settings_saved` (Pro only). Without Pro nothing would store a
+ * pick, so the selects are locked, as develop's disabled `pro-preview` rows.
  */
 const KEY = 'profile_role_forms';
 
@@ -52,8 +53,9 @@ export default function ProfileFormRoles() {
                             name={ `role_${ role }` }
                             value={ map[ role ] ? String( map[ role ] ) : '' }
                             onChange={ ( n, val ) => setRole( role, val ) }
+                            disabled={ ! isPro }
                         />
-                        <QuickLinks kind="profile_form" value={ map[ role ] ? String( map[ role ] ) : '' } addNew={ false } />
+                        { isPro && <QuickLinks kind="profile_form" value={ map[ role ] ? String( map[ role ] ) : '' } addNew={ false } /> }
                     </div>
                 </div>
             ) ) }
