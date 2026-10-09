@@ -1,4 +1,4 @@
-import { existsSync } from 'fs';
+import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { Browser, BrowserContext, Page, test, expect, chromium } from '@playwright/test';
 import { faker } from '@faker-js/faker';
@@ -51,6 +51,9 @@ const APP = `${Urls.baseUrl}/wp-admin/admin.php?page=wp-user-frontend`;
  * @Test_APP0021 : Builder seam "+": between two fields and after the last one it opens the field list and adds the picked field at that position
  * @Test_APP0022 : Column cell "+": adds a field into that column; the list leaves out types a column refuses
  * @Test_APP0024 : Post form builder Submissions tab; Settings / Form Editor tabs from the Submissions page; none on registration forms
+ * @Test_APP0026 : Forms list search with no match shows the empty state; clearing it brings the list back
+ * @Test_APP0027 : Builder refuses a second single-instance field; Remove asks first, Cancel keeps the field
+ * @Test_APP0028 : Tools import refuses a file with a script block and imports a clean export
  * @Test_APP0025 : Pro modules switch on / off through the React page; without a valid license all are locked and REST refuses switch-on
  * @Test_APP0023 : A column stored the develop way (inner fields without ids, as after an update) opens each inner field for editing
  */
@@ -885,8 +888,9 @@ test.describe('Admin app', () => {
         test.skip(!new AiFormBuilderPage(page).proActive(), 'modules need Pro');
 
         const MODULE = 'seo/wpuf-seo.php';
-        const active = () => aiWp(['option', 'get', 'wpuf_pro_active_modules', '--format=json']);
-        const wasOn = active().includes('seo/');
+        // WP-CLI JSON escapes the slash (`seo\/wpuf-seo.php`), so match the file name only.
+        const isOn = () => aiWp(['option', 'get', 'wpuf_pro_active_modules', '--format=json']).includes('wpuf-seo.php');
+        const wasOn = isOn();
         const license = aiWp(['option', 'get', 'wpuf_license', '--format=json']).trim();
 
         try {
@@ -900,7 +904,7 @@ test.describe('Admin app', () => {
                 await sw.click();
                 expect((await saved).status()).toBe(200);
                 await expect(sw).toHaveAttribute('aria-checked', String(want));
-                expect(active().includes('seo/'), `stored after switching ${want ? 'on' : 'off'}`).toBe(want);
+                expect(isOn(), `stored after switching ${want ? 'on' : 'off'}`).toBe(want);
             }
 
             // No valid license: locked, no switches, and the REST route refuses to switch one on.
@@ -918,6 +922,108 @@ test.describe('Admin app', () => {
             expect(status).toBe(403);
         } finally {
             aiWp(['option', 'update', 'wpuf_license', license, '--format=json']);
+        }
+    });
+
+    test('APP0026 : Forms list search with no match shows the empty state; clearing it brings the list back', { tag: ['@Lite', '@Test_APP0026'] }, async () => {
+        test.skip(!(await appOn()), 'admin app is off');
+
+        await page.goto('about:blank');
+        await page.goto(`${APP}#/post-forms`);
+        const list = page.locator('#wpuf-post-forms-list-table-view');
+        const search = list.locator('input[placeholder="Search Forms"]').first();
+        await expect(list.locator('tbody tr').first()).toBeVisible({ timeout: 30000 });
+
+        await search.fill('no-such-form-' + faker.string.alphanumeric(10));
+        await expect(list.getByText('No forms found matching your search!')).toBeVisible({ timeout: 15000 });
+
+        await search.fill('');
+        await expect(list.locator('tbody tr').first()).toBeVisible({ timeout: 15000 });
+        await expect(list.getByText('No forms found matching your search!')).toHaveCount(0);
+    });
+
+    test('APP0027 : Builder refuses a second single-instance field; Remove asks first and Cancel keeps the field', { tag: ['@Lite', '@Test_APP0027'] }, async () => {
+        test.skip(!(await appOn()), 'admin app is off');
+        test.skip(!HAS_WP_CLI, 'needs WP-CLI on the site');
+
+        const id = newForm('APP0027 single ' + faker.string.alphanumeric(6));
+
+        try {
+            await page.goto('about:blank');
+            await page.goto(`${APP}#/post-forms/${id}/edit`);
+            await expect(page.locator('[data-form-field="post_title"]').first()).toBeVisible({ timeout: 30000 });
+            const titles = page.locator('li[data-dnd-item].form-field-post_title');
+            const before = await titles.count();
+            expect(before).toBe(1);
+
+            // The sample form has a Post Title already: a second one is refused.
+            await page.locator('[data-form-field="post_title"]').first().click();
+            const oops = page.locator('[role="alertdialog"]').filter({ hasText: 'You already have this field in the form' });
+            await expect(oops).toBeVisible();
+            await oops.getByRole('button').last().click();
+            await expect(oops).toHaveCount(0);
+            await expect(titles).toHaveCount(before);
+
+            // Remove on a field asks first; Cancel keeps it.
+            const fields = page.locator('li[data-dnd-item]');
+            const fieldsBefore = await fields.count();
+            await titles.first().hover();
+            await titles.first().getByRole('button', { name: 'Remove' }).first().click();
+            const confirm = page.locator('[role="alertdialog"]').filter({ hasText: 'delete this field' });
+            await expect(confirm).toBeVisible();
+            await confirm.getByRole('button', { name: /Cancel/ }).click();
+            await expect(confirm).toHaveCount(0);
+            await expect(fields).toHaveCount(fieldsBefore);
+        } finally {
+            await discardBuilder().catch(() => {});
+            aiWp(['post', 'delete', String(id), '--force']);
+        }
+    });
+
+    test('APP0028 : Tools import refuses a file with a script block and imports a clean export', { tag: ['@Lite', '@Test_APP0028'] }, async () => {
+        test.skip(!(await appOn()), 'admin app is off');
+        test.skip(!HAS_WP_CLI, 'needs WP-CLI on the site');
+
+        const title = 'APP0028 export ' + faker.string.alphanumeric(6);
+        const id = newForm(title);
+        const dir = join(process.cwd(), 'test-results');
+        const clean = join(dir, 'app0028-clean.json');
+        const dirty = join(dir, 'app0028-script.json');
+
+        try {
+            await page.goto('about:blank');
+            await page.goto(`${APP}#/tools?tab=import`);
+            const exported = await page.evaluate(async (formId) => {
+                const nonce = (window as unknown as { wpApiSettings?: { nonce: string } }).wpApiSettings?.nonce || '';
+                const res = await fetch(`/wp-json/wpuf/v1/admin/tools/export?type=wpuf_forms&ids[]=${formId}`, { headers: { 'X-WP-Nonce': nonce } });
+                // The Export tab saves only `forms` from this response as the file.
+                return JSON.stringify((await res.json()).forms);
+            }, id);
+            mkdirSync(dir, { recursive: true });
+            writeFileSync(clean, exported);
+            writeFileSync(dirty, '<script>alert(1)</script>' + exported);
+            const countForms = () => Number(aiWp(['post', 'list', '--post_type=wpuf_forms', `--title=${title}`, '--format=count']).trim());
+            expect(countForms()).toBe(1);
+
+            const input = page.locator('#wpbody-content input[type="file"]').first();
+            const imported = () => page.waitForResponse((r) => r.url().includes('admin/tools/import') && 'POST' === r.request().method());
+
+            await input.setInputFiles(dirty);
+            let response = imported();
+            await page.getByRole('button', { name: 'Import Forms' }).click();
+            expect((await response).status()).toBe(415);
+            await expect(page.getByText('Please upload a valid JSON export file.').first()).toBeVisible();
+            expect(countForms()).toBe(1);
+
+            await input.setInputFiles(clean);
+            response = imported();
+            await page.getByRole('button', { name: 'Import Forms' }).click();
+            expect((await response).status()).toBe(200);
+            await expect(page.getByText('Forms imported successfully.').first()).toBeVisible();
+            expect(countForms()).toBe(2);
+        } finally {
+            const ids = aiWp(['post', 'list', '--post_type=wpuf_forms', `--title=${title}`, '--format=ids']).trim();
+            if (ids) aiWp(['post', 'delete', ...ids.split(/\s+/), '--force']);
         }
     });
 });

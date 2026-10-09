@@ -160,6 +160,30 @@ class ToolsTransactionsRestTest extends WP_UnitTestCase {
         $this->assertSame( [ 'fields', 'settings', 'notifications' ], array_keys( $data['forms'][0]['meta_data'] ) );
     }
 
+    /**
+     * Install WPUF Pages a second time reuses the pages (develop made a second
+     * set; QA story 24).
+     */
+    public function test_install_pages_twice_creates_no_duplicates() {
+        wp_set_current_user( $this->admin );
+
+        // A real REST request defines REST_REQUEST, which skips the installer's
+        // redirect; rest_do_request() does not, so mark the call the way the
+        // onboarding screen does (also no redirect) instead of defining it.
+        $_GET['page'] = \WeDevs\Wpuf\Admin\Onboarding::PAGE_SLUG;
+
+        try {
+            $this->assertSame( 200, $this->call( 'POST', 'admin/tools/install-pages' )->get_status() );
+            $first = wp_count_posts( 'page' )->publish;
+
+            $this->assertSame( 200, $this->call( 'POST', 'admin/tools/install-pages' )->get_status() );
+            $this->assertSame( $first, wp_count_posts( 'page' )->publish, 'no new pages on the second run' );
+            $this->assertGreaterThan( 0, (int) $first );
+        } finally {
+            unset( $_GET['page'] );
+        }
+    }
+
     public function test_import_without_a_file_is_refused() {
         wp_set_current_user( $this->admin );
 
