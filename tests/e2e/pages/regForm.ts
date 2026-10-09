@@ -608,7 +608,7 @@ export class RegFormPage extends Base {
         expect(emailTo).toContain(VendorRegistrationForm.wcVendorEmail);
 
         // View email content to validate body
-        await this.validateAndClick(Selectors.vendorRegistrationForms.wpMailLogValidation.viewEmailContent(VendorRegistrationForm.wcVendorEmail));
+        await this.validateAndClick(Selectors.vendorRegistrationForms.wpMailLogValidation.viewActivationEmail(VendorRegistrationForm.wcVendorEmail));
 
         const activationLink = await this.page.locator(Selectors.vendorRegistrationForms.wpMailLogValidation.grabActivationLink).getAttribute('href');
         //expect(emailBody).toContain(expectedBodyContent);
@@ -815,10 +815,8 @@ export class RegFormPage extends Base {
         const emailTo = await this.page.innerText(Selectors.regFormSettings.wpMailLogValidation.sentEmailAddress(VendorRegistrationForm.wcfmMemberEmail));
         expect(emailTo).toContain(VendorRegistrationForm.wcfmMemberEmail);
 
-        // View email content to validate body: the activation mail is the second row for this
-        // address (the "Status has been changed to pending" mail comes right after it), as in
-        // the WC Vendors check.
-        await this.validateAndClick(Selectors.vendorRegistrationForms.wpMailLogValidation.viewEmailContent(VendorRegistrationForm.wcfmMemberEmail));
+        // View the activation mail (by subject) to grab the link.
+        await this.validateAndClick(Selectors.vendorRegistrationForms.wpMailLogValidation.viewActivationEmail(VendorRegistrationForm.wcfmMemberEmail));
 
         const activationLink = await this.page.locator(Selectors.regFormSettings.wpMailLogValidation.grabActivationLink).getAttribute('href');
         //expect(emailBody).toContain(expectedBodyContent);

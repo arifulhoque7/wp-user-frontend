@@ -1705,6 +1705,9 @@ export const Selectors = {
             wpMailLogPage: '//h2[normalize-space()="WP Mail Log"]',
             sentEmailAddress: (emails: string) => `(//div[normalize-space()='${emails}'])[1]`,
             viewEmailContent: (emails: string) => `(//div[normalize-space()='${emails}'])[2]`,
+            // The activation mail of that address, by subject (not by row position: other
+            // mails to the same address may come before or after it).
+            viewActivationEmail: (email: string) => `(//tr[.//div[normalize-space()='${email}']][contains(normalize-space(.),'Account Activation')]//div[normalize-space()='${email}'])[1]`,
             previewEmailContentBody: '(//div[@class="wml-body-wrapper"])[1]',
             grabActivationLink: '//a[normalize-space()="Activation Link"]',
 
