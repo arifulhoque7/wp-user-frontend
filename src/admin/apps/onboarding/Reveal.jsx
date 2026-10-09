@@ -11,7 +11,7 @@
 import { Fragment } from '@wordpress/element';
 
 /** The stagger between words, as FlyHR uses. */
-export const WORD_STAGGER_MS = 55;
+const WORD_STAGGER_MS = 55;
 
 /**
  * One element that blurs in and rises into place after `delay`.

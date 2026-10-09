@@ -3,7 +3,7 @@ import { useDispatch, useSelect } from '@wordpress/data';
 import { __, sprintf } from '@wordpress/i18n';
 import { Radio, Select } from '@wpuf/components';
 import { STORE_NAME } from '../../store';
-import HelpTextIcon from '../Settings/fields/HelpTextIcon';
+import { HelpTextIcon } from '@wpuf/components';
 import { OPERATORS, RULE_OPTIONS, isEmptyOperator, readPath, writePath } from './conditionalUtils';
 
 // Develop's integration-conditional-logic: only choice fields can be rules,

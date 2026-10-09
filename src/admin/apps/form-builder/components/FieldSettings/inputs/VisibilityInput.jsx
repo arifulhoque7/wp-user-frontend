@@ -46,7 +46,7 @@ export default function VisibilityInput( { optionField, field, value, onChange }
         <div className="panel-field-opt panel-field-opt-radio">
             <div className="flex">
                 { optionField.title && (
-                    <label className="wpuf-option-field-title wpuf-font-sm text-gray-700 font-medium">
+                    <label className="wpuf-option-field-title text-gray-700 font-medium">
                         { optionField.title }
                     </label>
                 ) }

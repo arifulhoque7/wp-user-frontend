@@ -1,7 +1,7 @@
 import { RawHTML } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { NumberInput, Select, TextInput } from '@wpuf/components';
-import HelpTextIcon from './HelpTextIcon';
+import { HelpTextIcon } from '@wpuf/components';
 import { hasEmptyOption, orderedOptions } from './settingOptions';
 import { DateInput } from './DateField';
 

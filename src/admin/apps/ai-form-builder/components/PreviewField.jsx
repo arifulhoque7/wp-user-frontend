@@ -90,7 +90,7 @@ const PLACEHOLDERS = {
  *
  * @return {string} Placeholder.
  */
-export function fieldPlaceholder( type ) {
+function fieldPlaceholder( type ) {
     return PLACEHOLDERS[ type ] || 'Enter value...';
 }
 

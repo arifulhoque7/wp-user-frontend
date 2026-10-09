@@ -31,10 +31,6 @@ export function getCaps( state ) {
     return state.caps;
 }
 
-export function getModules( state ) {
-    return state.modules;
-}
-
 export function getProSections( state ) {
     return state.proSections;
 }

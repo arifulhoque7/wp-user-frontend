@@ -255,7 +255,7 @@ export default function OptionDataInput( { optionField, field } ) {
     return (
         <div className="panel-field-opt panel-field-opt-text">
             <div className="flex">
-                <label className="wpuf-font-sm text-gray-700">
+                <label className=" text-gray-700">
                     { optionField.title }
                     <SettingHelpText text={ optionField.help_text } />
                 </label>

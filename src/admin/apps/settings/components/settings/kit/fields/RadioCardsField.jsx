@@ -1,5 +1,5 @@
 import { useCallback } from '@wordpress/element';
-import HelpTextIcon from './HelpTextIcon';
+import { HelpTextIcon } from '@wpuf/components';
 import ProBadge from '../ProBadge';
 
 const IS_PRO = ( window.wpuf_settings || {} ).is_pro;

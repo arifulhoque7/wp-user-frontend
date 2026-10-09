@@ -1,6 +1,6 @@
 import { WpEditor } from '@wpuf/components';
 import SettingLabel from './SettingLabel';
-import HelpTextIcon from './HelpTextIcon';
+import { HelpTextIcon } from '@wpuf/components';
 
 // Legacy screen: WeDevs_Settings_API::callback_wysiwyg() wp_editor( teeny, no
 // media buttons, 10 rows ), i.e. WordPress core's teeny toolbar.

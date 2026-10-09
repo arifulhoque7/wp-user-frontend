@@ -16,7 +16,7 @@ import { shownFirstOption } from './shownFirstOptions';
  * @param {Object} fieldDef  Field definition.
  * @return {string} Input name.
  */
-export function settingName( fieldName, fieldDef ) {
+function settingName( fieldName, fieldDef ) {
     // Develop's rich-text bodies are wp_editor()s posting
     // wpuf_settings[notification][<key>] even when the definition has no name
     // (Welcome Email Body).
@@ -35,7 +35,7 @@ export function settingName( fieldName, fieldDef ) {
  * @param {string} name Input name (`field.name`) or the field key.
  * @return {Array<string>} [ key ] or [ group, key ].
  */
-export function settingPath( name ) {
+function settingPath( name ) {
     const match = /^wpuf_settings\[(\w+)\](?:\[(\w+)\])?(?:\[\])?$/.exec( name || '' );
 
     if ( ! match ) {

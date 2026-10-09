@@ -1,5 +1,6 @@
 /**
- * Help text tooltip icon — matches Vue's <help-text> component.
+ * Help text tooltip icon (the Vue builder's <help-text>): one copy for the
+ * settings kit and the builder's field settings (`@wpuf/components`).
  */
 export default function HelpTextIcon( { text } ) {
     if ( ! text ) {

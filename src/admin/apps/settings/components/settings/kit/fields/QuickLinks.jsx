@@ -21,7 +21,7 @@ export const QUICK_LINKS = {
 };
 
 // Where each AI provider issues API keys.
-export const API_KEY_URLS = {
+const API_KEY_URLS = {
     openai: 'https://platform.openai.com/api-keys',
     anthropic: 'https://console.anthropic.com/settings/keys',
     google: 'https://aistudio.google.com/app/apikey',

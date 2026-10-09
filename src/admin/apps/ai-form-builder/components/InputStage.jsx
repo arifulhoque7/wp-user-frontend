@@ -13,7 +13,7 @@ import { cn } from '@wedevs/plugin-ui';
 import { config, fetchIntegrations } from '../api';
 import { SparklesIcon, Spinner } from './icons';
 
-export const MAX_DESCRIPTION = 300;
+const MAX_DESCRIPTION = 300;
 
 /**
  * Prompt templates for the form type and integration.
@@ -23,7 +23,7 @@ export const MAX_DESCRIPTION = 300;
  *
  * @return {Array} { id, label }.
  */
-export function promptTemplatesFor( formType, integration ) {
+function promptTemplatesFor( formType, integration ) {
     const key = 'registration' === formType ? 'profile' : formType;
     const templates = ( config().promptTemplates || {} )[ key ] || {};
 

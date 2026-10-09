@@ -22,7 +22,7 @@ const has = ( object, key ) => !! object && Object.prototype.hasOwnProperty.call
  *
  * @return {*} Value.
  */
-export function readFieldValue( field, subscription ) {
+function readFieldValue( field, subscription ) {
 	if ( ! subscription ) {
 		return '';
 	}

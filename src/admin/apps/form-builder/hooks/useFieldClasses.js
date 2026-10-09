@@ -45,21 +45,6 @@ export function useFieldClasses( field, formId ) {
 }
 
 /**
- * Check if a field is a Pro feature.
- *
- * @param {Object} field         The field object
- * @param {Object} fieldSettings The full fieldSettings from the store
- * @return {boolean}
- */
-export function isProFeature( field, fieldSettings ) {
-    if ( ! field || ! field.template ) {
-        return false;
-    }
-    const config = fieldSettings[ field.template ];
-    return !! ( config && config.pro_feature );
-}
-
-/**
  * Format a price value to 2 decimal places.
  *
  * @param {*} price

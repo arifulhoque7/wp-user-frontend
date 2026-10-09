@@ -1,5 +1,4 @@
 import {
-    SET_POST,
     INITIALIZE_STATE,
     SET_FORM_FIELDS,
     ADD_FIELD,
@@ -241,11 +240,6 @@ function updateFieldInArray( fields, fieldId, fieldName, value ) {
 
 export default function reducer( state = DEFAULT_STATE, action ) {
     switch ( action.type ) {
-        case SET_POST:
-            return {
-                ...state,
-                post: action.post,
-            };
 
         case INITIALIZE_STATE:
             return {

@@ -26,7 +26,7 @@ const randomIndex = ( length ) => Math.floor( Math.random() * length );
  *
  * @return {string} Text.
  */
-export function helpfulExamples() {
+function helpfulExamples() {
     return [
         __( "I'm a form builder assistant. I can help you with form-related tasks only.", 'wp-user-frontend' ),
         '',
@@ -57,7 +57,7 @@ export function helpfulExamples() {
  *
  * @return {string} Text.
  */
-export function quickExamples() {
+function quickExamples() {
     return [
         __( 'Try asking me to:', 'wp-user-frontend' ),
         '• ' + __( 'Add a new field: "Add a phone number field"', 'wp-user-frontend' ),

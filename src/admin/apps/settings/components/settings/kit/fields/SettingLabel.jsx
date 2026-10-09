@@ -1,5 +1,5 @@
 import { __ } from '@wordpress/i18n';
-import HelpTextIcon from './HelpTextIcon';
+import { HelpTextIcon } from '@wpuf/components';
 
 /**
  * Label row of a settings field: label, help tooltip, optional "Learn More"

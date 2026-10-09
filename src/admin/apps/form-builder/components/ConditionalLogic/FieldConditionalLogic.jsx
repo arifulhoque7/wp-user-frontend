@@ -81,7 +81,7 @@ function ConditionalLogicPanel( { optionField, field, value: stored, onChange } 
 
     return (
         <div className="panel-field-opt panel-field-opt-conditional-logic">
-            <label className="wpuf-option-field-title wpuf-font-sm text-gray-700 font-medium">
+            <label className="wpuf-option-field-title text-gray-700 font-medium">
                 { optionField.title || __( 'Conditional Logic', 'wp-user-frontend' ) }
             </label>
 

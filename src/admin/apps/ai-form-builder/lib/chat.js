@@ -54,7 +54,7 @@ export function newSessionId( prefix ) {
  *
  * @return {string} Description.
  */
-export function fieldTypeDescription( type ) {
+function fieldTypeDescription( type ) {
     return TYPE_DESCRIPTIONS[ type ] || 'Input field';
 }
 

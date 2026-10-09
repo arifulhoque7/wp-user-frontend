@@ -208,7 +208,7 @@ export function convertFieldsToPreview( apiFields ) {
  *
  * @return {string} Input type.
  */
-export function mapToInputType( fieldType ) {
+function mapToInputType( fieldType ) {
     return INPUT_TYPES[ fieldType ] || 'text';
 }
 
@@ -219,7 +219,7 @@ export function mapToInputType( fieldType ) {
  *
  * @return {boolean} Meta.
  */
-export function shouldBeMeta( fieldName ) {
+function shouldBeMeta( fieldName ) {
     return ! [ 'title', 'content', 'excerpt', 'author', 'category', 'tags' ].includes( fieldName?.toLowerCase() );
 }
 

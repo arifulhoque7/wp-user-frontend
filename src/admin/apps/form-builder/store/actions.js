@@ -1,5 +1,4 @@
 import {
-    SET_POST,
     INITIALIZE_STATE,
     SET_FORM_FIELDS,
     ADD_FIELD,
@@ -37,10 +36,6 @@ import {
 } from './constants';
 
 // Post
-export function setPost( post ) {
-    return { type: SET_POST, post };
-}
-
 // Bulk initialization for fields not covered by individual setters
 export function initializeState( payload ) {
     return { type: INITIALIZE_STATE, payload };
@@ -101,10 +96,6 @@ export function removeRepeatField( repeatFieldId, index ) {
     return { type: REMOVE_REPEAT_FIELD, repeatFieldId, index };
 }
 
-export function moveRepeatField( repeatFieldId, fromIndex, toIndex ) {
-    return { type: MOVE_REPEAT_FIELD, repeatFieldId, fromIndex, toIndex };
-}
-
 export function cloneRepeatField( repeatFieldId, index, newId ) {
     return { type: CLONE_REPEAT_FIELD, repeatFieldId, index, newId };
 }
@@ -126,10 +117,6 @@ export function moveFieldTo( from, to ) {
 // Panel / UI actions
 export function setCurrentPanel( panel ) {
     return { type: SET_CURRENT_PANEL, panel };
-}
-
-export function setEditingField( fieldId ) {
-    return { type: SET_EDITING_FIELD, fieldId };
 }
 
 export function openFieldSettings( fieldId ) {
@@ -162,31 +149,7 @@ export function updateFormSetting( key, value ) {
 }
 
 // Notifications
-export function addNotification( notification ) {
-    return { type: ADD_NOTIFICATION, notification };
-}
-
-export function removeNotification( index ) {
-    return { type: REMOVE_NOTIFICATION, index };
-}
-
-export function cloneNotification( index ) {
-    return { type: CLONE_NOTIFICATION, index };
-}
-
-export function updateNotification( index, value ) {
-    return { type: UPDATE_NOTIFICATION, index, value };
-}
-
-export function updateNotificationProperty( index, property, value ) {
-    return { type: UPDATE_NOTIFICATION_PROPERTY, index, property, value };
-}
-
 // Integrations
-export function updateIntegration( index, value ) {
-    return { type: UPDATE_INTEGRATION, index, value };
-}
-
 // Dirty state
 export function markDirty() {
     return { type: MARK_DIRTY };

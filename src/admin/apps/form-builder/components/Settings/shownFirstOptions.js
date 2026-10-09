@@ -9,9 +9,9 @@ import { orderedOptions } from './fields/settingOptions';
  * and 15). Keyed by setting path; `FIRST` = the field's own first option (lists
  * that come from the site, e.g. MailPoet lists).
  */
-export const FIRST = true;
+const FIRST = true;
 
-export const SHOWN_FIRST_OPTIONS = {
+const SHOWN_FIRST_OPTIONS = {
     'expiration_settings.expiration_time_type': 'day',
     'expiration_settings.expired_post_status': 'draft',
     label_position: 'above',

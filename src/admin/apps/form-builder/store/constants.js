@@ -1,7 +1,6 @@
 export const STORE_NAME = 'wpuf/form-builder';
 
 // Initialization
-export const SET_POST = 'SET_POST';
 export const INITIALIZE_STATE = 'INITIALIZE_STATE';
 
 // Field actions

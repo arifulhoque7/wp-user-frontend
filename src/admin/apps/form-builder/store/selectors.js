@@ -123,6 +123,3 @@ export function getI18n( state ) {
     return state.i18n;
 }
 
-export function getShowCustomFieldTooltip( state ) {
-    return state.showCustomFieldTooltip;
-}

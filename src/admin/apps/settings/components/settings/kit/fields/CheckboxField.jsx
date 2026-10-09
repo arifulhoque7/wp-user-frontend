@@ -1,5 +1,5 @@
 import { Checkbox } from '@wpuf/components';
-import HelpTextIcon from './HelpTextIcon';
+import { HelpTextIcon } from '@wpuf/components';
 
 const isOn = ( value ) => true === value || 'yes' === value || 'on' === value;
 

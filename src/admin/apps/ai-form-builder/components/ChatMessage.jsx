@@ -18,7 +18,7 @@ import { LogoBadge, RestoreIcon, TypingDots } from './icons';
  * @param {Object} props
  * @param {string} props.text Text.
  */
-export function RichText( { text } ) {
+function RichText( { text } ) {
     return String( text || '' ).split( /(\*\*[^*]+\*\*)/g ).map( ( part, index ) => {
         if ( /^\*\*[^*]+\*\*$/.test( part ) ) {
             return <strong key={ index }>{ part.slice( 2, -2 ) }</strong>;

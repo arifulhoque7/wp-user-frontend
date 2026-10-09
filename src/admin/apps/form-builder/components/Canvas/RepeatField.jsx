@@ -24,7 +24,7 @@ export default function RepeatField( { field } ) {
     return (
         // No wrapper around the container: develop's stage prints it straight in the row.
         <div className="wpuf-fields wpuf-repeat-field-builder-container">
-            <label htmlFor={ field.name } className="wpuf-option-field-title wpuf-font-sm text-gray-700 font-medium">
+            <label htmlFor={ field.name } className="wpuf-option-field-title text-gray-700 font-medium">
                 { field.label } <SettingHelpText text={ field.help_text } />
             </label>
             <hr className="mt-4" />

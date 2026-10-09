@@ -11,10 +11,6 @@ export function getItem(state) {
     return state.item;
 }
 
-export function getItemCopy(state) {
-    return state.itemCopy;
-}
-
 export function getCounts(state) {
     return state.counts;
 }
@@ -33,10 +29,6 @@ export function getTaxonomyRestriction(state) {
 
 export function getTaxonomyViewRestriction(state) {
     return state.taxonomyViewRestriction;
-}
-
-export function getCurrentPage(state) {
-    return state.currentPage;
 }
 
 export function isLoading(state) {
@@ -68,28 +60,6 @@ export function isUnsavedPopupOpen(state) {
 
 export function getCurrentStatus(state) {
     return state.currentStatus;
-}
-
-export function getFieldNames(state) {
-    const wpufSubscriptions = getWpufSubscriptions();
-    const sections = wpufSubscriptions.fields;
-    const names = [];
-
-    for (const section in sections) {
-        if (!sections.hasOwnProperty(section)) {
-            continue;
-        }
-        for (const subsection in sections[section]) {
-            if (!sections[section].hasOwnProperty(subsection)) {
-                continue;
-            }
-            for (const field in sections[section][subsection]) {
-                names.push(field);
-            }
-        }
-    }
-
-    return names;
 }
 
 export function getFields(state) {
@@ -194,22 +164,3 @@ export function getTermById(state, termId) {
     return null;
 }
 
-export function getMetaValue(state, key) {
-    const item = state.item;
-    if (!item || !item.meta_value) {
-        return '';
-    }
-    return item.meta_value[key] || '';
-}
-
-export function getSerializedMetaValue(state, key, serializeKey) {
-    const item = state.item;
-    if (!item || !item.meta_value || !item.meta_value[key]) {
-        return '';
-    }
-    const serializedData = item.meta_value[key];
-    if (typeof serializedData === 'object' && serializeKey) {
-        return serializedData[serializeKey] || '';
-    }
-    return serializedData || '';
-}

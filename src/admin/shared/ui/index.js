@@ -17,6 +17,7 @@ export { default as Accordion } from './Accordion';
 export { default as ActionMenu } from './ActionMenu';
 export { default as ConfirmDialog, useConfirm } from './ConfirmDialog';
 export { default as Tooltip, HelpTip } from './Tooltip';
+export { default as HelpTextIcon } from './HelpTextIcon';
 export { default as ProBadge } from './ProBadge';
 export { default as Pagination } from './Pagination';
 export { default as EmptyState } from './EmptyState';

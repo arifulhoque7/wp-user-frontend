@@ -23,7 +23,7 @@ export function isOn( val ) {
  * @param {RegExp} containers Container templates whose inner fields count.
  * @return {boolean}
  */
-export function hasFieldTemplate( formFields, templates, containers = /^(column|repeat)_field$/ ) {
+function hasFieldTemplate( formFields, templates, containers = /^(column|repeat)_field$/ ) {
     for ( const field of formFields ) {
         if ( ! field || ! field.template ) {
             continue;

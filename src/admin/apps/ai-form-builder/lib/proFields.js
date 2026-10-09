@@ -30,7 +30,7 @@ const FREE_FIELDS = [
     'column_field', 'custom_html', 'custom_hidden_field',
 ];
 
-export const PRO_FIELD_LABELS = {
+const PRO_FIELD_LABELS = {
     date_field: 'Date Picker',
     time_field: 'Time Picker',
     datetime_field: 'Date & Time',

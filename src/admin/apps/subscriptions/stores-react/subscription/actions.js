@@ -116,13 +116,6 @@ export function setTaxonomyViewRestriction(restriction) {
     };
 }
 
-export function setCurrentPage(page) {
-    return {
-        type: ACTION_TYPES.SET_CURRENT_PAGE,
-        page,
-    };
-}
-
 export function modifyItem(key, value, serializeKey = null) {
     return {
         type: ACTION_TYPES.MODIFY_ITEM,
@@ -247,10 +240,6 @@ export function fetchItems(status, offset = 0) {
 }
 
 // Alias for backward compatibility with Subscriptions.jsx
-export function setSubscriptionsByStatus(status, offset = 0) {
-    return fetchItems(status, offset);
-}
-
 // Alias for getSubscriptionCount
 export function getSubscriptionCount(status = 'all') {
     return fetchCounts(status);

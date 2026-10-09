@@ -11,9 +11,9 @@ import { cn } from '@wedevs/plugin-ui';
 
 import { assetUrl } from '../api';
 
-export const STEP_DELAY = 1500;
-export const CONFETTI_DELAY = 500;
-export const COMPLETE_DELAY = 2500;
+const STEP_DELAY = 1500;
+const CONFETTI_DELAY = 500;
+const COMPLETE_DELAY = 2500;
 
 const STEPS = () => [
     __( 'Analyzing your request and detecting the form type...', 'wp-user-frontend' ),

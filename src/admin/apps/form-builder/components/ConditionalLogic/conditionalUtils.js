@@ -69,7 +69,7 @@ export function getOperatorsForType( inputType ) {
  * @param {string} template
  * @return {string}
  */
-export function templateToInputType( template ) {
+function templateToInputType( template ) {
     switch ( template ) {
         case 'radio_field':
             return 'radio';

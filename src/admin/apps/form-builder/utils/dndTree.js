@@ -16,7 +16,7 @@
 export const TOP = 'top';
 
 // Develop: form-column_field isAllowedInColumnField.
-export const RESTRICTED_IN_COLUMN = [ 'column_field', 'custom_hidden_field', 'step_start' ];
+const RESTRICTED_IN_COLUMN = [ 'column_field', 'custom_hidden_field', 'step_start' ];
 
 // Develop: form-repeat_field isAllowedInRepeatField.
 export const ALLOWED_IN_REPEAT = [
@@ -213,7 +213,7 @@ const STAGE_DEFAULTS = { show_icon: 'no', field_icon: '', icon_position: 'left_l
  *
  * @return {Object} Field (the same object when nothing changes).
  */
-export function reshapeForList( field, from, to ) {
+function reshapeForList( field, from, to ) {
     const fromTop = 'top' === parseContainer( from ).type;
     const toTop = 'top' === parseContainer( to ).type;
 

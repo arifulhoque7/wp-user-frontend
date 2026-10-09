@@ -43,7 +43,7 @@ export default function CheckboxInput( { optionField, field, value, onChange } )
 
     const title = optionField.title && (
         <div className="flex">
-            <label className="wpuf-option-field-title wpuf-font-sm text-gray-700 font-medium">
+            <label className="wpuf-option-field-title text-gray-700 font-medium">
                 { optionField.title }
                 <SettingHelpText text={ optionField.help_text } />
             </label>

@@ -211,41 +211,6 @@ export function openSaveValidationError( html ) {
 }
 
 /**
- * A premium option in the field settings (SweetAlert's info icon, Cancel and
- * Upgrade to Pro).
- *
- * @param {string} featureName Feature name.
- *
- * @return {Promise<boolean>} Upgrade chosen.
- */
-export function openProFeature( featureName ) {
-    const data = builderData();
-    const info = (
-        <span
-            aria-hidden="true"
-            style={ { display: 'flex', width: 80, height: 80, alignItems: 'center', justifyContent: 'center', border: '4px solid #9de0f6', borderRadius: '50%', color: '#3fc3ee', fontSize: 60, fontWeight: 600, lineHeight: 1 } }
-        >
-            i
-        </span>
-    );
-
-    return dialogs.confirm( {
-        title: __( 'Premium Feature', 'wp-user-frontend' ),
-        /* translators: %s: feature name */
-        message: sprintf( __( '%s is a premium feature. Please upgrade to Pro to use this feature.', 'wp-user-frontend' ), featureName ),
-        media: info,
-        confirmText: __( 'Upgrade to Pro', 'wp-user-frontend' ),
-        tone: 'primary',
-    } ).then( ( upgrade ) => {
-        if ( upgrade && data.pro_link ) {
-            window.open( data.pro_link, '_blank' );
-        }
-
-        return upgrade;
-    } );
-}
-
-/**
  * The form has third-party taxonomy fields that stay hidden without Pro
  * (develop's markup and classes inside the popup).
  *

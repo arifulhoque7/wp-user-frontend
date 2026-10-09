@@ -3,7 +3,7 @@ import { useDispatch, useSelect } from '@wordpress/data';
 import { __ } from '@wordpress/i18n';
 import { Radio, Select, TextInput } from '@wpuf/components';
 import { STORE_NAME } from '../../store';
-import HelpTextIcon from '../Settings/fields/HelpTextIcon';
+import { HelpTextIcon } from '@wpuf/components';
 import { OPERATORS, RULE_OPTIONS, isEmptyOperator } from './conditionalUtils';
 
 // Develop's submit-button-conditional-logic: fields a rule can use (top level).
@@ -29,7 +29,7 @@ const blankRule = () => ( { name: '', operator: '=', option: '', input_type: '' 
  * @param {Object|undefined} field Form field.
  * @return {Array} Operators.
  */
-export function submitOperators( field ) {
+function submitOperators( field ) {
     if ( ! field ) {
         return OPERATORS.text;
     }

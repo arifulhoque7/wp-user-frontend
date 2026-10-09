@@ -23,7 +23,7 @@ export default function TextInput( { optionField, value, onChange } ) {
             <div className="flex">
                 <label
                     htmlFor={ optionField.name }
-                    className="wpuf-option-field-title wpuf-font-sm text-gray-700 font-medium"
+                    className="wpuf-option-field-title text-gray-700 font-medium"
                 >
                     { optionField.title }
                     <SettingHelpText text={ optionField.help_text } />
