@@ -75,6 +75,53 @@ export function generateFieldId() {
 }
 
 /**
+ * Give column / repeat inner fields an id when they have none.
+ *
+ * Inner fields are stored inside their column / repeat field without an id (the
+ * save drops it), so after a reload every inner field had `id` null and the
+ * builder could not open one for editing (develop had the same bug: the Field
+ * Options panel stayed empty). A fresh id per load is enough: it only lives in
+ * the builder session.
+ *
+ * @param {Array} fields Form fields.
+ * @return {Array} The same fields, inner fields with ids.
+ */
+export function withInnerFieldIds( fields ) {
+    if ( ! Array.isArray( fields ) ) {
+        return fields;
+    }
+
+    const ensure = ( field ) => ( field && ! field.id ? { ...field, id: generateFieldId() } : field );
+
+    return fields.map( ( field ) => {
+        if ( ! field || ! field.inner_fields ) {
+            return field;
+        }
+
+        if ( Array.isArray( field.inner_fields ) ) {
+            return field.inner_fields.some( ( inner ) => inner && ! inner.id )
+                ? { ...field, inner_fields: field.inner_fields.map( ensure ) }
+                : field;
+        }
+
+        if ( 'object' === typeof field.inner_fields ) {
+            const columns = Object.entries( field.inner_fields );
+
+            if ( ! columns.some( ( [ , list ] ) => Array.isArray( list ) && list.some( ( inner ) => inner && ! inner.id ) ) ) {
+                return field;
+            }
+
+            return {
+                ...field,
+                inner_fields: Object.fromEntries( columns.map( ( [ key, list ] ) => [ key, Array.isArray( list ) ? list.map( ensure ) : list ] ) ),
+            };
+        }
+
+        return field;
+    } );
+}
+
+/**
  * Apply mutual exclusivity between read_only and required.
  *
  * @param {Object} field
@@ -204,12 +251,13 @@ export default function reducer( state = DEFAULT_STATE, action ) {
             return {
                 ...state,
                 ...action.payload,
+                ...( action.payload && action.payload.formFields ? { formFields: withInnerFieldIds( action.payload.formFields ) } : {} ),
             };
 
         case SET_FORM_FIELDS:
             return {
                 ...state,
-                formFields: action.formFields,
+                formFields: withInnerFieldIds( action.formFields ),
             };
 
         case ADD_FIELD: {

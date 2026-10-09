@@ -1,4 +1,4 @@
-import reducer, { DEFAULT_STATE, generateFieldId } from './reducer';
+import reducer, { DEFAULT_STATE, generateFieldId, withInnerFieldIds } from './reducer';
 import {
     SET_FORM_FIELDS,
     ADD_FIELD,
@@ -854,5 +854,25 @@ describe( 'reducer', () => {
             expect( id ).toBeGreaterThanOrEqual( 999999 );
             expect( id ).toBeLessThanOrEqual( 9999999999 );
         } );
+    } );
+} );
+
+
+describe( 'inner field ids on load', () => {
+    it( 'gives column and repeat inner fields without an id a unique id, keeps existing ids', () => {
+        const stored = [
+            { id: 1, template: 'column_field', inner_fields: { 'column-1': [ { template: 'text_field', label: 'A' } ], 'column-2': [ { template: 'website_url', label: 'B' } ], 'column-3': [] } },
+            { id: 2, template: 'repeat_field', inner_fields: [ { template: 'text_field', label: 'C' }, { id: 77, template: 'text_field', label: 'D' } ] },
+            { id: 3, template: 'text_field' },
+        ];
+        const state = reducer( undefined, { type: 'INITIALIZE_STATE', payload: { formFields: stored } } );
+        const col = state.formFields[ 0 ].inner_fields;
+        const ids = [ col[ 'column-1' ][ 0 ].id, col[ 'column-2' ][ 0 ].id, state.formFields[ 1 ].inner_fields[ 0 ].id ];
+
+        expect( ids.every( Boolean ) ).toBe( true );
+        expect( new Set( ids ).size ).toBe( 3 );
+        expect( state.formFields[ 1 ].inner_fields[ 1 ].id ).toBe( 77 );
+        expect( state.formFields[ 2 ] ).toBe( stored[ 2 ] );
+        expect( withInnerFieldIds( state.formFields )[ 0 ] ).toBe( state.formFields[ 0 ] );
     } );
 } );
