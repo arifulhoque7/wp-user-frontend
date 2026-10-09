@@ -2,9 +2,9 @@
 
 namespace WeDevs\Wpuf;
 
-use WeDevs\Wpuf\Api\FormList;
-use WeDevs\Wpuf\Api\Settings;
-use WeDevs\Wpuf\Api\Subscription;
+use WeDevs\Wpuf\Platform\REST\Controllers\FormListController;
+use WeDevs\Wpuf\Platform\REST\Controllers\SettingsController;
+use WeDevs\Wpuf\Platform\REST\Controllers\SubscriptionController;
 use WeDevs\Wpuf\Platform\REST\Manager;
 use WeDevs\WpUtils\ContainerTrait;
 
@@ -22,9 +22,9 @@ class API {
      * @since 1.0.0
      */
     public function __construct() {
-        $this->subscription = new Subscription();
-        $this->form_list    = new FormList();
-        $this->settings     = new Settings();
+        $this->subscription = new SubscriptionController();
+        $this->form_list    = new FormListController();
+        $this->settings     = new SettingsController();
 
         // Routes are registered by the platform REST manager
         // (Platform\REST\Manager) on rest_api_init, once per controller.

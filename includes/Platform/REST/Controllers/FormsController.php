@@ -289,7 +289,7 @@ class FormsController extends RestController {
         if ( 'wpuf_forms' === $type ) {
             // The admin container only exists on wp-admin requests, not on REST ones.
             $templates = wpuf()->admin ? wpuf()->admin->form_template : null;
-            $templates = $templates ? $templates : new \WeDevs\Wpuf\Admin\Forms\Post\Templates\Form_Template();
+            $templates = $templates ? $templates : new \WeDevs\Wpuf\Admin\Forms\Post\Templates\Post_Form_Templates();
             $object    = $templates->get_template_object( $template );
 
             // A card the picker shows as not installed (its integration is off) is refused too.

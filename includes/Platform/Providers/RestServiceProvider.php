@@ -8,12 +8,12 @@
 
 namespace WeDevs\Wpuf\Platform\Providers;
 
-use WeDevs\Wpuf\Api\FormList;
-use WeDevs\Wpuf\Api\Settings;
-use WeDevs\Wpuf\Api\Subscription;
 use WeDevs\Wpuf\Builder\FormSave;
+use WeDevs\Wpuf\Platform\REST\Controllers\FormListController;
 use WeDevs\Wpuf\Platform\REST\Controllers\FormsController;
 use WeDevs\Wpuf\Platform\REST\Controllers\OnboardingController;
+use WeDevs\Wpuf\Platform\REST\Controllers\SettingsController;
+use WeDevs\Wpuf\Platform\REST\Controllers\SubscriptionController;
 use WeDevs\Wpuf\Platform\REST\Controllers\ToolsController;
 use WeDevs\Wpuf\Platform\REST\Controllers\TransactionsController;
 use WeDevs\Wpuf\Platform\REST\Manager;
@@ -91,9 +91,9 @@ class RestServiceProvider extends ServiceProvider {
 
         // Frozen routes (wpuf_form, wpuf_subscription*, subscription-settings, settings).
         $legacy = [
-            FormList::class     => 'form_list',
-            Subscription::class => 'subscription',
-            Settings::class     => 'settings',
+            FormListController::class     => 'form_list',
+            SubscriptionController::class => 'subscription',
+            SettingsController::class     => 'settings',
         ];
 
         foreach ( $legacy as $class => $key ) {

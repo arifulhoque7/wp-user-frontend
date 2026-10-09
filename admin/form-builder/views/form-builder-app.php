@@ -1,6 +1,6 @@
 <?php
 /**
- * Form Builder v4.1 — React mount point.
+ * Form builder: the React mount point (was form-builder-v4.1.php).
  *
  * React renders the entire UI inside #wpuf-form-builder-app.
  * Hidden inputs are preserved for the save handler.

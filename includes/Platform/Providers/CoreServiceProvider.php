@@ -8,7 +8,7 @@
 
 namespace WeDevs\Wpuf\Platform\Providers;
 
-use WeDevs\Wpuf\Admin\Assets;
+use WeDevs\Wpuf\Admin\React_Assets;
 use WeDevs\Wpuf\Admin\App\AppPage;
 use WeDevs\Wpuf\Admin\BootPayload;
 use WeDevs\Wpuf\Admin\Screens\Registry;
@@ -50,9 +50,9 @@ class CoreServiceProvider extends ServiceProvider {
 
         // React admin bundles (handles, deps from *.asset.php), stylesheet switch, body classes.
         $this->share_tagged(
-            Assets::class,
+            React_Assets::class,
             function () {
-                return new Assets();
+                return new React_Assets();
             }
         );
 

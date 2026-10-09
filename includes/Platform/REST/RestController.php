@@ -17,7 +17,7 @@ use WP_REST_Response;
 /**
  * Base of every WPUF REST controller: capability permission callbacks with
  * explicit 401/403, pagination headers, typed casts and `wpuf_{resource}_{reason}`
- * errors. The frozen controllers (Api\FormList, Api\Subscription, Api\Settings)
+ * errors. The frozen controllers (FormListController, SubscriptionController, SettingsController)
  * extend it too and keep their own paths, arguments, permissions and responses.
  *
  * @since WPUF_SINCE

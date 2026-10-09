@@ -112,11 +112,11 @@ class FormsRestTest extends WP_UnitTestCase {
         $this->assertCount( 1, $routes['/wpuf/v1/wpuf_form'] );
         $this->assertCount( 2, $routes['/wpuf/v1/settings'] );
 
-        foreach ( [ \WeDevs\Wpuf\Api\FormList::class, \WeDevs\Wpuf\Api\Subscription::class, \WeDevs\Wpuf\Api\Settings::class, FormsController::class ] as $class ) {
+        foreach ( [ \WeDevs\Wpuf\Platform\REST\Controllers\FormListController::class, \WeDevs\Wpuf\Platform\REST\Controllers\SubscriptionController::class, \WeDevs\Wpuf\Platform\REST\Controllers\SettingsController::class, FormsController::class ] as $class ) {
             $this->assertTrue( is_subclass_of( $class, RestController::class ), $class );
         }
 
-        $this->assertSame( wpuf()->api->form_list, wpuf()->platform()->get( \WeDevs\Wpuf\Api\FormList::class ) );
+        $this->assertSame( wpuf()->api->form_list, wpuf()->platform()->get( \WeDevs\Wpuf\Platform\REST\Controllers\FormListController::class ) );
     }
 
     public function test_permissions_401_403_404() {
@@ -222,7 +222,7 @@ class FormsRestTest extends WP_UnitTestCase {
         $rest_form = $created->get_data()['data']['id'];
 
         // The template link's path stores the same form.
-        $link_form = ( new \WeDevs\Wpuf\Admin\Forms\Post\Templates\Form_Template() )->create_from_template( 'post_form_template_post' );
+        $link_form = ( new \WeDevs\Wpuf\Admin\Forms\Post\Templates\Post_Form_Templates() )->create_from_template( 'post_form_template_post' );
         $strip     = function ( $form_id ) {
             return array_map(
                 function ( $field ) {

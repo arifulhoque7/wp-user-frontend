@@ -6,7 +6,7 @@
  */
 
 /**
- * @covers \WeDevs\Wpuf\Api\FormList::get_submissions
+ * @covers \WeDevs\Wpuf\Platform\REST\Controllers\FormListController::get_submissions
  */
 class FormSubmissionsRestTest extends WP_UnitTestCase {
 

@@ -209,7 +209,7 @@ class Admin_Form_Builder {
 
     /**
      * The builder's hidden form inputs: form ID, form type, settings key and
-     * the save nonce (admin/form-builder/views/form-builder-v4.1.php).
+     * the save nonce (admin/form-builder/views/form-builder-app.php).
      *
      * @since WPUF_SINCE
      *
@@ -452,7 +452,7 @@ class Admin_Form_Builder {
             ]
         );
 
-        include WPUF_ROOT . '/admin/form-builder/views/form-builder-v4.1.php';
+        include WPUF_ROOT . '/admin/form-builder/views/form-builder-app.php';
     }
 
     /**

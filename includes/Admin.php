@@ -17,7 +17,7 @@ class Admin {
         $this->container['admin_welcome']         = new Admin\Admin_Welcome();
         $this->container['menu']                  = new Admin\Menu();
         $this->container['dashboard_metabox']     = new Admin\Dashboard_Metabox();
-        $this->container['form_template']         = new Admin\Forms\Post\Templates\Form_Template();
+        $this->container['form_template']         = new Admin\Forms\Post\Templates\Post_Form_Templates();
         $this->container['admin_form']            = new Admin\Forms\Admin_Form();
         $this->container['admin_form_handler']    = new Admin\Forms\Admin_Form_Handler();
         $this->container['ai_form_handler']       = new Admin\Forms\AI_Form_Handler();

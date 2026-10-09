@@ -85,7 +85,7 @@ class AiFormBuilderTest extends WP_UnitTestCase {
         wpuf()->assets->register_all_scripts();
         wpuf()->platform()->get( AiFormBuilder::class )->enqueue( 'post' );
 
-        $registry = wpuf()->platform()->get( WeDevs\Wpuf\Admin\Assets::class );
+        $registry = wpuf()->platform()->get( WeDevs\Wpuf\Admin\React_Assets::class );
         $script   = wp_scripts()->registered[ AiFormBuilder::HANDLE ];
         $this->assertSame( 1, $calls );
         $this->assertStringEndsWith( '/assets/js/react/ai-form-builder.js', $registry->scripts()['ai-form-builder']['src'] );

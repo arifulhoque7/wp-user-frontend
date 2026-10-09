@@ -7,7 +7,7 @@
  * @package WP_User_Frontend
  */
 
-use WeDevs\Wpuf\Api\Settings as Settings_Api;
+use WeDevs\Wpuf\Platform\REST\Controllers\SettingsController as Settings_Api;
 use WeDevs\Wpuf\Platform\Stores\SettingsStore;
 use WeDevs\Wpuf\Platform\Stores\Stores;
 

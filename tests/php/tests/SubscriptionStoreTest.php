@@ -8,7 +8,7 @@
  */
 
 use WeDevs\Wpuf\Admin\Subscription as Admin_Subscription;
-use WeDevs\Wpuf\Api\Subscription as Subscription_Api;
+use WeDevs\Wpuf\Platform\REST\Controllers\SubscriptionController as Subscription_Api;
 use WeDevs\Wpuf\Platform\Stores\Stores;
 use WeDevs\Wpuf\Platform\Stores\SubscriptionStore;
 
