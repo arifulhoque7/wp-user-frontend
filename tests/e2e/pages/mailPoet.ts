@@ -25,13 +25,12 @@ export class MailPoetPage extends Base {
         await this.waitForLoading();
 
         const checkbox = this.page.locator(Selectors.regFormSettings.mailPoet.moduleCheckbox);
-        // The toggle's checkbox is display:none (only the slider is visible), so
-        // wait for it to be attached rather than visible.
-        await checkbox.waitFor({ state: 'attached' });
+        // React Modules page: the module card's plugin-ui switch (aria-checked).
+        await checkbox.waitFor({ state: 'visible' });
 
         if (!(await checkbox.isChecked())) {
             await this.validateAndClick(Selectors.regFormSettings.mailPoet.moduleToggle);
-            // The toggle activates the module over AJAX — wait for it to stick.
+            // The switch activates the module over REST: wait for it to stick.
             await expect(checkbox).toBeChecked({ timeout: 15000 });
         }
         console.log('\x1b[32m%s\x1b[0m', '✅ Mailpoet 3 module enabled');

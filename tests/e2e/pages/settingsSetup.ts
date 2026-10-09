@@ -363,9 +363,10 @@ export class SettingsSetupPage extends Base {
         }
         await this.validateAndClick(Selectors.login.basicNavigation.licenseTab);
 
-        // Already activated? The key input renders readonly with a masked value and
-        // "Activations Remaining" is shown. Filling it then blocks until the test
-        // timeout ("element is not editable"), so short-circuit instead.
+        // Already activated? The React License page shows the "Active" status pill
+        // and no key input, so filling would block until the test timeout:
+        // wait for the page to render, then short-circuit.
+        await this.page.locator(Selectors.settingsSetup.pluginStatusCheck.licenseStatus).first().waitFor({ timeout: 30000 });
         const alreadyActivated = await this.page
             .locator(Selectors.settingsSetup.pluginStatusCheck.activationRemaining)
             .first()
@@ -774,6 +775,8 @@ export class SettingsSetupPage extends Base {
         //Go to Settings - General page
         await this.navigateToURL(this.wpufModulesPage);
         await this.validateAndClick(Selectors.settingsSetup.modules.clickDeactivateAll);
+        // The React page asks first (shared ConfirmDialog).
+        await this.validateAndClick(Selectors.settingsSetup.modules.confirmDeactivateAll);
         await this.page.waitForTimeout(2000);
         for (let i = 0; i < moduleName.length; i++) {
             if (moduleName[i] != '') {

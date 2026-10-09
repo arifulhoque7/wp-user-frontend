@@ -78,9 +78,11 @@ export const Selectors = {
             clickEDDnoticeCross: '//div[@id="edds-edd-stripe-core-notice"]//button[@type="button"]',
             clickPayPalCross: '//div[@id="wpuf-paypal-settings-notice"]//button[@type="button"]',
             clickRunUpdater: '//a[normalize-space()="Run the updater"]',
-            fillLicenseKey: '//div[@class="license-input-key"]//input[1]',
-            submitLicenseKey: '//div[@class="license-input-key"]/following-sibling::button[1]',
-            activationRemaining: '//h3[normalize-space()="Activations Remaining"]',
+            // React License page (Pro #/license): status pill, key input, Activate button.
+            licenseStatus: '[data-license-status]',
+            fillLicenseKey: '#wpuf-license-key',
+            submitLicenseKey: '//button[normalize-space()="Activate"]',
+            activationRemaining: '[data-license-status="active"]',
             
         },
 
@@ -293,9 +295,12 @@ export const Selectors = {
         },
 
         modules: {
-            clickActivateAll: '//span[@id="activate-all-modules"]',
-            clickDeactivateAll: '//span[@id="deactivate-all-modules"]',
-            checkModule: (moduleName: string) => `//li[@data-module='${moduleName}']//span[@class='slider round']`,
+            // React Modules page (Pro #/modules): header buttons, one card per module
+            // (`li[data-module="<module file>"]`) with a plugin-ui switch.
+            clickActivateAll: '//header//button[normalize-space()="Activate All"]',
+            clickDeactivateAll: '//header//button[normalize-space()="Deactivate All"]',
+            confirmDeactivateAll: '//*[@role="alertdialog"]//button[normalize-space()="Deactivate All"]',
+            checkModule: (moduleName: string) => `//li[@data-module='${moduleName}']//*[@role='switch']`,
         },
 
         AI: {
@@ -1540,9 +1545,9 @@ export const Selectors = {
         // MailPoet email-marketing module + per-form subscription settings
         mailPoet: {
             // WPUF > Modules : the "Mailpoet 3" module card + its enable toggle
-            moduleCard: '.plugin-card:has(a[href*="modules/mailpoet3/"])',
-            moduleToggle: '.plugin-card:has(a[href*="modules/mailpoet3/"]) label.wpuf-toggle-switch',
-            moduleCheckbox: '.plugin-card:has(a[href*="modules/mailpoet3/"]) input.wpuf-toggle-module',
+            moduleCard: 'li[data-module="mailpoet3/wpuf-mailpoet-3.php"]',
+            moduleToggle: 'li[data-module="mailpoet3/wpuf-mailpoet-3.php"] [role="switch"]',
+            moduleCheckbox: 'li[data-module="mailpoet3/wpuf-mailpoet-3.php"] [role="switch"]',
             // Registration form builder > Settings > Modules > Mailpoet 3
             settingsMenuItem: '//li[normalize-space()="Mailpoet 3"]',
             // React: a plugin-ui switch; #enable_mailpoet_3 is the hidden input behind it.
