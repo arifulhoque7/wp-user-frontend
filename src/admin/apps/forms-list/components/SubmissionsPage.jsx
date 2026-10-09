@@ -36,6 +36,16 @@ const BADGE = {
     future: 'bg-blue-50 border-blue-200 text-blue-800',
 };
 
+// Tones of the extra columns' badges (`wpuf_form_submissions_columns`).
+const TONE = {
+    green: 'bg-emerald-50 border-emerald-200 text-emerald-800',
+    yellow: 'bg-yellow-100 border-yellow-200 text-yellow-800',
+    red: 'bg-red-50 border-red-200 text-red-700',
+    blue: 'bg-blue-50 border-blue-200 text-blue-800',
+    orange: 'bg-orange-50 border-orange-200 text-orange-800',
+    gray: 'bg-gray-100 border-gray-200 text-gray-700',
+};
+
 const formsUrl = () => ( window.wpuf_admin_script || {} ).admin_url + 'admin.php?page=wpuf-post-forms';
 
 /**
@@ -86,6 +96,7 @@ const SubmissionsPage = ( { formId } ) => {
     const filtered = '' !== query || 'any' !== status;
     const taxColumns = ( data && data.columns ) || [];
     const hasComments = !! ( data && data.comments );
+    const extraColumns = ( data && data.extra_columns ) || [];
 
     const back = ( event ) => {
         event.preventDefault();
@@ -150,6 +161,7 @@ const SubmissionsPage = ( { formId } ) => {
                                         <span className="sr-only">{ __( 'Comments', 'wp-user-frontend' ) }</span>
                                     </th>
                                 ) : null }
+                                { extraColumns.map( ( column ) => <th key={ column.key } className={ TH }>{ column.label }</th> ) }
                                 <th className={ TH }>{ __( 'Status', 'wp-user-frontend' ) }</th>
                                 <th className={ TH }>{ __( 'Date', 'wp-user-frontend' ) }</th>
                                 <th className={ TH }><span className="sr-only">{ __( 'Actions', 'wp-user-frontend' ) }</span></th>
@@ -174,6 +186,19 @@ const SubmissionsPage = ( { formId } ) => {
                                         );
                                     } ) }
                                     { hasComments ? <td className={ TD + ' text-gray-500' }>{ item.comments }</td> : null }
+                                    { extraColumns.map( ( column ) => {
+                                        const value = item.extra && item.extra[ column.key ];
+
+                                        return (
+                                            <td key={ column.key } className={ TD }>
+                                                { value && value.text ? (
+                                                    <span title={ value.title || '' } className={ 'inline-flex max-w-56 items-center truncate py-[2px] px-2 rounded-[5px] text-xs font-medium border border-solid ' + ( TONE[ value.tone ] || TONE.gray ) }>
+                                                        { value.text }
+                                                    </span>
+                                                ) : <span className="text-gray-400" aria-hidden="true">&mdash;</span> }
+                                            </td>
+                                        );
+                                    } ) }
                                     <td className={ TD }>
                                         <span className={ 'inline-flex items-center py-[2px] px-2 rounded-[5px] text-xs font-medium border border-solid ' + ( BADGE[ item.status ] || BADGE.draft ) }>
                                             { item.status_label }

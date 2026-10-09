@@ -105,6 +105,38 @@ class FormSubmissionsRestTest extends WP_UnitTestCase {
         $this->assertSame( 13, $this->get( $form, [ 'status' => 'bogus' ] )->get_data()['total'] );
     }
 
+    public function test_extra_columns_and_row_values_come_from_the_filters() {
+        $form = wpuf_create_sample_form( 'Subs Form', 'wpuf_forms' );
+        $post = $this->submission( $form, 'publish', 'Reviewed' );
+
+        $columns = function ( $columns, $form_id ) use ( $form ) {
+            if ( $form === $form_id ) {
+                $columns[] = [ 'key' => 'ai_review', 'label' => 'AI Review' ];
+            }
+
+            return $columns;
+        };
+        $value   = function ( $item ) {
+            $item['extra']['ai_review'] = [ 'text' => 'Full Match', 'tone' => 'green', 'title' => 'Good' ];
+
+            return $item;
+        };
+
+        add_filter( 'wpuf_form_submissions_columns', $columns, 10, 2 );
+        add_filter( 'wpuf_form_submissions_item', $value );
+
+        $data = $this->get( $form )->get_data();
+
+        $this->assertSame( [ [ 'key' => 'ai_review', 'label' => 'AI Review' ] ], $data['extra_columns'] );
+        $this->assertSame( $post, $data['items'][0]['id'] );
+        $this->assertSame( 'Full Match', $data['items'][0]['extra']['ai_review']['text'] );
+
+        remove_filter( 'wpuf_form_submissions_columns', $columns, 10 );
+        remove_filter( 'wpuf_form_submissions_item', $value );
+
+        $this->assertSame( [], $this->get( $form )->get_data()['extra_columns'] );
+    }
+
     public function test_rejects_lower_roles_and_non_post_forms() {
         $form = wpuf_create_sample_form( 'Subs Form', 'wpuf_forms' );
 

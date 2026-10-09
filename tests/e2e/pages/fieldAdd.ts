@@ -472,8 +472,12 @@ export class FieldAddPage extends Base {
         const checkNewBlankFormCreatedValid_PF = await this.isVisibleSoon(Selectors.postForms.navigatePage_PF.checkAddButton_PF);
         if (checkNewBlankFormCreatedValid_PF === true) {
             await this.checkElementText(Selectors.postForms.navigatePage_PF.postFormsPageFormsTitleCheck_PF(validateNewPostName_PF), validateNewPostName_PF);
-            return await this.page.textContent(Selectors.postForms.navigatePage_PF.postFormShortCode(validateNewPostName_PF));
+            const shortcode = (await this.page.textContent(Selectors.postForms.navigatePage_PF.postFormShortCode(validateNewPostName_PF))) || '';
+            // An empty value made the next test build an empty page (PF0003): fail here instead.
+            expect(shortcode, `shortcode of "${validateNewPostName_PF}" in the forms list`).toMatch(/^\[wpuf_form id="\d+"\]$/);
+            return shortcode;
         }
+        throw new Error(`Forms list did not load after saving "${validateNewPostName_PF}"`);
     }
 
     async validateProductPostFormCreated(validateNewPostName_PF: string) {
@@ -488,8 +492,12 @@ export class FieldAddPage extends Base {
         const checkNewBlankFormCreatedValid_PF = await this.isVisibleSoon(Selectors.postForms.navigatePage_PF.checkAddButton_PF);
         if (checkNewBlankFormCreatedValid_PF === true) {
             await this.checkElementText(Selectors.postForms.navigatePage_PF.postFormsPageFormsTitleCheck_PF(validateNewPostName_PF), validateNewPostName_PF);
-            return await this.page.textContent(Selectors.postForms.navigatePage_PF.postFormShortCode(validateNewPostName_PF));
+            const shortcode = (await this.page.textContent(Selectors.postForms.navigatePage_PF.postFormShortCode(validateNewPostName_PF))) || '';
+            // An empty value made the next test build an empty page (PF0003): fail here instead.
+            expect(shortcode, `shortcode of "${validateNewPostName_PF}" in the forms list`).toMatch(/^\[wpuf_form id="\d+"\]$/);
+            return shortcode;
         }
+        throw new Error(`Forms list did not load after saving "${validateNewPostName_PF}"`);
     }
 
 

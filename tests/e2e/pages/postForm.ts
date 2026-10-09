@@ -5,6 +5,7 @@ import { Selectors } from './selectors';
 import { Base } from './base';
 import { faker } from '@faker-js/faker';
 import { DownloadsForm, PostForm, ProductForm, Urls } from '../utils/testData';
+import { BUILDER_URL } from '../utils/builderUrl';
 //import { TestData } from '../tests/testdata';
 
 export class PostFormPage extends Base {
@@ -37,6 +38,9 @@ export class PostFormPage extends Base {
         await this.validateAndClick(Selectors.postForms.createBlankForm_PF.clickBlankForm);
 
         //EnterName
+        // The new form route creates the form, then switches to its edit URL:
+        // reloading before that would create a second (empty "Sample Form").
+        await this.page.waitForURL(BUILDER_URL, { timeout: 30000 }).catch(() => {});
         await this.page.reload();
         //Click Form Name Box
         await this.validateAndClick(Selectors.postForms.createBlankForm_PF.editNewFormName);
@@ -67,6 +71,9 @@ export class PostFormPage extends Base {
         await this.validateAndClick(Selectors.postForms.createPreset_PF.clickPresetForm);
 
         //EnterName
+        // The new form route creates the form, then switches to its edit URL:
+        // reloading before that would create a second (empty "Sample Form").
+        await this.page.waitForURL(BUILDER_URL, { timeout: 30000 }).catch(() => {});
         await this.page.reload();
         //Click Form Name Box
         await this.validateAndClick(Selectors.postForms.createBlankForm_PF.editNewFormName);
@@ -154,6 +161,9 @@ export class PostFormPage extends Base {
         await this.validateAndClick(Selectors.postForms.createProduct_PF.clickProductForm);
 
         //EnterName
+        // The new form route creates the form, then switches to its edit URL:
+        // reloading before that would create a second (empty "Sample Form").
+        await this.page.waitForURL(BUILDER_URL, { timeout: 30000 }).catch(() => {});
         await this.page.reload();
         //Click Form Name Box
         await this.validateAndClick(Selectors.postForms.createBlankForm_PF.editNewFormName);
@@ -180,6 +190,9 @@ export class PostFormPage extends Base {
         //Click Product Form  
         await this.validateAndClick(Selectors.postForms.createDownloads_PF.clickDownloadsForm);
         //EnterName
+        // The new form route creates the form, then switches to its edit URL:
+        // reloading before that would create a second (empty "Sample Form").
+        await this.page.waitForURL(BUILDER_URL, { timeout: 30000 }).catch(() => {});
         await this.page.reload();
         //Click Form Name Box
         await this.validateAndClick(Selectors.postForms.createBlankForm_PF.editNewFormName);

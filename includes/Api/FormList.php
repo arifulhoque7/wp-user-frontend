@@ -175,6 +175,21 @@ class FormList extends RestController {
 
         $comments = post_type_supports( $post_type, 'comments' );
 
+        /**
+         * Extra columns of a post form's Submissions page (after the taxonomy
+         * columns), e.g. Pro's AI Review when the form has it on. Each column:
+         * `key`, `label`. Fill each row's value with
+         * `wpuf_form_submissions_item` (`$item['extra'][ $key ]` = [ 'text',
+         * 'tone' (green|yellow|red|gray|blue|orange), 'title' ]).
+         *
+         * @since WPUF_SINCE
+         *
+         * @param array $extra_columns Columns.
+         * @param int   $form_id       Form ID.
+         * @param array $settings      Form settings.
+         */
+        $extra_columns = (array) apply_filters( 'wpuf_form_submissions_columns', [], $form_id, $settings );
+
         foreach ( $query->posts as $post ) {
             $author = get_userdata( $post->post_author );
             $terms  = [];
@@ -192,7 +207,7 @@ class FormList extends RestController {
                 $date_label = __( 'Last Modified', 'wp-user-frontend' );
             }
 
-            $items[] = [
+            $item = [
                 'id'           => $post->ID,
                 'title'        => wp_strip_all_tags( $post->post_title ),
                 'status'       => $post->post_status,
@@ -209,7 +224,19 @@ class FormList extends RestController {
                     : get_the_modified_time( '', $post ),
                 'edit_url'     => current_user_can( 'edit_post', $post->ID ) ? get_edit_post_link( $post->ID, 'raw' ) : '',
                 'view_url'     => 'publish' === $post->post_status ? get_permalink( $post ) : '',
+                'extra'        => [],
             ];
+
+            /**
+             * One row of a post form's Submissions page.
+             *
+             * @since WPUF_SINCE
+             *
+             * @param array    $item    Row data (see `wpuf_form_submissions_columns` for `extra`).
+             * @param \WP_Post $post    Submitted post.
+             * @param int      $form_id Form ID.
+             */
+            $items[] = apply_filters( 'wpuf_form_submissions_item', $item, $post, $form_id );
         }
 
         return rest_ensure_response(
@@ -222,6 +249,7 @@ class FormList extends RestController {
                 'per_page'   => $per_page,
                 'counts'     => $counts,
                 'columns'    => $columns,
+                'extra_columns' => array_values( $extra_columns ),
                 'comments'   => $comments,
                 'post_type'  => $post_type,
                 'form'       => [
