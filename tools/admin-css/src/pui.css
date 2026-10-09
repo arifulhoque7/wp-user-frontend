@@ -286,3 +286,73 @@ body.wpuf-admin-react #wpbody-content .wpuf-help {
 [data-slot="alert"][data-wpuf-tone] > svg {
     color: var(--wpuf-notice-icon) !important;
 }
+
+/* WordPress admin notices on the app screens (#wpuf-admin-app-notices, other
+   plugins' markup kept): framed like the shared Notice (10px radius, 1px light
+   border, tinted background by type, 14px text, no left bar), centred at the
+   content width like the screens. */
+.wpuf-admin-notices {
+    box-sizing: border-box;
+    max-width: 1400px;
+    margin: 16px auto 0;
+    padding: 0 20px;
+}
+.wpuf-admin-notices .notice,
+.wpuf-admin-notices div.updated,
+.wpuf-admin-notices div.error,
+.wpuf-admin-notices .update-nag {
+    box-sizing: border-box;
+    margin: 0 0 12px !important;
+    padding: 12px 40px 12px 16px !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 10px;
+    background: #f9fafb !important;
+    box-shadow: none !important;
+    color: #4b5563;
+    font-size: 14px;
+    line-height: 20px;
+}
+.wpuf-admin-notices .notice:not(.is-dismissible),
+.wpuf-admin-notices .update-nag {
+    padding-right: 16px !important;
+}
+.wpuf-admin-notices .notice-success,
+.wpuf-admin-notices div.updated {
+    border-color: #a7f3d0 !important;
+    background: #ecfdf5 !important;
+    color: #374151;
+}
+.wpuf-admin-notices .notice-warning,
+.wpuf-admin-notices .update-nag {
+    border-color: #fde68a !important;
+    background: #fffbeb !important;
+    color: #92400e;
+}
+.wpuf-admin-notices .notice-error,
+.wpuf-admin-notices div.error {
+    border-color: #fecaca !important;
+    background: #fef2f2 !important;
+    color: #991b1b;
+}
+.wpuf-admin-notices .notice p {
+    margin: 4px 0 !important;
+    padding: 0 !important;
+    font-size: 14px;
+    line-height: 20px;
+}
+.wpuf-admin-notices .notice h2,
+.wpuf-admin-notices .notice h3,
+.wpuf-admin-notices .notice strong:first-child {
+    color: #111827;
+    font-weight: 600;
+}
+.wpuf-admin-notices .notice h2,
+.wpuf-admin-notices .notice h3 {
+    margin: 0 0 4px !important;
+    font-size: 14px !important;
+    line-height: 20px;
+}
+.wpuf-admin-notices .notice-dismiss {
+    top: 8px;
+    right: 8px;
+}

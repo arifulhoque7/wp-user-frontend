@@ -41,8 +41,8 @@ class Paypal {
         add_action( 'wpuf_paypal_webhook', [ $this, 'process_webhook' ] );
         add_action( 'template_redirect', [ $this, 'handle_webhook_request' ] );
 
-        // Add admin notice for PayPal settings update
-        add_action( 'admin_notices', [ $this, 'paypal_settings_update_notice' ] );
+        // The "WPUF PayPal Integration Enhanced" notice is no longer shown (owner request);
+        // paypal_settings_update_notice() stays for extensions that call it.
         add_action( 'wp_ajax_wpuf_dismiss_paypal_notice', [ $this, 'dismiss_paypal_notice' ] );
 
         // Add CSS for webhook configuration section
