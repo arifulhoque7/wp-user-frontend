@@ -71,7 +71,8 @@ async function submitQr(title: string, type: 'url' | 'text', value: string): Pro
 }
 
 test.beforeAll(async () => {
-    browser = await chromium.launch();
+    // HEADED=1 shows the browser (this spec launches its own).
+    browser = await chromium.launch({ headless: ! process.env.HEADED });
     context = await browser.newContext();
     page = await context.newPage();
     api = await WpufApi.create( createAdminAppPassword() );

@@ -45,7 +45,8 @@ const APP = `${Urls.baseUrl}/wp-admin/admin.php?page=wp-user-frontend`;
  */
 
 test.beforeAll(async () => {
-    browser = await chromium.launch();
+    // HEADED=1 shows the browser (this spec launches its own).
+    browser = await chromium.launch({ headless: ! process.env.HEADED });
     context = await browser.newContext({ ignoreHTTPSErrors: true });
     page = await context.newPage();
     await new BasicLoginPage(page).basicLogin(Users.adminUsername, Users.adminPassword);
