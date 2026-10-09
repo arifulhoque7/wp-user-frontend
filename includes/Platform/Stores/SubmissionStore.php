@@ -1,0 +1,258 @@
+<?php
+/**
+ * Submission store
+ *
+ * @package WP_User_Frontend
+ * @since WPUF_SINCE
+ */
+
+namespace WeDevs\Wpuf\Platform\Stores;
+
+use WeDevs\Wpuf\Platform\Contracts\DataStore;
+
+/**
+ * The plugin's own meta on posts submitted through its forms: the form
+ * (`_wpuf_form_id`), the order and payment state of a paid post
+ * (`_wpuf_order_id`, `_wpuf_payment_status`) and the quota flag
+ * (`wpuf_post_status`: new_draft / published).
+ *
+ * @since WPUF_SINCE
+ */
+class SubmissionStore implements DataStore {
+
+    /**
+     * Meta keys.
+     */
+    const FORM           = '_wpuf_form_id';
+    const ORDER          = '_wpuf_order_id';
+    const PAYMENT_STATUS = '_wpuf_payment_status';
+    const QUOTA_FLAG     = 'wpuf_post_status';
+
+    /**
+     * Whether a post was submitted through a form.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int $id Post id
+     *
+     * @return bool
+     */
+    public function exists( $id ) {
+        return '' !== get_post_meta( $id, self::FORM, true );
+    }
+
+    /**
+     * The submission facts of a post.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int $id Post id
+     *
+     * @return array|null { post, form_id, order_id, payment_status, quota_flag }, null for a missing post
+     */
+    public function read( $id ) {
+        $post = get_post( $id );
+
+        if ( ! $post ) {
+            return null;
+        }
+
+        return [
+            'post'           => $post,
+            'form_id'        => (int) get_post_meta( $post->ID, self::FORM, true ),
+            'order_id'       => $this->order_id( $post->ID ),
+            'payment_status' => $this->payment_status( $post->ID ),
+            'quota_flag'     => $this->quota_flag( $post->ID ),
+        ];
+    }
+
+    /**
+     * The submission facts of a post (DataStore).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int $id Post id
+     *
+     * @return array|null
+     */
+    public function find( $id ) {
+        return $this->read( $id );
+    }
+
+    /**
+     * Submissions by order id (`order_id`) or form (`form_id`), as posts.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param array $args { @type string $order_id @type int $form_id @type string|array $status Post status (default any) }
+     *
+     * @return \WP_Post[]
+     */
+    public function query( array $args = [] ) {
+        $query = [
+            'post_type'      => 'any',
+            'post_status'    => isset( $args['status'] ) ? $args['status'] : 'any',
+            'posts_per_page' => isset( $args['per_page'] ) ? (int) $args['per_page'] : -1,
+            'no_found_rows'  => true,
+            'meta_query'     => [], // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- the plugin's own meta.
+        ];
+
+        if ( ! empty( $args['order_id'] ) ) {
+            $query['meta_query'][] = [ 'key' => self::ORDER, 'value' => (string) $args['order_id'] ];
+        }
+
+        if ( ! empty( $args['form_id'] ) ) {
+            $query['meta_query'][] = [ 'key' => self::FORM, 'value' => (int) $args['form_id'] ];
+        }
+
+        return get_posts( $query );
+    }
+
+    /**
+     * Submissions matching the args.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param array $args As query()
+     *
+     * @return int
+     */
+    public function count( array $args = [] ) {
+        return count( $this->query( $args ) );
+    }
+
+    /**
+     * The unpublished post of an order (id and status), as the payment
+     * handlers look it up.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param string $order_id Order id
+     *
+     * @return object|null `{ ID, post_status }`
+     */
+    public function find_by_order( $order_id ) {
+        global $wpdb;
+
+        $row = $wpdb->get_row( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+            $wpdb->prepare(
+                "SELECT p.ID, p.post_status FROM {$wpdb->posts} p, {$wpdb->postmeta} m WHERE p.ID = m.post_id AND p.post_status <> 'publish' AND m.meta_key = %s AND m.meta_value = %s",
+                self::ORDER,
+                $order_id
+            )
+        );
+
+        return is_object( $row ) ? $row : null;
+    }
+
+    /**
+     * The form id of a submission.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int $post_id Post id
+     *
+     * @return int
+     */
+    public function form_id( $post_id ) {
+        return (int) get_post_meta( $post_id, self::FORM, true );
+    }
+
+    /**
+     * The order id of a paid submission ('' when none).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int $post_id Post id
+     *
+     * @return string
+     */
+    public function order_id( $post_id ) {
+        return (string) get_post_meta( $post_id, self::ORDER, true );
+    }
+
+    /**
+     * Give a submission its order id, once: a stored order id is kept (the
+     * handlers call this with a fresh id on every pass).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int    $post_id  Post id
+     * @param string $order_id Order id
+     *
+     * @return void
+     */
+    public function set_order_once( $post_id, $order_id ) {
+        if ( '' === $this->order_id( $post_id ) ) {
+            update_post_meta( $post_id, self::ORDER, $order_id );
+        }
+    }
+
+    /**
+     * The payment status of a submission ('' when none).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int $post_id Post id
+     *
+     * @return string
+     */
+    public function payment_status( $post_id ) {
+        return (string) get_post_meta( $post_id, self::PAYMENT_STATUS, true );
+    }
+
+    /**
+     * Store the payment status of a submission (pending, completed, ...).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int    $post_id Post id
+     * @param string $status  Status
+     *
+     * @return void
+     */
+    public function set_payment_status( $post_id, $status ) {
+        update_post_meta( $post_id, self::PAYMENT_STATUS, $status );
+    }
+
+    /**
+     * The quota flag of a submission ('', new_draft or published).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int $post_id Post id
+     *
+     * @return string
+     */
+    public function quota_flag( $post_id ) {
+        return (string) get_post_meta( $post_id, self::QUOTA_FLAG, true );
+    }
+
+    /**
+     * Store the quota flag of a submission.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int    $post_id Post id
+     * @param string $flag    new_draft or published
+     *
+     * @return void
+     */
+    public function set_quota_flag( $post_id, $flag ) {
+        update_post_meta( $post_id, self::QUOTA_FLAG, $flag );
+    }
+
+    /**
+     * Change the status of a submitted post.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int    $post_id Post id
+     * @param string $status  Post status
+     *
+     * @return int|\WP_Error
+     */
+    public function set_post_status( $post_id, $status ) {
+        return wp_update_post( [ 'ID' => $post_id, 'post_status' => $status ], true );
+    }
+}

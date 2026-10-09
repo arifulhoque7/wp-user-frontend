@@ -301,6 +301,87 @@ class SubscriptionStore implements DataStore {
     }
 
     /**
+     * Packs as `Admin\Subscription::get_subscriptions()` lists them: posts
+     * ordered by `_sort_order` with their meta in `meta_value`; a pack
+     * without a sort order gets 1 stored on the way.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param array $args get_posts() arguments on top of the defaults
+     *
+     * @return \WP_Post[]
+     */
+    public function ordered( array $args = [] ) {
+        $posts = get_posts(
+            wp_parse_args(
+                $args,
+                [
+                    'post_type'      => 'wpuf_subscription',
+                    'posts_per_page' => -1,
+                    'post_status'    => 'publish',
+                    'meta_key'       => '_sort_order', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- the packs' order, as before.
+                    'orderby'        => 'meta_value_num',
+                    'order'          => 'ASC',
+                ]
+            )
+        );
+
+        foreach ( $posts as $post ) {
+            $post->meta_value = Subscription::get_subscription_meta( $post->ID, $posts );
+
+            if ( empty( $post->meta_value['_sort_order'] ) ) {
+                update_post_meta( $post->ID, '_sort_order', 1 );
+                $post->meta_value['_sort_order'] = 1;
+            }
+        }
+
+        return $posts;
+    }
+
+    /**
+     * Packs per post status (auto-drafts left out) plus `all` (trash left out).
+     *
+     * @since WPUF_SINCE
+     *
+     * @return array status => count
+     */
+    public function counts_by_status() {
+        global $wpdb;
+
+        $rows   = $wpdb->get_results( $wpdb->prepare( "SELECT post_status, COUNT(*) AS count FROM {$wpdb->posts} WHERE post_type = %s AND post_status != %s GROUP BY post_status", 'wpuf_subscription', 'auto-draft' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+        $status = [];
+        $total  = 0;
+
+        foreach ( (array) $rows as $row ) {
+            $status[ $row->post_status ] = (int) $row->count;
+            $total                      += (int) $row->count;
+        }
+
+        $status['all'] = empty( $status['trash'] ) ? $total : $total - $status['trash'];
+
+        return $status;
+    }
+
+    /**
+     * Packs of one status, or every pack ('all'), as the pack class counted them.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param string $status Post status or 'all'
+     *
+     * @return int
+     */
+    public function count_status( $status = 'all' ) {
+        global $wpdb;
+
+        if ( 'all' === $status ) {
+            return (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = 'wpuf_subscription'" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+        }
+
+        return (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = 'wpuf_subscription' AND post_status = %s", $status ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+    }
+
+    /**
      * Delete a pack for good.
      *
      * @since WPUF_SINCE

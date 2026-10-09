@@ -12,8 +12,11 @@ use WeDevs\Wpuf\Platform\ServiceProvider;
 use WeDevs\Wpuf\Platform\Stores\FieldStore;
 use WeDevs\Wpuf\Platform\Stores\FormStore;
 use WeDevs\Wpuf\Platform\Stores\SettingsStore;
+use WeDevs\Wpuf\Platform\Stores\SubmissionStore;
+use WeDevs\Wpuf\Platform\Stores\SubscriberStore;
 use WeDevs\Wpuf\Platform\Stores\SubscriptionStore;
 use WeDevs\Wpuf\Platform\Stores\TransactionStore;
+use WeDevs\Wpuf\Platform\Stores\UserPackStore;
 use WeDevs\Wpuf\Platform\Tools\ToolsService;
 use WeDevs\Wpuf\Platform\Transactions\TransactionService;
 
@@ -63,6 +66,16 @@ class StoreServiceProvider extends ServiceProvider {
                 return new SettingsStore();
             }
         );
+
+        // Subscribers table, user packs and submission meta.
+        foreach ( [ SubscriberStore::class, UserPackStore::class, SubmissionStore::class ] as $store ) {
+            $this->share_tagged(
+                $store,
+                function () use ( $store ) {
+                    return new $store();
+                }
+            );
+        }
 
         // Domain services over the stores and develop's tables (Tools, Transactions).
         $this->share_tagged(

@@ -224,6 +224,58 @@ class TransactionStore implements DataStore {
     }
 
     /**
+     * The newest payment row of a user for a pack (null when none).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int $user_id User id
+     * @param int $pack_id Pack id
+     *
+     * @return object|null
+     */
+    public function latest_for_pack( $user_id, $pack_id ) {
+        global $wpdb;
+
+        $row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}wpuf_transaction WHERE user_id = %d AND pack_id = %d ORDER BY id DESC LIMIT 1", absint( $user_id ), absint( $pack_id ) ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+
+        return is_object( $row ) ? $row : null;
+    }
+
+    /**
+     * The transaction id of a user's payment for a pack (the first row the
+     * table gives, as the cancel handler read it), null when there is no row.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int $user_id User id
+     * @param int $pack_id Pack id
+     *
+     * @return string|null
+     */
+    public function transaction_id_for_pack( $user_id, $pack_id ) {
+        global $wpdb;
+
+        $row = $wpdb->get_row( $wpdb->prepare( "SELECT transaction_id FROM {$wpdb->prefix}wpuf_transaction WHERE user_id = %d AND pack_id = %d LIMIT 1", absint( $user_id ), absint( $pack_id ) ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+
+        return is_object( $row ) ? (string) $row->transaction_id : null;
+    }
+
+    /**
+     * The gateway of a user's newest completed payment ('' when none).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int $user_id User id
+     *
+     * @return string
+     */
+    public function last_completed_gateway( $user_id ) {
+        global $wpdb;
+
+        return (string) $wpdb->get_var( $wpdb->prepare( "SELECT payment_type FROM {$wpdb->prefix}wpuf_transaction WHERE user_id = %s AND status = 'completed' ORDER BY created DESC", $user_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+    }
+
+    /**
      * Empty the transactions table (Tools > Transactions).
      *
      * @since WPUF_SINCE

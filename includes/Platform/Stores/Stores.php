@@ -63,6 +63,39 @@ class Stores {
     }
 
     /**
+     * The subscriber store (the `wpuf_subscribers` table).
+     *
+     * @since WPUF_SINCE
+     *
+     * @return SubscriberStore
+     */
+    public static function subscribers() {
+        return self::get( SubscriberStore::class );
+    }
+
+    /**
+     * The user pack store (user meta).
+     *
+     * @since WPUF_SINCE
+     *
+     * @return UserPackStore
+     */
+    public static function user_packs() {
+        return self::get( UserPackStore::class );
+    }
+
+    /**
+     * The submission store (the plugin's meta on submitted posts).
+     *
+     * @since WPUF_SINCE
+     *
+     * @return SubmissionStore
+     */
+    public static function submissions() {
+        return self::get( SubmissionStore::class );
+    }
+
+    /**
      * Settings store
      *
      * @since WPUF_SINCE
