@@ -1222,7 +1222,7 @@ class Onboarding {
             if ( $login_page ) {
                 $profile['login_page'] = $login_page;
             }
-        } elseif ( absint( $login_choice ) ) {
+        } elseif ( $this->is_page( $login_choice ) ) {
             $profile['login_page'] = absint( $login_choice );
 
             $this->ensure_page_shortcode( absint( $login_choice ), 'wpuf-login', '[wpuf-login]' );
@@ -1253,7 +1253,7 @@ class Onboarding {
                     $profile['reg_override_page'] = $reg_page;
                 }
             }
-        } elseif ( absint( $reg_choice ) ) {
+        } elseif ( $this->is_page( $reg_choice ) ) {
             $profile['reg_override_page'] = absint( $reg_choice );
 
             if ( $is_pro ) {
@@ -1383,6 +1383,21 @@ class Onboarding {
     }
 
     /**
+     * Whether a wizard page choice is an existing page (not trashed)
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int|string $page_id Posted page id.
+     *
+     * @return bool
+     */
+    protected function is_page( $page_id ) {
+        $page_id = absint( $page_id );
+
+        return $page_id && 'page' === get_post_type( $page_id ) && 'trash' !== get_post_status( $page_id );
+    }
+
+    /**
      * Put a WPUF shortcode on a page that does not have it yet
      *
      * Picking an existing page from the wizard is only useful if the page
@@ -1480,7 +1495,8 @@ class Onboarding {
         } else {
             $page_id = absint( $choice );
 
-            if ( ! $page_id ) {
+            // Only an existing page; anything else keeps the stored account page.
+            if ( ! $this->is_page( $page_id ) ) {
                 return;
             }
 
