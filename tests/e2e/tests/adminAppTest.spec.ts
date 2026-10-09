@@ -691,6 +691,12 @@ test.describe('Admin app', () => {
         aiWp(['post', 'delete', String(id), '--force']);
     });
 
+    /** Leave the builder without saving: drop the unsaved state so the route guard does not stop the next test. */
+    const discardBuilder = () => page.evaluate(() => {
+        const w = window as unknown as { wp: { data: { dispatch: ( n: string ) => { markClean: () => void } } }; wpuf: { storeName: string } };
+        w.wp.data.dispatch( w.wpuf.storeName ).markClean();
+    });
+
     /** Hover a seam / cell and pick a field type from its "+" list (real mouse: the "+" shows on hover). */
     const pickFromPlus = async (hoverTarget: import('@playwright/test').Locator, button: import('@playwright/test').Locator, search: string, template: string) => {
         await hoverTarget.scrollIntoViewIfNeeded();
@@ -733,6 +739,7 @@ test.describe('Admin app', () => {
         await expect(rows.last()).toHaveClass(/form-field-email_address/);
         expect((await builderState()).dirty, 'adding marks the form changed').toBe(true);
 
+        await discardBuilder();
         aiWp(['post', 'delete', String(id), '--force']);
     });
 
@@ -762,6 +769,7 @@ test.describe('Admin app', () => {
         await expect(cell.locator('li.form-field-text_field')).toHaveCount(1);
         await expect(column.locator('[data-column="column-1"] li[class*="form-field-"]')).toHaveCount(0);
 
+        await discardBuilder();
         aiWp(['post', 'delete', String(id), '--force']);
     });
 });
