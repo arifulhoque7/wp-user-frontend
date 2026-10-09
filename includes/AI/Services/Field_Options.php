@@ -9,14 +9,14 @@
 namespace WeDevs\Wpuf\AI\Services;
 
 use WeDevs\Wpuf\AI\FormGenerator;
-use WP_REST_Request;
-use WP_REST_Response;
 use WP_Error;
 
 /**
- * Generating the options of a choice field from a prompt.
+ * Generating the options of a choice field (dropdown, radio, checkbox,
+ * multiselect) from a prompt. Shared by the REST route and the builder's
+ * AJAX action; takes plain arguments.
  *
- * @since WPUF_SINCE Moved out of AI\RestController, which keeps the routes and delegates.
+ * @since WPUF_SINCE Moved out of AI\RestController.
  */
 class Field_Options {
 
@@ -37,56 +37,50 @@ class Field_Options {
     }
 
     /**
-     * Generate field options using AI
+     * Generate the options of a field.
      *
-     * @param WP_REST_Request $request REST request object
-     * @return WP_REST_Response|WP_Error Response object
+     * @since WPUF_SINCE
+     *
+     * @param string $prompt The prompt
+     * @param array  $args   {
+     *     @type string $field_type    dropdown_field | radio_field | checkbox_field | multiple_select
+     *     @type string $output_format one_per_line | value_label
+     *     @type string $tone          casual | formal | professional | friendly
+     *     @type int    $max_options   1..100
+     * }
+     *
+     * @return array|WP_Error Sanitized options (`[ [ 'label', 'value' ], ... ]`) or the error (status in its data)
      */
-    public function generate_field_options( WP_REST_Request $request ) {
-        try {
-            $prompt = $request->get_param( 'prompt' );
-            $field_type = $request->get_param( 'field_type' );
-            $output_format = $request->get_param( 'output_format' ) ?? 'one_per_line';
-            $tone = $request->get_param( 'tone' ) ?? 'casual';
-            $max_options = $request->get_param( 'max_options' ) ?? 20;
+    public function generate( $prompt, array $args = [] ) {
+        $args = wp_parse_args(
+            $args,
+            [
+                'field_type'    => 'dropdown_field',
+                'output_format' => 'one_per_line',
+                'tone'          => 'casual',
+                'max_options'   => 20,
+            ]
+        );
 
-            // Validate max options
-            if ( $max_options < 1 || $max_options > 100 ) {
-                return new WP_Error(
-                    'invalid_max_options',
-                    __( 'Maximum options must be between 1 and 100', 'wp-user-frontend' ),
-                    [ 'status' => 400 ]
-                );
-            }
+        $max_options = (int) $args['max_options'];
 
-            // Call FormGenerator to generate options
-            $result = $this->form_generator->generate_field_options(
-                $prompt, [
-                    'field_type' => $field_type,
-                    'output_format' => $output_format,
-                    'tone' => $tone,
-                    'max_options' => $max_options,
-                ]
+        if ( $max_options < 1 || $max_options > 100 ) {
+            return new WP_Error(
+                'invalid_max_options',
+                __( 'Maximum options must be between 1 and 100', 'wp-user-frontend' ),
+                [ 'status' => 400 ]
             );
+        }
 
-            // Check for both error === true and success === false as failure conditions
-            if ( ( isset( $result['error'] ) && $result['error'] ) || ( isset( $result['success'] ) && ! $result['success'] ) ) {
-                return new WP_Error(
-                    'generation_failed',
-                    $result['message'] ?? __( 'Failed to generate field options', 'wp-user-frontend' ),
-                    [ 'status' => 400 ]
-                );
-            }
-
-            // Sanitize generated options
-            $sanitized_options = $this->sanitize_field_options( $result['options'] ?? [] );
-
-            return new WP_REST_Response(
+        try {
+            $result = $this->form_generator->generate_field_options(
+                $prompt,
                 [
-                    'success' => true,
-                    'options' => $sanitized_options,
-                    'message' => __( 'Options generated successfully', 'wp-user-frontend' ),
-                ], 200
+                    'field_type'    => $args['field_type'],
+                    'output_format' => $args['output_format'],
+                    'tone'          => $args['tone'],
+                    'max_options'   => $max_options,
+                ]
             );
         } catch ( \Exception $e ) {
             return new WP_Error(
@@ -95,15 +89,33 @@ class Field_Options {
                 [ 'status' => 500 ]
             );
         }
+
+        if ( is_wp_error( $result ) ) {
+            return $result;
+        }
+
+        // Both `error => true` and `success => false` are failures.
+        if ( ( isset( $result['error'] ) && $result['error'] ) || ( isset( $result['success'] ) && ! $result['success'] ) ) {
+            return new WP_Error(
+                'generation_failed',
+                isset( $result['message'] ) ? $result['message'] : __( 'Failed to generate field options', 'wp-user-frontend' ),
+                [ 'status' => 400 ]
+            );
+        }
+
+        return $this->sanitize( isset( $result['options'] ) ? $result['options'] : [] );
     }
 
     /**
-     * Sanitize field options
+     * Sanitize generated options.
      *
-     * @param array $options Raw options from AI (array of objects with 'label' and 'value' keys)
-     * @return array Sanitized options as indexed array
+     * @since WPUF_SINCE
+     *
+     * @param array $options Raw options from the provider: `[ 'label', 'value' ]` pairs or strings
+     *
+     * @return array Indexed `[ 'label' => ..., 'value' => ... ]` list
      */
-    private function sanitize_field_options( $options ) {
+    public function sanitize( $options ) {
         if ( ! is_array( $options ) ) {
             return [];
         }
@@ -111,14 +123,12 @@ class Field_Options {
         $sanitized = [];
 
         foreach ( $options as $option ) {
-            // Handle array of objects with label/value structure (from generate_field_options)
             if ( is_array( $option ) && isset( $option['label'] ) && isset( $option['value'] ) ) {
                 $sanitized[] = [
                     'label' => sanitize_text_field( $option['label'] ),
                     'value' => sanitize_key( $option['value'] ),
                 ];
             } elseif ( is_string( $option ) ) {
-                // Handle simple string options
                 $sanitized[] = [
                     'label' => sanitize_text_field( $option ),
                     'value' => sanitize_key( strtolower( str_replace( ' ', '_', $option ) ) ),

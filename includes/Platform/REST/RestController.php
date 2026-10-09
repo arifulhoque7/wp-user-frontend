@@ -63,6 +63,34 @@ abstract class RestController extends WP_REST_Controller implements RestRoute {
     }
 
     /**
+     * Register one route of this controller's namespace.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param string   $path       Route (with its leading slash)
+     * @param string   $methods    Methods (WP_REST_Server constants)
+     * @param string   $callback   Method of this class
+     * @param callable $permission Permission callback
+     * @param array    $args       Argument schema
+     *
+     * @return void
+     */
+    protected function route( $path, $methods, $callback, $permission, $args = [] ) {
+        register_rest_route(
+            $this->namespace,
+            $path,
+            [
+                [
+                    'methods'             => $methods,
+                    'callback'            => [ $this, $callback ],
+                    'permission_callback' => $permission,
+                    'args'                => $args,
+                ],
+            ]
+        );
+    }
+
+    /**
      * A response with `X-WP-Total` / `X-WP-TotalPages` headers.
      *
      * @since WPUF_SINCE

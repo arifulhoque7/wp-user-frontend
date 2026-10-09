@@ -265,6 +265,7 @@ class FormStore implements DataStore {
      *     @type bool       $version        Store wpuf_form_version (default true)
      *     @type bool       $settings_first Store settings before fields (templates)
      *     @type bool       $store_empty_settings Store settings even when empty (templates)
+     *     @type array      $meta           Extra post meta to store, key => value (AI form builder)
      * }
      *
      * @return int|WP_Error Form id
@@ -282,6 +283,7 @@ class FormStore implements DataStore {
                 'version'              => true,
                 'settings_first'       => false,
                 'store_empty_settings' => false,
+                'meta'                 => [],
             ]
         );
 
@@ -308,7 +310,22 @@ class FormStore implements DataStore {
         }
 
         foreach ( (array) $args['fields'] as $order => $field ) {
-            $this->fields->write( $form_id, $field, 0, $order, (bool) $args['unslash_fields'] );
+            $field_id = $this->fields->write( $form_id, $field, 0, $order, (bool) $args['unslash_fields'] );
+
+            // A field that could not be stored leaves no half-created form behind.
+            if ( is_wp_error( $field_id ) || ! $field_id ) {
+                $this->delete_permanently( $form_id );
+
+                return new WP_Error(
+                    'wpuf_form_field_not_created',
+                    sprintf(
+                        /* translators: 1: field position, 2: error message */
+                        __( 'Failed to create field at position %1$d: %2$s', 'wp-user-frontend' ),
+                        $order,
+                        is_wp_error( $field_id ) ? $field_id->get_error_message() : __( 'unknown error', 'wp-user-frontend' )
+                    )
+                );
+            }
         }
 
         if ( ! $args['settings_first'] ) {
@@ -434,6 +451,81 @@ class FormStore implements DataStore {
     }
 
     /**
+     * Update the post fields of a form (title, content, status, ...).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int   $form_id Form id
+     * @param array $fields  wp_update_post() fields without the ID
+     *
+     * @return int|WP_Error Form id
+     */
+    public function update( $form_id, array $fields ) {
+        unset( $fields['ID'] );
+
+        return wp_update_post( array_merge( $fields, [ 'ID' => absint( $form_id ) ] ), true );
+    }
+
+    /**
+     * Stored settings of a form (`wpuf_form_settings`), [] when none.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int $form_id Form id
+     *
+     * @return array
+     */
+    public function read_settings( $form_id ) {
+        $settings = get_post_meta( $form_id, 'wpuf_form_settings', true );
+
+        return is_array( $settings ) ? $settings : [];
+    }
+
+    /**
+     * Store the settings of a form as given.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int   $form_id  Form id
+     * @param array $settings Settings
+     *
+     * @return void
+     */
+    public function write_settings( $form_id, array $settings ) {
+        update_post_meta( $form_id, 'wpuf_form_settings', $settings );
+    }
+
+    /**
+     * One meta value of a form.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int    $form_id Form id
+     * @param string $key     Meta key
+     *
+     * @return mixed
+     */
+    public function read_meta( $form_id, $key ) {
+        return get_post_meta( $form_id, $key, true );
+    }
+
+    /**
+     * Store meta values of a form, key => value.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int   $form_id Form id
+     * @param array $meta    Meta, key => value
+     *
+     * @return void
+     */
+    public function write_meta( $form_id, array $meta ) {
+        foreach ( $meta as $key => $value ) {
+            update_post_meta( $form_id, $key, $value );
+        }
+    }
+
+    /**
      * Legacy delete (wpuf_delete_form(), Form_Manager::delete()): delete or
      * trash the post and remove its field rows directly, as those functions did.
      *
@@ -493,5 +585,7 @@ class FormStore implements DataStore {
         if ( $args['version'] ) {
             update_post_meta( $form_id, 'wpuf_form_version', WPUF_VERSION );
         }
+
+        $this->write_meta( $form_id, (array) $args['meta'] );
     }
 }

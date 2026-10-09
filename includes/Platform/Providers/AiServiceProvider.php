@@ -13,7 +13,13 @@ use WeDevs\Wpuf\Admin\Forms\AI_Form_Handler;
 use WeDevs\Wpuf\Admin\Screens\AiFormBuilder;
 use WeDevs\Wpuf\AI\FormGenerator;
 use WeDevs\Wpuf\AI\RestController;
-use WeDevs\Wpuf\Platform\Contracts\RestRoute;
+use WeDevs\Wpuf\AI\Services\Field_Options;
+use WeDevs\Wpuf\AI\Services\Form_Writer;
+use WeDevs\Wpuf\AI\Services\Generation;
+use WeDevs\Wpuf\AI\Services\Provider_Settings;
+use WeDevs\Wpuf\Platform\Stores\FieldStore;
+use WeDevs\Wpuf\Platform\Stores\FormStore;
+use WeDevs\Wpuf\Platform\Stores\SettingsStore;
 use WeDevs\Wpuf\Platform\ServiceProvider;
 
 /**
@@ -47,16 +53,49 @@ class AiServiceProvider extends ServiceProvider {
             }
         );
 
-        // Frozen routes: same paths, arguments, permissions and responses.
+        // The AI services over the provider client and the stores.
         $this->share_tagged(
-            RestController::class,
-            function () {
-                $manager = wpuf()->ai_manager;
-
-                return is_object( $manager ) ? $manager->get_rest_controller() : new RestController();
+            Generation::class,
+            function ( $container ) {
+                return new Generation( $container->get( FormGenerator::class ), $container->get( SettingsStore::class ) );
             }
         );
-        $this->container->add_tag( RestController::class, RestRoute::class );
+
+        $this->share_tagged(
+            Provider_Settings::class,
+            function ( $container ) {
+                return new Provider_Settings( $container->get( FormGenerator::class ), $container->get( SettingsStore::class ) );
+            }
+        );
+
+        $this->share_tagged(
+            Field_Options::class,
+            function ( $container ) {
+                return new Field_Options( $container->get( FormGenerator::class ) );
+            }
+        );
+
+        $this->share_tagged(
+            Form_Writer::class,
+            function ( $container ) {
+                return new Form_Writer( $container->get( FormGenerator::class ), $container->get( FormStore::class ), $container->get( FieldStore::class ) );
+            }
+        );
+
+        // Frozen routes: same paths, arguments, permissions and responses. On the
+        // platform REST base (a RestRoute, registered once by REST\Manager) and
+        // Hookable for the builder's field-options AJAX action.
+        $this->share_tagged(
+            RestController::class,
+            function ( $container ) {
+                return new RestController(
+                    $container->get( Generation::class ),
+                    $container->get( Provider_Settings::class ),
+                    $container->get( Field_Options::class ),
+                    $container->get( Form_Writer::class )
+                );
+            }
+        );
 
         // The admin_action handler Admin built (wpuf()->admin->ai_form_handler).
         $this->share_tagged(

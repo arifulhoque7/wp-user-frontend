@@ -16,13 +16,6 @@ use WeDevs\Wpuf\AI\FormGenerator;
 class AI_Manager {
 
     /**
-     * REST Controller instance
-     *
-     * @var RestController
-     */
-    private $rest_controller;
-
-    /**
      * Form Generator instance
      *
      * @var FormGenerator
@@ -53,9 +46,6 @@ class AI_Manager {
     private function init_classes() {
         // Initialize Form Generator
         $this->form_generator = new FormGenerator();
-
-        // Initialize REST Controller
-        $this->rest_controller = new RestController();
     }
 
     /**
@@ -66,7 +56,7 @@ class AI_Manager {
      */
     public function init_rest_api() {
         // Register REST API routes for AI form builder
-        $this->rest_controller->register_routes();
+        $this->get_rest_controller()->register_routes();
     }
 
     /**
@@ -137,7 +127,8 @@ class AI_Manager {
      * @return RestController
      */
     public function get_rest_controller() {
-        return $this->rest_controller;
+        // The platform builds it with its services (AiServiceProvider).
+        return wpuf()->platform()->get( RestController::class );
     }
 
     /**

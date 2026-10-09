@@ -128,31 +128,6 @@ class ToolsController extends RestController {
         $this->route( $base . '/onboarding', WP_REST_Server::READABLE, 'get_onboarding', $site );
     }
 
-    /**
-     * Register one route.
-     *
-     * @param string   $path       Route
-     * @param string   $methods    Methods
-     * @param string   $callback   Method of this class
-     * @param callable $permission Permission callback
-     * @param array    $args       Arguments
-     *
-     * @return void
-     */
-    private function route( $path, $methods, $callback, $permission, $args = [] ) {
-        register_rest_route(
-            $this->namespace,
-            $path,
-            [
-                [
-                    'methods'             => $methods,
-                    'callback'            => [ $this, $callback ],
-                    'permission_callback' => $permission,
-                    'args'                => $args,
-                ],
-            ]
-        );
-    }
 
     /**
      * Who may run the site-wide tools: as the classic page's handlers.

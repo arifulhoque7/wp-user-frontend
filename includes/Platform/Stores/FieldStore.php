@@ -209,6 +209,43 @@ class FieldStore {
     }
 
     /**
+     * Rewrite a form's fields by position: the stored field posts (any status,
+     * by menu_order) are updated in place, extra fields inserted, surplus
+     * posts deleted. Fields are stored as given (no unslash), as the AI form
+     * builder writes them.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int   $form_id Form id
+     * @param array $fields  Fields in order
+     *
+     * @return void
+     */
+    public function replace( $form_id, array $fields ) {
+        $existing = get_children(
+            [
+                'post_parent' => $form_id,
+                'post_type'   => 'wpuf_input',
+                'post_status' => 'any',
+                'numberposts' => -1,
+                'orderby'     => 'menu_order',
+                'order'       => 'ASC',
+                'fields'      => 'ids',
+            ]
+        );
+        $existing = array_values( array_map( 'intval', $existing ) );
+        $fields   = array_values( $fields );
+
+        foreach ( $fields as $order => $field ) {
+            $this->write( $form_id, $field, isset( $existing[ $order ] ) ? $existing[ $order ] : 0, $order, false );
+        }
+
+        foreach ( array_slice( $existing, count( $fields ) ) as $field_id ) {
+            wp_delete_post( $field_id, true );
+        }
+    }
+
+    /**
      * Delete every field post of a form (any status).
      *
      * @since WPUF_SINCE

@@ -9,15 +9,17 @@
 namespace WeDevs\Wpuf\AI\Services;
 
 use WeDevs\Wpuf\AI\FormGenerator;
-use WeDevs\Wpuf\AI\Form_Builder;
-use WP_REST_Request;
-use WP_REST_Response;
+use WeDevs\Wpuf\Platform\Stores\FieldStore;
+use WeDevs\Wpuf\Platform\Stores\FormStore;
+use WeDevs\Wpuf\Platform\Stores\Stores;
 use WP_Error;
 
 /**
- * Turning an AI answer into a stored form: creating and modifying forms and their field posts, with every value sanitized and checked.
+ * Writing the forms the AI builder produces: creating a form from the
+ * generated data and applying AI modifications to one. Persists through the
+ * form and field stores; takes plain arguments.
  *
- * @since WPUF_SINCE Moved out of AI\RestController, which keeps the routes and delegates.
+ * @since WPUF_SINCE Moved out of AI\RestController.
  */
 class Form_Writer {
 
@@ -29,24 +31,45 @@ class Form_Writer {
     protected $form_generator;
 
     /**
+     * The form store.
+     *
+     * @var FormStore
+     */
+    protected $forms;
+
+    /**
+     * The field store.
+     *
+     * @var FieldStore
+     */
+    protected $fields;
+
+    /**
      * @since WPUF_SINCE
      *
-     * @param FormGenerator $form_generator The provider client.
+     * @param FormGenerator   $form_generator The provider client.
+     * @param FormStore|null  $forms          The form store (container default).
+     * @param FieldStore|null $fields         The field store (container default).
      */
-    public function __construct( FormGenerator $form_generator ) {
+    public function __construct( FormGenerator $form_generator, $forms = null, $fields = null ) {
         $this->form_generator = $form_generator;
+        $this->forms          = $forms instanceof FormStore ? $forms : Stores::forms();
+        $this->fields         = $fields instanceof FieldStore ? $fields : Stores::fields();
     }
 
     /**
-     * Create form from AI generated data
+     * Create a form from the generated data.
      *
-     * @param WP_REST_Request $request REST request object
-     * @return WP_REST_Response|WP_Error Response object
+     * @since WPUF_SINCE
+     *
+     * @param array  $form_data { form_title, form_description, wpuf_fields, form_settings }
+     * @param string $form_type post | profile | registration
+     *
+     * @return array|WP_Error The created form (`form_id`, `form_type`, `form_data`, `edit_url`, `list_url`, `message`) or the error (status in its data)
      */
-    public function create_form_from_ai( WP_REST_Request $request ) {
+    public function create( array $form_data, $form_type = 'post' ) {
         try {
-            $form_data = $request->get_param( 'form_data' );
-            $form_type = $request->get_param( 'form_type' ) ?? 'post'; // Get form type, default to 'post'
+            $form_type = $form_type ? $form_type : 'post';
 
             // Validate required fields
             if ( empty( $form_data['form_title'] ) || empty( $form_data['wpuf_fields'] ) ) {
@@ -78,16 +101,79 @@ class Form_Writer {
             // Determine post type based on form type
             $post_type = ( $form_type === 'profile' || $form_type === 'registration' ) ? 'wpuf_profile' : 'wpuf_forms';
 
-            // Create the form post
-            $form_post = array(
-                'post_title' => sanitize_text_field( $form_data['form_title'] ),
-                'post_content' => sanitize_textarea_field( $form_data['form_description'] ?? '' ),
-                'post_status' => 'publish',
-                'post_type' => $post_type,
-                'post_author' => get_current_user_id(),
-            );
+            // Validate and sanitize the fields before anything is stored; the
+            // child posts get the registered input type, like a form built by hand.
+            $wpuf_fields = $this->sanitize_form_fields( $form_data['wpuf_fields'] );
+            $field_posts = [];
 
-            $form_id = wp_insert_post( $form_post );
+            foreach ( $wpuf_fields as $field ) {
+                // Skip a field without the required properties.
+                if ( empty( $field['name'] ) || empty( $field['input_type'] ) ) {
+                    continue;
+                }
+
+                $field = $this->normalize_field_input_type( $field );
+
+                // Reject a field whose input_type does not match its template
+                // (the AI form-builder object-injection primitive).
+                if ( ! $this->is_valid_field_definition( $field ) ) {
+                    return new WP_Error(
+                        'invalid_field_definition',
+                        __( 'A submitted field has a template and input type that do not match.', 'wp-user-frontend' ),
+                        [ 'status' => 400 ]
+                    );
+                }
+
+                $field['name']  = sanitize_key( $field['name'] );
+                $field['label'] = sanitize_text_field( isset( $field['label'] ) ? $field['label'] : '' );
+                $field_posts[]  = $field;
+            }
+
+            $default_settings = [
+                'post_type'        => 'post',
+                'post_status'      => 'publish',
+                'default_cat'      => '-1',
+                'guest_post'       => 'false',
+                'redirect_to'      => 'post',
+                'comment_status'   => 'open',
+                'submit_text'      => __( 'Submit Form', 'wp-user-frontend' ),
+                'edit_post_status' => 'publish',
+                'edit_redirect_to' => 'same',
+                'update_message'   => __( 'Form has been updated successfully.', 'wp-user-frontend' ),
+                'update_text'      => __( 'Update Form', 'wp-user-frontend' ),
+            ];
+
+            $form_settings = wp_parse_args( isset( $form_data['form_settings'] ) ? $form_data['form_settings'] : [], $default_settings );
+
+            // The form template of the post type lets the integrations save
+            // their meta through their hooks (WooCommerce's price, ...).
+            if ( ! empty( $form_settings['post_type'] ) ) {
+                $form_template = $this->get_form_template_for_post_type( $form_settings['post_type'] );
+
+                if ( $form_template ) {
+                    $form_settings['form_template'] = $form_template;
+                }
+            }
+
+            // Form post, field posts, settings, version and the AI meta through the store.
+            $form_id = $this->forms->create(
+                [
+                    'post_title'     => sanitize_text_field( $form_data['form_title'] ),
+                    'post_content'   => sanitize_textarea_field( isset( $form_data['form_description'] ) ? $form_data['form_description'] : '' ),
+                    'post_status'    => 'publish',
+                    'post_type'      => $post_type,
+                    'post_author'    => get_current_user_id(),
+                    'fields'         => $field_posts,
+                    'unslash_fields' => false,
+                    'settings'       => $form_settings,
+                    'meta'           => [
+                        'wpuf_form_fields'   => $wpuf_fields,
+                        'wpuf_ai_generated'  => true,
+                        'wpuf_ai_created_at' => current_time( 'mysql' ),
+                        'wpuf_ai_created_by' => get_current_user_id(),
+                    ],
+                ]
+            );
 
             if ( is_wp_error( $form_id ) ) {
                 return new WP_Error(
@@ -97,102 +183,6 @@ class Form_Writer {
                 );
             }
 
-            // Save form fields as child posts (WPUF's actual storage method)
-            $wpuf_fields = $form_data['wpuf_fields'];
-
-            // Sanitize all field data to prevent XSS
-            $wpuf_fields = $this->sanitize_form_fields( $wpuf_fields );
-
-            // Create child posts for each field (WPUF's storage method)
-            foreach ( $wpuf_fields as $order => $field ) {
-                // Validate required field properties
-                if ( empty( $field['name'] ) || empty( $field['input_type'] ) ) {
-                    continue; // Skip invalid fields
-                }
-
-                // The AI templates name input_type after the template; store the
-                // registered input_type instead, like a form built by hand.
-                $field = $this->normalize_field_input_type( $field );
-
-                // Reject a field whose input_type does not match its template
-                // (the AI form-builder object-injection primitive).
-                if ( ! $this->is_valid_field_definition( $field ) ) {
-                    $this->delete_ai_form_and_field_posts( $form_id );
-
-                    return new WP_Error(
-                        'invalid_field_definition',
-                        __( 'A submitted field has a template and input type that do not match.', 'wp-user-frontend' ),
-                        [ 'status' => 400 ]
-                    );
-                }
-
-                // Sanitize field data
-                $field['name'] = sanitize_key( $field['name'] );
-                $field['label'] = sanitize_text_field( $field['label'] ?? '' );
-
-                $field_post = array(
-                    'post_type' => 'wpuf_input',
-                    'post_status' => 'publish',
-                    'post_parent' => $form_id,
-                    'menu_order' => $order,
-                    'post_content' => serialize( $field ), // WPUF stores field data as serialized content
-                );
-
-                $field_id = wp_insert_post( $field_post );
-
-                if ( is_wp_error( $field_id ) ) {
-                    // Clean up previously created fields and the form post
-                    $this->delete_ai_form_and_field_posts( $form_id );
-                    return new WP_Error(
-                        'field_creation_failed',
-                        /* translators: 1: field position, 2: error message */
-                        sprintf( __( 'Failed to create field at position %1$d: %2$s', 'wp-user-frontend' ), $order, $field_id->get_error_message() ),
-                        [ 'status' => 500 ]
-                    );
-                }
-            }
-
-            // Also save as meta for compatibility (some functions might still use this)
-            // Fields already have correct structure from AI provider
-            update_post_meta( $form_id, 'wpuf_form_fields', $wpuf_fields );
-
-            // Add form version for compatibility
-            update_post_meta( $form_id, 'wpuf_form_version', WPUF_VERSION );
-
-            // Save form settings
-            $default_settings = [
-                'post_type' => 'post',
-                'post_status' => 'publish',
-                'default_cat' => '-1',
-                'guest_post' => 'false',
-                'redirect_to' => 'post',
-                'comment_status' => 'open',
-                'submit_text' => __( 'Submit Form', 'wp-user-frontend' ),
-                'edit_post_status' => 'publish',
-                'edit_redirect_to' => 'same',
-                'update_message' => __( 'Form has been updated successfully.', 'wp-user-frontend' ),
-                'update_text' => __( 'Update Form', 'wp-user-frontend' ),
-            ];
-
-            $form_settings = wp_parse_args( $form_data['form_settings'] ?? [], $default_settings );
-
-            // Set form_template based on post_type for proper integration handling
-            // This is critical for integrations to properly save meta fields via their hooks
-            if ( ! empty( $form_settings['post_type'] ) ) {
-                $form_template = $this->get_form_template_for_post_type( $form_settings['post_type'] );
-
-                if ( $form_template ) {
-                    $form_settings['form_template'] = $form_template;
-                }
-            }
-
-            update_post_meta( $form_id, 'wpuf_form_settings', $form_settings );
-
-            // Add form creation metadata
-            update_post_meta( $form_id, 'wpuf_ai_generated', true );
-            update_post_meta( $form_id, 'wpuf_ai_created_at', current_time( 'mysql' ) );
-            update_post_meta( $form_id, 'wpuf_ai_created_by', get_current_user_id() );
-
             // Log the form creation
             $this->log_form_creation( $form_id, $form_data );
 
@@ -200,33 +190,20 @@ class Form_Writer {
             $page = ( $form_type === 'profile' || $form_type === 'registration' ) ? 'wpuf-profile-forms' : 'wpuf-post-forms';
             $list_page = ( $form_type === 'profile' || $form_type === 'registration' ) ? 'wpuf-profile-forms' : 'wpuf-post-forms';
 
-            return new WP_REST_Response(
-                [
-                    'success' => true,
-                    'form_id' => $form_id,
-                    'form_type' => $form_type,
-                    'form_data' => [
-                        'wpuf_fields' => $wpuf_fields,
-                        'form_title' => $form_data['form_title'],
-                        'form_description' => $form_data['form_description'] ?? '',
-                    ],
-                    'edit_url' => admin_url( "admin.php?page={$page}&action=edit&id={$form_id}" ),
-                    'list_url' => admin_url( "admin.php?page={$list_page}" ),
-                    'message' => __( 'Form created successfully', 'wp-user-frontend' ),
-                ], 201
-            );
-        } catch ( \Exception $e ) {
-            // Enhanced error logging with context
-            $error_context = [
-                'user_id' => get_current_user_id(),
-                'form_title' => $form_data['form_title'] ?? 'Unknown',
-                'field_count' => count( $form_data['wpuf_fields'] ?? [] ),
-                'error_message' => $e->getMessage(),
-                'error_file' => $e->getFile(),
-                'error_line' => $e->getLine(),
-                'timestamp' => current_time( 'mysql' ),
+            return [
+                'success'   => true,
+                'form_id'   => $form_id,
+                'form_type' => $form_type,
+                'form_data' => [
+                    'wpuf_fields'      => $wpuf_fields,
+                    'form_title'       => $form_data['form_title'],
+                    'form_description' => isset( $form_data['form_description'] ) ? $form_data['form_description'] : '',
+                ],
+                'edit_url'  => admin_url( "admin.php?page={$page}&action=edit&id={$form_id}" ),
+                'list_url'  => admin_url( "admin.php?page={$list_page}" ),
+                'message'   => __( 'Form created successfully', 'wp-user-frontend' ),
             ];
-
+        } catch ( \Exception $e ) {
             return new WP_Error(
                 'form_creation_error',
                 __( 'An error occurred while creating the form. Please try again.', 'wp-user-frontend' ),
@@ -236,15 +213,19 @@ class Form_Writer {
     }
 
     /**
-     * Modify existing form using AI data
+     * Apply an AI modification to a form: the provider answers with field
+     * changes or a whole new form, both stored through the stores.
      *
-     * @param WP_REST_Request $request REST request object
-     * @return WP_REST_Response|WP_Error Response object
+     * @since WPUF_SINCE
+     *
+     * @param int   $form_id           Form id (a post form)
+     * @param array $modification_data { prompt, current_form, conversation_context, session_id }
+     *
+     * @return array|WP_Error The modified form (`form_id`, `form_data`, `message`) or the error (status in its data)
      */
-    public function modify_form_from_ai( WP_REST_Request $request ) {
+    public function modify( $form_id, array $modification_data ) {
         try {
-            $form_id = $request->get_param( 'form_id' );
-            $modification_data = $request->get_param( 'modification_data' );
+            $form_id = absint( $form_id );
 
             // Validate form exists and user has permission
             $form = get_post( $form_id );
@@ -280,7 +261,7 @@ class Form_Writer {
             $ai_response = $this->form_generator->generate_form(
                 $prompt, [
                     'session_id' => $modification_data['session_id'] ?? $this->generate_session_id(),
-                    'provider' => get_option( 'wpuf_ai' )['ai_provider'] ?? 'openai',
+                    'provider' => $this->stored_provider(),
                     'temperature' => 0.3, // Lower temperature for more consistent modifications
                     'conversation_context' => $modification_context,
                     'form_type' => $current_form['form_type'] ?? 'post',
@@ -298,7 +279,7 @@ class Form_Writer {
             // Process AI response - could be direct modification instructions or new form data
             if ( isset( $ai_response['action'] ) && $ai_response['action'] === 'modify' ) {
                 // Direct modification instructions from AI
-                $current_fields = get_post_meta( $form_id, 'wpuf_form_fields', true );
+                $current_fields = $this->forms->read_meta( $form_id, 'wpuf_form_fields' );
                 if ( ! is_array( $current_fields ) ) {
                     $current_fields = [];
                 }
@@ -358,11 +339,7 @@ class Form_Writer {
                     // Sanitize fields to ensure show_in_post and other properties are properly set
                     $converted_fields = $this->sanitize_form_fields( $current_fields );
 
-                    // Update form meta
-                    update_post_meta( $form_id, 'wpuf_form_fields', $converted_fields );
-
-                    // Also update child posts
-                    $this->update_form_field_posts( $form_id, $converted_fields );
+                    $this->store_fields( $form_id, $converted_fields );
                 }
 
                 $response_data = [
@@ -392,29 +369,14 @@ class Form_Writer {
                 // Sanitize fields to ensure show_in_post and other properties are properly set
                 $converted_fields = $this->sanitize_form_fields( $form_data['wpuf_fields'] ?? [] );
 
-                // Update form meta
-                update_post_meta( $form_id, 'wpuf_form_fields', $converted_fields );
+                $this->store_fields( $form_id, $converted_fields );
 
-                // Also update child posts
-                $this->update_form_field_posts( $form_id, $converted_fields );
-
-                // Update form title/description if provided
                 if ( isset( $ai_response['form_title'] ) ) {
-                    wp_update_post(
-                        [
-                            'ID' => $form_id,
-                            'post_title' => sanitize_text_field( $ai_response['form_title'] ),
-                        ]
-                    );
+                    $this->forms->update( $form_id, [ 'post_title' => sanitize_text_field( $ai_response['form_title'] ) ] );
                 }
 
                 if ( isset( $ai_response['form_description'] ) ) {
-                    wp_update_post(
-                        [
-                            'ID' => $form_id,
-                            'post_content' => sanitize_textarea_field( $ai_response['form_description'] ),
-                        ]
-                    );
+                    $this->forms->update( $form_id, [ 'post_content' => sanitize_textarea_field( $ai_response['form_description'] ) ] );
                 }
 
                 $response_data = [
@@ -435,7 +397,7 @@ class Form_Writer {
                 );
             }
 
-            return new WP_REST_Response( $response_data );
+            return $response_data;
         } catch ( \Exception $e ) {
             return new WP_Error(
                 'modification_error',
@@ -445,55 +407,7 @@ class Form_Writer {
         }
     }
 
-    /**
-     * Prepare modification prompt with current form context
-     */
-    private function prepare_modification_prompt( $prompt, $current_form ) {
-        $form_title = $current_form['form_title'] ?? 'Current Form';
-        $form_description = $current_form['form_description'] ?? '';
-        $fields = $current_form['wpuf_fields'] ?? [];
 
-        $context = "CURRENT FORM CONTEXT:\n";
-        $context .= "Form Title: {$form_title}\n";
-        $context .= "Form Description: {$form_description}\n";
-        $context .= "Current Fields:\n";
-
-        foreach ( $fields as $index => $field ) {
-            $label = $field['label'] ?? 'Unnamed';
-            $required = ( $field['required'] ?? false ) ? ' (Required)' : ' (Optional)';
-            $input_type = $field['input_type'] ?? $field['type'] ?? 'text';
-            $type = $this->get_human_readable_field_type( $input_type );
-            $context .= "- {$label}{$required} - {$type}\n";
-        }
-
-        $context .= "\nUSER REQUEST: {$prompt}\n\n";
-        $context .= 'Please provide the modification instructions or updated form structure.';
-
-        return $context;
-    }
-
-    /**
-     * Get human readable field type
-     */
-    private function get_human_readable_field_type( $type ) {
-        $types = [
-            'text_field' => 'Text Input',
-            'email_address' => 'Email Field',
-            'textarea_field' => 'Text Area',
-            'dropdown_field' => 'Dropdown',
-            'radio_field' => 'Radio Buttons',
-            'checkbox_field' => 'Checkboxes',
-            'file_upload' => 'File Upload',
-            'date_field' => 'Date Picker',
-            'time_field' => 'Time Picker',
-            'phone_field' => 'Phone Number',
-            'address_field' => 'Address',
-            'ratings' => 'Star Rating',
-            'toc' => 'Terms & Conditions',
-        ];
-
-        return $types[ $type ] ?? ucfirst( str_replace( '_', ' ', $type ) );
-    }
 
     /**
      * Generate session ID
@@ -643,28 +557,15 @@ class Form_Writer {
      */
     private function update_form_settings( $form_id, $target, $changes ) {
         if ( $target === 'form_title' && isset( $changes['form_title'] ) ) {
-            wp_update_post(
-                [
-                    'ID' => $form_id,
-                    'post_title' => sanitize_text_field( $changes['form_title'] ),
-                ]
-            );
+            $this->forms->update( $form_id, [ 'post_title' => sanitize_text_field( $changes['form_title'] ) ] );
         }
 
         if ( $target === 'form_description' && isset( $changes['form_description'] ) ) {
-            wp_update_post(
-                [
-                    'ID' => $form_id,
-                    'post_content' => sanitize_textarea_field( $changes['form_description'] ),
-                ]
-            );
+            $this->forms->update( $form_id, [ 'post_content' => sanitize_textarea_field( $changes['form_description'] ) ] );
         }
 
         // Update other form settings
-        $current_settings = get_post_meta( $form_id, 'wpuf_form_settings', true );
-        if ( ! is_array( $current_settings ) ) {
-            $current_settings = [];
-        }
+        $current_settings = $this->forms->read_settings( $form_id );
 
         foreach ( $changes as $key => $value ) {
             if ( $key !== 'form_title' && $key !== 'form_description' ) {
@@ -684,7 +585,7 @@ class Form_Writer {
             }
         }
 
-        update_post_meta( $form_id, 'wpuf_form_settings', $current_settings );
+        $this->forms->write_settings( $form_id, $current_settings );
     }
 
     /**
@@ -782,94 +683,39 @@ class Form_Writer {
         return $allowed[ $template ] === $field['input_type'];
     }
 
+
     /**
-     * Delete an AI-created form along with any field child posts already inserted.
+     * Store a form's fields: the `wpuf_form_fields` meta and the field posts,
+     * after dropping any field whose template / input_type pairing is invalid
+     * (a mismatched, object-injection definition is never persisted).
      *
-     * The wp_delete_post() function does not cascade to children for non-hierarchical post
-     * types, so remove the wpuf_input children explicitly before the form itself
-     * to avoid orphaned field posts when an AI form build is rejected or fails.
+     * @since WPUF_SINCE
      *
-     * @since 4.3.11
-     *
-     * @param int $form_id Form ID.
+     * @param int   $form_id Form id
+     * @param array $fields  Fields in order
      *
      * @return void
      */
-    private function delete_ai_form_and_field_posts( $form_id ) {
-        $field_ids = get_posts(
-            [
-                'post_type'      => 'wpuf_input',
-                'post_parent'    => $form_id,
-                'posts_per_page' => -1,
-                'post_status'    => 'any',
-                'fields'         => 'ids',
-            ]
-        );
+    private function store_fields( $form_id, $fields ) {
+        $this->forms->write_meta( $form_id, [ 'wpuf_form_fields' => $fields ] );
 
-        foreach ( $field_ids as $field_id ) {
-            wp_delete_post( $field_id, true );
-        }
-
-        wp_delete_post( $form_id, true );
-    }
-
-    /**
-     * Update form field child posts
-     *
-     * @param int $form_id Form ID
-     * @param array $fields Updated fields
-     */
-    private function update_form_field_posts( $form_id, $fields ) {
-        // Drop any field whose template/input_type pairing is invalid before saving,
-        // so a mismatched (object-injection) definition can never be persisted.
         $fields = array_map( [ $this, 'normalize_field_input_type' ], $fields );
         $fields = array_values( array_filter( $fields, [ $this, 'is_valid_field_definition' ] ) );
 
-        // Get existing field posts ordered by menu_order
-        $existing_posts = get_posts(
-            [
-                'post_type' => 'wpuf_input',
-                'post_parent' => $form_id,
-                'posts_per_page' => -1,
-                'post_status' => 'any',
-                'orderby' => 'menu_order',
-                'order' => 'ASC',
-            ]
-        );
+        $this->fields->replace( $form_id, $fields );
+    }
 
-        $existing_count = count( $existing_posts );
-        $new_count = count( $fields );
+    /**
+     * The stored provider id (`wpuf_ai`), openai by default.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return string
+     */
+    private function stored_provider() {
+        $stored = Stores::settings()->read( 'wpuf_ai' );
 
-        // Update or create field posts
-        foreach ( $fields as $order => $field ) {
-            if ( $order < $existing_count ) {
-                // Update existing post
-                wp_update_post(
-                    [
-                        'ID' => $existing_posts[ $order ]->ID,
-                        'menu_order' => $order,
-                        'post_content' => serialize( $field ),
-                    ]
-                );
-            } else {
-                // Create new post
-                $field_post = array(
-                    'post_type' => 'wpuf_input',
-                    'post_status' => 'publish',
-                    'post_parent' => $form_id,
-                    'menu_order' => $order,
-                    'post_content' => serialize( $field ),
-                );
-                wp_insert_post( $field_post );
-            }
-        }
-
-        // Delete excess posts if new count is less than existing
-        if ( $new_count < $existing_count ) {
-            for ( $i = $new_count; $i < $existing_count; $i++ ) {
-                wp_delete_post( $existing_posts[ $i ]->ID, true );
-            }
-        }
+        return is_array( $stored ) && ! empty( $stored['ai_provider'] ) ? $stored['ai_provider'] : 'openai';
     }
 
     /**
@@ -895,16 +741,6 @@ class Form_Writer {
         update_option( 'wpuf_ai_form_creation_log', $creation_log );
     }
 
-    /**
-     * Determine if field should be meta
-     *
-     * @param string $field_name
-     * @return bool
-     */
-    private function should_be_meta( $field_name ) {
-        $post_fields = [ 'post_title', 'post_content', 'post_excerpt', 'post_tags', 'post_category' ];
-        return ! in_array( $field_name, $post_fields, true );
-    }
 
     /**
      * Get form template for a given post type
@@ -1380,43 +1216,5 @@ class Form_Writer {
         }
 
         return $fields;
-    }
-
-    /**
-     * Final security validation for all API operations
-     *
-     * Performs comprehensive security checks including:
-     * - User capability verification
-     * - Rate limiting validation
-     * - Session integrity checks
-     * - Request origin validation
-     *
-     * @param WP_REST_Request $request The REST request
-     * @return bool|WP_Error True if valid, WP_Error if not
-     */
-    private function perform_security_validation( WP_REST_Request $request ) {
-        // Verify user capabilities with enhanced checks
-        if ( ! current_user_can( 'edit_posts' ) ) {
-            return new WP_Error(
-                'insufficient_capabilities',
-                __( 'You do not have permission to use AI form builder', 'wp-user-frontend' ),
-                [ 'status' => 403 ]
-            );
-        }
-
-        // Security rate limiting removed - AI provider handles their own limits
-
-        // Validate session integrity
-        $session_token = wp_get_session_token();
-        if ( empty( $session_token ) ) {
-            return new WP_Error(
-                'invalid_session',
-                __( 'Invalid user session', 'wp-user-frontend' ),
-                [ 'status' => 401 ]
-            );
-        }
-
-        // All security checks passed
-        return true;
     }
 }

@@ -8,17 +8,29 @@
 
 namespace WeDevs\Wpuf\AI\Services;
 
-use WeDevs\Wpuf\AI\FormGenerator;
 use WeDevs\Wpuf\AI\Config;
-use WP_REST_Request;
-use WP_REST_Response;
+use WeDevs\Wpuf\AI\FormGenerator;
+use WeDevs\Wpuf\Platform\Stores\SettingsStore;
+use WeDevs\Wpuf\Platform\Stores\Stores;
 
 /**
- * The AI settings and providers: connection test, provider and integration lists, settings read and save, model lists.
+ * The AI settings and providers: connection test, provider and integration
+ * lists, settings read and save, model lists. The `wpuf_ai` section is read
+ * and written through the settings store; takes plain arguments.
  *
- * @since WPUF_SINCE Moved out of AI\RestController, which keeps the routes and delegates.
+ * @since WPUF_SINCE Moved out of AI\RestController.
  */
 class Provider_Settings {
+
+    /**
+     * The settings section.
+     */
+    const SECTION = 'wpuf_ai';
+
+    /**
+     * Transient caching the provider model lists.
+     */
+    const MODELS_CACHE = 'wpuf_ai_models_cache';
 
     /**
      * The provider client.
@@ -28,85 +40,100 @@ class Provider_Settings {
     protected $form_generator;
 
     /**
+     * The settings store.
+     *
+     * @var SettingsStore
+     */
+    protected $settings;
+
+    /**
      * @since WPUF_SINCE
      *
-     * @param FormGenerator $form_generator The provider client.
+     * @param FormGenerator      $form_generator The provider client.
+     * @param SettingsStore|null $settings       The settings store (container default).
      */
-    public function __construct( FormGenerator $form_generator ) {
+    public function __construct( FormGenerator $form_generator, $settings = null ) {
         $this->form_generator = $form_generator;
+        $this->settings       = $settings instanceof SettingsStore ? $settings : Stores::settings();
     }
 
     /**
-     * Test connection to AI provider
+     * The stored `wpuf_ai` section, [] when none.
      *
-     * @param WP_REST_Request $request REST request object
-     * @return WP_REST_Response Response object
+     * @since WPUF_SINCE
+     *
+     * @return array
      */
-    public function test_connection( WP_REST_Request $request ) {
-        try {
-            // Get parameters from request
-            $api_key = $request->get_param( 'api_key' );
-            $provider = $request->get_param( 'provider' );
-            $model = $request->get_param( 'model' );
+    public function stored() {
+        $stored = $this->settings->read( self::SECTION );
 
-            // The settings screen only has the masked key; use the stored one.
-            $stored_ai = get_option( 'wpuf_ai', [] );
-            $stored    = is_array( $stored_ai ) && is_string( $provider ) && isset( $stored_ai[ $provider . '_api_key' ] ) ? $stored_ai[ $provider . '_api_key' ] : '';
+        return is_array( $stored ) ? $stored : [];
+    }
+
+    /**
+     * Test the connection to a provider.
+     *
+     * The settings screen only has the masked key, so a masked copy of the
+     * stored key means "use the stored one".
+     *
+     * @since WPUF_SINCE
+     *
+     * @param string $api_key  API key (or its masked copy)
+     * @param string $provider Provider id
+     * @param string $model    Model id
+     *
+     * @return array `[ 'success' => bool, 'message' => string, ... ]`
+     */
+    public function test_connection( $api_key, $provider, $model ) {
+        try {
+            $stored_ai = $this->stored();
+            $stored    = is_string( $provider ) && isset( $stored_ai[ $provider . '_api_key' ] ) ? $stored_ai[ $provider . '_api_key' ] : '';
 
             if ( function_exists( 'wpuf_settings_is_masked_secret' ) && wpuf_settings_is_masked_secret( $api_key, $stored, 4 ) ) {
                 $api_key = $stored;
             }
 
-            // Pass provider and model to test_connection
-            $result = $this->form_generator->test_connection( $api_key, $provider, $model );
-
-            return new WP_REST_Response( $result, $result['success'] ? 200 : 400 );
+            return $this->form_generator->test_connection( $api_key, $provider, $model );
         } catch ( \Exception $e ) {
-            return new WP_REST_Response(
-                [
-                    'success' => false,
-                    'message' => $e->getMessage(),
-                ], 500
-            );
+            return [
+                'success'   => false,
+                'message'   => $e->getMessage(),
+                'exception' => true,
+            ];
         }
     }
 
     /**
-     * Get available providers
+     * The providers and the current one.
      *
-     * @param WP_REST_Request $request REST request object
-     * @return WP_REST_Response Response object
+     * @since WPUF_SINCE
+     *
+     * @return array `[ 'success' => true, 'providers' => [...], 'current_provider' => string ]`
      */
-    public function get_providers( WP_REST_Request $request ) {
-        $providers = $this->form_generator->get_providers();
-        $current_provider = $this->form_generator->get_current_provider();
-
-        return new WP_REST_Response(
-            [
-                'success' => true,
-                'providers' => $providers,
-                'current_provider' => $current_provider,
-            ], 200
-        );
+    public function providers() {
+        return [
+            'success'          => true,
+            'providers'        => $this->form_generator->get_providers(),
+            'current_provider' => $this->form_generator->get_current_provider(),
+        ];
     }
 
     /**
-     * Get available integrations
+     * The integrations available for a form type (installed plugins), filtered
+     * through `wpuf_ai_integrations`.
      *
-     * Returns list of available integrations based on installed plugins
+     * @since WPUF_SINCE
      *
-     * @since 4.2.9
+     * @param string $form_type post | profile | registration
      *
-     * @param WP_REST_Request $request REST request object
-     * @return WP_REST_Response Response object
+     * @return array `[ 'success' => true, 'integrations' => [...], 'form_type' => string ]`
      */
-    public function get_integrations( WP_REST_Request $request ) {
-        $form_type = $request->get_param( 'form_type' ) ?? 'post';
+    public function integrations( $form_type = 'post' ) {
+        $form_type = $form_type ? $form_type : 'post';
 
-        // Define all possible integrations with their requirements
         $all_integrations = [
-            // Post form integrations
-            'woocommerce' => [
+            // Post form integrations.
+            'woocommerce'     => [
                 'id'          => 'woocommerce',
                 'label'       => __( 'WooCommerce Product', 'wp-user-frontend' ),
                 'description' => __( 'Create WooCommerce product submission forms', 'wp-user-frontend' ),
@@ -114,7 +141,7 @@ class Provider_Settings {
                 'form_types'  => [ 'post' ],
                 'icon'        => 'woocommerce',
             ],
-            'edd' => [
+            'edd'             => [
                 'id'          => 'edd',
                 'label'       => __( 'Easy Digital Downloads', 'wp-user-frontend' ),
                 'description' => __( 'Create EDD download submission forms', 'wp-user-frontend' ),
@@ -130,8 +157,8 @@ class Provider_Settings {
                 'form_types'  => [ 'post' ],
                 'icon'        => 'calendar',
             ],
-            // Registration form integrations
-            'dokan' => [
+            // Registration form integrations.
+            'dokan'           => [
                 'id'          => 'dokan',
                 'label'       => __( 'Dokan Vendor', 'wp-user-frontend' ),
                 'description' => __( 'Create Dokan vendor registration forms', 'wp-user-frontend' ),
@@ -139,7 +166,7 @@ class Provider_Settings {
                 'form_types'  => [ 'profile', 'registration' ],
                 'icon'        => 'store',
             ],
-            'wc_vendors' => [
+            'wc_vendors'      => [
                 'id'          => 'wc_vendors',
                 'label'       => __( 'WC Vendors', 'wp-user-frontend' ),
                 'description' => __( 'Create WC Vendors registration forms', 'wp-user-frontend' ),
@@ -147,7 +174,7 @@ class Provider_Settings {
                 'form_types'  => [ 'profile', 'registration' ],
                 'icon'        => 'store',
             ],
-            'wcfm' => [
+            'wcfm'            => [
                 'id'          => 'wcfm',
                 'label'       => __( 'WCFM Membership', 'wp-user-frontend' ),
                 'description' => __( 'Create WCFM vendor registration forms', 'wp-user-frontend' ),
@@ -157,12 +184,11 @@ class Provider_Settings {
             ],
         ];
 
-        // Filter integrations based on form type and enabled status
-        $available_integrations = [];
+        $available = [];
+
         foreach ( $all_integrations as $integration ) {
-            // Only include if enabled and supports the current form type
             if ( $integration['enabled'] && in_array( $form_type, $integration['form_types'], true ) ) {
-                $available_integrations[] = $integration;
+                $available[] = $integration;
             }
         }
 
@@ -176,197 +202,177 @@ class Provider_Settings {
          * @param array  $available_integrations Array of integration objects
          * @param string $form_type              Form type ('post' or 'profile')
          */
-        $available_integrations = apply_filters( 'wpuf_ai_integrations', $available_integrations, $form_type );
+        $available = apply_filters( 'wpuf_ai_integrations', $available, $form_type );
 
-        return new WP_REST_Response(
-            [
-                'success' => true,
-                'integrations' => $available_integrations,
-                'form_type' => $form_type,
-            ], 200
-        );
+        return [
+            'success'      => true,
+            'integrations' => $available,
+            'form_type'    => $form_type,
+        ];
     }
 
     /**
-     * Save AI settings
+     * Save the AI settings (provider, model, key, temperature, max tokens) and
+     * refresh the cached model lists when they are older than an hour.
      *
-     * @param WP_REST_Request $request REST request object
-     * @return WP_REST_Response Response object
+     * @since WPUF_SINCE
+     *
+     * @param array $input {
+     *     @type string     $provider    Provider id
+     *     @type string     $model       Model id
+     *     @type string     $api_key     API key ('' keeps the stored one)
+     *     @type float|null $temperature 0..1
+     *     @type int|null   $max_tokens  100..4000
+     * }
+     *
+     * @return array `[ 'success' => bool, 'message' => string ]`
      */
-    public function save_settings( WP_REST_Request $request ) {
-        $provider    = $request->get_param( 'provider' );
-        $model       = $request->get_param( 'model' );
-        $api_key     = $request->get_param( 'api_key' );
-        $temperature = $request->get_param( 'temperature' );
-        $max_tokens  = $request->get_param( 'max_tokens' );
+    public function save( array $input ) {
+        $input = wp_parse_args(
+            $input,
+            [
+                'provider'    => '',
+                'model'       => '',
+                'api_key'     => '',
+                'temperature' => null,
+                'max_tokens'  => null,
+            ]
+        );
 
-        // Get existing settings
-        $existing = get_option( 'wpuf_ai', [] );
+        $existing    = $this->stored();
+        $api_key     = $input['api_key'];
+        $temperature = $input['temperature'];
+        $max_tokens  = $input['max_tokens'];
 
-        // Validate API key format if provided
         if ( ! empty( $api_key ) ) {
             $api_key = sanitize_text_field( $api_key );
+
             if ( strlen( $api_key ) < 10 ) {
-                return new WP_REST_Response(
-                    [
-                        'success' => false,
-                        'message' => __( 'API key appears to be too short', 'wp-user-frontend' ),
-                    ], 400
-                );
+                return [
+                    'success' => false,
+                    'message' => __( 'API key appears to be too short', 'wp-user-frontend' ),
+                ];
             }
         }
 
-        // Normalize optional params
-        if ( $temperature !== null ) {
+        if ( null !== $temperature ) {
             $temperature = max( 0.0, min( 1.0, (float) $temperature ) );
         }
-        if ( $max_tokens !== null ) {
+
+        if ( null !== $max_tokens ) {
             $max_tokens = max( 100, min( 4000, (int) $max_tokens ) );
         }
 
-        // Update with new values
         $settings = [
-            'ai_provider' => $provider ? $provider : ( $existing['ai_provider'] ?? 'openai' ),
-            'ai_model'    => $model ? $model : ( $existing['ai_model'] ?? 'gpt-3.5-turbo' ),
-            'ai_api_key'  => ! empty( $api_key )
-                                ? $api_key
-                                : ( $existing['ai_api_key'] ?? '' ),
-            'temperature' => $temperature !== null
-                                ? $temperature
-                                : ( $existing['temperature'] ?? 0.7 ),
-            'max_tokens'  => $max_tokens !== null
-                                ? $max_tokens
-                                : ( $existing['max_tokens'] ?? 2000 ),
+            'ai_provider' => $input['provider'] ? $input['provider'] : ( isset( $existing['ai_provider'] ) ? $existing['ai_provider'] : 'openai' ),
+            'ai_model'    => $input['model'] ? $input['model'] : ( isset( $existing['ai_model'] ) ? $existing['ai_model'] : 'gpt-3.5-turbo' ),
+            'ai_api_key'  => ! empty( $api_key ) ? $api_key : ( isset( $existing['ai_api_key'] ) ? $existing['ai_api_key'] : '' ),
+            'temperature' => null !== $temperature ? $temperature : ( isset( $existing['temperature'] ) ? $existing['temperature'] : 0.7 ),
+            'max_tokens'  => null !== $max_tokens ? $max_tokens : ( isset( $existing['max_tokens'] ) ? $existing['max_tokens'] : 2000 ),
         ];
 
-        $saved = update_option( 'wpuf_ai', $settings );
+        // Unchanged settings are not a failure to save (update_option() returns false then).
+        $saved = $settings === $existing || $this->settings->write_section( self::SECTION, $settings ) === $settings;
 
-        // Auto-refresh all models when settings are saved
-        if ( $saved ) {
-            // Check if models need refresh (cache older than 1 hour or not exists)
-            $cached = get_transient( 'wpuf_ai_models_cache' );
-            $should_refresh = true;
-
-            if ( false !== $cached && is_array( $cached ) && isset( $cached['last_updated'] ) ) {
-                $cache_age = time() - $cached['last_updated'];
-                $should_refresh = $cache_age > HOUR_IN_SECONDS;
-            }
-
-            if ( $should_refresh ) {
-                // Fetch all models from all providers (don't fail if this errors)
-                Config::update_all_models();
-            }
+        if ( ! $saved ) {
+            return [
+                'success' => false,
+                'message' => __( 'Failed to save settings', 'wp-user-frontend' ),
+            ];
         }
 
-        if ( $saved ) {
-            return new WP_REST_Response(
-                [
-                    'success' => true,
-                    'message' => __( 'Settings saved successfully', 'wp-user-frontend' ),
-                ], 200
-            );
-        } else {
-            return new WP_REST_Response(
-                [
-                    'success' => false,
-                    'message' => __( 'Failed to save settings', 'wp-user-frontend' ),
-                ], 400
-            );
-        }
+        $this->refresh_models_if_stale();
+
+        return [
+            'success' => true,
+            'message' => __( 'Settings saved successfully', 'wp-user-frontend' ),
+        ];
     }
 
     /**
-     * Get AI settings
+     * The settings as the screens read them (the key only as "is it set").
      *
-     * @param WP_REST_Request $request REST request object
-     * @return WP_REST_Response Response object
+     * @since WPUF_SINCE
+     *
+     * @return array `[ 'success' => true, 'settings' => [ provider, model, temperature, max_tokens, has_api_key ] ]`
      */
-    public function get_settings( WP_REST_Request $request ) {
-        // Get settings from WPUF settings system
-        $wpuf_ai_settings = get_option( 'wpuf_ai', [] );
+    public function read() {
+        $stored = $this->stored();
 
-        // Map to expected format
-        $settings = [
-            'provider' => $wpuf_ai_settings['ai_provider'] ?? 'openai',
-            'model' => $wpuf_ai_settings['ai_model'] ?? 'gpt-3.5-turbo',
-            'temperature' => $wpuf_ai_settings['temperature'] ?? 0.7,
-            'max_tokens' => $wpuf_ai_settings['max_tokens'] ?? 2000,
-            'api_key' => $wpuf_ai_settings['ai_api_key'] ?? '',
+        return [
+            'success'  => true,
+            'settings' => [
+                'provider'    => isset( $stored['ai_provider'] ) ? $stored['ai_provider'] : 'openai',
+                'model'       => isset( $stored['ai_model'] ) ? $stored['ai_model'] : 'gpt-3.5-turbo',
+                'temperature' => isset( $stored['temperature'] ) ? $stored['temperature'] : 0.7,
+                'max_tokens'  => isset( $stored['max_tokens'] ) ? $stored['max_tokens'] : 2000,
+                'has_api_key' => ! empty( $stored['ai_api_key'] ),
+            ],
         ];
-
-        // Don't expose the actual API key, just whether it's set
-        $settings['has_api_key'] = ! empty( $settings['api_key'] );
-        unset( $settings['api_key'] );
-
-        return new WP_REST_Response(
-            [
-                'success' => true,
-                'settings' => $settings,
-            ], 200
-        );
     }
 
     /**
-     * Refresh Google models from API
+     * Refresh the model lists of every provider (needs the stored Google key).
      *
-     * @param WP_REST_Request $request REST request object
-     * @return WP_REST_Response Response object
+     * @since WPUF_SINCE
+     *
+     * @return array `[ 'success' => bool, 'message' => string, 'models' => [...] ]`
      */
-    public function refresh_google_models( WP_REST_Request $request ) {
-        // Get Google API key from settings
-        $wpuf_ai_settings = get_option( 'wpuf_ai', [] );
+    public function refresh_google_models() {
+        $stored = $this->stored();
 
-        // Check for Google API key (stored as google_api_key)
-        $api_key = $wpuf_ai_settings['google_api_key'] ?? '';
-
-        if ( empty( $api_key ) ) {
-            return new WP_REST_Response(
-                [
-                    'success' => false,
-                    'message' => __( 'Google API key not configured. Please save your Google API key first.', 'wp-user-frontend' ),
-                ], 400
-            );
+        if ( empty( $stored['google_api_key'] ) ) {
+            return [
+                'success' => false,
+                'message' => __( 'Google API key not configured. Please save your Google API key first.', 'wp-user-frontend' ),
+            ];
         }
 
-        // Fetch models from all providers
         $result = Config::update_all_models();
 
         if ( is_wp_error( $result ) ) {
-            return new WP_REST_Response(
-                [
-                    'success' => false,
-                    'message' => $result->get_error_message(),
-                ], 400
-            );
+            return [
+                'success' => false,
+                'message' => $result->get_error_message(),
+            ];
         }
 
-        // Get the updated models
-        $models = Config::get_models();
-
-        return new WP_REST_Response(
-            [
-                'success' => true,
-                'message' => __( 'Google models updated successfully', 'wp-user-frontend' ),
-                'models' => $models,
-            ], 200
-        );
+        return [
+            'success' => true,
+            'message' => __( 'Google models updated successfully', 'wp-user-frontend' ),
+            'models'  => Config::get_models(),
+        ];
     }
 
     /**
-     * Get available models
+     * The cached model lists.
      *
-     * @param WP_REST_Request $request REST request object
-     * @return WP_REST_Response Response object
+     * @since WPUF_SINCE
+     *
+     * @return array `[ 'success' => true, 'models' => [...] ]`
      */
-    public function get_models( WP_REST_Request $request ) {
-        // Get all models from cache
-        $models = Config::get_models();
+    public function models() {
+        return [
+            'success' => true,
+            'models'  => Config::get_models(),
+        ];
+    }
 
-        return new WP_REST_Response(
-            [
-                'success' => true,
-                'models' => $models,
-            ], 200
-        );
+    /**
+     * Fetch the model lists again when the cache is missing or older than an hour.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return void
+     */
+    private function refresh_models_if_stale() {
+        $cached = get_transient( self::MODELS_CACHE );
+
+        if ( false !== $cached && is_array( $cached ) && isset( $cached['last_updated'] ) && ( time() - $cached['last_updated'] ) <= HOUR_IN_SECONDS ) {
+            return;
+        }
+
+        // Every provider with a key; a failure here does not fail the save.
+        Config::update_all_models();
     }
 }
