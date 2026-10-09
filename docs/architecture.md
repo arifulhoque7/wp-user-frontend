@@ -27,7 +27,7 @@ Rules of the container: services are built only in providers (`share_tagged`), d
 | A screen (menu slug, load hook, route, boot data) | `includes/Admin/Screens/<Screen>.php`, registered in `Screens\Registry`; Pro screens in `wpuf-pro/includes/Platform/Screens/` |
 | A REST route under `wpuf/v1` | `includes/Platform/REST/Controllers/*Controller.php` (admin routes `admin/*`, frozen routes `wpuf_form`, `wpuf_subscription*`, `settings`); the AI form builder's routes in `includes/AI/RestController.php` (feature-local); Pro routes in `wpuf-pro/includes/Platform/<Feature>/*Controller.php`. All go through `Platform\REST\Manager`; base class `Platform\REST\RestController` |
 | Who may do what | `Platform\Caps` (`MANAGE_FORMS`, `MANAGE_SUBSCRIPTIONS`, `MANAGE_SETTINGS` map to `wpuf_admin_role()`; `MANAGE_SITE` to `manage_options`; `wpuf_capability` filter) |
-| Reading or writing forms, fields, packs, settings, subscribers, a user's pack, a submission's payment meta | `Platform\Stores\*Store` (through `Stores::forms()`, `::fields()`, `::subscriptions()`, `::settings()`, `::transactions()`, `::subscribers()`, `::user_packs()`, `::submissions()`); models in `Platform\Models` |
+| Reading or writing forms, fields, packs, settings, subscribers, a user's pack, a submission's form / payment / lock meta | `Platform\Stores\*Store` (through `Stores::forms()`, `::fields()`, `::subscriptions()`, `::settings()`, `::transactions()`, `::subscribers()`, `::user_packs()`, `::submissions()`); models in `Platform\Models` |
 | The builder save | AJAX `wpuf_form_builder_save_form` and REST `admin/forms/{id}` both call `Builder\FormSave` → `Admin\Forms\Admin_Form_Builder::save_form()` → the stores. Builder boot data: `Builder\BuilderBoot` |
 | Tools, Transactions | `Platform\Tools\ToolsService` (reset through `SettingsStore::delete_section()`, delete through `FormStore::delete_all_of_type()` / `SubscriptionStore::delete_all()`, `TransactionStore::truncate()`, listing / export / import through `FormStore` `query` + `read` + `create`; `Admin_Tools::import_json_file()` forwards to `ToolsService::import_forms()`), `Platform\Transactions\TransactionService` over `Platform\Stores\TransactionStore` (every SQL of the screen); container services; old action links of develop's pages are replayed by `TransactionService::legacy_request()` and `Admin_Tools`' `wpuf_load_tools` handlers |
 | Onboarding | `Admin\Onboarding` (the wizard: hooks, steps, state, step savers) delegating to `Platform\Onboarding\Pages` and `Platform\Onboarding\Plugin_Installer`; REST `OnboardingController`; screen `Screens\Onboarding` |
@@ -56,8 +56,11 @@ includes/Platform/            the platform: Container, ServiceProvider, Bootstra
 includes/Admin/Screens/       one class per admin screen + Registry, Screen (base), PrintsNotices
 includes/Admin/App/           AppPage (the one admin page)
 includes/Builder/             BuilderBoot, FormSave, HookBridge, HookDeprecations
-includes/Admin/               legacy admin services still in use (Menu, Admin_Tools, Onboarding facade, Posting, Help_Content,
-                              views/ for Subscribers / Premium / shortcode builder / help content)
+includes/Admin/               legacy admin services still in use, all built by the platform container: Menu (the WP
+                              admin_menu adapter, every callback renders through Screens\Registry / AppPage), Admin_Tools
+                              (handlers through ToolsService), Onboarding facade, Posting (metaboxes through
+                              SubmissionStore), Customizer_Options (Customizer bridge), Upgrades, Help_Content,
+                              views/ for Subscribers / Premium / shortcode builder / help content
 includes/Admin/Subscriptions/ the subscription packs admin behind two facades (hooks + delegators, statics stay):
                               Admin_Subscription -> Pack_Fields (pack editor schema), Pack_Screen (CPT columns, classic
                               metaboxes, React screen boot, sort order migration through SubscriptionStore), User_Profile

@@ -202,4 +202,40 @@ class UserPackStore implements DataStore {
         update_user_meta( $user_id, self::PRE_NOTICE, '' );
         update_user_meta( $user_id, self::POST_NOTICE, '' );
     }
+
+    /**
+     * Whether an expiry notice mail was already sent to the user.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int    $user_id User id
+     * @param string $notice  self::PRE_NOTICE or self::POST_NOTICE
+     *
+     * @return bool
+     */
+    public function notice_sent( $user_id, $notice ) {
+        if ( ! in_array( $notice, [ self::PRE_NOTICE, self::POST_NOTICE ], true ) ) {
+            return false;
+        }
+
+        return 'sent' === get_user_meta( $user_id, $notice, true );
+    }
+
+    /**
+     * Record that an expiry notice mail was sent to the user.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int    $user_id User id
+     * @param string $notice  self::PRE_NOTICE or self::POST_NOTICE
+     *
+     * @return void
+     */
+    public function mark_notice_sent( $user_id, $notice ) {
+        if ( ! in_array( $notice, [ self::PRE_NOTICE, self::POST_NOTICE ], true ) ) {
+            return;
+        }
+
+        update_user_meta( $user_id, $notice, 'sent' );
+    }
 }

@@ -46,6 +46,13 @@ class TransactionStore implements DataStore {
     const BANK_LABEL = 'Bank/Manual';
 
     /**
+     * Columns of the transaction table a single-value read may ask for.
+     *
+     * @since WPUF_SINCE
+     */
+    const COLUMNS = [ 'id', 'user_id', 'status', 'subtotal', 'discount', 'coupon_id', 'tax', 'cost', 'post_id', 'pack_id', 'payer_first_name', 'payer_last_name', 'payer_email', 'payment_type', 'payer_address', 'transaction_id', 'created' ];
+
+    /**
      * Whether a payment row exists.
      *
      * @since WPUF_SINCE
@@ -409,5 +416,26 @@ class TransactionStore implements DataStore {
         }
 
         return [ $tx, $order ];
+    }
+
+    /**
+     * One column of the user's latest pack transaction (pack_id != 0), any status.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int    $user_id User id
+     * @param string $column  A column of self::COLUMNS
+     *
+     * @return string|null Null when the column is unknown or the user has no pack transaction
+     */
+    public function latest_pack_value( $user_id, $column ) {
+        global $wpdb;
+
+        if ( ! $user_id || ! in_array( $column, self::COLUMNS, true ) ) {
+            return null;
+        }
+
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- allowlisted column
+        return $wpdb->get_var( $wpdb->prepare( "SELECT {$column} FROM {$wpdb->prefix}wpuf_transaction WHERE pack_id != 0 AND user_id = %d ORDER BY id DESC LIMIT 1", $user_id ) );
     }
 }

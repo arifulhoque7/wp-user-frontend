@@ -29,6 +29,20 @@ class SubmissionStore implements DataStore {
     const QUOTA_FLAG     = 'wpuf_post_status';
 
     /**
+     * Meta key: the admin "lock frontend editing" flag of a post.
+     *
+     * @since WPUF_SINCE
+     */
+    const LOCK = '_wpuf_lock_editing_post';
+
+    /**
+     * Meta key: when the lock was set (frontend edit screen).
+     *
+     * @since WPUF_SINCE
+     */
+    const LOCK_TIME = '_wpuf_lock_user_editing_post_time';
+
+    /**
      * Whether a post was submitted through a form.
      *
      * @since WPUF_SINCE
@@ -254,5 +268,83 @@ class SubmissionStore implements DataStore {
      */
     public function set_post_status( $post_id, $status ) {
         return wp_update_post( [ 'ID' => $post_id, 'post_status' => $status ], true );
+    }
+
+    /**
+     * Set the form a post was submitted with (the admin "form selection" metabox).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int        $post_id Post id
+     * @param int|string $form_id Form id, or '' to clear the selection
+     *
+     * @return void
+     */
+    public function set_form_id( $post_id, $form_id ) {
+        update_post_meta( $post_id, self::FORM, $form_id );
+    }
+
+    /**
+     * The "lock frontend editing" flag of a post ('yes' / 'no' / '').
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int $post_id Post id
+     *
+     * @return string
+     */
+    public function lock( $post_id ) {
+        return (string) get_post_meta( $post_id, self::LOCK, true );
+    }
+
+    /**
+     * When the lock was set, as stored (empty when never locked from the frontend).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int $post_id Post id
+     *
+     * @return string
+     */
+    public function lock_time( $post_id ) {
+        return (string) get_post_meta( $post_id, self::LOCK_TIME, true );
+    }
+
+    /**
+     * Set the "lock frontend editing" flag of a post.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int    $post_id Post id
+     * @param string $value   'yes', 'no' or ''
+     *
+     * @return void
+     */
+    public function set_lock( $post_id, $value ) {
+        update_post_meta( $post_id, self::LOCK, $value );
+    }
+
+    /**
+     * Detach posts from their author (privacy eraser): post_author becomes 0.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int[] $post_ids Post ids
+     *
+     * @return int Rows changed
+     */
+    public function detach_author( array $post_ids ) {
+        global $wpdb;
+
+        $post_ids = array_values( array_filter( array_map( 'absint', $post_ids ) ) );
+
+        if ( empty( $post_ids ) ) {
+            return 0;
+        }
+
+        $placeholders = implode( ',', array_fill( 0, count( $post_ids ), '%d' ) );
+
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- placeholders only
+        return (int) $wpdb->query( $wpdb->prepare( "UPDATE {$wpdb->posts} SET post_author = 0 WHERE ID IN ({$placeholders})", $post_ids ) );
     }
 }

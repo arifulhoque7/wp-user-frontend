@@ -196,32 +196,28 @@ class Admin_Tools {
         if ( ! current_user_can( 'manage_options' ) ) {
             return;
         }
-        global $wpdb;
+        $tools   = wpuf()->platform()->get( ToolsService::class );
         $action  = isset( $_GET['wpuf_action'] ) ? sanitize_text_field( wp_unslash( $_GET['wpuf_action'] ) ) : '';
         $message = 'del_forms';
         switch ( $action ) {
             case 'clear_settings':
-                delete_option( 'wpuf_general' );
-                delete_option( 'wpuf_dashboard' );
-                delete_option( 'wpuf_profile' );
-                delete_option( 'wpuf_payment' );
-                delete_option( '_wpuf_page_created' );
+                $tools->reset_settings();
                 $message = 'settings_cleared';
                 break;
             case 'del_post_forms':
-                $this->delete_post_type( 'wpuf_forms' );
+                $tools->delete_post_type( 'wpuf_forms' );
                 break;
             case 'del_pro_forms':
-                $this->delete_post_type( 'wpuf_profile' );
+                $tools->delete_post_type( 'wpuf_profile' );
                 break;
             case 'del_subs':
-                $this->delete_post_type( 'wpuf_subscription' );
+                $tools->delete_post_type( 'wpuf_subscription' );
                 break;
             case 'del_coupon':
-                $this->delete_post_type( 'wpuf_coupon' );
+                $tools->delete_post_type( 'wpuf_coupon' );
                 break;
             case 'clear_transaction':
-                $wpdb->query( "TRUNCATE TABLE {$wpdb->prefix}wpuf_transaction" );
+                $tools->clear_transactions();
                 $message = 'del_trans';
                 break;
             default:
@@ -415,20 +411,7 @@ class Admin_Tools {
      * @return void
      */
     public function delete_post_type( $post_type ) {
-        $query = new WP_Query(
-            [
-                'post_type'      => $post_type,
-                'posts_per_page' => -1,
-                'post_status'    => [ 'publish', 'draft', 'pending', 'trash' ],
-            ]
-        );
-        $posts = $query->get_posts();
-        if ( $posts ) {
-            foreach ( $posts as $item ) {
-                wp_delete_post( $item->ID, true );
-            }
-        }
-        wp_reset_postdata();
+        wpuf()->platform()->get( ToolsService::class )->delete_post_type( $post_type );
     }
 
     /**

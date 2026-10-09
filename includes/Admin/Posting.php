@@ -2,6 +2,7 @@
 
 namespace WeDevs\Wpuf\Admin;
 
+use WeDevs\Wpuf\Platform\Stores\Stores;
 use WeDevs\Wpuf\Traits\FieldableTrait;
 
 /**
@@ -196,7 +197,7 @@ class Posting {
         global $post;
 
         $forms    = get_posts( ['post_type' => 'wpuf_forms', 'numberposts' => '-1'] );
-        $selected = get_post_meta( $post->ID, '_wpuf_form_id', true ); ?>
+        $selected = Stores::submissions()->form_id( $post->ID ); ?>
 
         <!-- <input type="hidden" name="wpuf_form_select_nonce" value="<?php // echo wp_create_nonce( plugin_basename( __FILE__ ) ); ?>" /> -->
         <?php wp_nonce_field( plugin_basename( __FILE__ ), 'wpuf_form_select_nonce' ); ?>
@@ -237,7 +238,7 @@ class Posting {
         }
         $wpuf_form_select = isset( $_POST['wpuf_form_select'] ) ? sanitize_text_field( wp_unslash( $_POST['wpuf_form_select'] ) ) : '';
 
-        update_post_meta( $post->ID, '_wpuf_form_id', $wpuf_form_select );
+        Stores::submissions()->set_form_id( $post->ID, $wpuf_form_select );
     }
 
     /**
@@ -271,8 +272,8 @@ class Posting {
         global $post;
 
         $msg                 = '';
-        $edit_post_lock      = get_post_meta( $post->ID, '_wpuf_lock_editing_post', true );
-        $edit_post_lock_time = get_post_meta( $post->ID, '_wpuf_lock_user_editing_post_time', true );
+        $edit_post_lock      = Stores::submissions()->lock( $post->ID );
+        $edit_post_lock_time = Stores::submissions()->lock_time( $post->ID );
 
         if ( empty( $edit_post_lock_time ) ) {
             $is_locked = false;
@@ -356,7 +357,7 @@ class Posting {
         }
         $wpuf_lock_post = isset( $_POST['wpuf_lock_post'] ) ? sanitize_text_field( wp_unslash( $_POST['wpuf_lock_post'] ) ) : '';
 
-        update_post_meta( $post->ID, '_wpuf_lock_editing_post', $wpuf_lock_post );
+        Stores::submissions()->set_lock( $post->ID, $wpuf_lock_post );
     }
 
     /**
@@ -404,7 +405,7 @@ class Posting {
     public function render_form( $form_id, $post_id = null ) {
         global $post;
 
-        $form_id       = get_post_meta( $post->ID, '_wpuf_form_id', true );
+        $form_id       = Stores::submissions()->form_id( $post->ID );
         $form_settings = wpuf_get_form_settings( $form_id );
 
         /**
