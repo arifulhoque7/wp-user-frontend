@@ -18,9 +18,6 @@ class Post_Form_Templates {
         add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ] );
         add_action( 'admin_enqueue_scripts', [ $this, 'deregister_scripts' ], 99 );
 
-        // post form templates
-        // add_action( 'admin_footer', [ $this, 'render_post_form_templates' ] );
-
         // frontend insert/update
         add_action( 'wpuf_add_post_after_insert', [ $this, 'post_form_submission' ], 10, 3 );
         add_action( 'wpuf_edit_post_after_update', [ $this, 'post_form_submission' ], 10, 3 );
@@ -83,34 +80,6 @@ class Post_Form_Templates {
         }
 
         wp_enqueue_style( 'wpuf-admin-form-builder' );
-    }
-
-    /**
-     * Render the forms in the modal
-     *
-     * @return void
-     */
-    public function render_post_form_templates() {
-        if ( ! $this->should_display() ) {
-            return;
-        }
-
-        $registry       = wpuf_get_post_form_templates();
-        $pro_templates  = wpuf_get_pro_form_previews();
-        $blank_form_url = admin_url( 'admin.php?page=wpuf-post-forms&action=add-new' );
-        $action_name    = 'post_form_template';
-        $footer_help    = sprintf(
-            // translators: %s is support Mail
-            __( 'Want a new integration? <a href="%s" target="_blank">Let us know</a>.', 'wp-user-frontend' ), 'mailto:support@wedevs.com?subject=WPUF Custom Post Template Integration Request' 
-        );
-
-        if ( ! $registry ) {
-            return;
-        }
-
-        $modal = WPUF_ROOT . '/includes/Admin/template-parts/modal-v4.1.php';
-
-        wpuf_include_once( $modal );
     }
 
     /**

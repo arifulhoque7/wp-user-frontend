@@ -122,7 +122,6 @@ class Free_Loader extends Pro_Prompt {
             $load_free = apply_filters( 'wpuf_free_loader', true );
 
             if ( $load_free ) {
-                new WPUF_Admin_Form_Free();
                 new Form_Settings_Cleanup();
             }
         }

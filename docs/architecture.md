@@ -29,7 +29,7 @@ Rules of the container: services are built only in providers (`share_tagged`), d
 | Who may do what | `Platform\Caps` (`MANAGE_FORMS`, `MANAGE_SUBSCRIPTIONS`, `MANAGE_SETTINGS` map to `wpuf_admin_role()`; `MANAGE_SITE` to `manage_options`; `wpuf_capability` filter) |
 | Reading or writing forms, fields, packs, settings | `Platform\Stores\*Store` (through `Stores::forms()`, `::fields()`, `::subscriptions()`, `::settings()`); models in `Platform\Models` |
 | The builder save | AJAX `wpuf_form_builder_save_form` and REST `admin/forms/{id}` both call `Builder\FormSave` → `Admin\Forms\Admin_Form_Builder::save_form()` → the stores. Builder boot data: `Builder\BuilderBoot` |
-| Tools, Transactions | `Platform\Tools\ToolsService`, `Platform\Transactions\TransactionService` (container services; old action links of develop's pages are replayed by `TransactionService::legacy_request()` and `Admin_Tools`' `wpuf_load_tools` handlers) |
+| Tools, Transactions | `Platform\Tools\ToolsService`, `Platform\Transactions\TransactionService` over `Platform\Stores\TransactionStore` (every SQL of the screen); container services; old action links of develop's pages are replayed by `TransactionService::legacy_request()` and `Admin_Tools`' `wpuf_load_tools` handlers |
 | Onboarding | `Admin\Onboarding` (the wizard: hooks, steps, state, step savers) delegating to `Platform\Onboarding\Pages` and `Platform\Onboarding\Plugin_Installer`; REST `OnboardingController`; screen `Screens\Onboarding` |
 | Hooks of the old Vue builder | `Builder\HookBridge` (fires the kept PHP hooks into React slots), `Builder\HookDeprecations` (retired hooks fire as deprecated), guide `docs/hooks/migration-vue-to-react.md` |
 | React admin assets | `Admin\React_Assets` (bundles under `assets/js/react/`, their `*.asset.php`, screen stylesheets); the legacy `WeDevs\Wpuf\Assets` keeps the full handle list and merges these in |
@@ -43,7 +43,7 @@ includes/Platform/            the platform: Container, ServiceProvider, Bootstra
   Contracts/                  Hookable, RestRoute, DataStore
   Providers/                  Core, Store, Rest, Ai service providers
   REST/                       Manager, RestController (base), Controllers/*
-  Stores/                     FormStore, FieldStore, SubscriptionStore, SettingsStore, Normalizers, Stores
+  Stores/                     FormStore, FieldStore, SubscriptionStore, SettingsStore, TransactionStore, Normalizers, Stores
   Models/                     Form, SubscriptionPack
   Onboarding/                 Pages, Plugin_Installer
   Tools/, Transactions/       ToolsService, TransactionService

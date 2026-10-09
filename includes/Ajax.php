@@ -29,8 +29,9 @@ class Ajax {
         $this->register_ajax( 'wpuf_insert_image', [ new Ajax\Upload_Ajax(), 'insert_image' ] );
         $this->register_ajax( 'wpuf_form_builder_save_form', [ new Ajax\Admin_Form_Builder_Ajax(), 'save_form' ], $this->logged_in_only );
         $this->register_ajax( 'wpuf_form_setting_post', [ new Ajax\Admin_Form_Builder_Ajax(), 'get_post_taxonomies' ], $this->logged_in_only );
-        $this->register_ajax( 'wpuf_dismiss_promotional_offer_notice', [ new Admin\Promotion(), 'dismiss_promotional_offer' ], $this->logged_in_only );
-        $this->register_ajax( 'wpuf_dismiss_review_notice', [ new Admin\Promotion(), 'dismiss_review_notice' ], $this->logged_in_only );
+        $promotion = $this->admin_service( 'promotion', Admin\Promotion::class );
+        $this->register_ajax( 'wpuf_dismiss_promotional_offer_notice', [ $promotion, 'dismiss_promotional_offer' ], $this->logged_in_only );
+        $this->register_ajax( 'wpuf_dismiss_review_notice', [ $promotion, 'dismiss_review_notice' ], $this->logged_in_only );
         $this->register_ajax( 'wpuf_ajax_tag_search', 'wpuf_ajax_tag_search' );
         $this->register_ajax( 'wpuf_dismiss_notice_acf', [ new Integrations\WPUF_ACF_Compatibility(), 'dismiss_notice' ], $this->logged_in_only );
         $this->register_ajax( 'wpuf_compatibility_acf', [ new Integrations\WPUF_ACF_Compatibility(), 'maybe_compatible' ], $this->logged_in_only );
@@ -41,16 +42,33 @@ class Ajax {
         $this->register_ajax( 'wpuf_form_preview', [ new Frontend\Frontend_Form(), 'preview_form' ], $this->logged_in_only );
         $this->register_ajax( 'wpuf_make_media_embed_code', [ new Frontend\Frontend_Form(), 'make_media_embed_code' ] );
         $this->register_ajax( 'wpuf_draft_post', [ new Frontend\Frontend_Form(), 'draft_post' ] );
-        $this->register_ajax( 'wpuf_delete_user_package', [ new Admin\Admin_Subscription(), 'delete_user_package' ], $this->logged_in_only );
+        $this->register_ajax( 'wpuf_delete_user_package', [ $this->admin_service( 'admin_subscription', Admin\Admin_Subscription::class ), 'delete_user_package' ], $this->logged_in_only );
         $this->register_ajax( 'wpuf_address_ajax_action', [ new Ajax\Address_Form_Ajax(), 'ajax_form_action' ] );
         $frontend_account = new Frontend\Frontend_Account();
         $this->register_ajax( 'wpuf_account_update_profile', [ $frontend_account, 'update_profile' ], $this->logged_in_only );
         $this->register_ajax( 'wpuf_account_change_password', [ $frontend_account, 'change_password' ], $this->logged_in_only );
-        $this->register_ajax( 'wpuf_import_forms', [ new Admin\Admin_Tools(), 'import_forms' ], $this->logged_in_only );
+        $this->register_ajax( 'wpuf_import_forms', [ $this->admin_service( 'tools', Admin\Admin_Tools::class ), 'import_forms' ], $this->logged_in_only );
         $this->register_ajax( 'wpuf_get_child_cat', 'wpuf_get_child_cats' );
         $this->register_ajax( 'wpuf_ajax_address', 'wpuf_ajax_get_states_field' );
         $this->register_ajax( 'wpuf_update_billing_address', 'wpuf_update_billing_address' );
         $this->register_ajax( 'wpuf_clear_schedule_lock', 'wpuf_clear_schedule_lock', $this->logged_in_only );
+    }
+
+    /**
+     * An admin service as the admin layer built it, so its constructor hooks are
+     * not registered a second time; a new one when the admin layer is not loaded.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param string $key        Key in wpuf()->admin
+     * @param string $class_name Class to build otherwise
+     *
+     * @return object
+     */
+    private function admin_service( $key, $class_name ) {
+        $admin = function_exists( 'wpuf' ) ? wpuf()->admin : null;
+
+        return is_object( $admin ) && $admin->{$key} instanceof $class_name ? $admin->{$key} : new $class_name();
     }
 
     /**

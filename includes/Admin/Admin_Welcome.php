@@ -12,7 +12,6 @@ class Admin_Welcome {
     public function __construct() {
         add_action( 'admin_menu', [ $this, 'register_menu' ] );
         add_action( 'admin_head', [ $this, 'hide_menu' ] );
-        // add_action( 'admin_init', array( $this, 'redirect_to_page' ), 9999 );
     }
 
     /**
@@ -45,24 +44,6 @@ class Admin_Welcome {
      */
     public function hide_menu() {
         remove_submenu_page( 'index.php', 'wpuf-welcome' );
-    }
-
-    /**
-     * Redirect to the welcome page once the plugin is installed
-     *
-     * @return void
-     */
-    public function redirect_to_page() {
-        if ( ! get_transient( 'wpuf_activation_redirect' ) ) {
-            return;
-        }
-        delete_transient( 'wpuf_activation_redirect' );
-        // Only do this for single site installs.
-        if ( is_network_admin() || isset( $_GET['activate-multi'] ) ) {
-            return;
-        }
-        wp_safe_redirect( admin_url( 'index.php?page=wpuf-welcome' ) );
-        exit;
     }
 
     /**

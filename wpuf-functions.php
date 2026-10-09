@@ -62,6 +62,8 @@ function wpuf_show_post_status( $status ) {
  * @since version 0.1
  *
  * @author Tareq Hasan
+ *
+ * @deprecated WPUF_SINCE Not used by WP User Frontend any more; kept as public API.
  */
 function wpuf_admin_post_status( $status ) {
     $fontcolor = '#000';
@@ -87,6 +89,8 @@ function wpuf_admin_post_status( $status ) {
  * Upload the files to the post as attachemnt
  *
  * @param <type> $post_id
+ *
+ * @deprecated WPUF_SINCE Not used by WP User Frontend any more; kept as public API.
  */
 function wpuf_upload_attachment( $post_id ) {
     // phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce is verified by the submit/draft handler that calls this.
@@ -124,6 +128,8 @@ function wpuf_upload_attachment( $post_id ) {
  * @param int $post_id
  *
  * @return array attachment list
+ *
+ * @deprecated WPUF_SINCE Not used by WP User Frontend any more; kept as public API.
  */
 function wpfu_get_attachments( $post_id ) {
     $att_list = [];
@@ -514,6 +520,11 @@ function wpuf_get_field_settings_excludes( $field_settings, $exclude_type ) {
     return $excludes;
 }
 
+/**
+ * Unused helper.
+ *
+ * @deprecated WPUF_SINCE Not used by WP User Frontend any more; kept as public API.
+ */
 function wpuf_pre( $data ) {
     echo wp_kses_post( '<pre>' );
     print_r( $data );
@@ -872,6 +883,11 @@ function wpuf_get_user_avatar_data( $user, $size = 96 ) {
 }
 
 
+/**
+ * Unused helper.
+ *
+ * @deprecated WPUF_SINCE Not used by WP User Frontend any more; kept as public API.
+ */
 function wpuf_update_avatar( $user_id, $attachment_id ) {
     $upload_dir   = wp_upload_dir();
     $relative_url = wp_get_attachment_url( $attachment_id );
@@ -1603,6 +1619,8 @@ function wpuf_shortcode_map( $location, $post_id = null, $args = [], $meta_key =
  * @param string $meta_key
  * @param int    $user_id
  * @param array  $args
+ *
+ * @deprecated WPUF_SINCE Not used by WP User Frontend any more; kept as public API.
  */
 function wpuf_shortcode_map_user( $meta_key, $user_id = null, $args = [] ) {
     $location = get_user_meta( $user_id, $meta_key, true );
@@ -1848,6 +1866,8 @@ function wpuf_ajax_tag_search() {
  * @param string $selected
  *
  * @return string
+ *
+ * @deprecated WPUF_SINCE Not used by WP User Frontend any more; kept as public API.
  */
 function wpuf_dropdown_helper( $options, $selected = '' ) {
     $string = '';
@@ -2068,6 +2088,8 @@ add_action( 'wp_ajax_nopriv_wpuf_get_child_cat', 'wpuf_get_child_cats' );
  * @since WPUF
  *
  * @return int
+ *
+ * @deprecated WPUF_SINCE Not used by WP User Frontend any more; kept as public API.
  */
 function wpuf_form_field_id_generator( $min = 999999, $max = 9999000001 ) {
     return rand( $min, $max );
@@ -2231,6 +2253,8 @@ function wpuf_get_form_integrations( $form_id ) {
  * @param string $integration_id
  *
  * @return bool
+ *
+ * @deprecated WPUF_SINCE Not used by WP User Frontend any more; kept as public API.
  */
 function wpuf_is_integration_active( $form_id, $integration_id ) {
     $integrations = wpuf_get_form_integrations( $form_id );
@@ -2252,6 +2276,8 @@ function wpuf_is_integration_active( $form_id, $integration_id ) {
  * Get the subscription page url
  *
  * @return string
+ *
+ * @deprecated WPUF_SINCE Not used by WP User Frontend any more; kept as public API.
  */
 function wpuf_get_subscription_page_url() {
     $page_id = wpuf_get_option( 'subscription_page', 'wpuf_payment' );
@@ -2276,6 +2302,8 @@ function wpuf_clear_buffer() {
  * @since 2.3.13
  *
  * @return bool
+ *
+ * @deprecated WPUF_SINCE Not used by WP User Frontend any more; kept as public API.
  */
 function wpuf_is_license_expired() {
     $remote_addr = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
@@ -4088,6 +4116,8 @@ function is_wpuf_post_form_builder() {
  * @since 2.6
  *
  * @return bool
+ *
+ * @deprecated WPUF_SINCE Not used by WP User Frontend any more; kept as public API.
  */
 function is_wpuf_profile_form_builder() {
     $page = isset( $_GET['page'] ) ? sanitize_text_field( wp_unslash( $_GET['page'] ) ) : '';
@@ -4836,6 +4866,8 @@ function wpuf_ini_get_byte( $val ) {
  * @since 3.3.0
  *
  * @return string|int
+ *
+ * @deprecated WPUF_SINCE Not used by WP User Frontend any more; kept as public API.
  */
 function wpuf_max_upload_size() {
     $post_max_size       = ini_get( 'post_max_size' );
@@ -5028,6 +5060,8 @@ function wpuf_wp_timezone() {
  * @since 3.5.27
  *
  * @return string
+ *
+ * @deprecated WPUF_SINCE Not used by WP User Frontend any more; kept as public API.
  */
 function wpuf_timezone_string() {
     if ( function_exists( 'wp_timezone_string' ) ) {
@@ -5144,6 +5178,8 @@ function wpuf_map_address_fields( $address_fields ) {
  * @param array $pagination_args
  *
  * @return string
+ *
+ * @deprecated WPUF_SINCE Not used by WP User Frontend any more; kept as public API.
  */
 function wpuf_pagination( $total_items, $per_page, $pagination_args = [] ) {
     $pagenum = isset( $_GET['pagenum'] ) ? absint( $_GET['pagenum'] ) : 1;
@@ -5250,6 +5286,8 @@ function wpuf_is_post_editable( $post ) {
  *
  * @return array                single image size returned if parameter size is passed
  *                              full array of all the sizes will return otherwise
+ *
+ * @deprecated WPUF_SINCE Not used by WP User Frontend any more; kept as public API.
  */
 function wpuf_get_image_sizes_array( $size = '' ) {
     $additional_image_sizes   = wp_get_additional_image_sizes();
@@ -5627,6 +5665,8 @@ function wpuf_is_option_on( $option ) {
  * @since 4.1.0
  *
  * @return string
+ *
+ * @deprecated WPUF_SINCE Not used by WP User Frontend any more; kept as public API.
  */
 function wpuf_get_pro_icon() {
     return WPUF_ASSET_URI . '/images/pro-badge.svg';

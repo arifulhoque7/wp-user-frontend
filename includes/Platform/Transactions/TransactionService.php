@@ -9,6 +9,7 @@
 namespace WeDevs\Wpuf\Platform\Transactions;
 
 use WeDevs\Wpuf\Frontend\Payment;
+use WeDevs\Wpuf\Platform\Stores\TransactionStore;
 use WP_Error;
 
 /**
@@ -30,30 +31,46 @@ class TransactionService {
     /**
      * Kind of a completed payment row.
      */
-    const KIND_TRANSACTION = 'transaction';
+    const KIND_TRANSACTION = TransactionStore::KIND_TRANSACTION;
 
     /**
      * Kind of a pending bank payment (wpuf_order post).
      */
-    const KIND_ORDER = 'order';
+    const KIND_ORDER = TransactionStore::KIND_ORDER;
 
     /**
      * Status tabs.
      */
-    const STATUSES = [ 'all', 'completed', 'pending' ];
+    const STATUSES = TransactionStore::STATUSES;
 
     /**
      * Sortable columns.
      */
-    const ORDERBY = [ 'created', 'id' ];
+    const ORDERBY = TransactionStore::ORDERBY;
 
     /**
      * Gateway label of an accepted bank payment (classic page).
      */
-    const BANK_LABEL = 'Bank/Manual';
+    const BANK_LABEL = TransactionStore::BANK_LABEL;
 
     /**
-     * One page of rows, with the tab counts.
+     * The rows.
+     *
+     * @var TransactionStore
+     */
+    private $store;
+
+    /**
+     * @since WPUF_SINCE
+     *
+     * @param TransactionStore|null $store The rows (the container passes it).
+     */
+    public function __construct( $store = null ) {
+        $this->store = $store instanceof TransactionStore ? $store : new TransactionStore();
+    }
+
+    /**
+     * Rows of one page, with the totals.
      *
      * @since WPUF_SINCE
      *
@@ -62,138 +79,23 @@ class TransactionService {
      * @return array items, total, counts
      */
     public function query( $args ) {
-        global $wpdb;
-
-        $args = wp_parse_args(
-            $args,
-            [
-                'status'   => 'all',
-                'search'   => '',
-                'gateway'  => '',
-                'from'     => '',
-                'to'       => '',
-                'orderby'  => 'created',
-                'order'    => 'desc',
-                'page'     => 1,
-                'per_page' => 20,
-            ]
-        );
-
-        $status   = in_array( $args['status'], self::STATUSES, true ) ? $args['status'] : 'all';
-        $orderby  = in_array( $args['orderby'], self::ORDERBY, true ) ? $args['orderby'] : 'created';
-        $order    = 'asc' === strtolower( $args['order'] ) ? 'ASC' : 'DESC';
-        $per_page = max( 1, min( 100, absint( $args['per_page'] ) ) );
-        $offset   = ( max( 1, absint( $args['page'] ) ) - 1 ) * $per_page;
-
-        list( $tx_sql, $order_sql ) = $this->filters( $args );
-
-        $parts = [];
-
-        if ( 'pending' !== $status ) {
-            $parts[] = "SELECT 'transaction' AS kind, id, created AS sort_date FROM {$wpdb->prefix}wpuf_transaction WHERE 1=1 {$tx_sql}" . ( 'completed' === $status ? " AND status = 'completed'" : '' );
-        }
-
-        if ( 'completed' !== $status && null !== $order_sql ) {
-            $parts[] = "SELECT 'order' AS kind, ID AS id, post_date AS sort_date FROM {$wpdb->posts} WHERE post_type = 'wpuf_order' AND post_status IN ('publish','pending') {$order_sql}";
-        }
-
-        $items = [];
-        $total = 0;
-
-        if ( $parts ) {
-            $union = '(' . implode( ') UNION ALL (', $parts ) . ')';
-            $sort  = 'id' === $orderby ? 'id' : 'sort_date';
-            // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery -- filter values are prepared in filters(); sort column and order are allowlisted.
-            $total = (int) $wpdb->get_var( "SELECT COUNT(*) FROM ({$union}) AS wpuf_rows" );
-            $rows  = $wpdb->get_results( $wpdb->prepare( "SELECT kind, id FROM ({$union}) AS wpuf_rows ORDER BY {$sort} {$order}, id {$order} LIMIT %d, %d", $offset, $per_page ) );
-            // phpcs:enable
-
-            $items = $this->hydrate( (array) $rows );
-        }
+        $args = (array) $args;
 
         return [
-            'items'  => $items,
-            'total'  => $total,
+            'items'  => $this->hydrate( $this->store->query( $args ) ),
+            'total'  => $this->store->count( $args ),
             'counts' => $this->counts(),
         ];
     }
 
     /**
-     * SQL conditions for the search, gateway and date filters: one for the
-     * transaction table, one for orders (null: no order matches).
-     *
-     * @param array $args Query args
-     *
-     * @return array [ string, string|null ]
-     */
-    private function filters( $args ) {
-        global $wpdb;
-
-        $tx    = '';
-        $order = '';
-
-        $search = trim( (string) $args['search'] );
-
-        if ( '' !== $search ) {
-            $like = '%' . $wpdb->esc_like( $search ) . '%';
-            $tx  .= $wpdb->prepare(
-                ' AND ( payer_email LIKE %s OR payer_first_name LIKE %s OR payer_last_name LIKE %s OR transaction_id LIKE %s OR CAST(id AS CHAR) = %s )',
-                $like,
-                $like,
-                $like,
-                $like,
-                $search
-            );
-            // An order keeps the payer in its serialized `_data` meta.
-            $order .= $wpdb->prepare(
-                " AND ( CAST(ID AS CHAR) = %s OR EXISTS ( SELECT 1 FROM {$wpdb->postmeta} m WHERE m.post_id = ID AND m.meta_key = '_data' AND m.meta_value LIKE %s ) )",
-                $search,
-                $like
-            );
-        }
-
-        $gateway = (string) $args['gateway'];
-
-        if ( '' !== $gateway ) {
-            $tx .= $wpdb->prepare( ' AND payment_type = %s', $gateway );
-
-            // Orders are bank payments waiting for approval.
-            if ( self::BANK_LABEL !== $gateway ) {
-                $order = null;
-            }
-        }
-
-        foreach ( [
-			'from' => '>=',
-			'to' => '<=',
-		] as $key => $operator ) {
-            $date = (string) $args[ $key ];
-
-            if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date ) ) {
-                continue;
-            }
-
-            $value = $date . ( 'to' === $key ? ' 23:59:59' : ' 00:00:00' );
-            $tx   .= $wpdb->prepare( " AND created {$operator} %s", $value ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- operator is from the fixed map above.
-
-            if ( null !== $order ) {
-                $order .= $wpdb->prepare( " AND post_date {$operator} %s", $value ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- operator is from the fixed map above.
-            }
-        }
-
-        return [ $tx, $order ];
-    }
-
-    /**
-     * Rows for the IDs of a page, in the page's order.
+     * Full rows for the `kind` + `id` pairs of a page, in that order.
      *
      * @param object[] $rows kind, id
      *
-     * @return array[]
+     * @return array
      */
     private function hydrate( $rows ) {
-        global $wpdb;
-
         $tx_ids = [];
 
         foreach ( $rows as $row ) {
@@ -202,17 +104,8 @@ class TransactionService {
             }
         }
 
-        $transactions = [];
-
-        if ( $tx_ids ) {
-            $placeholders = implode( ',', array_fill( 0, count( $tx_ids ), '%d' ) );
-            // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare, WordPress.DB.DirectDatabaseQuery
-            foreach ( (array) $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}wpuf_transaction WHERE id IN ({$placeholders})", $tx_ids ) ) as $transaction ) {
-                $transactions[ (int) $transaction->id ] = $transaction;
-            }
-        }
-
-        $items = [];
+        $transactions = $tx_ids ? $this->store->read_many( $tx_ids ) : [];
+        $items        = [];
 
         foreach ( $rows as $row ) {
             $id = (int) $row->id;
@@ -422,47 +315,30 @@ class TransactionService {
     }
 
     /**
-     * Tab counts and totals of completed payments.
+     * Totals of the cards and the status tabs.
      *
      * @since WPUF_SINCE
      *
-     * @return array
+     * @return array all, completed, pending, income, tax
      */
     public function counts() {
-        global $wpdb;
+        $counts = $this->store->counts();
 
-        // phpcs:disable WordPress.DB.DirectDatabaseQuery
-        $tx      = $wpdb->get_row( "SELECT COUNT(*) AS rows_all, SUM( status = 'completed' ) AS completed, SUM( CASE WHEN status = 'completed' THEN cost + 0 ELSE 0 END ) AS income, SUM( CASE WHEN status = 'completed' THEN tax + 0 ELSE 0 END ) AS tax FROM {$wpdb->prefix}wpuf_transaction" );
-        $pending = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = 'wpuf_order' AND post_status IN ('publish','pending')" );
-        // phpcs:enable
+        $counts['income'] = $this->money( $counts['income'] );
+        $counts['tax']    = $this->money( $counts['tax'] );
 
-        $tx = is_object( $tx ) ? $tx : (object) [
-            'rows_all'  => 0,
-            'completed' => 0,
-            'income'    => 0,
-            'tax'       => 0,
-        ];
-
-        return [
-            'all'       => (int) $tx->rows_all + $pending,
-            'completed' => (int) $tx->completed,
-            'pending'   => $pending,
-            'income'    => $this->money( $tx->income ),
-            'tax'       => $this->money( $tx->tax ),
-        ];
+        return $counts;
     }
 
     /**
-     * Gateways that appear on completed payments, for the filter.
+     * Gateway filter options: every gateway with a row, plus bank orders.
      *
      * @since WPUF_SINCE
      *
      * @return string[]
      */
     public function gateways() {
-        global $wpdb;
-
-        $gateways = $wpdb->get_col( "SELECT DISTINCT payment_type FROM {$wpdb->prefix}wpuf_transaction WHERE payment_type <> '' ORDER BY payment_type" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+        $gateways = $this->store->gateways();
 
         if ( ! in_array( self::BANK_LABEL, $gateways, true ) ) {
             $gateways[] = self::BANK_LABEL;
@@ -581,9 +457,7 @@ class TransactionService {
      * @return bool
      */
     private function delete( $id ) {
-        global $wpdb;
-
-        return (bool) $wpdb->delete( $wpdb->prefix . 'wpuf_transaction', [ 'id' => $id ], [ '%d' ] ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+        return $this->store->delete( $id );
     }
 
     /**

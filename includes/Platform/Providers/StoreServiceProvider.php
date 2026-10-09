@@ -13,6 +13,7 @@ use WeDevs\Wpuf\Platform\Stores\FieldStore;
 use WeDevs\Wpuf\Platform\Stores\FormStore;
 use WeDevs\Wpuf\Platform\Stores\SettingsStore;
 use WeDevs\Wpuf\Platform\Stores\SubscriptionStore;
+use WeDevs\Wpuf\Platform\Stores\TransactionStore;
 use WeDevs\Wpuf\Platform\Tools\ToolsService;
 use WeDevs\Wpuf\Platform\Transactions\TransactionService;
 
@@ -72,9 +73,16 @@ class StoreServiceProvider extends ServiceProvider {
         );
 
         $this->share_tagged(
-            TransactionService::class,
+            TransactionStore::class,
             function () {
-                return new TransactionService();
+                return new TransactionStore();
+            }
+        );
+
+        $this->share_tagged(
+            TransactionService::class,
+            function ( $container ) {
+                return new TransactionService( $container->get( TransactionStore::class ) );
             }
         );
     }
