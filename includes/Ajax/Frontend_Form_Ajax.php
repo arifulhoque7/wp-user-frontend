@@ -2,6 +2,8 @@
 
 namespace WeDevs\Wpuf\Ajax;
 
+use WeDevs\Wpuf\Platform\Stores\Stores;
+
 use DOMDocument;
 use WeDevs\Wpuf\Admin\Forms\Form;
 use WeDevs\Wpuf\Frontend\Frontend_Form;
@@ -38,7 +40,7 @@ class Frontend_Form_Ajax {
         add_filter( 'wpuf_form_fields', [ $this, 'add_field_settings' ] );
         @header( 'Content-Type: application/json; charset=' . get_option( 'blog_charset' ) );
 
-        $form_id               = isset( $_POST['form_id'] ) ? intval( wp_unslash( $_POST['form_id'] ) ) : 0;
+        $form_id = isset( $_POST['form_id'] ) ? intval( wp_unslash( $_POST['form_id'] ) ) : 0;
 
         // The nonce is action-wide, not bound to a form, so form_id is fully
         // attacker-controlled. Pointing it at an ordinary post/page id yields a
@@ -347,7 +349,7 @@ class Frontend_Form_Ajax {
                 $postarr['post_status'] = $this->form_settings['edit_post_status'];
             }
             // handle for falback ppp
-            if ( 'pending' === get_post_meta( $post_id, '_wpuf_payment_status', true ) ) {
+            if ( 'pending' === Stores::submissions()->payment_status( $post_id ) ) {
                 $postarr['post_status'] = 'pending';
             }
         } elseif ( isset( $this->form_settings['comment_status'] ) ) {
@@ -418,14 +420,14 @@ class Frontend_Form_Ajax {
 
             if ( $post_id && $lock_edit_post > 0 ) {
                 $lock_edit_post_time = time() + ( $lock_edit_post * 60 * 60 );
-                update_post_meta( $post_id, '_wpuf_lock_user_editing_post_time', $lock_edit_post_time );
+                Stores::submissions()->set_lock_time( $post_id, $lock_edit_post_time );
             }
         }
 
         if ( $post_id ) {
             $this->update_post_meta( $meta_vars, $post_id );
             // set the post form_id for later usage
-            update_post_meta( $post_id, self::$config_id, $form_id );
+            Stores::submissions()->set_form_id( $post_id, $form_id );
 
             // The submission went through, so the post is no longer an unsubmitted draft.
             // Clearing the flag means later edits are treated as edits and are not gated
@@ -436,7 +438,7 @@ class Frontend_Form_Ajax {
             // if user has a subscription pack
             $this->wpuf_user_subscription_pack( $this->form_settings, $post_id );
             // set the post form_id for later usage
-            update_post_meta( $post_id, self::$config_id, $form_id );
+            Stores::submissions()->set_form_id( $post_id, $form_id );
 
             // save post formats if have any
             if ( isset( $this->form_settings['post_format'] ) && $this->form_settings['post_format'] !== '0' ) {
@@ -563,7 +565,7 @@ class Frontend_Form_Ajax {
             $response['redirect_to']  = add_query_arg( $wp->query_string, '', home_url( $wp->request ) );
             $response['message']      = __( 'Thank you for posting on our site. We have sent you an confirmation email. Please check your inbox!', 'wp-user-frontend' );
 
-            update_post_meta( $post_id, '_wpuf_payment_status', 'pending' );
+            Stores::submissions()->set_payment_status( $post_id, 'pending' );
             update_post_meta( $post_id, Frontend_Form::$guest_verify_id, 'yes' );
             wpuf_send_mail_to_guest( $post_id_encoded, $form_id_encoded, 'no', 2 );
         }
@@ -872,7 +874,7 @@ class Frontend_Form_Ajax {
     public function wpuf_user_subscription_pack( $form_settings, $post_id = null ) {
 
         // if user has a subscription pack
-        $user_wpuf_subscription_pack = get_user_meta( get_current_user_id(), '_wpuf_subscription_pack', true );
+        $user_wpuf_subscription_pack = Stores::user_packs()->read( get_current_user_id() );
         $wpuf_user               = wpuf_get_user();
         $user_subscription       = new User_Subscription( $wpuf_user );
         // Only the pack value 'on'/'yes'/'true'/'1' means expiration is enabled. Guarding on

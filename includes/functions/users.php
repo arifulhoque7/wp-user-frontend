@@ -556,7 +556,7 @@ function wpuf_ajax_get_states_field() {
     $country = isset( $_POST['country'] ) ? sanitize_text_field( wp_unslash( $_POST['country'] ) ) : '';
     $cs        = new WeDevs\Wpuf\Data\Country_State();
     $countries = $cs->countries();
-    $states    = $cs->getStates( $countries[ $country ] );
+    $states    = isset( $countries[ $country ] ) ? $cs->getStates( $countries[ $country ] ) : [];
 
     if ( ! empty( $states ) ) {
         $field_name = isset( $_POST['field_name'] ) ? sanitize_text_field( wp_unslash( $_POST['field_name'] ) ) : '';

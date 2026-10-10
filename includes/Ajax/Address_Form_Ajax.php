@@ -82,7 +82,7 @@ class Address_Form_Ajax {
 
             case 'hidden':
                 $country_hide = 'display: none;';
-            // no break
+				// no break
             default:
                 break;
         }
@@ -94,7 +94,7 @@ class Address_Form_Ajax {
 
             case 'hidden':
                 $state_hide = 'display: none;';
-            // no break
+				// no break
             default:
                 break;
         }
@@ -106,7 +106,7 @@ class Address_Form_Ajax {
 
             case 'hidden':
                 $add1_hide = 'display: none;';
-            // no break
+				// no break
             default:
                 break;
         }
@@ -118,7 +118,7 @@ class Address_Form_Ajax {
 
             case 'hidden':
                 $add2_hide = 'display: none;';
-            // no break
+				// no break
             default:
                 break;
         }
@@ -129,7 +129,7 @@ class Address_Form_Ajax {
 
             case 'hidden':
                 $city_hide = 'display: none;';
-            // no break
+				// no break
             default:
                 break;
         }
@@ -140,14 +140,14 @@ class Address_Form_Ajax {
 
             case 'hidden':
                 $zip_hide = 'display: none;';
-            // no break
+				// no break
             default:
                 break;
         }
 
         if ( is_user_logged_in() ) {
             $user_id = get_current_user_id();
-        } else if ( isset( $_GET['user_id'] ) ) {
+        } elseif ( isset( $_GET['user_id'] ) ) {
             $user_id = absint( $_GET['user_id'] );
         } else {
             return;
@@ -174,36 +174,45 @@ class Address_Form_Ajax {
                             $cs        = new Country_State();
                             $states    = [];
                             $selected  = [];
-                            $base_addr = get_option( 'wpuf_base_country_state', false );
+                            $base_addr = wp_parse_args(
+                                (array) get_option( 'wpuf_base_country_state', [] ), [
+									'country' => '',
+									'state' => '',
+								]
+                            );
                             $address_fields = wpuf_map_address_fields( $address_fields );
 
                             $selected['country'] = ! ( empty( $address_fields['country'] ) ) ? $address_fields['country'] : $base_addr['country'];
 
-                            echo wp_kses( wpuf_select( [
-                                    'options'          => $cs->countries(),
-                                    'name'             => 'wpuf_biiling_country',
-                                    'selected'         => $selected['country'],
-                                    'show_option_all'  => false,
-                                    'show_option_none' => false,
-                                    'id'               => 'wpuf_biiling_country',
-                                    'class'            => 'wpuf_biiling_country',
-                                    'chosen'           => false,
-                                    'placeholder'      => __( 'Choose a country', 'wp-user-frontend' ),
-                                ]
-                            ), [
-                                'select' => [
-                                    'class'            => [],
-                                    'name'             => [],
-                                    'id'               => [],
-                                    'data-placeholder' => []
-                                ],
-                                'option' => [
-                                    'value'    => [],
-                                    'class'    => [],
-                                    'id'       => [],
-                                    'selected' => []
-                                ],
-                            ] ); ?>
+                            echo wp_kses(
+                                wpuf_select(
+                                    [
+										'options'          => $cs->countries(),
+										'name'             => 'wpuf_biiling_country',
+										'selected'         => $selected['country'],
+										'show_option_all'  => false,
+										'show_option_none' => false,
+										'id'               => 'wpuf_biiling_country',
+										'class'            => 'wpuf_biiling_country',
+										'chosen'           => false,
+										'placeholder'      => __( 'Choose a country', 'wp-user-frontend' ),
+									]
+                                ), [
+									'select' => [
+										'class'            => [],
+										'name'             => [],
+										'id'               => [],
+										'data-placeholder' => [],
+									],
+									'option' => [
+										'value'    => [],
+										'class'    => [],
+										'id'       => [],
+										'selected' => [],
+									],
+								]
+                            );
+                            ?>
                         </td>
                         <td class="<?php echo isset( $state_required ) ? esc_attr( $required_class ) : null; ?>"
                             style="display:inline-block;float:left;width:100%;margin:0px;padding:5px;<?php echo esc_attr( $state_hide ); ?>">
@@ -212,41 +221,45 @@ class Address_Form_Ajax {
                             <?php
                             $states            = $cs->getStates( $selected['country'] );
                             $selected['state'] = ! ( empty( $address_fields['state'] ) ) ? $address_fields['state'] : $base_addr['state'];
-                            echo wp_kses( wpuf_select( [
-                                    'options'          => $states,
-                                    'name'             => 'wpuf_biiling_state',
-                                    'selected'         => $selected['state'],
-                                    'show_option_all'  => false,
-                                    'show_option_none' => false,
-                                    'id'               => 'wpuf_biiling_state',
-                                    'class'            => 'wpuf_biiling_state',
-                                    'chosen'           => false,
-                                    'placeholder'      => __( 'Choose a state', 'wp-user-frontend' ),
-                                ]
-                            ), [
-                                'select' => [
-                                    'class'            => [],
-                                    'name'             => [],
-                                    'id'               => [],
-                                    'data-placeholder' => []
-                                ],
-                                'option' => [
-                                    'value'    => [],
-                                    'class'    => [],
-                                    'id'       => [],
-                                    'selected' => []
-                                ],
-                            ] ); ?>
+                            echo wp_kses(
+                                wpuf_select(
+                                    [
+										'options'          => $states,
+										'name'             => 'wpuf_biiling_state',
+										'selected'         => $selected['state'],
+										'show_option_all'  => false,
+										'show_option_none' => false,
+										'id'               => 'wpuf_biiling_state',
+										'class'            => 'wpuf_biiling_state',
+										'chosen'           => false,
+										'placeholder'      => __( 'Choose a state', 'wp-user-frontend' ),
+									]
+                                ), [
+									'select' => [
+										'class'            => [],
+										'name'             => [],
+										'id'               => [],
+										'data-placeholder' => [],
+									],
+									'option' => [
+										'value'    => [],
+										'class'    => [],
+										'id'       => [],
+										'selected' => [],
+									],
+								]
+                            );
+                            ?>
                         </td>
                         <td style="display:inline-block;float:left;width:100%;margin:0px;padding:5px;<?php echo esc_attr( $add1_hide ); ?>">
                             <div
                                 class="wpuf-label"><?php esc_html_e( 'Address Line 1 ', 'wp-user-frontend' ); ?><?php echo isset( $address1_required ) ? wp_kses( '<span class="required">*</span>', array( 'span' => array() ) ) : null; ?></div>
                             <div class="wpuf-fields">
                                 <input type="text"
-                                       class="input <?php echo isset( $address1_required ) ? esc_attr( $required_class ) : null; ?>"
-                                       name="wpuf_biiling_add_line_1"
-                                       id="wpuf_biiling_add_line_1"
-                                       value="<?php echo esc_attr( $address_fields['add_line_1'] ); ?>"/>
+                                        class="input <?php echo isset( $address1_required ) ? esc_attr( $required_class ) : null; ?>"
+                                        name="wpuf_biiling_add_line_1"
+                                        id="wpuf_biiling_add_line_1"
+                                        value="<?php echo esc_attr( $address_fields['add_line_1'] ); ?>"/>
                             </div>
                         </td>
                         <td style="display:inline-block;float:left;width:100%;margin:0px;padding:5px;<?php echo esc_attr( $add2_hide ); ?>">
@@ -254,10 +267,10 @@ class Address_Form_Ajax {
                                 class="wpuf-label"><?php esc_html_e( 'Address Line 2 ', 'wp-user-frontend' ); ?><?php echo isset( $address2_required ) ? wp_kses( '<span class="required">*</span>', array( 'span' => array() ) ) : null; ?></div>
                             <div class="wpuf-fields">
                                 <input type="text"
-                                       class="input <?php echo isset( $address2_required ) ? esc_attr( $required_class ) : null; ?>"
-                                       name="wpuf_biiling_add_line_2"
-                                       id="wpuf_biiling_add_line_2"
-                                       value="<?php echo esc_attr( $address_fields['add_line_2'] ); ?>"/>
+                                        class="input <?php echo isset( $address2_required ) ? esc_attr( $required_class ) : null; ?>"
+                                        name="wpuf_biiling_add_line_2"
+                                        id="wpuf_biiling_add_line_2"
+                                        value="<?php echo esc_attr( $address_fields['add_line_2'] ); ?>"/>
                             </div>
                         </td>
                         <td style="display:inline-block;float:left;width:100%;margin:0px;padding:5px;<?php echo esc_attr( $city_hide ); ?>">
@@ -265,9 +278,9 @@ class Address_Form_Ajax {
                                 class="wpuf-label"><?php esc_html_e( 'City', 'wp-user-frontend' ); ?><?php echo isset( $city_required ) ? wp_kses( '<span class="required">*</span>', array( 'span' => array() ) ) : null; ?></div>
                             <div class="wpuf-fields">
                                 <input type="text"
-                                       class="input <?php echo isset( $city_required ) ? esc_attr( $required_class ) : null; ?>"
-                                       name="wpuf_biiling_city" id="wpuf_biiling_city"
-                                       value="<?php echo esc_attr( $address_fields['city'] ); ?>"/>
+                                        class="input <?php echo isset( $city_required ) ? esc_attr( $required_class ) : null; ?>"
+                                        name="wpuf_biiling_city" id="wpuf_biiling_city"
+                                        value="<?php echo esc_attr( $address_fields['city'] ); ?>"/>
                             </div>
                         </td>
                         <td style="display:inline-block;float:left;width:100%;margin:0px;padding:5px;<?php echo esc_attr( $zip_hide ); ?>">
@@ -275,14 +288,14 @@ class Address_Form_Ajax {
                                 class="wpuf-label"><?php esc_html_e( 'Postal Code/ZIP', 'wp-user-frontend' ); ?><?php echo isset( $zip_required ) ? wp_kses( '<span class="required">*</span>', array( 'span' => array() ) ) : null; ?></div>
                             <div class="wpuf-fields">
                                 <input type="text"
-                                       class="input <?php echo isset( $zip_required ) ? esc_attr( $required_class ) : null; ?>"
-                                       name="wpuf_biiling_zip_code" id="wpuf_biiling_zip_code"
-                                       value="<?php echo esc_attr( $address_fields['zip_code'] ); ?>"/>
+                                        class="input <?php echo isset( $zip_required ) ? esc_attr( $required_class ) : null; ?>"
+                                        name="wpuf_biiling_zip_code" id="wpuf_biiling_zip_code"
+                                        value="<?php echo esc_attr( $address_fields['zip_code'] ); ?>"/>
                             </div>
                         </td>
                         <td class="<?php echo esc_attr( $required ); ?>" class="wpuf-submit" style="display:none;">
                             <input type="submit" class="wpuf-btn" name="submit" id="wpuf-account-update-billing_address"
-                                   value="<?php esc_html_e( 'Update Billing Address', 'wp-user-frontend' ); ?>"/>
+                                    value="<?php esc_html_e( 'Update Billing Address', 'wp-user-frontend' ); ?>"/>
                         </td>
                     </tr>
 

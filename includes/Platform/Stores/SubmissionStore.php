@@ -112,11 +112,17 @@ class SubmissionStore implements DataStore {
         ];
 
         if ( ! empty( $args['order_id'] ) ) {
-            $query['meta_query'][] = [ 'key' => self::ORDER, 'value' => (string) $args['order_id'] ];
+            $query['meta_query'][] = [
+				'key' => self::ORDER,
+				'value' => (string) $args['order_id'],
+			];
         }
 
         if ( ! empty( $args['form_id'] ) ) {
-            $query['meta_query'][] = [ 'key' => self::FORM, 'value' => (int) $args['form_id'] ];
+            $query['meta_query'][] = [
+				'key' => self::FORM,
+				'value' => (int) $args['form_id'],
+			];
         }
 
         return get_posts( $query );
@@ -267,7 +273,12 @@ class SubmissionStore implements DataStore {
      * @return int|\WP_Error
      */
     public function set_post_status( $post_id, $status ) {
-        return wp_update_post( [ 'ID' => $post_id, 'post_status' => $status ], true );
+        return wp_update_post(
+            [
+				'ID' => $post_id,
+				'post_status' => $status,
+			], true
+        );
     }
 
     /**
@@ -346,5 +357,19 @@ class SubmissionStore implements DataStore {
 
         // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- placeholders only
         return (int) $wpdb->query( $wpdb->prepare( "UPDATE {$wpdb->posts} SET post_author = 0 WHERE ID IN ({$placeholders})", $post_ids ) );
+    }
+
+    /**
+     * Set when the lock was set ('' clears it).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int        $post_id Post id
+     * @param int|string $value   Timestamp or ''
+     *
+     * @return void
+     */
+    public function set_lock_time( $post_id, $value ) {
+        update_post_meta( $post_id, self::LOCK_TIME, $value );
     }
 }

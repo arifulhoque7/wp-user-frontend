@@ -9,18 +9,6 @@ namespace WeDevs\Wpuf\Ajax;
  */
 class Upload_Ajax {
 
-    /**
-     * Validate if it's coming from WordPress with a valid nonce
-     *
-     * @return void
-     */
-    public function validate_nonce() {
-        $nonce = isset( $_GET['nonce'] ) ? sanitize_key( wp_unslash( $_GET['nonce'] ) ) : '';
-        if ( isset( $nonce ) && ! wp_verify_nonce( $nonce, 'wpuf-upload-nonce' ) ) {
-            return;
-        }
-    }
-
     public function upload_file( $image_only = false ) {
         $nonce = isset( $_REQUEST['nonce'] ) ? sanitize_key( wp_unslash( $_REQUEST['nonce'] ) ) : '';
         if ( isset( $nonce ) && ! wp_verify_nonce( $nonce, 'wpuf-upload-nonce' ) ) {
@@ -60,7 +48,16 @@ class Upload_Ajax {
                 die( 'error' );
             }
         }
-        $wpuf_file = isset( $_FILES['wpuf_file'] ) ? $_FILES['wpuf_file'] : []; // WPCS: sanitization ok.
+        $wpuf_file = isset( $_FILES['wpuf_file'] ) ? (array) $_FILES['wpuf_file'] : []; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- the entries are checked by wp_handle_upload()
+        $wpuf_file = wp_parse_args(
+            $wpuf_file, [
+				'name' => '',
+				'type' => '',
+				'tmp_name' => '',
+				'error' => UPLOAD_ERR_NO_FILE,
+				'size' => 0,
+			]
+        );
         $file_name      = pathinfo( $wpuf_file['name'], PATHINFO_FILENAME );
         $file_extension = pathinfo( $wpuf_file['name'], PATHINFO_EXTENSION );
         $upload = [
@@ -239,7 +236,7 @@ class Upload_Ajax {
         return $data;
     }
 
-    public static function attach_html( $attach_id, $type = NULL, $form_id = NULL ) {
+    public static function attach_html( $attach_id, $type = null, $form_id = null ) {
         if ( ! $type ) {
             $type = isset( $_GET['type'] ) ? sanitize_text_field( wp_unslash( $_GET['type'] ) ) : 'image';
         }
@@ -424,17 +421,7 @@ class Upload_Ajax {
         return $token;
     }
 
-    public function associate_file( $attach_id, $post_id ) {
-        wp_update_post(
-            [
-                'ID'          => $attach_id,
-                'post_parent' => $post_id,
-            ]
-        );
-    }
-
     public function insert_image() {
         $this->upload_file( true );
     }
-    
 }

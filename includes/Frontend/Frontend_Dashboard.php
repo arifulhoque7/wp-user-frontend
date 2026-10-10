@@ -159,9 +159,13 @@ class Frontend_Dashboard {
                     <div class="wpuf-user-image"><?php echo get_avatar( $userdata->user_email, 80 ); ?></div>
                     <div class="wpuf-author-body">
                         <?php /* translators: %s: user display name */ ?>
-                        <p class="wpuf-user-name"><a href="<?php echo esc_url(
-                                get_author_posts_url( esc_attr( $userdata->ID ) )
-                            ); ?>"><?php printf( '%s', esc_attr( $userdata->display_name ) ); ?></a></p>
+                        <p class="wpuf-user-name"><a href="
+                        <?php
+                        echo esc_url(
+                            get_author_posts_url( esc_attr( $userdata->ID ) )
+                        );
+						?>
+                            "><?php printf( '%s', esc_attr( $userdata->display_name ) ); ?></a></p>
                         <p class="wpuf-author-info"><?php echo esc_html( $userdata->description ); ?></p>
                     </div>
                 </div>
@@ -184,7 +188,9 @@ class Frontend_Dashboard {
         }
         //check, if the requested user is the post author
         $maybe_delete = get_post( $pid );
-        if ( ( $maybe_delete->post_author == $userdata->ID ) || current_user_can( 'delete_others_pages' ) ) {
+        $is_author    = $maybe_delete instanceof \WP_Post && (int) $maybe_delete->post_author === (int) $userdata->ID;
+
+        if ( $is_author || current_user_can( 'delete_others_pages' ) ) {
             wp_trash_post( $pid );
             //redirect
             $redirect = add_query_arg( [ 'msg' => 'deleted' ], get_permalink() );

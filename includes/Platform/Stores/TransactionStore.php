@@ -571,4 +571,19 @@ class TransactionStore implements DataStore {
 
         return (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}wpuf_transaction" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
     }
+
+    /**
+     * When the user's latest completed transaction was created (the account page).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int $user_id User id
+     *
+     * @return string|null
+     */
+    public function last_completed_date( $user_id ) {
+        global $wpdb;
+
+        return $wpdb->get_var( $wpdb->prepare( "SELECT created FROM {$wpdb->prefix}wpuf_transaction WHERE user_id = %d AND status = 'completed' ORDER BY created DESC LIMIT 1", (int) $user_id ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+    }
 }

@@ -248,22 +248,6 @@ class User_Subscription {
     }
 
     /**
-     * Delete subscription pack from the user
-     *
-     * @return void
-     */
-    public function delete_pack() {
-
-        // cancel is it's a recurring payment
-        if ( $this->recurring() ) {
-            $wpuf_paypal = new Lib\Gateway\Paypal();
-            $wpuf_paypal->recurring_change_status( $this->user->id, 'Cancel' );
-        }
-
-        Stores::user_packs()->delete( $this->user->id );
-    }
-
-    /**
      * Determine if the user has used a Free pack before
      *
      * @param int $pack_id

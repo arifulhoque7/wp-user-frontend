@@ -1277,7 +1277,7 @@ function wpuf_payment_success_page( $data ) {
     if ( 'post' === $data['type'] ) {
         // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only id on the payment success redirect.
         $post_id           = array_key_exists( 'item_number', $data ) && ! empty( $data['item_number'] ) ? $data['item_number'] : ( isset( $_GET['post_id'] ) ? absint( wp_unslash( $_GET['post_id'] ) ) : 0 );
-        $form_id           = get_post_meta( $post_id, '_wpuf_form_id', true );
+        $form_id           = Stores::submissions()->form_id( $post_id );
         $form_settings     = wpuf_get_form_settings( $form_id );
         $ppp_success_page  = ! empty( $form_settings['ppp_payment_success_page'] ) ? $form_settings['ppp_payment_success_page'] : '';
         $redirect_page_id  = $ppp_success_page ? $ppp_success_page : $redirect_page_id;

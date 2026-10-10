@@ -2,6 +2,8 @@
 
 namespace WeDevs\Wpuf\Ajax;
 
+use WeDevs\Wpuf\Platform\Stores\Stores;
+
 use WeDevs\Wpuf\Builder\FormSave;
 
 /**
@@ -69,10 +71,7 @@ class Admin_Form_Builder_Ajax {
         $current_settings = [];
 
         if ( $form_id ) {
-            $current_settings = get_post_meta( $form_id, 'wpuf_form_settings', true );
-            if ( ! is_array( $current_settings ) ) {
-                $current_settings = [];
-            }
+            $current_settings = Stores::forms()->read_settings( $form_id );
         }
 
         foreach ( $post_taxonomies as $tax ) {

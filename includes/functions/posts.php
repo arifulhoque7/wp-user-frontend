@@ -1,4 +1,6 @@
 <?php
+
+use WeDevs\Wpuf\Platform\Stores\Stores;
 /**
  * Posts, attachments, taxonomies and the submitted-post helpers
  *
@@ -364,7 +366,7 @@ function wpuf_show_custom_fields( $content ) {
     }
 
     $show_caption  = wpuf_get_option( 'image_caption', 'wpuf_frontend_posting' );
-    $form_id       = get_post_meta( $post->ID, '_wpuf_form_id', true );
+    $form_id       = Stores::submissions()->form_id( $post->ID );
     $form_settings = wpuf_get_form_settings( $form_id );
 
     if ( ! $form_id ) {
@@ -897,7 +899,7 @@ function wpuf_ajax_tag_search() {
     global $wpdb;
 
     $taxonomy = isset( $_GET['tax'] ) ? sanitize_text_field( wp_unslash( $_GET['tax'] ) ) : '';
-    $term_ids = ! empty( $_GET['term_ids'] ) ? sanitize_key( wp_unslash( $_GET['term_ids'] ) ) : '';
+    $term_ids = ! empty( $_GET['term_ids'] ) ? sanitize_text_field( wp_unslash( $_GET['term_ids'] ) ) : ''; // a comma list of ids, cast below
     $tax      = get_taxonomy( $taxonomy );
 
     if ( ! $tax ) {
@@ -923,8 +925,12 @@ function wpuf_ajax_tag_search() {
         wp_die();
     } // require 2 chars for matching
 
-    if ( ! empty( $term_ids ) ) {
-        $results = $wpdb->get_col( $wpdb->prepare( "SELECT t.name FROM $wpdb->term_taxonomy AS tt INNER JOIN $wpdb->terms AS t ON tt.term_id = t.term_id WHERE tt.taxonomy = %s AND t.term_id IN ($term_ids) AND t.name LIKE (%s)", $taxonomy, '%' . $wpdb->esc_like( $s ) . '%' ) );
+    $term_id_list = array_values( array_filter( array_map( 'absint', explode( ',', (string) $term_ids ) ) ) );
+
+    if ( ! empty( $term_id_list ) ) {
+        $placeholders = implode( ',', array_fill( 0, count( $term_id_list ), '%d' ) );
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- placeholders only
+        $results = $wpdb->get_col( $wpdb->prepare( "SELECT t.name FROM $wpdb->term_taxonomy AS tt INNER JOIN $wpdb->terms AS t ON tt.term_id = t.term_id WHERE tt.taxonomy = %s AND t.term_id IN ($placeholders) AND t.name LIKE (%s)", array_merge( [ $taxonomy ], $term_id_list, [ '%' . $wpdb->esc_like( $s ) . '%' ] ) ) );
     } else {
         $results = $wpdb->get_col( $wpdb->prepare( "SELECT t.name FROM $wpdb->term_taxonomy AS tt INNER JOIN $wpdb->terms AS t ON tt.term_id = t.term_id WHERE tt.taxonomy = %s AND t.name LIKE (%s)", $taxonomy, '%' . $wpdb->esc_like( $s ) . '%' ) );
     }
@@ -1041,16 +1047,11 @@ function taxnomy_select( $terms, $attr ) {
  * @return string $post_status
  */
 function wpuf_get_draft_post_status( $form_settings ) {
-    $noce = isset( $_REQUEST['_wpnonce'] ) ? sanitize_key( wp_unslash( $_REQUEST['_wpnonce'] ) ) : '';
-
-    if ( isset( $nonce ) && ! wp_verify_nonce( $noce, 'wpuf_form_add' ) ) {
-        return;
-    }
 
     $post_status                 = 'draft';
     $current_user                = wpuf_get_user();
     $charging_enabled            = $current_user->subscription()->current_pack_id();
-    $user_wpuf_subscription_pack = get_user_meta( get_current_user_id(), '_wpuf_subscription_pack', true );
+    $user_wpuf_subscription_pack = Stores::user_packs()->read( get_current_user_id() );
 
     if ( $charging_enabled && ! isset( $_POST['post_id'] ) ) {
         if ( ! empty( $user_wpuf_subscription_pack ) ) {
@@ -1451,7 +1452,7 @@ function wpuf_user_can_edit_post( $post_id, $check_settings = true ) {
         }
 
         // Check post-specific lock (admin can lock individual posts)
-        $post_lock = get_post_meta( $post_id, '_wpuf_lock_editing_post', true );
+        $post_lock = Stores::submissions()->lock( $post_id );
 
         if ( 'yes' === $post_lock ) {
             return new WP_Error(
@@ -1464,7 +1465,7 @@ function wpuf_user_can_edit_post( $post_id, $check_settings = true ) {
         }
 
         // Check time-based lock
-        $lock_time = get_post_meta( $post_id, '_wpuf_lock_user_editing_post_time', true );
+        $lock_time = Stores::submissions()->lock_time( $post_id );
 
         if ( ! empty( $lock_time ) && $lock_time < time() ) {
             return new WP_Error(
@@ -1511,7 +1512,7 @@ function wpuf_user_can_edit_post( $post_id, $check_settings = true ) {
         }
 
         // Check payment status for draft/pending posts
-        $payment_status = get_post_meta( $post_id, '_wpuf_payment_status', true );
+        $payment_status = Stores::submissions()->payment_status( $post_id );
 
         if ( ( 'draft' === $post->post_status || 'pending' === $post->post_status ) && ! empty( $payment_status ) && 'completed' !== $payment_status ) {
             return new WP_Error(

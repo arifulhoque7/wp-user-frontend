@@ -2,6 +2,8 @@
 
 namespace WeDevs\Wpuf\Frontend;
 
+use WeDevs\Wpuf\Platform\Stores\Stores;
+
 use WeDevs\Wpuf\Admin\Forms\Form;
 use WeDevs\Wpuf\Admin\Subscription;
 use WeDevs\Wpuf\Frontend_Render_Form;
@@ -79,8 +81,8 @@ class Frontend_Form extends Frontend_Render_Form {
             return '<div class="wpuf-info">' . __( 'Invalid post', 'wp-user-frontend' ) . '</div>';
         }
 
-        $edit_post_lock      = get_post_meta( $post_id, '_wpuf_lock_editing_post', true );
-        $edit_post_lock_time = get_post_meta( $post_id, '_wpuf_lock_user_editing_post_time', true );
+        $edit_post_lock      = Stores::submissions()->lock( $post_id );
+        $edit_post_lock_time = Stores::submissions()->lock_time( $post_id );
 
         if ( $edit_post_lock === 'yes' ) {
             return '<div class="wpuf-info">' . apply_filters( 'wpuf_edit_post_lock_user_notice', __( 'Your edit access for this post has been locked by an administrator.', 'wp-user-frontend' ) ) . '</div>';
@@ -324,7 +326,7 @@ class Frontend_Form extends Frontend_Render_Form {
             self::update_post_meta( $meta_vars, $post_id );
 
             // set the post form_id for later usage
-            update_post_meta( $post_id, self::$config_id, $form_id );
+            Stores::submissions()->set_form_id( $post_id, $form_id );
 
             // Mark the draft as still awaiting submission. submit_post() reads this to tell
             // a draft being finished (which must pass the submission gate) apart from an
@@ -444,7 +446,7 @@ class Frontend_Form extends Frontend_Render_Form {
         // read as uncharged and publish the post for free. Trust only the form id
         // the post itself was submitted through, and refuse a f_id that does not
         // match it, so the paywall is always evaluated against the real form.
-        $real_form_id = absint( get_post_meta( $post_id, self::$config_id, true ) );
+        $real_form_id = Stores::submissions()->form_id( $post_id );
         $form_id      = absint( $form_id );
 
         if ( ! $real_form_id || get_post_type( $real_form_id ) !== 'wpuf_forms' ) {
@@ -552,7 +554,7 @@ class Frontend_Form extends Frontend_Render_Form {
 
         // Only grant cap for posts genuinely created via a WPUF form.
         // Excludes arbitrary CPTs (page, product, etc.) and admin-created content.
-        $wpuf_form_id = absint( get_post_meta( $post_id, '_wpuf_form_id', true ) );
+        $wpuf_form_id = Stores::submissions()->form_id( $post_id );
 
         if ( empty( $wpuf_form_id ) ) {
             return $allcaps;
@@ -595,7 +597,7 @@ class Frontend_Form extends Frontend_Render_Form {
         ) {
             // phpcs:enable WordPress.WP.Capabilities.RoleFound
             $post    = get_post( $post_id );
-            $form_id = get_post_meta( $post_id, '_wpuf_form_id', true );
+            $form_id = Stores::submissions()->form_id( $post_id );
 
             if ( absint( $post->post_author ) === get_current_user_id() && $form_id ) {
                 return $this->get_frontend_post_edit_link( $post_id );
@@ -668,7 +670,7 @@ class Frontend_Form extends Frontend_Render_Form {
         // Form around a non-form object whose settings are a string, and indexing
         // that string fatals on PHP 8. Bind to the post's own form, exactly as
         // publish_guest_post() does, instead of reading the parameter.
-        $form_id = absint( get_post_meta( $post_id, self::$config_id, true ) );
+        $form_id = Stores::submissions()->form_id( $post_id );
 
         if ( ! $form_id || 'wpuf_forms' !== get_post_type( $form_id ) ) {
             return;

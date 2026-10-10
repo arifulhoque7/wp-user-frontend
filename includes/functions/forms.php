@@ -1,4 +1,6 @@
 <?php
+
+use WeDevs\Wpuf\Platform\Stores\Stores;
 /**
  * Forms: fields, settings, templates, builder helpers and form-level checks
  *
@@ -163,7 +165,7 @@ function wpuf_get_form_settings( $form_id, $status = true ) {
  * @return array
  */
 function wpuf_get_form_notifications( $form_id ) {
-    $notifications = get_post_meta( $form_id, 'notifications', true );
+    $notifications = Stores::forms()->read_meta( $form_id, 'notifications' );
 
     if ( ! $notifications ) {
         return [];
@@ -182,7 +184,7 @@ function wpuf_get_form_notifications( $form_id ) {
  * @return array
  */
 function wpuf_get_form_integrations( $form_id ) {
-    $integrations = get_post_meta( $form_id, 'integrations', true );
+    $integrations = Stores::forms()->read_meta( $form_id, 'integrations' );
 
     if ( ! $integrations ) {
         return [];
@@ -756,8 +758,8 @@ function wpuf_clear_schedule_lock() {
     $post_id = isset( $_POST['post_id'] ) ? absint( wp_unslash( $_POST['post_id'] ) ) : 0;
 
     if ( ! empty( $post_id ) ) {
-        update_post_meta( $post_id, '_wpuf_lock_user_editing_post_time', '' );
-        update_post_meta( $post_id, '_wpuf_lock_editing_post', 'no' );
+        Stores::submissions()->set_lock_time( $post_id, '' );
+        Stores::submissions()->set_lock( $post_id, 'no' );
     }
     exit;
 }

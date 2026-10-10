@@ -23,28 +23,28 @@ class Ajax {
     protected $logged_out_only = [ 'priv' => false ];
 
     public function __construct() {
-        $this->register_ajax( 'wpuf_submit_post', [ new Ajax\Frontend_Form_Ajax(), 'submit_post' ] );
-        $this->register_ajax( 'wpuf_file_del', [ new Ajax\Upload_Ajax(), 'delete_file' ] );
-        $this->register_ajax( 'wpuf_upload_file', [ new Ajax\Upload_Ajax(), 'upload_file' ] );
-        $this->register_ajax( 'wpuf_insert_image', [ new Ajax\Upload_Ajax(), 'insert_image' ] );
-        $this->register_ajax( 'wpuf_form_builder_save_form', [ new Ajax\Admin_Form_Builder_Ajax(), 'save_form' ], $this->logged_in_only );
-        $this->register_ajax( 'wpuf_form_setting_post', [ new Ajax\Admin_Form_Builder_Ajax(), 'get_post_taxonomies' ], $this->logged_in_only );
+        $this->register_ajax( 'wpuf_submit_post', [ $this->service( Ajax\Frontend_Form_Ajax::class ), 'submit_post' ] );
+        $this->register_ajax( 'wpuf_file_del', [ $this->service( Ajax\Upload_Ajax::class ), 'delete_file' ] );
+        $this->register_ajax( 'wpuf_upload_file', [ $this->service( Ajax\Upload_Ajax::class ), 'upload_file' ] );
+        $this->register_ajax( 'wpuf_insert_image', [ $this->service( Ajax\Upload_Ajax::class ), 'insert_image' ] );
+        $this->register_ajax( 'wpuf_form_builder_save_form', [ $this->service( Ajax\Admin_Form_Builder_Ajax::class ), 'save_form' ], $this->logged_in_only );
+        $this->register_ajax( 'wpuf_form_setting_post', [ $this->service( Ajax\Admin_Form_Builder_Ajax::class ), 'get_post_taxonomies' ], $this->logged_in_only );
         $promotion = $this->admin_service( 'promotion', Admin\Promotion::class );
         $this->register_ajax( 'wpuf_dismiss_promotional_offer_notice', [ $promotion, 'dismiss_promotional_offer' ], $this->logged_in_only );
         $this->register_ajax( 'wpuf_dismiss_review_notice', [ $promotion, 'dismiss_review_notice' ], $this->logged_in_only );
         $this->register_ajax( 'wpuf_ajax_tag_search', 'wpuf_ajax_tag_search' );
-        $this->register_ajax( 'wpuf_dismiss_notice_acf', [ new Integrations\WPUF_ACF_Compatibility(), 'dismiss_notice' ], $this->logged_in_only );
-        $this->register_ajax( 'wpuf_compatibility_acf', [ new Integrations\WPUF_ACF_Compatibility(), 'maybe_compatible' ], $this->logged_in_only );
-        $this->register_ajax( 'wpuf_migrate_acf', [ new Integrations\WPUF_ACF_Compatibility(), 'migrate_cf_data' ], $this->logged_in_only );
-        $this->register_ajax( 'wpuf_ajax_login', [ new Login_Widget(), 'ajax_login' ], $this->logged_out_only );
-        $this->register_ajax( 'wpuf_lost_password', [ new Login_Widget(), 'ajax_reset_pass' ], $this->logged_out_only );
-        $this->register_ajax( 'wpuf_ajax_logout', [ new Login_Widget(), 'ajax_logout' ], $this->logged_out_only );
-        $this->register_ajax( 'wpuf_form_preview', [ new Frontend\Frontend_Form(), 'preview_form' ], $this->logged_in_only );
-        $this->register_ajax( 'wpuf_make_media_embed_code', [ new Frontend\Frontend_Form(), 'make_media_embed_code' ] );
-        $this->register_ajax( 'wpuf_draft_post', [ new Frontend\Frontend_Form(), 'draft_post' ] );
+        $this->register_ajax( 'wpuf_dismiss_notice_acf', [ $this->service( Integrations\WPUF_ACF_Compatibility::class ), 'dismiss_notice' ], $this->logged_in_only );
+        $this->register_ajax( 'wpuf_compatibility_acf', [ $this->service( Integrations\WPUF_ACF_Compatibility::class ), 'maybe_compatible' ], $this->logged_in_only );
+        $this->register_ajax( 'wpuf_migrate_acf', [ $this->service( Integrations\WPUF_ACF_Compatibility::class ), 'migrate_cf_data' ], $this->logged_in_only );
+        $this->register_ajax( 'wpuf_ajax_login', [ $this->service( Login_Widget::class ), 'ajax_login' ], $this->logged_out_only );
+        $this->register_ajax( 'wpuf_lost_password', [ $this->service( Login_Widget::class ), 'ajax_reset_pass' ], $this->logged_out_only );
+        $this->register_ajax( 'wpuf_ajax_logout', [ $this->service( Login_Widget::class ), 'ajax_logout' ], $this->logged_out_only );
+        $this->register_ajax( 'wpuf_form_preview', [ $this->service( Frontend\Frontend_Form::class ), 'preview_form' ], $this->logged_in_only );
+        $this->register_ajax( 'wpuf_make_media_embed_code', [ $this->service( Frontend\Frontend_Form::class ), 'make_media_embed_code' ] );
+        $this->register_ajax( 'wpuf_draft_post', [ $this->service( Frontend\Frontend_Form::class ), 'draft_post' ] );
         $this->register_ajax( 'wpuf_delete_user_package', [ $this->admin_service( 'admin_subscription', Admin\Admin_Subscription::class ), 'delete_user_package' ], $this->logged_in_only );
-        $this->register_ajax( 'wpuf_address_ajax_action', [ new Ajax\Address_Form_Ajax(), 'ajax_form_action' ] );
-        $frontend_account = new Frontend\Frontend_Account();
+        $this->register_ajax( 'wpuf_address_ajax_action', [ $this->service( Ajax\Address_Form_Ajax::class ), 'ajax_form_action' ] );
+        $frontend_account = $this->service( Frontend\Frontend_Account::class );
         $this->register_ajax( 'wpuf_account_update_profile', [ $frontend_account, 'update_profile' ], $this->logged_in_only );
         $this->register_ajax( 'wpuf_account_change_password', [ $frontend_account, 'change_password' ], $this->logged_in_only );
         $this->register_ajax( 'wpuf_import_forms', [ $this->admin_service( 'tools', Admin\Admin_Tools::class ), 'import_forms' ], $this->logged_in_only );
@@ -52,6 +52,24 @@ class Ajax {
         $this->register_ajax( 'wpuf_ajax_address', 'wpuf_ajax_get_states_field' );
         $this->register_ajax( 'wpuf_update_billing_address', 'wpuf_update_billing_address' );
         $this->register_ajax( 'wpuf_clear_schedule_lock', 'wpuf_clear_schedule_lock', $this->logged_in_only );
+    }
+
+    /**
+     * A frontend class as the platform container shares it (the frontend layer's
+     * instance when that is loaded), so its constructor hooks are registered once.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param string $class_name Class (see Platform\Providers\FrontendServiceProvider)
+     *
+     * @return object
+     */
+    private function service( $class_name ) {
+        if ( function_exists( 'wpuf' ) && wpuf()->platform()->has( $class_name ) ) {
+            return wpuf()->platform()->get( $class_name );
+        }
+
+        return new $class_name();
     }
 
     /**

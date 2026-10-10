@@ -9,6 +9,7 @@
 namespace WeDevs\Wpuf\Platform;
 
 use WeDevs\Wpuf\Platform\Providers\AdminServiceProvider;
+use WeDevs\Wpuf\Platform\Providers\FrontendServiceProvider;
 
 use WeDevs\Wpuf\Platform\Contracts\Hookable;
 use WeDevs\Wpuf\Platform\Providers\CoreServiceProvider;
@@ -77,6 +78,7 @@ class Bootstrap {
             LegacyServiceProvider::class,
             CoreServiceProvider::class,
             AdminServiceProvider::class,
+            FrontendServiceProvider::class,
             StoreServiceProvider::class,
             RestServiceProvider::class,
             AiServiceProvider::class,

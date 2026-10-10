@@ -10,7 +10,6 @@ namespace WeDevs\Wpuf\Admin\Subscriptions;
 
 use WeDevs\Wpuf\Admin\Admin_Subscription;
 use WeDevs\Wpuf\Frontend\Payment;
-use WeDevs\Wpuf\Lib\Gateway\Paypal;
 use WeDevs\Wpuf\Platform\Stores\Stores;
 
 /**
@@ -463,8 +462,11 @@ class User_Profile {
         $userid = isset( $_POST['userid'] ) ? intval( wp_unslash( $_POST['userid'] ) ) : 0;
 
         echo esc_html( Stores::user_packs()->delete( $userid ) ? '1' : '' );
-        $wpuf_paypal = new Paypal();
-        $wpuf_paypal->recurring_change_status( $userid, 'Cancel' );
+        // A recurring PayPal pack is cancelled at PayPal too (the old call here
+        // named a method that no longer exists and fatalled before subscriber_cancel).
+        if ( Stores::user_packs()->paypal_subscription_id( $userid ) ) {
+            wpuf()->paypal->subscription_cancel( $userid );
+        }
 
         if ( isset( $_POST['packid'] ) ) {
             $pack_id = intval( wp_unslash( $_POST['packid'] ) );

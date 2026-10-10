@@ -253,7 +253,9 @@ class Payment {
                                 <h3><?php esc_html_e( 'Billing Address', 'wp-user-frontend' ); ?></h3>
                                 <div class="wpuf-bill_addr-inner">
                                     <?php
-                                    $add_form = new Ajax\Address_Form_Ajax();
+                                    $add_form = wpuf()->platform()->has( Ajax\Address_Form_Ajax::class )
+                                        ? wpuf()->platform()->get( Ajax\Address_Form_Ajax::class )
+                                        : new Ajax\Address_Form_Ajax();
                                     $add_form->wpuf_ajax_address_form();
                                     ?>
                                 </div>
@@ -1125,6 +1127,13 @@ class Payment {
         ) ) {
             return;
         }
+        // The form posts the owner's id; only an admin may cancel for someone else.
+        $owner_id = isset( $_POST['user_id'] ) ? absint( wp_unslash( $_POST['user_id'] ) ) : 0;
+
+        if ( $owner_id && $owner_id !== get_current_user_id() && ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+
         $gateway = isset( $_POST['gateway'] ) ? sanitize_text_field( wp_unslash( $_POST['gateway'] ) ) : '';
         do_action( "wpuf_cancel_payment_{$gateway}", $_POST );
     }

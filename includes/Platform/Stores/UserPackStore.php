@@ -36,6 +36,13 @@ class UserPackStore implements DataStore {
     const ASSIGN_NOTICE = '_pack_assign_notification';
 
     /**
+     * Meta key: the user's PayPal subscription id (recurring packs).
+     *
+     * @since WPUF_SINCE
+     */
+    const PAYPAL_SUBSCRIPTION = '_wpuf_paypal_subscription_id';
+
+    /**
      * Whether a user holds pack data.
      *
      * @since WPUF_SINCE
@@ -271,5 +278,32 @@ class UserPackStore implements DataStore {
      */
     public function set_assign_notification( $user_id, $value ) {
         update_user_meta( $user_id, self::ASSIGN_NOTICE, $value );
+    }
+
+    /**
+     * The user's PayPal subscription id ('' when none).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int $user_id User id
+     *
+     * @return string
+     */
+    public function paypal_subscription_id( $user_id ) {
+        return (string) get_user_meta( $user_id, self::PAYPAL_SUBSCRIPTION, true );
+    }
+
+    /**
+     * Remember the user's PayPal subscription id.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int    $user_id         User id
+     * @param string $subscription_id PayPal subscription id
+     *
+     * @return void
+     */
+    public function set_paypal_subscription_id( $user_id, $subscription_id ) {
+        update_user_meta( $user_id, self::PAYPAL_SUBSCRIPTION, $subscription_id );
     }
 }

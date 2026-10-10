@@ -2,6 +2,7 @@
 
 namespace WeDevs\Wpuf;
 
+use WeDevs\Wpuf\Platform\Providers\FrontendServiceProvider;
 use WeDevs\WpUtils\ContainerTrait;
 
 /**
@@ -14,14 +15,14 @@ class Frontend {
     use ContainerTrait;
 
     public function __construct() {
-        $this->container['frontend_form']      = new Frontend\Frontend_Form();
-        $this->container['registration']       = new Frontend\Registration();
-        $this->container['simple_login']       = new Free\Simple_Login();
-        $this->container['frontend_account']   = new Frontend\Frontend_Account();
-        $this->container['frontend_dashboard'] = new Frontend\Frontend_Dashboard();
-        $this->container['shortcode']          = new Frontend\Shortcode();
-        $this->container['payment']            = new Frontend\Payment();
-        $this->container['form_preview']       = new Frontend\Form_Preview();
+        // Every frontend service comes from the platform container
+        // (FrontendServiceProvider): one instance per request, built here in the
+        // old order so the constructors add their hooks as before.
+        $platform = wpuf()->platform();
+
+        foreach ( array_keys( FrontendServiceProvider::SERVICES ) as $key ) {
+            $this->container[ $key ] = $platform->get( FrontendServiceProvider::class_of( $key ) );
+        }
 
         add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_scripts' ] );
 
