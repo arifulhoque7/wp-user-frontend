@@ -138,7 +138,6 @@ class Admin_Form_Builder {
         wp_enqueue_style( 'wpuf-font-awesome' );
         wp_enqueue_style( 'wpuf-sweetalert2' );
         wp_enqueue_style( 'wpuf-selectize' );
-        wp_enqueue_style( 'wpuf-toastr' );
         wp_enqueue_style( 'wpuf-tooltip' );
         wp_enqueue_style( 'wpuf-jquery-ui' );
         wp_enqueue_style( 'wp-color-picker' );
@@ -152,10 +151,7 @@ class Admin_Form_Builder {
 
         wp_enqueue_script( 'wpuf-subscriptions' );
         wp_enqueue_script( 'wpuf-sweetalert2' );
-        wp_enqueue_script( 'wpuf-jquery-scrollTo' );
         wp_enqueue_script( 'wpuf-selectize' );
-        wp_enqueue_script( 'wpuf-toastr' );
-        wp_enqueue_script( 'wpuf-clipboard' );
         wp_enqueue_script( 'wpuf-tooltip' );
         wp_enqueue_script( 'wpuf-timepicker' );
         wp_enqueue_script( 'wpuf-admin' );
@@ -277,7 +273,6 @@ class Admin_Form_Builder {
         /*
          * Data required for building the form
          */
-        wpuf_require_once( WPUF_ROOT . '/admin/form-builder/class-wpuf-form-builder-field-settings.php' );
         wpuf_require_once( WPUF_ROOT . '/includes/Free/Pro_Prompt.php' );
         $lock_icon = WPUF_ASSET_URI . '/images/crown-circle.svg';
         $free_icon = WPUF_ASSET_URI . '/images/free-circle.svg';
@@ -360,6 +355,10 @@ class Admin_Form_Builder {
         // Retired Vue mixin filters still fire (deprecated when an outside plugin
         // listens).
         $retired = wpuf()->platform()->get( HookDeprecations::class );
+
+        // The retired script-dependency filter still fires too; the React bundle
+        // declares its own dependencies, so the result is not used.
+        $retired->filter( 'wpuf_form_builder_js_deps', [ 'jquery', 'jquery-ui-sortable', 'jquery-ui-draggable', 'jquery-ui-droppable', 'jquery-ui-resizable', 'underscore', 'wpuf-sweetalert2', 'wpuf-selectize', 'wpuf-tooltip' ] );
 
         return [
             'wpuf_form_builder'   => $wpuf_form_builder,

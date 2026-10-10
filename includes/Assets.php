@@ -39,7 +39,6 @@ class Assets {
                 'wpuf-font-awesome',
                 'wpuf-sweetalert2',
                 'wpuf-selectize',
-                'wpuf-toastr',
                 'wpuf-tooltip',
                 'buttons',
             ]
@@ -177,15 +176,6 @@ class Assets {
 
             wp_register_script( 'wpuf-' . $handle, $this->existing_src( $script['src'] ), $deps, $version, $in_footer );
         }
-
-        // The Vue builder mixins are gone. Scripts that still extend them (e.g. the
-        // pro QR-code module) get empty mixins so their old registration is a no-op.
-        wp_add_inline_script(
-            'wpuf-form-builder-mixins',
-            'window.wpuf_mixins = window.wpuf_mixins || {};'
-            . '["form_field_mixin","option_field_mixin","add_form_field","global_mixin"].forEach(function(k){ window.wpuf_mixins[k] = window.wpuf_mixins[k] || {}; });',
-            'after'
-        );
     }
 
     /**
@@ -268,10 +258,6 @@ class Assets {
                 'src'     => WPUF_ASSET_URI . '/vendor/selectize/css/selectize.default.css',
                 'version' => '0.12.4',
             ],
-            'toastr'              => [
-                'src'     => WPUF_ASSET_URI . '/vendor/toastr/toastr.min.css',
-                'version' => '2.1.3',
-            ],
             'tooltip'             => [
                 'src'     => WPUF_ASSET_URI . '/vendor/tooltip/tooltip.css',
                 'version' => '3.3.7',
@@ -299,10 +285,6 @@ class Assets {
             'swiffy-slider'       => [
                 'src'     => WPUF_ASSET_URI . '/vendor/swiffy-slider/swiffy-slider.min.css',
                 'version' => '1.6.0',
-            ],
-            'setup'               => [
-                'src'  => WPUF_ASSET_URI . '/css/admin/wpuf-setup.css',
-                'deps' => [ 'dashicons', 'install' ],
             ],
             // React forms list sheet (tools/admin-css), under the old handle.
             'forms-list'           => [
@@ -343,47 +325,12 @@ class Assets {
         $this->scheme         = is_ssl() ? 'https' : 'http';
         $api_key              = wpuf_get_option( 'gmap_api_key', 'wpuf_general' );
 
-        $form_builder_js_deps = apply_filters(
-            'wpuf_form_builder_js_deps',
-            [
-                'jquery',
-                'jquery-ui-sortable',
-                'jquery-ui-draggable',
-                'jquery-ui-droppable',
-                'jquery-ui-resizable',
-                'underscore',
-                'wpuf-vue',
-                'wpuf-vuex',
-                'wpuf-sweetalert2',
-                'wpuf-jquery-scrollTo',
-                'wpuf-selectize',
-                'wpuf-toastr',
-                'wpuf-clipboard',
-                'wpuf-tooltip',
-            ]
-        );
         $scripts = [
-            'vue'                      => [
-                'src'       => WPUF_ASSET_URI . '/vendor/vue/vue' . $this->suffix . '.js',
-                'in_footer' => true,
-                'version'   => '2.2.4',
-            ],
-            'vuex'                     => [
-                'src'       => WPUF_ASSET_URI . '/vendor/vuex/vuex' . $this->suffix . '.js',
-                'in_footer' => true,
-                'version'   => '2.2.1',
-            ],
             'sweetalert2'              => [
                 'src'       => WPUF_ASSET_URI . '/vendor/sweetalert2/sweetalert2.js',
                 'in_footer' => true,
                 'version'   => '11.4.8',
                 'deps'      => [ 'jquery' ],
-            ],
-            'jquery-scrollTo'          => [
-                'src'       => WPUF_ASSET_URI . '/vendor/jquery.scrollTo/jquery.scrollTo' . $this->suffix . '.js',
-                'in_footer' => true,
-                'deps'      => [ 'jquery' ],
-                'version'   => '11.4.19',
             ],
             'selectize'                => [
                 'src'       => WPUF_ASSET_URI . '/vendor/selectize/js/standalone/selectize' . $this->suffix . '.js',
@@ -391,37 +338,10 @@ class Assets {
                 'deps'      => [ 'jquery' ],
                 'version'   => '0.12.4',
             ],
-            'toastr'                   => [
-                'src'       => WPUF_ASSET_URI . '/vendor/toastr/toastr' . $this->suffix . '.js',
-                'in_footer' => true,
-                'version'   => '2.1.3',
-            ],
-            'clipboard'                => [
-                'src'       => WPUF_ASSET_URI . '/vendor/clipboard/clipboard' . $this->suffix . '.js',
-                'in_footer' => true,
-                'version'   => '1.6.0',
-            ],
             'tooltip'                  => [
                 'src'       => WPUF_ASSET_URI . '/vendor/tooltip/tooltip' . $this->suffix . '.js',
                 'in_footer' => true,
                 'version'   => '3.3.7',
-            ],
-            // Shim of the removed Vue builder (no file): keeps its other deps for
-            // code that enqueues it, but no longer pulls in Vue / Vuex.
-            'form-builder-mixins'      => [
-                'src'       => WPUF_ASSET_URI . '/js/wpuf-form-builder-mixins.js',
-                'deps'      => array_values( array_diff( $form_builder_js_deps, [ 'wpuf-vue', 'wpuf-vuex' ] ) ),
-                'in_footer' => true,
-            ],
-            'form-builder-components'  => [
-                'src'       => WPUF_ASSET_URI . '/js/wpuf-form-builder-components.js',
-                'deps'      => [ 'wpuf-form-builder-mixins' ],
-                'in_footer' => true,
-            ],
-            'form-builder'             => [
-                'src'       => WPUF_ASSET_URI . '/js/wpuf-form-builder.js',
-                'deps'      => [ 'wpuf-form-builder-components' ],
-                'in_footer' => true,
             ],
             'admin'                    => [
                 'src'  => WPUF_ASSET_URI . '/js/wpuf-admin.js',
@@ -443,11 +363,6 @@ class Assets {
                 'src'       => WPUF_ASSET_URI . '/js/jquery-ui-timepicker-addon.js',
                 'deps'      => [ 'jquery-ui-datepicker' ],
                 'version'   => '1.2',
-            ],
-            'form-builder-wpuf-forms'  => [
-                'src'       => WPUF_ASSET_URI . '/js/wpuf-form-builder-wpuf-forms.js',
-                'deps'      => [ 'jquery', 'underscore' ],
-                'in_footer' => true,
             ],
             'registration-forms'       => [
                 'src'       => WPUF_ASSET_URI . '/js/registration-forms.js',
@@ -495,19 +410,6 @@ class Assets {
                 'deps'    => [ 'jquery' ],
                 'version' => '2.70',
             ],
-            'selectWoo'                => [
-                'src'     => WPUF_ASSET_URI . '/js/selectWoo/selectWoo.full.min.js',
-                'deps'    => [ 'jquery' ],
-                'version' => '1.0.1',
-            ],
-            'enhanced-select'          => [
-                'src'  => WPUF_ASSET_URI . '/js/admin/wpuf-enhanced-select' . $this->suffix . '.js',
-                'deps' => [ 'jquery', 'wpuf-selectWoo' ],
-            ],
-            'setup'                    => [
-                'src'  => WPUF_ASSET_URI . '/js/admin/wpuf-setup' . $this->suffix . '.js',
-                'deps' => [ 'jquery', 'wpuf-enhanced-select', 'wpuf-jquery-blockui' ],
-            ],
             'frontend-form'            => [
                 'src'  => WPUF_ASSET_URI . '/js/frontend-form' . $this->suffix . '.js',
                 'deps' => [ 'jquery' ],
@@ -524,9 +426,6 @@ class Assets {
             'ajax_login'               => [
                 'src'  => WPUF_ASSET_URI . '/js/wpuf-login-widget.js',
                 'deps' => [ 'jquery' ],
-            ],
-            'headway'                  => [
-                'src'  => '//cdn.headwayapp.co/widget.js',
             ],
             'turnstile'                  => [
                 'src'  => 'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback',

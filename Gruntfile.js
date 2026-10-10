@@ -155,7 +155,6 @@ module.exports = function( grunt) {
                     '**',
                     '!**/node_modules/**',
                     '!build/**',
-                    '!admin/form-builder/assets/**',
                     '!assets/css/*.less',
                     '!bin/**',
                     '!.git/**',

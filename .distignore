@@ -18,6 +18,7 @@
 /tools
 /build
 /node_modules
+/assets/less
 
 # Nested build inputs for the user-directory module (keep its built output)
 modules/user-directory/src

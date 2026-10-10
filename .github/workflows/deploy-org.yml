@@ -60,15 +60,11 @@ jobs:
         run: node bin/verify-build.mjs --release
 
       # Distributable zip (mirrors what ships to wp.org, via .distignore).
+      # Same script as `pnpm zip` locally: .distignore copy, zip, and a check that
+      # no source, tooling or test path is inside. Named after WPUF_VERSION.
       - name: Generate plugin zip
-        run: |
-          VERSION="${GITHUB_REF_NAME#v}"
-          rm -rf /tmp/pkg && mkdir -p /tmp/pkg/wp-user-frontend
-          rsync -a --exclude-from=.distignore ./ /tmp/pkg/wp-user-frontend/
-          ( cd /tmp/pkg && zip -rq "$GITHUB_WORKSPACE/wp-user-frontend-v${VERSION}.zip" wp-user-frontend )
-          echo "Built wp-user-frontend-v${VERSION}.zip"
+        run: node bin/zip.mjs --out "$GITHUB_WORKSPACE" --skip-verify
 
-      # Pull this version's changelog block out of readme.txt for the release notes.
       - name: Extract changelog
         run: |
           { echo "## Changelog"; echo ""; \

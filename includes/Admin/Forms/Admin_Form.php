@@ -242,21 +242,6 @@ class Admin_Form {
     }
 
     /**
-     * Add dependencies to form builder script
-     *
-     * @since 2.5
-     *
-     * @param array $deps
-     *
-     * @return array
-     */
-    public function js_dependencies( $deps ) {
-        $deps[] = 'wpuf-form-builder-wpuf-forms';
-
-        return apply_filters( 'wpuf_form_builder_wpuf_forms_js_deps', $deps );
-    }
-
-    /**
      * Add mixins to root instance
      *
      * @since 2.5

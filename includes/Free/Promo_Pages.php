@@ -81,9 +81,6 @@ class Promo_Pages extends Pro_Prompt {
             wpuf()->platform()->get( \WeDevs\Wpuf\Admin\Screens\Registry::class )->load( 'wpuf-profile-forms' );
         }
 
-        wp_enqueue_style( 'wpuf-admin' );
-        wp_enqueue_style( 'wpuf-registration-forms' );
-        wp_enqueue_script( 'wpuf-registration-forms' );
         /**
          * Backdoor for calling the menu hook.
          * This hook won't get translated even the site language is changed

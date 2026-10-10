@@ -191,7 +191,7 @@ add_action( 'wp_ajax_wpuf_get_child_cat', 'wpuf_get_child_cats' );
 add_action( 'wp_ajax_nopriv_wpuf_get_child_cat', 'wpuf_get_child_cats' );
 
 /*
- * Generates a random integer for WPUF form field id like wpuf-form-builder-mixins.js
+ * Generates a random integer for a WPUF form field id (the builder does the same in JS)
  *
  * @since WPUF
  *

@@ -11,7 +11,7 @@
   "license": "GPL",
   "private": true,
   "scripts": {
-    "release": "grunt release",
+    "release": "pnpm install --frozen-lockfile && pnpm clean && pnpm build && grunt release && pnpm build:verify:release && pnpm zip",
     "build": "pnpm run build:css && pnpm run build:admin && pnpm run build:frontend-subscriptions && pnpm run build:account && pnpm run build:admin-css && pnpm run build:user-directory && pnpm run build:blocks && pnpm run build:legacy && pnpm run build:css && pnpm run build:sanitize && pnpm run build:verify",
     "build:verify": "node bin/verify-build.mjs",
     "build:sanitize": "node bin/sanitize-dist.mjs",
@@ -38,7 +38,12 @@
     "build:account": "ENTRY=account vite build",
     "test:form-builder": "jest --config src/admin/apps/form-builder/jest.config.js",
     "test:ai-form-builder": "jest --config src/admin/apps/ai-form-builder/jest.config.js",
-    "test:shared": "jest --config src/admin/shared/jest.config.js"
+    "test:shared": "jest --config src/admin/shared/jest.config.js",
+    "clean": "node bin/clean-build.mjs",
+    "zip": "node bin/zip.mjs",
+    "version:stamp": "node bin/version-replace.mjs",
+    "version:check": "node bin/version-replace.mjs --check",
+    "build:verify:release": "node bin/verify-build.mjs --release"
   },
   "devDependencies": {
     "@babel/core": "^7.28.0",
