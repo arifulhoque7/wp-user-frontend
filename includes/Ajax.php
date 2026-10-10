@@ -2,6 +2,7 @@
 
 namespace WeDevs\Wpuf;
 
+use WeDevs\Wpuf\Platform\Http\Ajax_Abort;
 use WeDevs\Wpuf\Widgets\Login_Widget;
 
 /**
@@ -130,7 +131,7 @@ class Ajax {
      * @param string $error
      */
     public function send_error( $error ) {
-        wp_send_json_error(
+        Ajax_Abort::send_error(
             [
                 'success' => false,
                 'error'   => $error,

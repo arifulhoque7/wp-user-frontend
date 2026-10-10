@@ -95,3 +95,12 @@ assets/css/settings-react.css
 assets/css/ai-form-builder-react.css
 assets/css/ai-form-builder-react-rtl.css
 .phpunit.result.cache
+
+# Frontend React apps (built by `pnpm build:frontend-react`, see Frontend\Renderer_Switch)
+/assets/js/frontend/
+/assets/css/frontend/runtime.css
+/assets/css/frontend/runtime-rtl.css
+/assets/css/frontend/forms.css
+/assets/css/frontend/forms-rtl.css
+/assets/css/frontend/account-react.css
+/assets/css/frontend/account-react-rtl.css

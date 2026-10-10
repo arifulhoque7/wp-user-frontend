@@ -8,6 +8,15 @@
 
 namespace WeDevs\Wpuf\Platform\Providers;
 
+use WeDevs\Wpuf\Frontend\Account\Account_Service;
+use WeDevs\Wpuf\Frontend\Forms\Form_Schema;
+use WeDevs\Wpuf\Frontend\Forms\Submission_Service;
+use WeDevs\Wpuf\Frontend\Forms\Upload_Service;
+use WeDevs\Wpuf\Frontend\Renderer_Switch;
+use WeDevs\Wpuf\Platform\REST\Controllers\AccountController;
+use WeDevs\Wpuf\Platform\REST\Controllers\FormsPublicController;
+use WeDevs\Wpuf\Platform\REST\Controllers\UploadsController;
+use WeDevs\Wpuf\Platform\REST\Rate_Limit;
 use WeDevs\Wpuf\Platform\ServiceProvider;
 
 /**
@@ -73,6 +82,8 @@ class FrontendServiceProvider extends ServiceProvider {
                 }
             );
         }
+
+        $this->register_react_frontend();
     }
 
     /**
@@ -84,6 +95,71 @@ class FrontendServiceProvider extends ServiceProvider {
      *
      * @return string|null
      */
+    /**
+     * The services behind the React post form and account page and their
+     * REST controllers (tagged RestRoute, registered by REST\Manager).
+     *
+     * @since WPUF_SINCE
+     *
+     * @return void
+     */
+    private function register_react_frontend() {
+        $this->container->share(
+            Renderer_Switch::class,
+            function () {
+                return new Renderer_Switch();
+            }
+        );
+        $this->container->share(
+            Rate_Limit::class,
+            function () {
+                return new Rate_Limit();
+            }
+        );
+        $this->container->share(
+            Form_Schema::class,
+            function () {
+                return new Form_Schema();
+            }
+        );
+        $this->container->share(
+            Submission_Service::class,
+            function ( $container ) {
+                return new Submission_Service( $container->get( \WeDevs\Wpuf\Ajax\Frontend_Form_Ajax::class ) );
+            }
+        );
+        $this->container->share(
+            Upload_Service::class,
+            function ( $container ) {
+                return new Upload_Service( $container->get( \WeDevs\Wpuf\Ajax\Upload_Ajax::class ) );
+            }
+        );
+        $this->container->share(
+            Account_Service::class,
+            function () {
+                return new Account_Service();
+            }
+        );
+        $this->share_tagged(
+            FormsPublicController::class,
+            function ( $container ) {
+                return new FormsPublicController( $container->get( Form_Schema::class ), $container->get( Submission_Service::class ), $container->get( Rate_Limit::class ) );
+            }
+        );
+        $this->share_tagged(
+            UploadsController::class,
+            function ( $container ) {
+                return new UploadsController( $container->get( Upload_Service::class ), $container->get( Rate_Limit::class ) );
+            }
+        );
+        $this->share_tagged(
+            AccountController::class,
+            function ( $container ) {
+                return new AccountController( $container->get( Account_Service::class ), $container->get( Upload_Service::class ) );
+            }
+        );
+    }
+
     public static function class_of( $key ) {
         return isset( self::SERVICES[ $key ] ) ? self::SERVICES[ $key ] : null;
     }

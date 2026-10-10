@@ -1,0 +1,344 @@
+<?php
+/**
+ * Post form submissions as a service: create, update and draft without dying
+ *
+ * @package WP_User_Frontend
+ * @since WPUF_SINCE
+ */
+
+namespace WeDevs\Wpuf\Frontend\Forms;
+
+use WeDevs\Wpuf\Admin\Forms\Form;
+use WeDevs\Wpuf\Ajax\Frontend_Form_Ajax;
+use WeDevs\Wpuf\Platform\Http\Ajax_Abort;
+use WeDevs\Wpuf\Platform\Stores\Stores;
+use WeDevs\Wpuf\Traits\FieldableTrait;
+use WP_Error;
+
+/**
+ * The REST controller and the admin-ajax action share this service, so every
+ * validation, every `wpuf_add_post_*` / `wpuf_edit_post_*` hook and every
+ * redirect rule runs once, in one place, for both transports.
+ *
+ * Compatibility shim: the legacy submit handler and about thirty of its
+ * listeners (the WooCommerce product template among them) read `$_POST`
+ * directly. `with_input()` therefore fills `$_POST` / `$_REQUEST` from the
+ * service input for the duration of the call, slashed the way PHP delivers a
+ * form post, and restores them afterwards. The REST payload is never trusted
+ * more than a form post was: the same nonce, the same sanitising, the same
+ * capability checks run.
+ *
+ * @since WPUF_SINCE
+ */
+class Submission_Service {
+
+    use FieldableTrait;
+
+    /**
+     * Settings of the form being handled (the trait reads them).
+     *
+     * @var array
+     */
+    public $form_settings = [];
+
+    /**
+     * Fields of the form being handled (the trait reads them).
+     *
+     * @var array
+     */
+    private $form_fields = [];
+
+    /**
+     * The legacy submit handler.
+     *
+     * @var Frontend_Form_Ajax
+     */
+    private $ajax;
+
+    /**
+     * @since WPUF_SINCE
+     *
+     * @param Frontend_Form_Ajax $ajax The legacy submit handler
+     */
+    public function __construct( Frontend_Form_Ajax $ajax ) {
+        $this->ajax = $ajax;
+    }
+
+    /**
+     * Create or update a post from a form submission.
+     *
+     * Input keys are the form's field names plus `form_id`, `page_id`,
+     * `post_id` (update), `wpuf_form_status`, `delete_attachments`, and the
+     * `wpuf_form_add` nonce as `_wpnonce` (a form post) or `wpuf_nonce` (REST).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param array $input   Submission input, unslashed
+     * @param bool  $slashed True when $input already carries PHP's slashes ($_POST itself)
+     *
+     * @return array|WP_Error The AJAX success payload (`redirect_to`, `show_message`, `message`, ...) or the error
+     */
+    public function submit( array $input, $slashed = false ) {
+        return $this->with_input(
+            $input,
+            $slashed,
+            function () {
+                if ( ! $this->nonce_ok() ) {
+                    return $this->expired();
+                }
+
+                return Ajax_Abort::collect(
+                    function () {
+                        return $this->ajax->submit_post();
+                    }
+                );
+            }
+        );
+    }
+
+    /**
+     * Save a draft (the "Save Draft" button) for a logged-in user.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param array $input   Submission input, unslashed
+     * @param bool  $slashed True when $input already carries PHP's slashes
+     *
+     * @return array|WP_Error `post_id`, `url`, `message`, ... or the error
+     */
+    public function draft( array $input, $slashed = false ) {
+        return $this->with_input(
+            $input,
+            $slashed,
+            function () {
+                if ( ! $this->nonce_ok() ) {
+                    return $this->expired();
+                }
+
+                return $this->save_draft();
+            }
+        );
+    }
+
+    /**
+     * The `wpuf_form_add` nonce of the current input.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return bool
+     */
+    public function nonce_ok() {
+        $nonce = '';
+
+        foreach ( [ '_wpnonce', '_ajax_nonce', 'wpuf_nonce' ] as $key ) {
+            if ( ! empty( $_REQUEST[ $key ] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- this is the nonce check.
+                $nonce = sanitize_key( wp_unslash( $_REQUEST[ $key ] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+                break;
+            }
+        }
+
+        return (bool) wp_verify_nonce( $nonce, 'wpuf_form_add' );
+    }
+
+    /**
+     * Run a handler with the service input in place of the request superglobals.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param array    $input   Input
+     * @param bool     $slashed Whether $input is already slashed
+     * @param callable $handler Handler
+     *
+     * @return mixed
+     */
+    private function with_input( array $input, $slashed, callable $handler ) {
+        $post    = $_POST; // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        $request = $_REQUEST; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+        $files   = isset( $_FILES ) ? $_FILES : []; // phpcs:ignore WordPress.Security.NonceVerification.Missing
+
+        $data = $slashed ? $input : wp_slash( $input );
+
+        // REST clients send the form nonce as `wpuf_nonce` because `_wpnonce`
+        // is the REST cookie nonce; the legacy handler reads `_wpnonce`.
+        if ( isset( $data['wpuf_nonce'] ) && ! isset( $data['_wpnonce'] ) ) {
+            $data['_wpnonce'] = $data['wpuf_nonce'];
+        }
+
+        $_POST    = $data;
+        $_REQUEST = array_merge( $request, $data );
+
+        // The legacy handler answers errors through wpuf()->ajax, which the
+        // plugin only builds for admin-ajax requests.
+        if ( ! isset( wpuf()->ajax ) ) {
+            wpuf()->init_ajax();
+        }
+
+        try {
+            return $handler();
+        } finally {
+            $_POST    = $post;
+            $_REQUEST = $request;
+            $_FILES   = $files;
+        }
+    }
+
+    /**
+     * The error for a missing or stale nonce.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return WP_Error
+     */
+    private function expired() {
+        return new WP_Error(
+            'wpuf_submit_expired',
+            __( 'Your session has expired. Please reload the page and try again.', 'wp-user-frontend' ),
+            [ 'status' => 403 ]
+        );
+    }
+
+    /**
+     * The draft handler (the body of the old `Frontend_Form::draft_post()`,
+     * returning instead of answering).
+     *
+     * @since WPUF_SINCE
+     *
+     * @return array|WP_Error
+     */
+    private function save_draft() {
+        add_filter( 'wpuf_form_fields', [ $this, 'add_field_settings' ] );
+
+        // phpcs:disable WordPress.Security.NonceVerification.Missing -- the nonce is checked in draft().
+        $form_id             = isset( $_POST['form_id'] ) ? intval( wp_unslash( $_POST['form_id'] ) ) : 0;
+        $form                = new Form( $form_id );
+        $this->form_settings = $form->get_settings();
+        $this->form_fields   = $form->get_fields();
+        $current_user_id     = get_current_user_id();
+
+        if ( ! $form_id || 'wpuf_forms' !== get_post_type( $form_id ) ) {
+            return new WP_Error( 'wpuf_draft_invalid_form', __( 'Invalid form.', 'wp-user-frontend' ), [ 'status' => 404 ] );
+        }
+
+        if ( $current_user_id <= 0 ) {
+            return new WP_Error( 'wpuf_draft_login', __( 'You must be logged in to save drafts.', 'wp-user-frontend' ), [ 'status' => 401 ] );
+        }
+
+        if ( ! isset( $_POST['post_id'] ) ) {
+            [ $user_can_post, $submission_info ] = $form->is_submission_open( $form, $this->form_settings );
+            $user_can_post                       = apply_filters( 'wpuf_can_post', $user_can_post, $form_id, $this->form_settings );
+            $submission_info                     = apply_filters( 'wpuf_addpost_notice', $submission_info, $form_id, $this->form_settings );
+
+            if ( ! wpuf_is_option_on( $user_can_post ) ) {
+                return new WP_Error(
+                    'wpuf_draft_closed',
+                    ! empty( $submission_info ) ? $submission_info : __( 'You are not allowed to submit to this form.', 'wp-user-frontend' ),
+                    [ 'status' => 403 ]
+                );
+            }
+        }
+
+        [ $post_vars, $taxonomy_vars, $meta_vars ] = $this->get_input_fields( $this->form_fields );
+
+        $allowed_tags = wp_kses_allowed_html( 'post' );
+        $post_content = isset( $_POST['post_content'] ) ? wp_kses( wp_unslash( $_POST['post_content'] ), $allowed_tags ) : '';
+
+        $postarr = [
+            'post_type'    => $this->form_settings['post_type'],
+            'post_status'  => wpuf_get_draft_post_status( $this->form_settings ),
+            'post_author'  => $current_user_id,
+            'post_title'   => isset( $_POST['post_title'] ) ? sanitize_text_field( wp_unslash( $_POST['post_title'] ) ) : '',
+            'post_content' => $post_content,
+            'post_excerpt' => isset( $_POST['post_excerpt'] ) ? wp_kses( wp_unslash( $_POST['post_excerpt'] ), $allowed_tags ) : '',
+        ];
+
+        if ( ! empty( $this->form_fields ) ) {
+            foreach ( $this->form_fields as $field ) {
+                if ( 'taxonomy' !== $field['template'] ) {
+                    continue;
+                }
+
+                $category_name = $field['name'];
+
+                if ( isset( $_POST[ $category_name ] ) && is_array( $_POST[ $category_name ] ) ) {
+                    $category = array_map( 'sanitize_text_field', wp_unslash( $_POST[ $category_name ] ) );
+                } else {
+                    $category = isset( $_POST[ $category_name ] ) ? sanitize_text_field( wp_unslash( $_POST[ $category_name ] ) ) : '';
+                }
+
+                if ( '' !== $category && '0' !== $category && '-1' !== $category[0] ) {
+                    if ( ! is_array( $category ) && is_string( $category ) ) {
+                        $cat_ids = [];
+
+                        foreach ( explode( ',', $category ) as $each_cat_string ) {
+                            $cat_ids[] = get_cat_ID( trim( $each_cat_string ) );
+                        }
+
+                        $postarr['post_category'] = $cat_ids;
+                    } else {
+                        $postarr['post_category'] = $category;
+                    }
+                }
+            }
+        }
+
+        if ( ! isset( $postarr['post_category'] ) && isset( $this->form_settings['default_cat'] ) && is_object_in_taxonomy( $this->form_settings['post_type'], 'category' ) ) {
+            $postarr['post_category'] = is_array( $this->form_settings['default_cat'] ) ? $this->form_settings['default_cat'] : [ $this->form_settings['default_cat'] ];
+        }
+
+        if ( isset( $_POST['tags'] ) ) {
+            $postarr['tags_input'] = explode( ',', sanitize_text_field( wp_unslash( $_POST['tags'] ) ) );
+        }
+
+        if ( isset( $_POST['post_id'] ) ) {
+            $update_post_id = intval( wp_unslash( $_POST['post_id'] ) );
+            $can_edit       = wpuf_user_can_edit_post( $update_post_id );
+
+            if ( is_wp_error( $can_edit ) ) {
+                $can_edit->add_data( [ 'status' => 403 ] );
+
+                return $can_edit;
+            }
+
+            $existing_post             = get_post( $update_post_id );
+            $postarr['ID']             = $update_post_id;
+            $postarr['post_author']    = (int) $existing_post->post_author;
+            $postarr['comment_status'] = 'open';
+        }
+
+        $postarr = $this->adjust_thumbnail_id( $postarr );
+        $post_id = wp_insert_post( $postarr );
+
+        wpuf_frontend_post_revision( $post_id, $this->form_settings );
+
+        if ( $post_id ) {
+            self::update_post_meta( $meta_vars, $post_id );
+            Stores::submissions()->set_form_id( $post_id, $form_id );
+            update_post_meta( $post_id, '_wpuf_draft_pending', 1 );
+
+            if ( isset( $this->form_settings['post_format'] ) && '0' !== $this->form_settings['post_format'] && post_type_supports( $this->form_settings['post_type'], 'post-formats' ) ) {
+                set_post_format( $post_id, $this->form_settings['post_format'] );
+            }
+
+            if ( ! empty( $taxonomy_vars ) ) {
+                $this->set_custom_taxonomy( $post_id, $taxonomy_vars );
+            } else {
+                $this->set_default_taxonomy( $post_id );
+            }
+        }
+
+        do_action( 'wpuf_draft_post_after_insert', $post_id, $form_id, $this->form_settings, $this->form_fields );
+
+        $action = isset( $_POST['action'] ) ? sanitize_text_field( wp_unslash( $_POST['action'] ) ) : '';
+        // phpcs:enable WordPress.Security.NonceVerification.Missing
+
+        return [
+            'post_id'        => $post_id,
+            'action'         => $action,
+            'date'           => current_time( 'mysql' ),
+            'post_author'    => $current_user_id,
+            'comment_status' => get_option( 'default_comment_status' ),
+            'url'            => add_query_arg( 'preview', 'true', get_permalink( $post_id ) ),
+            'message'        => __( 'Post Saved', 'wp-user-frontend' ),
+        ];
+    }
+}

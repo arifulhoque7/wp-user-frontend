@@ -16,9 +16,19 @@ const MAP = {
     recharts: { global: [ 'wpuf', 'ui', 'recharts' ], handle: 'wpuf-admin-ui' },
 };
 
+// The frontend apps (webpack.frontend.config.js): the kit and the icons come
+// from the runtime bundle, published on window.wpuf.frontend.
+const FRONTEND_MAP = {
+    '@wpuf/frontend-kit': { global: [ 'wpuf', 'frontend' ], handle: 'wpuf-frontend-runtime' },
+    'lucide-react': { global: [ 'wpuf', 'frontend', 'icons' ], handle: 'wpuf-frontend-runtime' },
+};
+
 module.exports = {
     MAP,
+    FRONTEND_MAP,
     // DependencyExtractionWebpackPlugin options.
     requestToExternal: ( request ) => ( MAP[ request ] ? MAP[ request ].global : undefined ),
     requestToHandle: ( request ) => ( MAP[ request ] ? MAP[ request ].handle : undefined ),
+    frontendRequestToExternal: ( request ) => ( FRONTEND_MAP[ request ] ? FRONTEND_MAP[ request ].global : undefined ),
+    frontendRequestToHandle: ( request ) => ( FRONTEND_MAP[ request ] ? FRONTEND_MAP[ request ].handle : undefined ),
 };

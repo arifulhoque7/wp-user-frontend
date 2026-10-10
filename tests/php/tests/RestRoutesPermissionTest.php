@@ -24,6 +24,20 @@ class RestRoutesPermissionTest extends WP_UnitTestCase {
         '/wpuf/v1/user_directory/search' => 'frontend user directory search for visitors (free module, as on develop)',
     ];
 
+    /**
+     * Route prefixes of the frontend apps: scoped to the logged-in user (a
+     * subscriber is the intended caller) or public when the form itself is
+     * public. Their gates are proved route by route in FrontendFormRestTest,
+     * AccountRestTest and UploadsRestTest, not by this admin-side walk.
+     *
+     * @var string[]
+     */
+    const USER_SCOPED = [
+        '/wpuf/v1/account',
+        '/wpuf/v1/forms/(?P<id>\\d+)',
+        '/wpuf/v1/uploads',
+    ];
+
     public function set_up() {
         parent::set_up();
 
@@ -98,6 +112,16 @@ class RestRoutesPermissionTest extends WP_UnitTestCase {
         }
     }
 
+    private function is_user_scoped( $route ) {
+        foreach ( self::USER_SCOPED as $prefix ) {
+            if ( 0 === strpos( $route, $prefix ) ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function test_visitors_and_subscribers_are_refused_on_every_wpuf_route() {
         $routes   = rest_get_server()->get_routes();
         $checked  = 0;
@@ -108,7 +132,7 @@ class RestRoutesPermissionTest extends WP_UnitTestCase {
         ];
 
         foreach ( $routes as $route => $handlers ) {
-            if ( 0 !== strpos( $route, '/wpuf/v1' ) || isset( self::PUBLIC[ $route ] ) ) {
+            if ( 0 !== strpos( $route, '/wpuf/v1' ) || isset( self::PUBLIC[ $route ] ) || $this->is_user_scoped( $route ) ) {
                 continue;
             }
 

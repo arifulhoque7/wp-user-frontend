@@ -1,0 +1,507 @@
+/**
+ * The React account page in the FlyHR profile layout: header card, sticky
+ * left rail, content column; stats strip and cards from the kit. Every
+ * rule under `.wpuf-frontend`; the classic container classes stay for CSS
+ * written against them.
+ */
+
+.wpuf-frontend .wpuf-account-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    /* The layout keys off the container the theme gives us, not the viewport:
+       a 620px content column stacks the rail, a wide one puts it beside. */
+    container-type: inline-size;
+    container-name: wpuf-account;
+}
+
+/* ---- Header card ---- */
+.wpuf-frontend .wpuf-profile-header {
+    background: var(--wpuf-surface);
+    border: 1px solid var(--wpuf-border);
+    border-radius: var(--wpuf-radius-lg);
+    box-shadow: var(--wpuf-shadow);
+    padding: 24px;
+    text-align: start;
+}
+
+.wpuf-frontend .wpuf-profile-header__main {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+.wpuf-frontend .wpuf-profile-header__text {
+    flex: 1;
+    min-width: 200px;
+}
+
+.wpuf-frontend .wpuf-profile-header__name-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+}
+
+.wpuf-frontend .wpuf-profile-name {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--wpuf-text);
+}
+
+.wpuf-frontend .wpuf-profile-header__line {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 8px 0 0;
+    color: var(--wpuf-muted);
+    overflow-wrap: anywhere;
+}
+
+.wpuf-frontend .wpuf-profile-header__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.wpuf-frontend .wpuf-profile-header__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 20px -24px 0;
+    padding: 16px 24px 0;
+    border-top: 1px solid var(--wpuf-border);
+}
+
+.wpuf-frontend .wpuf-meta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border: 1px solid var(--wpuf-border);
+    border-radius: 999px;
+    background: var(--wpuf-soft);
+    color: var(--wpuf-text);
+    font-size: 12px;
+    text-decoration: none;
+}
+
+.wpuf-frontend a.wpuf-meta-pill:hover {
+    border-color: #d1d5db;
+    color: var(--wpuf-text);
+}
+
+/* ---- Body: rail + content ---- */
+.wpuf-frontend .wpuf-account-body {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    align-items: flex-start;
+}
+
+.wpuf-frontend .wpuf-account-sidebar {
+    width: 100%;
+    flex: none;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+}
+
+.wpuf-frontend .wpuf-account-nav {
+    background: var(--wpuf-surface);
+    border: 1px solid var(--wpuf-border);
+    border-radius: var(--wpuf-radius-lg);
+    box-shadow: var(--wpuf-shadow);
+    padding: 12px;
+}
+
+.wpuf-frontend .wpuf-account-nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.wpuf-frontend .wpuf-account-nav li {
+    margin: 0;
+    padding: 0;
+}
+
+.wpuf-frontend .wpuf-account-menu-toggle {
+    display: none;
+}
+
+.wpuf-frontend .wpuf-account-content {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+@container wpuf-account (min-width: 860px) {
+    .wpuf-frontend .wpuf-account-body {
+        flex-direction: row;
+    }
+
+    .wpuf-frontend .wpuf-account-sidebar {
+        width: 240px;
+        position: sticky;
+        top: 88px;
+    }
+}
+
+@container wpuf-account (min-width: 860px) {
+    .wpuf-frontend .wpuf-account-menu-toggle {
+        display: none;
+    }
+
+    .wpuf-frontend .wpuf-account-nav {
+        display: block;
+    }
+}
+
+@container wpuf-account (max-width: 859.98px) {
+    .wpuf-frontend .wpuf-account-menu-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        min-height: 44px;
+        padding: 10px 14px;
+        border: 1px solid var(--wpuf-border);
+        border-radius: var(--wpuf-radius-lg);
+        background: var(--wpuf-surface);
+        color: var(--wpuf-text);
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .wpuf-frontend .wpuf-account-nav {
+        display: none;
+        margin-top: 8px;
+    }
+
+    .wpuf-frontend .wpuf-account-nav.is-open {
+        display: block;
+    }
+}
+
+/* ---- Overview ---- */
+.wpuf-frontend .wpuf-overview {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.wpuf-frontend .wpuf-overview__stats {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.wpuf-frontend .wpuf-overview__links {
+    margin: 0;
+    color: var(--wpuf-muted);
+}
+
+.wpuf-frontend .wpuf-overview__links a {
+    color: var(--wpuf-text);
+    text-decoration: underline;
+}
+
+/* ---- Section heads ---- */
+.wpuf-frontend .wpuf-section-head {
+    margin: 0;
+}
+
+.wpuf-frontend .wpuf-section-head__title {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--wpuf-text);
+}
+
+.wpuf-frontend .wpuf-section-head__lead {
+    margin: 6px 0 0;
+    color: var(--wpuf-muted);
+}
+
+/* ---- Posts table ---- */
+.wpuf-frontend .wpuf-posts-card {
+    padding: 0;
+    overflow: hidden;
+}
+
+.wpuf-frontend .wpuf-posts-card > .wpuf-card__body {
+    padding: 0;
+}
+
+.wpuf-frontend .wpuf-posts-card .wpuf-pagination {
+    padding: 16px;
+    margin: 0;
+    border-top: 1px solid var(--wpuf-border);
+}
+
+.wpuf-frontend .wpuf-empty {
+    padding: 32px 16px;
+    text-align: center;
+}
+
+.wpuf-frontend .wpuf-table-wrap {
+    overflow-x: auto;
+}
+
+.wpuf-frontend .wpuf-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+    border: 0;
+}
+
+.wpuf-frontend .wpuf-table th,
+.wpuf-frontend .wpuf-table td {
+    padding: 14px 16px;
+    text-align: start;
+    vertical-align: middle;
+    border: 0;
+    border-bottom: 1px solid var(--wpuf-border);
+    background: transparent;
+}
+
+.wpuf-frontend .wpuf-table th {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--wpuf-muted);
+    background: var(--wpuf-soft);
+}
+
+.wpuf-frontend .wpuf-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.wpuf-frontend .wpuf-table tbody tr:hover td {
+    background: var(--wpuf-soft);
+}
+
+.wpuf-frontend .wpuf-table__title {
+    font-weight: 500;
+}
+
+.wpuf-frontend .wpuf-table__title a {
+    color: var(--wpuf-text);
+    text-decoration: none;
+}
+
+.wpuf-frontend .wpuf-table__title a:hover {
+    text-decoration: underline;
+}
+
+.wpuf-frontend .wpuf-table__title .wpuf-pill {
+    margin-inline-start: 8px;
+}
+
+.wpuf-frontend .wpuf-table__thumb {
+    display: block;
+    width: 56px;
+    height: 56px;
+    border-radius: 6px;
+    object-fit: cover;
+    background: var(--wpuf-hover);
+}
+
+.wpuf-frontend .wpuf-table__actions {
+    text-align: end;
+    white-space: nowrap;
+}
+
+.wpuf-frontend .wpuf-row-actions {
+    display: inline-flex;
+    gap: 4px;
+}
+
+.wpuf-frontend .wpuf-row-actions__delete:hover:not(:disabled) {
+    color: var(--wpuf-danger);
+    background: var(--wpuf-danger-soft);
+}
+
+@media (max-width: 640px) {
+    .wpuf-frontend .wpuf-table thead {
+        display: none;
+    }
+
+    .wpuf-frontend .wpuf-table tr {
+        display: block;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--wpuf-border);
+    }
+
+    .wpuf-frontend .wpuf-table td {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 6px 16px;
+        border: 0;
+    }
+
+    .wpuf-frontend .wpuf-table td::before {
+        content: attr(data-label);
+        font-size: 12px;
+        color: var(--wpuf-muted);
+    }
+
+    .wpuf-frontend .wpuf-table__actions {
+        text-align: start;
+    }
+}
+
+/* ---- Profile forms ---- */
+.wpuf-frontend .wpuf-edit-profile-container,
+.wpuf-frontend .wpuf-change-password-container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.wpuf-frontend .wpuf-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0 0 20px;
+}
+
+.wpuf-frontend .wpuf-form-grid {
+    display: grid;
+    gap: 0 20px;
+    grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+    .wpuf-frontend .wpuf-form-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+.wpuf-frontend .wpuf-form-label {
+    font-weight: 600;
+    color: var(--wpuf-text);
+}
+
+.wpuf-frontend .wpuf-form-label .required {
+    color: var(--wpuf-danger);
+}
+
+.wpuf-frontend .wpuf-form-control {
+    position: relative;
+}
+
+.wpuf-frontend .wpuf-form-input {
+    display: block;
+    width: 100%;
+    min-height: 40px;
+    padding: 8px 12px;
+    border: 1px solid var(--wpuf-border);
+    border-radius: var(--wpuf-radius);
+    background: var(--wpuf-surface);
+    color: var(--wpuf-text);
+    font: inherit;
+    font-size: var(--wpuf-size);
+    line-height: 1.4;
+    box-shadow: none;
+    margin: 0;
+}
+
+.wpuf-frontend .wpuf-form-input:focus {
+    outline: none;
+    border-color: var(--wpuf-primary);
+    box-shadow: var(--wpuf-focus);
+}
+
+.wpuf-frontend .has-error .wpuf-form-input {
+    border-color: var(--wpuf-danger);
+}
+
+.wpuf-frontend .wpuf-form-eye {
+    position: absolute;
+    top: 50%;
+    inset-inline-end: 10px;
+    transform: translateY(-50%);
+    background: transparent;
+    border: 0;
+    padding: 4px;
+    color: var(--wpuf-muted);
+    cursor: pointer;
+    display: inline-flex;
+}
+
+.wpuf-frontend .wpuf-form-fieldset {
+    margin: 8px 0 20px;
+    padding: 16px;
+    border: 1px solid var(--wpuf-border);
+    border-radius: var(--wpuf-radius);
+}
+
+.wpuf-frontend .wpuf-form-fieldset legend {
+    padding: 0 6px;
+    font-weight: 600;
+    color: var(--wpuf-text);
+}
+
+.wpuf-frontend .wpuf-form-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.wpuf-frontend .wpuf-error-msg {
+    display: block;
+    font-size: 12px;
+    color: var(--wpuf-danger);
+}
+
+/* ---- Server HTML sections keep the classic Tailwind look of their templates ---- */
+.wpuf-frontend .wpuf-account-html {
+    min-width: 0;
+}
+
+/* ---- Boot skeleton (server-rendered before the app mounts) ---- */
+.wpuf-frontend .wpuf-account-boot {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    container-type: inline-size;
+    container-name: wpuf-account;
+}
+
+.wpuf-frontend .wpuf-account-boot .wpuf-skeleton-row {
+    display: flex;
+    gap: 12px;
+    padding: 10px 12px;
+}
+
+@container wpuf-account (min-width: 860px) {
+    .wpuf-frontend .wpuf-account-boot {
+        flex-direction: row;
+        align-items: flex-start;
+    }
+
+    .wpuf-frontend .wpuf-account-boot .wpuf-account-sidebar {
+        width: 240px;
+    }
+}

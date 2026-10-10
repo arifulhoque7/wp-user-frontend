@@ -31,7 +31,7 @@ class Frontend {
         // data, Oxygen, do_shortcode() in a template), so load the bundle the moment
         // a WPUF shortcode or form actually renders. Scripts print in the footer,
         // styles go through print_late_styles(), so this is safe after wp_head.
-        add_filter( 'pre_do_shortcode_tag', [ $this, 'enqueue_on_shortcode_render' ], 10, 2 );
+        add_filter( 'pre_do_shortcode_tag', [ $this, 'enqueue_on_shortcode_render' ], 10, 3 );
         add_action( 'wpuf_before_form_render', [ $this, 'enqueue_form_assets' ] );
 
         // show admin bar as per wpuf settings
@@ -46,14 +46,62 @@ class Frontend {
      * @return void
      */
     public function enqueue_scripts() {
-        if ( $this->should_load_form_assets() ) {
+        if ( $this->should_load_form_assets() && ! $this->react_renders_the_forms() ) {
             $this->enqueue_form_assets();
         }
 
         // Enqueue account page Tailwind CSS and JS
-        if ( wpuf_has_shortcode( 'wpuf_account' ) || wpuf_has_shortcode( 'wpuf_editprofile' ) ) {
+        if ( wpuf_has_shortcode( 'wpuf_editprofile' ) || ( wpuf_has_shortcode( 'wpuf_account' ) && ! $this->renderer()->is_react( 'account' ) ) ) {
             $this->enqueue_account_assets();
         }
+    }
+
+    /**
+     * The React or classic decision for this request.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return \WeDevs\Wpuf\Frontend\Renderer_Switch
+     */
+    private function renderer() {
+        return wpuf()->platform()->get( \WeDevs\Wpuf\Frontend\Renderer_Switch::class );
+    }
+
+    /**
+     * Whether the only reason to load the classic form bundle on this page is
+     * a post form the React app will render. Every other trigger (payment
+     * page, preview, Dokan, the block, Elementor, the other shortcodes) keeps
+     * the classic bundle; a form the render-time filter sends back to classic
+     * gets the bundle from enqueue_on_shortcode_render().
+     *
+     * @since WPUF_SINCE
+     *
+     * @return bool
+     */
+    private function react_renders_the_forms() {
+        global $post;
+
+        if ( ! $this->renderer()->is_react( 'post_form' ) ) {
+            return false;
+        }
+
+        $pay_page = intval( wpuf_get_option( 'payment_page', 'wpuf_payment' ) );
+
+        if ( ( isset( $post->ID ) && $pay_page === (int) $post->ID )
+            || isset( $_GET['wpuf_preview'] ) // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+            || $this->dokan_is_seller_dashboard()
+            || ( isset( $post->post_content ) && has_block( 'wpuf/post-form', $post ) )
+            || $this->elementor_needs_form_assets() ) {
+            return false;
+        }
+
+        foreach ( $this->get_asset_shortcodes() as $shortcode ) {
+            if ( ! in_array( $shortcode, [ 'wpuf_form', 'wpuf_edit', 'wpuf_account' ], true ) && wpuf_has_shortcode( $shortcode ) ) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -202,7 +250,26 @@ class Frontend {
      *
      * @return false|string
      */
-    public function enqueue_on_shortcode_render( $output, $tag ) {
+    public function enqueue_on_shortcode_render( $output, $tag, $attr = [] ) {
+        // This runs before the handler (pre_do_shortcode_tag): a shortcode the
+        // React app is about to render gets its assets from Renderer_Switch,
+        // not the classic bundle. Same decision, same inputs as the handler.
+        $renderer = $this->renderer();
+        $atts     = is_array( $attr ) ? $attr : [];
+        $form_id  = isset( $atts['id'] ) ? (int) $atts['id'] : 0;
+
+        if ( 'wpuf_form' === $tag && $renderer->is_react( 'post_form', $form_id, [ 'atts' => $atts ] ) ) {
+            return $output;
+        }
+
+        if ( 'wpuf_edit' === $tag && $renderer->is_react( 'edit_form', $form_id, [ 'atts' => $atts ] ) ) {
+            return $output;
+        }
+
+        if ( 'wpuf_account' === $tag && is_user_logged_in() && $renderer->is_react( 'account', 0, [ 'atts' => $atts ] ) ) {
+            return $output;
+        }
+
         if ( in_array( $tag, $this->get_asset_shortcodes(), true ) ) {
             $this->enqueue_form_assets();
         }
@@ -238,15 +305,17 @@ class Frontend {
      * @return void
      */
     public function enqueue_form_assets() {
-        global $post;
-
-        static $enqueued = false;
-
-        if ( $enqueued ) {
+        // The schema of a React form fires the render hooks this method listens to; the classic bundle stays off then.
+        if ( $this->renderer()->building() ) {
             return;
         }
 
-        $enqueued = true;
+        global $post;
+
+        // Once per request: the queue itself is the flag (a static survived across PHPUnit tests).
+        if ( wp_script_is( 'wpuf-frontend-form', 'enqueued' ) ) {
+            return;
+        }
 
         wp_enqueue_style( 'wpuf-layout1' );
         wp_enqueue_style( 'wpuf-frontend-forms' );

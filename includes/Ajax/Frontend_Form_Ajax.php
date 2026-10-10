@@ -7,6 +7,7 @@ use WeDevs\Wpuf\Platform\Stores\Stores;
 use DOMDocument;
 use WeDevs\Wpuf\Admin\Forms\Form;
 use WeDevs\Wpuf\Frontend\Frontend_Form;
+use WeDevs\Wpuf\Platform\Http\Ajax_Abort;
 use WeDevs\Wpuf\Traits\FieldableTrait;
 use WeDevs\Wpuf\User_Subscription;
 use WP_Error;
@@ -36,6 +37,9 @@ class Frontend_Form_Ajax {
      * @return void
      */
     public function submit_post() {
+        // The REST path pre-checks the same nonce in Submission_Service and
+        // runs this handler through Ajax_Abort::collect(); a failed check here
+        // can only come from the AJAX client.
         check_ajax_referer( 'wpuf_form_add' );
         add_filter( 'wpuf_form_fields', [ $this, 'add_field_settings' ] );
         @header( 'Content-Type: application/json; charset=' . get_option( 'blog_charset' ) );
@@ -478,6 +482,12 @@ class Frontend_Form_Ajax {
             }
 
             $response = $this->send_mail_for_guest( $charging_enabled, $post_id, $form_id, $is_update, $post_author, $meta_vars );
+
+            // A service (REST) collecting the answer gets it returned; the AJAX client gets it sent.
+            if ( Ajax_Abort::collecting() ) {
+                return $response;
+            }
+
             wpuf_clear_buffer();
 
             wp_send_json( $response );
@@ -539,7 +549,7 @@ class Frontend_Form_Ajax {
             'success'      => true,
             'redirect_to'  => $redirect_to,
             'show_message' => $show_message,
-            'message'      => $this->form_settings['message'],
+            'message'      => isset( $this->form_settings['message'] ) ? $this->form_settings['message'] : '',
         ];
 
         $guest_mode     = isset( $this->form_settings['post_permission'] ) && 'guest_post' === $this->form_settings['post_permission'] ? $this->form_settings['post_permission'] : '';
@@ -791,14 +801,12 @@ class Frontend_Form_Ajax {
 
                 // is valid email?
                 if ( ! is_email( $guest_email ) ) {
-                    echo wp_json_encode(
+                    Ajax_Abort::send(
                         [
                             'success' => false,
                             'error'   => __( 'Invalid email address.', 'wp-user-frontend' ),
                         ]
                     );
-
-                    die();
                 }
 
                 // check if the user email already exists
@@ -806,7 +814,7 @@ class Frontend_Form_Ajax {
 
                 if ( $user ) {
                     // $post_author = $user->ID;
-                    wp_send_json_error(
+                    Ajax_Abort::send_error(
                         [
                             'error'       => __( 'You already have an account in our site. Please login to continue.', 'wp-user-frontend' ),
                             'type'        => 'login',

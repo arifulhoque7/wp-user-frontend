@@ -1,0 +1,92 @@
+/**
+ * The lucide icons the frontend apps use, bundled once in the runtime and
+ * published as `wpuf.frontend.icons` (apps import them from the kit, never
+ * from lucide-react directly, so no second copy lands on the page). Named
+ * imports only: a namespace import would bundle the whole icon set.
+ *
+ * @since WPUF_SINCE
+ */
+import {
+    AlertCircle,
+    ArrowLeft,
+    BadgeDollarSign,
+    CalendarDays,
+    CheckCircle2,
+    ChevronDown,
+    ChevronLeft,
+    ChevronRight,
+    Eye,
+    EyeOff,
+    FileText,
+    Files,
+    House,
+    Image,
+    KeyRound,
+    LogOut,
+    Mail,
+    MapPin,
+    MessageCircle,
+    MoreHorizontal,
+    Pencil,
+    Receipt,
+    ShieldCheck,
+    SquarePen,
+    Trash2,
+    Upload,
+    UserRound,
+    X,
+} from 'lucide-react';
+
+export {
+    AlertCircle,
+    ArrowLeft,
+    BadgeDollarSign,
+    CalendarDays,
+    CheckCircle2,
+    ChevronDown,
+    ChevronLeft,
+    ChevronRight,
+    Eye,
+    EyeOff,
+    FileText,
+    Files,
+    House,
+    Image,
+    KeyRound,
+    LogOut,
+    Mail,
+    MapPin,
+    MessageCircle,
+    MoreHorizontal,
+    Pencil,
+    Receipt,
+    ShieldCheck,
+    SquarePen,
+    Trash2,
+    Upload,
+    UserRound,
+    X,
+};
+
+/** The kebab-case names the server sends (Account_Service::ICONS) and their icons. */
+const BY_NAME = {
+    'alert-circle': AlertCircle,
+    'badge-dollar-sign': BadgeDollarSign,
+    'calendar-days': CalendarDays,
+    'file-text': FileText,
+    files: Files,
+    house: House,
+    image: Image,
+    'key-round': KeyRound,
+    'log-out': LogOut,
+    mail: Mail,
+    'map-pin': MapPin,
+    'message-circle': MessageCircle,
+    receipt: Receipt,
+    'shield-check': ShieldCheck,
+    'square-pen': SquarePen,
+    'user-round': UserRound,
+};
+
+/** Resolve an icon name from the server to a component (FileText when unknown). */
+export const iconByName = ( name ) => BY_NAME[ String( name || '' ) ] || FileText;

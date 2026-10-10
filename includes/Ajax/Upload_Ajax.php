@@ -11,133 +11,63 @@ class Upload_Ajax {
 
     public function upload_file( $image_only = false ) {
         $nonce = isset( $_REQUEST['nonce'] ) ? sanitize_key( wp_unslash( $_REQUEST['nonce'] ) ) : '';
+
         if ( isset( $nonce ) && ! wp_verify_nonce( $nonce, 'wpuf-upload-nonce' ) ) {
             return;
         }
-        // a valid request will have a form ID
-        $form_id = isset( $_POST['form_id'] ) ? intval( wp_unslash( $_POST['form_id'] ) ) : false;
-        if ( ! $form_id ) {
+
+        // The body lives in Upload_Service::upload() (shared with REST); the
+        // answers below are byte for byte what this action always printed.
+        $form_id    = isset( $_POST['form_id'] ) ? intval( wp_unslash( $_POST['form_id'] ) ) : 0;
+        $field_type = isset( $_REQUEST['type'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['type'] ) ) : '';
+        $wpuf_file  = isset( $_FILES['wpuf_file'] ) ? (array) $_FILES['wpuf_file'] : []; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- the entries are checked by wp_handle_upload()
+        $service    = wpuf()->platform()->get( \WeDevs\Wpuf\Frontend\Forms\Upload_Service::class );
+
+        if ( ! $form_id || ! $service->can_upload( $form_id ) ) {
             die( 'error' );
         }
-        $field_type = isset( $_REQUEST['type'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['type'] ) ) : '';
-        /**
-         * Hook fires before begining upload process
-         *
-         * @since 3.3.0
-         *
-         * @param int    $form_id
-         * @param string $field_type
-         */
-        do_action( 'wpuf_upload_file_init', $form_id, $field_type );
-        // check if guest post enabled for guests
-        if ( ! is_user_logged_in() ) {
-            $guest_post    = false;
-            $form_settings = wpuf_get_form_settings( $form_id );
-            if ( isset( $form_settings['post_permission'] ) && 'guest_post' === $form_settings['post_permission'] ) {
-                $guest_post = true;
-            }
-            // check if the request coming from weForms & allow users to upload when require login option is disabled
-            if ( isset( $form_settings['require_login'] ) && $form_settings['require_login'] == 'false' ) {
-                $guest_post = true;
-            }
-            //if it is registration form, let the user upload the file
-            if ( get_post_type( $form_id ) == 'wpuf_profile' ) {
-                $guest_post = true;
-            }
-            if ( ! $guest_post ) {
-                die( 'error' );
-            }
-        }
-        $wpuf_file = isset( $_FILES['wpuf_file'] ) ? (array) $_FILES['wpuf_file'] : []; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- the entries are checked by wp_handle_upload()
-        $wpuf_file = wp_parse_args(
-            $wpuf_file, [
-				'name' => '',
-				'type' => '',
-				'tmp_name' => '',
-				'error' => UPLOAD_ERR_NO_FILE,
-				'size' => 0,
-			]
-        );
-        $file_name      = pathinfo( $wpuf_file['name'], PATHINFO_FILENAME );
-        $file_extension = pathinfo( $wpuf_file['name'], PATHINFO_EXTENSION );
-        $upload = [
-            'name'     => $file_name . '.' . $file_extension,
-            'type'     => $wpuf_file['type'],
-            'tmp_name' => $wpuf_file['tmp_name'],
-            'error'    => $wpuf_file['error'],
-            'size'     => $wpuf_file['size'],
-        ];
+
         header( 'Content-Type: text/html; charset=' . get_option( 'blog_charset' ) );
-        $attach = $this->handle_upload( $upload );
-        if ( $attach['success'] ) {
-            $response = [ 'success' => true ];
-            if ( $image_only ) {
-                $image_size = wpuf_get_option( 'insert_photo_size', 'wpuf_frontend_posting', 'thumbnail' );
-                $image_type = wpuf_get_option( 'insert_photo_type', 'wpuf_frontend_posting', 'link' );
-                /**
-                 * Filter upload image size for response
-                 *
-                 * @since 3.3.0
-                 *
-                 * @param string $image_size
-                 * @param int    $form_id
-                 * @param string $field_type
-                 */
-                $image_size = apply_filters( 'wpuf_upload_response_image_size', $image_size, $form_id, $field_type );
-                /**
-                 * Filter upload image type for response
-                 *
-                 * @since 3.3.0
-                 *
-                 * @param string $image_size
-                 * @param int    $form_id
-                 * @param string $field_type
-                 */
-                $image_type = apply_filters( 'wpuf_upload_response_image_type', $image_type, $form_id, $field_type );
-                if ( $image_type == 'link' ) {
-                    $response['html'] = wp_get_attachment_link( $attach['attach_id'], $image_size );
-                } else {
-                    $response['html'] = wp_get_attachment_image( $attach['attach_id'], $image_size );
-                }
-            } else {
-                $response['html'] = self::attach_html( $attach['attach_id'], $field_type, $form_id );
-            }
-            echo wp_kses(
-                $response['html'], [
-                    'li'       => [
-                        'class' => [],
-                    ],
-                    'div'      => [
-                        'class' => [],
-                    ],
-                    'img'      => [
-                        'src'   => [],
-                        'alt'   => [],
-                        'class' => [],
-                    ],
-                    'input'    => [
-                        'type'        => [],
-                        'name'        => [],
-                        'value'       => [],
-                        'placeholder' => [],
-                    ],
-                    'textarea' => [
-                        'name'        => [],
-                        'placeholder' => [],
-                    ],
-                    'a'        => [
-                        'href'           => [],
-                        'class'          => [],
-                        'data-attach-id' => [],
-                    ],
-                    'span'     => [
-                        'class' => [],
-                    ],
-                ]
-            );
-        } else {
-            wp_send_json_error( $attach['error'], 200 );
+
+        $result = $service->upload( $wpuf_file, $form_id, $field_type, (bool) $image_only );
+
+        if ( is_wp_error( $result ) ) {
+            wp_send_json_error( $result->get_error_message(), 200 );
         }
+
+        echo wp_kses(
+            $result['html'], [
+                'li'       => [
+                    'class' => [],
+                ],
+                'div'      => [
+                    'class' => [],
+                ],
+                'img'      => [
+                    'src'   => [],
+                    'alt'   => [],
+                    'class' => [],
+                ],
+                'input'    => [
+                    'type'        => [],
+                    'name'        => [],
+                    'value'       => [],
+                    'placeholder' => [],
+                ],
+                'textarea' => [
+                    'name'        => [],
+                    'placeholder' => [],
+                ],
+                'a'        => [
+                    'href'           => [],
+                    'class'          => [],
+                    'data-attach-id' => [],
+                ],
+                'span'     => [
+                    'class' => [],
+                ],
+            ]
+        );
         exit;
     }
 
@@ -312,25 +242,19 @@ class Upload_Ajax {
 
     public function delete_file() {
         check_ajax_referer( 'wpuf_nonce', 'nonce' );
+
         $attachment_id = isset( $_POST['attach_id'] ) ? absint( wp_unslash( $_POST['attach_id'] ) ) : 0;
-        if ( empty( $attachment_id ) ) {
-            wp_send_json_error( [ 'message' => __( 'attach_id is required.', 'wp-user-frontend' ) ], 422 );
-        }
-        $attachment = get_post( $attachment_id );
+        $result        = wpuf()->platform()->get( \WeDevs\Wpuf\Frontend\Forms\Upload_Service::class )->delete( $attachment_id );
 
-        if ( empty( $attachment ) || 'attachment' !== $attachment->post_type ) {
-            wp_send_json_error( [ 'message' => __( 'attachment not found.', 'wp-user-frontend' ) ] );
-        }
+        if ( is_wp_error( $result ) ) {
+            $data   = $result->get_error_data();
+            $status = isset( $data['status'] ) ? (int) $data['status'] : 422;
 
-        if ( ! $this->can_delete_attachment( $attachment ) ) {
-            wp_send_json_error( [ 'message' => __( 'You are not allowed to delete this attachment.', 'wp-user-frontend' ) ], 403 );
+            // 404 answered with the default status, as this action always did.
+            wp_send_json_error( [ 'message' => $result->get_error_message() ], 404 === $status ? null : $status );
         }
 
-        $deleted = wp_delete_attachment( $attachment_id, true );
-        if ( $deleted ) {
-            wp_send_json_success( [ 'message' => __( 'Attachment deleted successfully.', 'wp-user-frontend' ) ] );
-        }
-        wp_send_json_error( [ 'message' => __( 'Could not delete the attachment', 'wp-user-frontend' ) ], 422 );
+        wp_send_json_success( [ 'message' => __( 'Attachment deleted successfully.', 'wp-user-frontend' ) ] );
     }
 
     /**
@@ -348,7 +272,7 @@ class Upload_Ajax {
      *
      * @return bool
      */
-    protected function can_delete_attachment( $attachment ) {
+    public function can_delete_attachment( $attachment ) {
         // Users able to manage others' content (editors, admins) keep full control.
         if ( current_user_can( 'delete_private_pages' ) ) {
             return true;

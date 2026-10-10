@@ -2,6 +2,8 @@
 
 namespace WeDevs\Wpuf\Frontend;
 
+use WeDevs\Wpuf\Frontend\Account\Account_Service;
+
 use stdClass;
 use WeDevs\Wpuf\Admin\Subscription;
 use WeDevs\Wpuf\User_Subscription;
@@ -88,9 +90,15 @@ class Frontend_Account {
      *
      * @since 2.4.2
      */
-    public function shortcode( $atts ) {
+    public function shortcode( $atts, $content = '', $tag = 'wpuf_account' ) {
         //phpcs:ignore
         extract( shortcode_atts( [], $atts ) );
+
+        // [wpuf_editprofile] shares this handler and stays classic; the account shortcode may mount the React app.
+        if ( 'wpuf_account' === $tag && is_user_logged_in() && $this->renderer()->is_react( 'account', 0, [ 'atts' => $atts ] ) ) {
+            return $this->react_account();
+        }
+
         ob_start();
         if ( is_user_logged_in() ) {
             $default_active_tab = wpuf_get_option( 'account_page_active_tab', 'wpuf_my_account', 'dashboard' );
@@ -309,50 +317,11 @@ class Frontend_Account {
             wp_die();
         }
 
-        $current_user = wp_get_current_user();
-
-        // Passwords are intentionally not sanitized, only unslashed, so the
-        // characters the user typed are compared and stored verbatim.
-        // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-        $current_password = ! empty( $_POST['current_password'] ) ? wp_unslash( $_POST['current_password'] ) : '';
-        $pass1            = ! empty( $_POST['pass1'] ) ? wp_unslash( $_POST['pass1'] ) : '';
-        $pass2            = ! empty( $_POST['pass2'] ) ? wp_unslash( $_POST['pass2'] ) : '';
-        // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-
-        if ( empty( $current_password ) ) {
-            wp_send_json_error( __( 'Please enter your current password.', 'wp-user-frontend' ) );
-            return;
-        }
-
-        if ( empty( $pass1 ) ) {
-            wp_send_json_error( __( 'Please enter a new password.', 'wp-user-frontend' ) );
-            return;
-        }
-
-        if ( empty( $pass2 ) ) {
-            wp_send_json_error( __( 'Please confirm your new password.', 'wp-user-frontend' ) );
-            return;
-        }
-
-        if ( $pass1 !== $pass2 ) {
-            wp_send_json_error( __( 'New passwords do not match.', 'wp-user-frontend' ) );
-            return;
-        }
-
-        if ( ! wp_check_password( $current_password, $current_user->user_pass, $current_user->ID ) ) {
-            wp_send_json_error( __( 'Your current password is incorrect.', 'wp-user-frontend' ) );
-            return;
-        }
-
-        $result = wp_update_user(
-            [
-				'ID'        => $current_user->ID,
-				'user_pass' => $pass1,
-			]
-        );
+        // The body lives in Account_Service::change_password() (shared with REST).
+        $result = $this->account()->change_password( wp_unslash( $_POST ) );
 
         if ( is_wp_error( $result ) ) {
-            wp_send_json_error( __( 'Could not update password. Please try again.', 'wp-user-frontend' ) );
+            wp_send_json_error( $result->get_error_message() );
             return;
         }
 
@@ -389,63 +358,89 @@ class Frontend_Account {
         if ( isset( $nonce ) && ! wp_verify_nonce( $nonce, 'wpuf-account-update-profile' ) ) {
             wp_send_json_error( __( 'Nonce failure', 'wp-user-frontend' ) );
         }
-        global $current_user;
-        $first_name       = ! empty( $_POST['first_name'] ) ? sanitize_text_field( wp_unslash( $_POST['first_name'] ) ) : '';
-        $last_name        = ! empty( $_POST['last_name'] ) ? sanitize_text_field( wp_unslash( $_POST['last_name'] ) ) : '';
-        $email            = ! empty( $_POST['email'] ) ? sanitize_text_field( wp_unslash( $_POST['email'] ) ) : '';
-        $current_password = ! empty( $_POST['current_password'] ) ? sanitize_text_field( wp_unslash( $_POST['current_password'] ) ) : '';
-        $pass1            = ! empty( $_POST['pass1'] ) ? sanitize_text_field( wp_unslash( $_POST['pass1'] ) ) : '';
-        $pass2            = ! empty( $_POST['pass2'] ) ? sanitize_text_field( wp_unslash( $_POST['pass2'] ) ) : '';
-        $save_pass        = true;
-        if ( empty( $first_name ) ) {
-            wp_send_json_error( __( 'First Name is a required field.', 'wp-user-frontend' ) );
-        }
-        if ( empty( $last_name ) ) {
-            wp_send_json_error( __( 'Last Name is a required field.', 'wp-user-frontend' ) );
-        }
-        if ( empty( $email ) ) {
-            wp_send_json_error( __( 'Email is a required field.', 'wp-user-frontend' ) );
-        }
-        $user             = new stdClass();
-        $user->ID         = $current_user->ID;
-        $user->first_name = $first_name;
-        $user->last_name  = $last_name;
-        if ( $email ) {
-            $email = sanitize_email( $email );
-            if ( ! is_email( $email ) ) {
-                wp_send_json_error( __( 'Please provide a valid email address.', 'wp-user-frontend' ) );
-            } elseif ( email_exists( $email ) && $email !== $current_user->user_email ) {
-                wp_send_json_error( __( 'This email address is already registered.', 'wp-user-frontend' ) );
-            }
-            $user->user_email = $email;
-        }
-        if ( ! empty( $current_password ) && empty( $pass1 ) && empty( $pass2 ) ) {
-            wp_send_json_error( __( 'Please fill out all password fields.', 'wp-user-frontend' ) );
-            $save_pass = false;
-        } elseif ( ! empty( $pass1 ) && empty( $current_password ) ) {
-            wp_send_json_error( __( 'Please enter your current password.', 'wp-user-frontend' ) );
-            $save_pass = false;
-        } elseif ( ! empty( $pass1 ) && empty( $pass2 ) ) {
-            wp_send_json_error( __( 'Please re-enter your password.', 'wp-user-frontend' ) );
-            $save_pass = false;
-        } elseif ( ( ! empty( $pass1 ) || ! empty( $pass2 ) ) && $pass1 !== $pass2 ) {
-            wp_send_json_error( __( 'New passwords do not match.', 'wp-user-frontend' ) );
-            $save_pass = false;
-        } elseif ( ! empty( $pass1 ) && ! wp_check_password(
-            $current_password, $current_user->user_pass,
-            $current_user->ID
-        ) ) {
-            wp_send_json_error( __( 'Your current password is incorrect.', 'wp-user-frontend' ) );
-            $save_pass = false;
-        }
-        if ( $pass1 && $save_pass ) {
-            $user->user_pass = $pass1;
-        }
-        $result = wp_update_user( $user );
+
+        // The body lives in Account_Service::update_profile() (shared with REST).
+        $result = $this->account()->update_profile( wp_unslash( $_POST ) );
+
         if ( is_wp_error( $result ) ) {
-            wp_send_json_error( __( 'Your current password is incorrect.', 'wp-user-frontend' ) );
+            wp_send_json_error( $result->get_error_message() );
         }
+
         wp_send_json_success();
+    }
+
+    /**
+     * The React or classic decision for this request.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return Renderer_Switch
+     */
+    protected function renderer() {
+        return wpuf()->platform()->get( Renderer_Switch::class );
+    }
+
+    /**
+     * The account data and actions.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return Account_Service
+     */
+    protected function account() {
+        return wpuf()->platform()->get( Account_Service::class );
+    }
+
+    /**
+     * The markup the React account app mounts into: the classic container
+     * class, the profile, sections and stats as boot data, a skeleton of the
+     * sidebar and content. Sections served as server HTML still need the
+     * classic form bundle (billing, subscription, submit post), so it is
+     * enqueued when any such section is listed.
+     *
+     * @since WPUF_SINCE
+     *
+     * @return string
+     */
+    protected function react_account() {
+        $account  = $this->account();
+        $sections = $account->sections();
+        $boot     = [
+            'id'       => get_current_user_id(),
+            'profile'  => $account->profile(),
+            'sections' => $sections,
+            'stats'    => $account->stats(),
+            'settings' => [
+                'page_url'    => $account->page_url(),
+                'default_tab' => wpuf_get_option( 'account_page_active_tab', 'wpuf_my_account', 'dashboard' ),
+                'per_page'    => (int) wpuf_get_option( 'per_page', 'wpuf_dashboard', 5 ),
+                'post_types'  => $account->allowed_post_types(),
+            ],
+            'nonces'   => [
+                'profile'  => wp_create_nonce( 'wpuf-account-update-profile' ),
+                'password' => wp_create_nonce( 'wpuf-account-change-password' ),
+            ],
+        ];
+
+        foreach ( $sections as $section ) {
+            if ( 'html' === $section['kind'] ) {
+                wpuf()->frontend->enqueue_form_assets();
+                break;
+            }
+        }
+
+        $items = '';
+
+        foreach ( array_slice( $sections, 0, 6 ) as $section ) {
+            $items .= '<li><span class="wpuf-account-nav-item wpuf-skeleton-row"><span class="wpuf-skeleton wpuf-skeleton-icon"></span><span class="wpuf-skeleton wpuf-skeleton-label"></span></span></li>';
+        }
+
+        $skeleton = sprintf(
+            '<div class="wpuf-account-container wpuf-account-boot" aria-busy="true"><aside class="wpuf-account-sidebar"><div class="wpuf-profile-section"><span class="wpuf-skeleton wpuf-skeleton-avatar"></span><span class="wpuf-skeleton wpuf-skeleton-label"></span></div><nav class="wpuf-account-nav"><ul>%s</ul></nav></aside><div class="wpuf-account-content"><span class="wpuf-skeleton wpuf-skeleton-card"></span></div></div>',
+            $items
+        );
+
+        return $this->renderer()->markup( 'account', $boot, $skeleton, 'wpuf-account-react' );
     }
 
     /**

@@ -1,0 +1,396 @@
+<?php
+/**
+ * REST: the post form on the front end (schema, submit, draft, helpers)
+ *
+ * @package WP_User_Frontend
+ * @since WPUF_SINCE
+ */
+
+namespace WeDevs\Wpuf\Platform\REST\Controllers;
+
+use WeDevs\Wpuf\Frontend\Forms\Form_Schema;
+use WeDevs\Wpuf\Frontend\Forms\Submission_Service;
+use WeDevs\Wpuf\Platform\REST\Rate_Limit;
+use WeDevs\Wpuf\Platform\REST\RestController;
+use WP_Error;
+use WP_REST_Request;
+use WP_REST_Server;
+
+/**
+ * `wpuf/v1/forms/{id}/...` for the React post form. Public only where the
+ * form itself is public (guest posting); every write carries the form nonce
+ * the schema handed out, guests are rate limited, and the submit runs the
+ * same service (and therefore the same validation, hooks and redirects) as
+ * the admin-ajax action.
+ *
+ * @since WPUF_SINCE
+ */
+class FormsPublicController extends RestController {
+
+    /**
+     * Resource name for error codes.
+     *
+     * @var string
+     */
+    protected $resource = 'form';
+
+    /**
+     * Schema builder.
+     *
+     * @var Form_Schema
+     */
+    private $form_schema;
+
+    /**
+     * Submissions.
+     *
+     * @var Submission_Service
+     */
+    private $submissions;
+
+    /**
+     * Rate limiter.
+     *
+     * @var Rate_Limit
+     */
+    private $limiter;
+
+    /**
+     * @since WPUF_SINCE
+     *
+     * @param Form_Schema        $schema      Schema builder
+     * @param Submission_Service $submissions Submissions
+     * @param Rate_Limit         $limiter     Rate limiter
+     */
+    public function __construct( Form_Schema $schema, Submission_Service $submissions, Rate_Limit $limiter ) {
+        $this->form_schema = $schema;
+        $this->submissions = $submissions;
+        $this->limiter     = $limiter;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function register_routes() {
+        $id = [
+            'id' => [
+                'type'     => 'integer',
+                'required' => true,
+                'minimum'  => 1,
+            ],
+        ];
+
+        $this->route(
+            '/forms/(?P<id>\d+)/schema', WP_REST_Server::READABLE, 'get_schema', [ $this, 'can_read' ], $id + [
+				'post_id' => [
+					'type'    => 'integer',
+					'default' => 0,
+				],
+				'page_id' => [
+					'type'    => 'integer',
+					'default' => 0,
+				],
+			]
+        );
+        $this->route( '/forms/(?P<id>\d+)/submissions', WP_REST_Server::CREATABLE, 'create_submission', [ $this, 'can_submit' ], $id );
+        $this->route( '/forms/(?P<id>\d+)/submissions/(?P<post_id>\d+)', WP_REST_Server::EDITABLE, 'update_submission', [ $this, 'can_edit' ], $id );
+        $this->route( '/forms/(?P<id>\d+)/drafts', WP_REST_Server::CREATABLE, 'create_draft', [ $this, 'can_edit' ], $id );
+        $this->route(
+            '/forms/(?P<id>\d+)/terms', WP_REST_Server::READABLE, 'get_terms', [ $this, 'can_read' ], $id + [
+				'taxonomy' => [
+					'type'    => 'string',
+					'default' => 'category',
+				],
+				'parent'   => [
+					'type'    => 'integer',
+					'default' => 0,
+				],
+			]
+        );
+        $this->route( '/forms/(?P<id>\d+)/embed', WP_REST_Server::CREATABLE, 'get_embed', [ $this, 'can_edit' ], $id );
+        $this->route(
+            '/forms/(?P<id>\d+)/states', WP_REST_Server::READABLE, 'get_states', [ $this, 'can_read' ], $id + [
+				'country' => [
+					'type'     => 'string',
+					'required' => true,
+				],
+			]
+        );
+    }
+
+    /**
+     * Reading the form: logged in, or a form that accepts guests.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param WP_REST_Request $request Request
+     *
+     * @return true|WP_Error
+     */
+    public function can_read( WP_REST_Request $request ) {
+        $form_id = (int) $request['id'];
+
+        if ( 'wpuf_forms' !== get_post_type( $form_id ) ) {
+            return $this->error( 'not_found', __( 'Your selected form is no longer available.', 'wp-user-frontend' ), 404 );
+        }
+
+        if ( is_user_logged_in() || $this->guest_form( $form_id ) ) {
+            return true;
+        }
+
+        return new WP_Error( 'wpuf_rest_unauthorized', __( 'You must be logged in.', 'wp-user-frontend' ), [ 'status' => 401 ] );
+    }
+
+    /**
+     * Submitting: `can_read` plus the rate limit for guests. The form nonce
+     * is checked by the service, the captcha by the legacy validator.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param WP_REST_Request $request Request
+     *
+     * @return true|WP_Error
+     */
+    public function can_submit( WP_REST_Request $request ) {
+        $read = $this->can_read( $request );
+
+        if ( true !== $read ) {
+            return $read;
+        }
+
+        if ( ! is_user_logged_in() && ! $this->limiter->allow( 'submit', 10, MINUTE_IN_SECONDS ) ) {
+            return $this->error( 'rate_limited', __( 'Too many submissions. Please wait a minute and try again.', 'wp-user-frontend' ), 429 );
+        }
+
+        return true;
+    }
+
+    /**
+     * Editing, drafts and embeds: a logged-in user.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param WP_REST_Request $request Request
+     *
+     * @return true|WP_Error
+     */
+    public function can_edit( WP_REST_Request $request ) {
+        if ( 'wpuf_forms' !== get_post_type( (int) $request['id'] ) ) {
+            return $this->error( 'not_found', __( 'Your selected form is no longer available.', 'wp-user-frontend' ), 404 );
+        }
+
+        if ( ! is_user_logged_in() ) {
+            return new WP_Error( 'wpuf_rest_unauthorized', __( 'You must be logged in.', 'wp-user-frontend' ), [ 'status' => 401 ] );
+        }
+
+        return true;
+    }
+
+    /**
+     * Whether a form accepts guests.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param int $form_id Form id
+     *
+     * @return bool
+     */
+    private function guest_form( $form_id ) {
+        $settings = wpuf_get_form_settings( $form_id );
+
+        return isset( $settings['post_permission'] ) && 'guest_post' === $settings['post_permission'];
+    }
+
+    /**
+     * GET /forms/{id}/schema
+     *
+     * @since WPUF_SINCE
+     *
+     * @param WP_REST_Request $request Request
+     *
+     * @return \WP_REST_Response|WP_Error
+     */
+    public function get_schema( WP_REST_Request $request ) {
+        $schema = $this->form_schema->build( (int) $request['id'], (int) $request['post_id'], [ 'page_id' => (int) $request['page_id'] ] );
+
+        return is_wp_error( $schema ) ? $schema : rest_ensure_response( $schema );
+    }
+
+    /**
+     * POST /forms/{id}/submissions
+     *
+     * @since WPUF_SINCE
+     *
+     * @param WP_REST_Request $request Request
+     *
+     * @return \WP_REST_Response|WP_Error
+     */
+    public function create_submission( WP_REST_Request $request ) {
+        $input = $this->input( $request );
+        unset( $input['post_id'] );
+
+        return $this->answer( $this->submissions->submit( $input ) );
+    }
+
+    /**
+     * PUT /forms/{id}/submissions/{post_id}
+     *
+     * @since WPUF_SINCE
+     *
+     * @param WP_REST_Request $request Request
+     *
+     * @return \WP_REST_Response|WP_Error
+     */
+    public function update_submission( WP_REST_Request $request ) {
+        $input            = $this->input( $request );
+        $input['post_id'] = (int) $request['post_id'];
+
+        return $this->answer( $this->submissions->submit( $input ) );
+    }
+
+    /**
+     * POST /forms/{id}/drafts
+     *
+     * @since WPUF_SINCE
+     *
+     * @param WP_REST_Request $request Request
+     *
+     * @return \WP_REST_Response|WP_Error
+     */
+    public function create_draft( WP_REST_Request $request ) {
+        return $this->answer( $this->submissions->draft( $this->input( $request ) ) );
+    }
+
+    /**
+     * GET /forms/{id}/terms: the child terms of a taxonomy field (the ajax category picker).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param WP_REST_Request $request Request
+     *
+     * @return \WP_REST_Response|WP_Error
+     */
+    public function get_terms( WP_REST_Request $request ) {
+        $taxonomy = sanitize_key( $request['taxonomy'] );
+
+        if ( ! taxonomy_exists( $taxonomy ) ) {
+            return $this->error( 'bad_taxonomy', __( 'Unknown taxonomy.', 'wp-user-frontend' ), 400 );
+        }
+
+        if ( ! is_taxonomy_viewable( $taxonomy ) && ! current_user_can( get_taxonomy( $taxonomy )->cap->assign_terms ) ) {
+            return $this->error( 'bad_taxonomy', __( 'Unknown taxonomy.', 'wp-user-frontend' ), 400 );
+        }
+
+        $terms = get_terms(
+            [
+                'taxonomy'   => $taxonomy,
+                'parent'     => (int) $request['parent'],
+                'hide_empty' => false,
+            ]
+        );
+
+        if ( is_wp_error( $terms ) ) {
+            return $terms;
+        }
+
+        $items = [];
+
+        foreach ( $terms as $term ) {
+            $children = get_term_children( $term->term_id, $taxonomy );
+
+            $items[] = [
+                'id'       => (int) $term->term_id,
+                'name'     => (string) $term->name,
+                'slug'     => (string) $term->slug,
+                'parent'   => (int) $term->parent,
+                'children' => is_array( $children ) ? count( $children ) : 0,
+            ];
+        }
+
+        return rest_ensure_response( $items );
+    }
+
+    /**
+     * POST /forms/{id}/embed: the oEmbed markup of a URL (the editor's "insert embed").
+     *
+     * @since WPUF_SINCE
+     *
+     * @param WP_REST_Request $request Request
+     *
+     * @return \WP_REST_Response|WP_Error
+     */
+    public function get_embed( WP_REST_Request $request ) {
+        $url = esc_url_raw( (string) $request->get_param( 'url' ) );
+
+        if ( '' === $url ) {
+            return $this->error( 'bad_url', __( 'A URL is required.', 'wp-user-frontend' ), 400 );
+        }
+
+        $html = wp_oembed_get( $url );
+
+        if ( ! $html ) {
+            return $this->error( 'no_embed', __( 'No embed found for this URL.', 'wp-user-frontend' ), 404 );
+        }
+
+        return rest_ensure_response( [ 'html' => $html ] );
+    }
+
+    /**
+     * GET /forms/{id}/states?country=: the states of a country (the address field).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param WP_REST_Request $request Request
+     *
+     * @return \WP_REST_Response
+     */
+    public function get_states( WP_REST_Request $request ) {
+        // The same lookup as wpuf_ajax_get_states_field(), as data instead of a <select>.
+        $country   = sanitize_text_field( (string) $request['country'] );
+        $cs        = new \WeDevs\Wpuf\Data\Country_State();
+        $countries = $cs->countries();
+        $states    = isset( $countries[ $country ] ) ? (array) $cs->getStates( $countries[ $country ] ) : [];
+
+        return rest_ensure_response(
+            [
+                'country' => $country,
+                'states'  => $states,
+            ]
+        );
+    }
+
+    /**
+     * The body parameters as submit input (route parameters removed).
+     *
+     * @since WPUF_SINCE
+     *
+     * @param WP_REST_Request $request Request
+     *
+     * @return array
+     */
+    private function input( WP_REST_Request $request ) {
+        $input = (array) $request->get_body_params();
+
+        if ( ! $input ) {
+            $input = (array) $request->get_json_params();
+        }
+
+        $input['form_id'] = (int) $request['id'];
+        unset( $input['_wpnonce'] );
+
+        return $input;
+    }
+
+    /**
+     * A service result as a response.
+     *
+     * @since WPUF_SINCE
+     *
+     * @param array|WP_Error $result Result
+     *
+     * @return \WP_REST_Response|WP_Error
+     */
+    private function answer( $result ) {
+        return is_wp_error( $result ) ? $result : rest_ensure_response( $result );
+    }
+}
