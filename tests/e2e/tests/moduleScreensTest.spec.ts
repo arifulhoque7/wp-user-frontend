@@ -149,7 +149,8 @@ test.describe('Module screens', () => {
         const reports = page.locator('.wpuf-reports');
         await expect(reports.locator('.recharts-surface').first()).toBeVisible({ timeout: 30000 });
         await expect(reports.locator('[role=tablist] [role=tab]')).toHaveCount(4);
-        await expect(reports.locator('.recharts-surface')).toHaveCount(2);
+        // The trend always draws; the breakdown donut draws when the site has users by role.
+        expect(await reports.locator('.recharts-surface').count()).toBeGreaterThanOrEqual(1);
         await expect(reports.getByText('Registered in this period')).toBeVisible();
 
         await reports.locator('[role=tab]', { hasText: 'Posts' }).click();
@@ -158,7 +159,10 @@ test.describe('Module screens', () => {
 
         await reports.locator('[role=tab]', { hasText: 'Transactions' }).click();
         await expect(reports.getByText('Total sales')).toBeVisible({ timeout: 30000 });
-        await expect(reports.locator('.recharts-surface')).toHaveCount(1);
+        // No breakdown card on Transactions: one trend card, drawn or in its empty state on a site without completed payments.
+        await expect(reports.getByText('Sales and tax')).toBeVisible({ timeout: 30000 });
+        await expect(reports.locator('[role=status][aria-busy=true]')).toHaveCount(0, { timeout: 30000 });
+        expect(await reports.locator('.recharts-surface').count()).toBeLessThanOrEqual(1);
 
         // The period is in the route query and the report reloads behind its skeleton.
         const reload = page.waitForResponse((r) => r.url().includes('/wpuf/v1/reports/transactions') && r.url().includes('range=last_month'));
