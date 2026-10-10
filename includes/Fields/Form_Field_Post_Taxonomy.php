@@ -154,6 +154,11 @@ class Form_Field_Post_Taxonomy extends Field_Contract {
         <span class="wpuf-wordlimit-message wpuf-help"></span>
         <?php
         $this->help_text( $field_settings );
+        ?>
+        </div>
+        <?php
+        // Close the field's list item (the other fields do; the browser repaired the open tags before).
+        $this->after_field_print_label();
     }
 
     public function taxnomy_select( $terms ) {
