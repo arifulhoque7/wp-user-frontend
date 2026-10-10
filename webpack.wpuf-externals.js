@@ -11,6 +11,9 @@ const MAP = {
     '@wpuf/api': { global: [ 'wpuf', 'api' ], handle: 'wpuf-admin-runtime' },
     '@wpuf/hooks': { global: [ 'wpuf', 'reactHooks' ], handle: 'wpuf-admin-runtime' },
     '@wpuf/utilities': { global: [ 'wpuf', 'utilities' ], handle: 'wpuf-admin-runtime' },
+    // plugin-ui re-exports recharts: one copy on the page, so its React context
+    // (chart size, scales) is the one plugin-ui's ChartContainer fills.
+    recharts: { global: [ 'wpuf', 'ui', 'recharts' ], handle: 'wpuf-admin-ui' },
 };
 
 module.exports = {

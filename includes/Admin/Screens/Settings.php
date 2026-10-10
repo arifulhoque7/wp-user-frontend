@@ -95,6 +95,16 @@ class Settings extends Screen {
         wp_set_script_translations( $handle, 'wp-user-frontend', WPUF_ROOT . '/languages' );
         wpuf()->platform()->get( BootPayload::class )->attach( 'settings', $handle );
 
+        /**
+         * The React settings screen is loading: enqueue a bundle that adds field
+         * types (`wpuf.settings.field.<type>` filter) or extends the screen.
+         *
+         * @since WPUF_SINCE
+         *
+         * @param string $handle The settings app's script handle (depend on it).
+         */
+        do_action( 'wpuf_settings_app_scripts', $handle );
+
         wp_localize_script(
             $handle,
             'wpuf_settings',
