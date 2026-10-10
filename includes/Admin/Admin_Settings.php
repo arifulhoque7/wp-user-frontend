@@ -22,7 +22,7 @@ class Admin_Settings {
         wpuf_require_once( WPUF_INCLUDES . '/functions/settings-react.php' );
         wpuf_require_once( WPUF_ROOT . '/Lib/WeDevs_Settings_API.php' );
 
-        $this->settings_api = new WeDevs_Settings_API();
+        $this->settings_api = wpuf()->platform()->get( WeDevs_Settings_API::class );
         add_action( 'admin_init', [ $this, 'admin_init' ] );
     }
 

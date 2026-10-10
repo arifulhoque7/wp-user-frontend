@@ -248,9 +248,7 @@ function wpuf_update_option( $option, $section, $value ) {
  * @param array $args settings field args
  */
 function wpuf_settings_multiselect( $args ) {
-    wpuf_require_once( WPUF_ROOT . '/Lib/WeDevs_Settings_API.php' );
-
-    $settings = new WeDevs_Settings_API();
+    $settings = wpuf()->platform()->get( WeDevs_Settings_API::class );
     $value    = $settings->get_option( $args['id'], $args['section'], $args['std'] );
     $value    = is_array( $value ) ? (array) $value : [];
     $size     = isset( $args['size'] ) && ! is_null( $args['size'] ) ? $args['size'] : 'regular';
@@ -288,9 +286,7 @@ function wpuf_settings_multiselect( $args ) {
  * @since WPUF_PRO_SINCE
  */
 function wpuf_settings_password_preview( $args ) {
-    wpuf_require_once( WPUF_ROOT . '/Lib/WeDevs_Settings_API.php' );
-
-    $settings = new WeDevs_Settings_API();
+    $settings = wpuf()->platform()->get( WeDevs_Settings_API::class );
     $value    = $settings->get_option( $args['id'], $args['section'], $args['std'] );
     $disabled = ! empty( $args['is_pro_preview'] ) && $args['is_pro_preview'] ? 'disabled' : '';
     $size     = isset( $args['size'] ) && ! is_null( $args['size'] ) ? $args['size'] : 'regular';

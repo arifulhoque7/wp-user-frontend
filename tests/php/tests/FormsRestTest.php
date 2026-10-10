@@ -373,6 +373,8 @@ class FormsRestTest extends WP_UnitTestCase {
         $this->assertNotNull( $loader );
 
         remove_all_actions( 'wpuf_form_builder_save_form' );
+        // The cleanup is a shared service now: drop the instance an earlier test built so its hooks are added afresh.
+        wpuf()->platform()->forget( \WeDevs\Wpuf\Hooks\Form_Settings_Cleanup::class );
         $loader->boot_rest_cleanup();
         $loader->boot_rest_cleanup();
 

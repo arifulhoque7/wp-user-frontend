@@ -37,6 +37,32 @@ class CoreServiceProvider extends ServiceProvider {
      * @return void
      */
     public function register() {
+        // Free-only hooks (Free_Loader built them with `new`): the post-lock user profile
+        // fields and the Pro-settings cleanup on form saves, one instance each.
+        $this->share_tagged(
+            \WeDevs\Wpuf\Free\Edit_Profile::class,
+            function () {
+                return new \WeDevs\Wpuf\Free\Edit_Profile();
+            }
+        );
+        $this->share_tagged(
+            \WeDevs\Wpuf\Hooks\Form_Settings_Cleanup::class,
+            function () {
+                return new \WeDevs\Wpuf\Hooks\Form_Settings_Cleanup();
+            }
+        );
+
+        // The classic settings API (Lib): Admin_Settings and the legacy field renderers
+        // share one instance (each `new` hooked admin_enqueue_scripts again).
+        $this->share_tagged(
+            \WeDevs_Settings_API::class,
+            function () {
+                wpuf_require_once( WPUF_ROOT . '/Lib/WeDevs_Settings_API.php' );
+
+                return new \WeDevs_Settings_API();
+            }
+        );
+
         // The onboarding wizard's own state (options + the activation redirect).
         $this->share_tagged(
             State::class,

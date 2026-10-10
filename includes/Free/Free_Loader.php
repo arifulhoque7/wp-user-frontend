@@ -120,7 +120,7 @@ class Free_Loader extends Pro_Prompt {
     }
 
     public function instantiate() {
-        $this->edit_profile = new Edit_Profile();
+        $this->edit_profile = wpuf()->platform()->get( Edit_Profile::class );
 
         // Initialize User Directory Free if Pro module is not active AND Free module is enabled
         if ( ! $this->is_pro_user_directory_active() && $this->is_free_user_directory_active() ) {
@@ -139,7 +139,7 @@ class Free_Loader extends Pro_Prompt {
             $load_free = apply_filters( 'wpuf_free_loader', true );
 
             if ( $load_free ) {
-                new Form_Settings_Cleanup();
+                wpuf()->platform()->get( Form_Settings_Cleanup::class );
             }
         }
 
@@ -160,7 +160,7 @@ class Free_Loader extends Pro_Prompt {
             return;
         }
 
-        new Form_Settings_Cleanup();
+        wpuf()->platform()->get( Form_Settings_Cleanup::class );
     }
 
     /**

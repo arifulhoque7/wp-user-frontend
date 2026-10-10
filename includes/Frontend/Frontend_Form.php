@@ -480,7 +480,7 @@ class Frontend_Form extends Frontend_Render_Form {
             wp_die( esc_html__( 'This post has already been published.', 'wp-user-frontend' ) );
         }
 
-        $payment_status = new Subscription();
+        $payment_status = wpuf()->subscription;
         $form           = new Form( $real_form_id );
         $pay_per_post   = $form->is_enabled_pay_per_post();
         $force_pack     = $form->is_enabled_force_pack();
